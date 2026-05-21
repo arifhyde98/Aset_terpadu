@@ -135,11 +135,11 @@ Status implementasi fitur utama sistem.
 | Autentikasi & Multi-Role | DONE | Stabil dengan `TenantScope` |
 | Dashboard & Metrik | DONE | Menggunakan *targeted cache invalidation* |
 | Master Data (OPD & Jenis) | DONE | Mendukung *atomic cleanup* |
-| Kendaraan (CRUD) | DONE | UI Modal tersentralisasi & validasi ketat |
+| Kendaraan (CRUD) | DONE | UI Modal tersentralisasi, validasi ketat, dan nomor register unik nullable sebagai identitas internal aset |
 | Import Excel Kendaraan | DONE | Automasi relasi & *Batch Insert* teroptimasi |
 | Audit Trail (Log Sistem) | DONE | Hanya dapat diakses Superadmin |
 | CMS Pengaturan Global | DONE | Tersimpan di *Cache* |
-| Cek & Resolusi Duplikasi | DONE | Analisis ganda cerdas (plat & mesin) & merge OPD |
+| Cek & Resolusi Duplikasi | DONE | Analisis ganda cerdas (plat & mesin) & merge OPD; nomor register dikecualikan dari auto-merge karena identitas unik aset |
 | Modul Laporan | DONE | Strategy modular (4 tipe), otorisasi ketat (403 untuk OPD pada laporan ganda), preview AJAX, ekspor Excel, cetak browser, PDF mPDF, dan isolasi tenant |
 | Pengaturan Dokumen Laporan | DONE | Kop surat, logo, pejabat TTD, ukuran/orientasi kertas, ringkasan, dan tanda tangan per tipe laporan khusus superadmin |
 | Visual & Animasi Mikro Premium (Vanilla CSS) | DONE | Transisi modal bouncy, skeleton shimmer loading, glassmorphism navbar scroll, efek hover elevate, dan tombol premium glow |
@@ -152,7 +152,7 @@ Status implementasi fitur utama sistem.
 - Peningkatan performa kueri (*indexing*), UI responsif, pembersihan kode, dan standarisasi *FormRequest*.
 ### Phase 3: Future Expansion (Selesai)
 - **AI Smart Import**: Pemetaan dinamis header Excel berbasis AI semantik agar pengguna dapat mengunggah format file Excel bebas dan memetakan kolom secara visual. Fitur ini didukung oleh kecocokan sinonim otomatis dan fallback kemiripan teks (similar text) > 65%.
-- **Diagnosis & Resolusi Duplikasi**: Modul pendeteksi plat ganda hasil impor serta pencocokan mesin ganda secara global. Dilengkapi fitur resolusi gabung (*merge*) kendaraan dan penggabungan instansi OPD dengan kemiripan nama untuk mencegah inkonsistensi data.
+- **Diagnosis & Resolusi Duplikasi**: Modul pendeteksi plat ganda hasil impor serta pencocokan mesin ganda secara global. Dilengkapi fitur resolusi gabung (*merge*) kendaraan dan penggabungan instansi OPD dengan kemiripan nama untuk mencegah inkonsistensi data. Nomor register dikecualikan dari auto-merge karena merupakan identitas unik aset.
 - **Modul Laporan Modular**: Menyediakan laporan status kendaraan, distribusi aset OPD, masa berlaku dokumen, serta laporan kendaraan ganda/identik melalui arsitektur strategy modular, preview HTML AJAX, ekspor Excel berbasis kueri streaming atau koleksi ter-enrich, cetak browser, dan PDF formal mPDF dengan otorisasi ketat (HTTP 403 bagi OPD) serta isolasi data multi-tenant yang kokoh. Didukung oleh analisis duplikasi global lintas OPD meskipun laporan difilter berdasarkan instansi tertentu.
 - **Pengaturan Dokumen Laporan**: Superadmin dapat mengatur kop surat, logo, pejabat penanda tangan, gambar tanda tangan, ukuran kertas, orientasi, ringkasan, dan blok tanda tangan per tipe laporan. Data disimpan pada `report_letterheads`, `report_signatories`, dan `report_export_settings`; file publik berada di `public/uploads/report/`.
 - **Sentuhan Visual & Animasi Mikro Premium (Vanilla CSS)**: Penambahan visual premium dan animasi mikro kustom yang terisolasi sepenuhnya di `_vanilla-touches.scss`. Meliputi bouncy transition pada seluruh modal, glassmorphism navbar saat di-scroll, skeleton shimmer loading, hover elevate card, dan efek sapuan kilat premium glow pada tombol aksi utama. Kompilasi aset bersih via Vite menjamin visual premium tanpa merusak fungsionalitas core Laravel 12.

@@ -76,6 +76,7 @@ class VehicleController extends Controller implements HasMiddleware
             $search = strtoupper(preg_replace('/\s+/', ' ', trim($request->q)));
             $query->where(function($q) use ($search) {
                 $q->where('no_polisi', 'LIKE', "%{$search}%")
+                  ->orWhere('nomor_register', 'LIKE', "%{$search}%")
                   ->orWhere('pemegang', 'LIKE', "%{$search}%")
                   ->orWhere('merk', 'LIKE', "%{$search}%")
                   ->orWhere('opd', 'LIKE', "%{$search}%");
@@ -111,7 +112,7 @@ class VehicleController extends Controller implements HasMiddleware
 
         $vehicleDataMap = $vehicles->getCollection()->keyBy('id')->map(function($v) {
             $data = $v->only([
-                'id', 'no_polisi', 'merk', 'tipe', 'jenis', 'opd_id', 'pemegang', 'status', 'kondisi',
+                'id', 'no_polisi', 'nomor_register', 'merk', 'tipe', 'jenis', 'opd_id', 'pemegang', 'status', 'kondisi',
                 'vehicle_type_id', 'tahun_pembuatan', 'warna', 'stnk_ada', 'bpkb_ada', 
                 'tgl_stnk', 'tgl_perolehan', 'nilai_perolehan', 'no_mesin', 'no_rangka', 
                 'keterangan', 'foto_kendaraan'
@@ -550,6 +551,7 @@ class VehicleController extends Controller implements HasMiddleware
             // Kolom Target Database E-RANDIS yang diharapkan untuk dipetakan
             $targetColumns = [
                 'no_polisi' => 'Nomor Polisi (Plat)',
+                'nomor_register' => 'Nomor Register',
                 'jenis' => 'Jenis Kendaraan (Roda 2 / Roda 4 / dll)',
                 'merk' => 'Merk / Pabrikan',
                 'tipe' => 'Tipe / Model',

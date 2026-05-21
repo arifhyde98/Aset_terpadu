@@ -183,6 +183,7 @@ class VehicleService
             'pemegang' => ['pemegang', 'nama pemegang', 'penanggung jawab', 'peminjam', 'user', 'driver', 'nama pemakai', 'penggunaan', 'pengguna'],
             'keterangan' => ['keterangan', 'ket', 'note', 'notes', 'keterangan tambahan', 'keterangan aset'],
             'opd' => ['opd', 'instansi', 'dinas', 'skpd', 'kantor', 'bagian', 'department', 'organisasi'],
+            'nomor_register' => ['nomor register', 'no register', 'no. register', 'nomer register', 'register', 'register number', 'reg number', 'no_register', 'no reg'],
         ];
 
         foreach ($headers as $header) {

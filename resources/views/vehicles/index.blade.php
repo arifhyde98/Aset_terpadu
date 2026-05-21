@@ -70,7 +70,7 @@
                 <div class="col-md-4">
                     <div class="input-group input-group-sm">
                         <span class="input-group-text bg-white border-end-0"><i class="bi bi-search text-secondary"></i></span>
-                        <input type="text" name="q" value="{{ request('q') }}" class="form-control border-start-0 bg-white shadow-none" placeholder="Cari nomor polisi atau nama pengguna...">
+                        <input type="text" name="q" value="{{ request('q') }}" class="form-control border-start-0 bg-white shadow-none" placeholder="Cari nomor polisi, nomor register, atau nama pengguna...">
                     </div>
                 </div>
                 <div class="col-md-3">
@@ -116,6 +116,11 @@
                 </td>
                 <td class="py-3">
                     <span class="badge bg-light text-dark border border-secondary border-opacity-25 px-3 py-2 fs-6 rounded-3 fw-bold plate-number">{{ $vehicle->no_polisi }}</span>
+                    @if($vehicle->nomor_register)
+                        <div class="mt-1 small text-secondary fw-semibold" style="font-size: 0.75rem;">
+                            <i class="bi bi-hash text-primary"></i> {{ $vehicle->nomor_register }}
+                        </div>
+                    @endif
                 </td>
                 <td class="py-3">
                     <div class="fw-bold text-navy">{{ $vehicle->merk }}</div>
@@ -226,6 +231,10 @@
                 <div class="col-md-3">
                     <label class="form-label fw-semibold small text-uppercase">No. Polisi <span class="text-danger">*</span></label>
                     <input type="text" name="no_polisi" class="form-control" placeholder="DN 1234 XX" required>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label fw-semibold small text-uppercase">No. Register</label>
+                    <input type="text" name="nomor_register" class="form-control" placeholder="REG-1234567">
                 </div>
                 <div class="col-md-3">
                     <label class="form-label fw-semibold small text-uppercase">Jenis <span class="text-danger">*</span></label>
@@ -355,6 +364,10 @@
                 <div class="col-md-3">
                     <label class="form-label fw-semibold small text-uppercase">No. Polisi <span class="text-danger">*</span></label>
                     <input type="text" name="no_polisi" id="edit_no_polisi" class="form-control" required>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label fw-semibold small text-uppercase">No. Register</label>
+                    <input type="text" name="nomor_register" id="edit_nomor_register" class="form-control">
                 </div>
                 <div class="col-md-3">
                     <label class="form-label fw-semibold small text-uppercase">Jenis <span class="text-danger">*</span></label>
@@ -667,7 +680,8 @@
                             <div class="p-3 bg-light rounded-3 border-start border-primary border-4">
                                 <small class="text-secondary text-uppercase fw-bold d-block mb-1" style="font-size: 0.7rem;">Nomor Polisi</small>
                                 <h4 class="fw-bold text-navy mb-0">${escapeHtml(vehicle.no_polisi)}</h4>
-                                <p class="text-secondary mb-0 small">${escapeHtml(vehicle.merk)} (${escapeHtml(vehicle.tahun_pembuatan)})</p>
+                                ${vehicle.nomor_register ? `<span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 mt-1 small"><i class="bi bi-hash"></i> ${escapeHtml(vehicle.nomor_register)}</span>` : ''}
+                                <p class="text-secondary mb-0 small mt-1">${escapeHtml(vehicle.merk)} (${escapeHtml(vehicle.tahun_pembuatan)})</p>
                             </div>
                         </div>
                         <div class="col-md-6">
@@ -678,17 +692,21 @@
                         </div>
                         <div class="col-12 mt-4">
                             <div class="row g-3">
-                                <div class="col-md-4">
+                                <div class="col-md-3">
+                                    <label class="small text-secondary fw-bold text-uppercase" style="font-size: 0.65rem;">Nomor Register</label>
+                                    <div class="fw-semibold text-dark">${escapeHtml(vehicle.nomor_register) || '-'}</div>
+                                </div>
+                                <div class="col-md-3">
                                     <label class="small text-secondary fw-bold text-uppercase" style="font-size: 0.65rem;">Nomor Mesin</label>
-                                    <div class="fw-semibold text-dark">${escapeHtml(vehicle.no_mesin)}</div>
+                                    <div class="fw-semibold text-dark">${escapeHtml(vehicle.no_mesin) || '-'}</div>
                                 </div>
-                                <div class="col-md-4">
+                                <div class="col-md-3">
                                     <label class="small text-secondary fw-bold text-uppercase" style="font-size: 0.65rem;">Nomor Rangka</label>
-                                    <div class="fw-semibold text-dark">${escapeHtml(vehicle.no_rangka)}</div>
+                                    <div class="fw-semibold text-dark">${escapeHtml(vehicle.no_rangka) || '-'}</div>
                                 </div>
-                                <div class="col-md-4">
+                                <div class="col-md-3">
                                     <label class="small text-secondary fw-bold text-uppercase" style="font-size: 0.65rem;">Pemegang</label>
-                                    <div class="fw-semibold text-dark">${escapeHtml(vehicle.pemegang)}</div>
+                                    <div class="fw-semibold text-dark">${escapeHtml(vehicle.pemegang) || '-'}</div>
                                 </div>
                                 <div class="col-md-12 mt-2">
                                     <div class="p-3 border rounded-3 bg-white d-flex align-items-center">
@@ -727,6 +745,7 @@
 
                 // Populate Fields
                 document.getElementById('edit_no_polisi').value = vehicle.no_polisi || '';
+                document.getElementById('edit_nomor_register').value = vehicle.nomor_register || '';
                 document.getElementById('edit_vehicle_type_id').value = vehicle.vehicle_type_id || '';
                 document.getElementById('edit_jenis_text').value = vehicle.jenis || '';
                 document.getElementById('edit_merk').value = vehicle.merk || '';

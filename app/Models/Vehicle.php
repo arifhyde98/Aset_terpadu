@@ -13,6 +13,7 @@ use App\Enums\VehicleCondition;
  * 
  * @property int $id ID Utama
  * @property string $no_polisi Nomor Polisi / Plat
+ * @property string|null $nomor_register Nomor Register Kendaraan
  * @property string $merk Merk Kendaraan
  * @property string $tipe Tipe/Model Kendaraan
  * @property string $jenis Jenis Kendaraan
@@ -53,7 +54,7 @@ class Vehicle extends Model
      * @var array<int, string>
      */
     protected $fillable = [
-        'no_polisi', 'merk', 'tipe', 'jenis', 'vehicle_type_id', 
+        'no_polisi', 'nomor_register', 'merk', 'tipe', 'jenis', 'vehicle_type_id', 
         'tahun_pembuatan', 'tgl_perolehan', 'nilai_perolehan', 
         'stnk_ada', 'bpkb_ada', 'no_rangka', 'no_mesin', 'warna', 
         'tgl_stnk', 'opd', 'opd_id', 'pemegang', 'status', 'kondisi', 

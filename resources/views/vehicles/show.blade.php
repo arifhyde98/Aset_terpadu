@@ -78,6 +78,11 @@
                 <div class="badge bg-light text-dark border border-secondary border-opacity-25 px-4 py-2 fs-5 rounded-3 fw-bold mb-3">
                     {{ $vehicle->no_polisi }}
                 </div>
+                @if($vehicle->nomor_register)
+                    <div class="text-secondary small mb-3">
+                        <i class="bi bi-tag-fill me-1"></i> No. Register: <span class="fw-bold text-dark">{{ $vehicle->nomor_register }}</span>
+                    </div>
+                @endif
                 <div class="d-flex justify-content-center mb-4">
                     <x-status-badge :status="$vehicle->status" />
                 </div>
@@ -109,6 +114,12 @@
                 </div>
                 
                 <div class="row g-4">
+                    <div class="col-md-12">
+                        <div class="p-3 bg-light rounded-3 border-start border-navy border-4">
+                            <small class="text-secondary d-block text-uppercase fw-bold letter-spacing-1 mb-1" style="font-size: 0.65rem;">Nomor Register</small>
+                            <span class="fw-bold text-dark fs-5">{{ $vehicle->nomor_register ?? '-' }}</span>
+                        </div>
+                    </div>
                     <div class="col-md-6">
                         <div class="p-3 bg-light rounded-3 border-start border-primary border-4">
                             <small class="text-secondary d-block text-uppercase fw-bold letter-spacing-1 mb-1" style="font-size: 0.65rem;">Nomor Mesin</small>

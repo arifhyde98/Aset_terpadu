@@ -26,6 +26,7 @@ class VehicleStatusReport implements ReportStrategy
             ->select([
                 'id',
                 'no_polisi',
+                'nomor_register',
                 'merk',
                 'tipe',
                 'status',
@@ -63,6 +64,7 @@ class VehicleStatusReport implements ReportStrategy
     {
         return [
             'no_polisi'       => 'Plat Nomor',
+            'nomor_register'  => 'Nomor Register',
             'merk'            => 'Merek',
             'tipe'            => 'Tipe',
             'kondisi'         => 'Kondisi Fisik',

@@ -55,6 +55,7 @@ class UpdateVehicleRequest extends FormRequest
         
         return [
             'no_polisi' => 'required|unique:vehicles,no_polisi,' . $vehicleId,
+            'nomor_register' => 'nullable|string|max:255|unique:vehicles,nomor_register,' . $vehicleId,
             'merk' => 'required',
             'tipe' => 'required',
             'jenis' => 'required',
@@ -92,6 +93,7 @@ class UpdateVehicleRequest extends FormRequest
             'foto_kendaraan.*.image' => 'File harus berupa gambar.',
             'foto_kendaraan.*.mimes' => 'Format gambar harus jpeg, png, jpg, atau webp.',
             'foto_kendaraan.*.max' => 'Ukuran setiap foto tidak boleh lebih dari 2MB.',
+            'nomor_register.unique' => 'Nomor register sudah digunakan oleh kendaraan lain.',
         ];
     }
 
@@ -102,7 +104,7 @@ class UpdateVehicleRequest extends FormRequest
     {
         return [
             'foto_kendaraan' => 'Foto Kendaraan',
+            'nomor_register' => 'Nomor Register',
         ];
     }
 }
-

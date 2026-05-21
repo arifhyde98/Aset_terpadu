@@ -51,6 +51,7 @@ class StoreVehicleRequest extends FormRequest
     {
         return [
             'no_polisi' => 'required|unique:vehicles,no_polisi',
+            'nomor_register' => 'nullable|string|max:255|unique:vehicles,nomor_register',
             'merk' => 'required',
             'tipe' => 'required',
             'jenis' => 'required',
@@ -88,6 +89,7 @@ class StoreVehicleRequest extends FormRequest
             'foto_kendaraan.*.image' => 'File harus berupa gambar.',
             'foto_kendaraan.*.mimes' => 'Format gambar harus jpeg, png, jpg, atau webp.',
             'foto_kendaraan.*.max' => 'Ukuran setiap foto tidak boleh lebih dari 2MB.',
+            'nomor_register.unique' => 'Nomor register sudah digunakan oleh kendaraan lain.',
         ];
     }
 
@@ -98,6 +100,7 @@ class StoreVehicleRequest extends FormRequest
     {
         return [
             'foto_kendaraan' => 'Foto Kendaraan',
+            'nomor_register' => 'Nomor Register',
         ];
     }
 }

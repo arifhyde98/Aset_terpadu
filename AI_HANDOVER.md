@@ -45,6 +45,7 @@ Dokumen ini merupakan sumber kebenaran tunggal (*Single Source of Truth*) mengen
 Menyimpan entitas aset utama dengan arsitektur kolom ternormalisasi:
 - `id` (PK, BigInt)
 - `no_polisi` (String, Unique) — Nomor plat kendaraan.
+- `nomor_register` (String, Nullable, Unique) - Nomor register internal aset. Boleh kosong, tetapi jika diisi wajib unik global lintas OPD.
 - `merk`, `tipe`, `warna`, `no_rangka`, `no_mesin` — Detail fisik aset.
 - `tahun_pembuatan`, `tgl_perolehan`, `nilai_perolehan` — Akuntansi aset.
 - `stnk_ada`, `bpkb_ada` (String: 'Ada' / 'Tidak') — Status kelengkapan dokumen.
@@ -213,6 +214,7 @@ Sistem memiliki modul diagnosis duplikasi data untuk membantu membersihkan inkon
    - Request hanya diterima bila pasangan `original_id` dan `duplicate_id` cocok dengan pasangan duplikasi sah hasil diagnosis service.
 4. **Resolusi Atomik**:
    - `mergeVehicles()` dan `mergeOpds()` dibungkus transaksi database agar tidak meninggalkan perubahan parsial jika terjadi kegagalan.
+   - `nomor_register` tidak digunakan sebagai kriteria deteksi duplikasi dan tidak ikut auto-merge kendaraan karena merupakan identitas unik aset. Perubahan nomor register harus dilakukan manual melalui form edit.
    - Saat merge OPD, sistem menyinkronkan **dua kolom sekaligus** pada kendaraan terdampak: `opd_id` dan teks historis `opd`.
 5. **Catatan Kualitas Data**:
    - Untuk duplikasi berbasis `no_mesin`, pemilihan record induk saat ini masih mengikuti record pertama hasil kueri. Ini aman secara teknis, tetapi kebijakan bisnis pemilihan induk terbaik masih menjadi area penyempurnaan lanjutan.

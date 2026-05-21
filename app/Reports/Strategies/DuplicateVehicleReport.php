@@ -63,6 +63,7 @@ class DuplicateVehicleReport implements ReportStrategy, PostProcessesReportRows
             ->select([
                 'id',
                 'no_polisi',
+                'nomor_register',
                 'merk',
                 'tipe',
                 'status',
@@ -238,6 +239,7 @@ class DuplicateVehicleReport implements ReportStrategy, PostProcessesReportRows
     {
         return [
             'no_polisi'           => 'Plat Nomor',
+            'nomor_register'      => 'Nomor Register',
             'merk'                => 'Merek',
             'tipe'                => 'Tipe',
             'opd'                 => 'Instansi Pengelola',

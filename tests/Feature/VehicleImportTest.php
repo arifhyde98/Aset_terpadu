@@ -130,6 +130,93 @@ class VehicleImportTest extends TestCase
     }
 
     /**
+     * Test 3b: Mengetes kegagalan impor jika terdeteksi nomor register yang sama/duplikat dengan database.
+     */
+    public function test_import_throws_exception_on_duplicate_nomor_register()
+    {
+        $admin = User::factory()->create([
+            'role' => UserRole::ADMIN
+        ]);
+
+        $this->actingAs($admin);
+
+        // Buat kendaraan awal dengan nomor register terisi
+        Vehicle::create([
+            'no_polisi' => 'DN 1111 AA',
+            'nomor_register' => 'REG-12345',
+            'merk' => 'Toyota',
+            'tipe' => 'Avanza',
+            'jenis' => 'Mobil',
+            'stnk_ada' => 'Ada',
+            'bpkb_ada' => 'Ada',
+            'kondisi' => 'Baik',
+            'status' => 'Tersedia',
+            'opd' => 'BELUM DIKETAHUI',
+            'pemegang' => '-'
+        ]);
+
+        // Reset shared state agar pendaftaran nomor register baru terbaca bersih dari database
+        \App\Imports\VehicleImport::resetSharedState();
+
+        // Buat objek VehicleImport secara manual
+        $importer = new \App\Imports\VehicleImport(
+            ['no_polisi' => 'Nomor Polisi', 'merk' => 'Merk', 'nomor_register' => 'Nomor Register'],
+            ['Nomor Polisi', 'Merk', 'Nomor Register']
+        );
+
+        $this->expectException(\Exception::class);
+        $this->expectExceptionMessage("Nomor register 'REG-12345' sudah digunakan oleh kendaraan lain di sistem atau terdapat duplikat pada berkas Excel. Proses impor dibatalkan.");
+
+        $row = [
+            0 => 'DN 2222 BB', // Nomor Polisi
+            1 => 'Toyota Avanza', // Merk
+            2 => 'REG-12345' // Nomor Register duplikat dengan database
+        ];
+
+        $importer->model($row);
+    }
+
+    /**
+     * Test 3c: Mengetes kegagalan impor jika terdeteksi nomor register duplikat di baris Excel yang sama (in-memory).
+     */
+    public function test_import_throws_exception_on_duplicate_nomor_register_in_excel_rows()
+    {
+        $admin = User::factory()->create([
+            'role' => UserRole::ADMIN
+        ]);
+
+        $this->actingAs($admin);
+
+        // Buat objek VehicleImport secara manual
+        $importer = new \App\Imports\VehicleImport(
+            ['no_polisi' => 'Nomor Polisi', 'merk' => 'Merk', 'nomor_register' => 'Nomor Register'],
+            ['Nomor Polisi', 'Merk', 'Nomor Register']
+        );
+
+        // Reset shared state
+        \App\Imports\VehicleImport::resetSharedState();
+
+        // Baris pertama (sukses)
+        $row1 = [
+            0 => 'DN 1111 AA',
+            1 => 'Toyota Avanza',
+            2 => 'REG-99999'
+        ];
+        $importer->model($row1);
+
+        // Baris kedua (melempar exception karena nomor register REG-99999 duplikat in-memory)
+        $this->expectException(\Exception::class);
+        $this->expectExceptionMessage("Nomor register 'REG-99999' sudah digunakan oleh kendaraan lain di sistem atau terdapat duplikat pada berkas Excel. Proses impor dibatalkan.");
+
+        $row2 = [
+            0 => 'DN 2222 BB',
+            1 => 'Honda Civic',
+            2 => 'REG-99999'
+        ];
+        $importer->model($row2);
+    }
+
+    /**
      * Test 4: Mengetes normalisasi dokumen STNK/BPKB 'ada' -> 'Ada', 'tidak' -> 'Tidak'.
      */
     public function test_stnk_and_bpkb_document_status_normalization()

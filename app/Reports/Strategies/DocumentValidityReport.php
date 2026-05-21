@@ -26,6 +26,7 @@ class DocumentValidityReport implements ReportStrategy
             ->select([
                 'id',
                 'no_polisi',
+                'nomor_register',
                 'merk',
                 'tipe',
                 'opd_id',
@@ -62,14 +63,15 @@ class DocumentValidityReport implements ReportStrategy
     public function headers(): array
     {
         return [
-            'no_polisi' => 'Plat Nomor',
-            'merk'      => 'Merek',
-            'tipe'      => 'Tipe',
-            'stnk_ada'  => 'STNK Ada?',
-            'tgl_stnk'  => 'Masa Berlaku STNK',
-            'bpkb_ada'  => 'BPKB Ada?',
-            'opd'       => 'Instansi Pengelola',
-            'pemegang'  => 'Pemegang / Penanggung Jawab',
+            'no_polisi'      => 'Plat Nomor',
+            'nomor_register' => 'Nomor Register',
+            'merk'           => 'Merek',
+            'tipe'           => 'Tipe',
+            'stnk_ada'       => 'STNK Ada?',
+            'tgl_stnk'       => 'Masa Berlaku STNK',
+            'bpkb_ada'       => 'BPKB Ada?',
+            'opd'            => 'Instansi Pengelola',
+            'pemegang'       => 'Pemegang / Penanggung Jawab',
         ];
     }
 }

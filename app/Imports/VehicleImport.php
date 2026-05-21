@@ -23,6 +23,9 @@ class VehicleImport implements ToModel, WithStartRow, WithBatchInserts, WithChun
     /** @var array Shared cache memori untuk seluruh sheet (menghindari duplikasi plat antar sheet) */
     private static $sharedExistingPlates = null;
 
+    /** @var array Shared cache memori untuk seluruh sheet (menghindari duplikasi nomor register antar sheet) */
+    private static $sharedExistingRegisters = null;
+
     /** @var int Shared counter untuk pembuatan ID sementara kendaraan tanpa plat */
     private static $sharedRowCount = 0;
 
@@ -48,6 +51,7 @@ class VehicleImport implements ToModel, WithStartRow, WithBatchInserts, WithChun
     public static function resetSharedState()
     {
         static::$sharedExistingPlates = null;
+        static::$sharedExistingRegisters = null;
         static::$sharedRowCount = 0;
     }
 
@@ -69,12 +73,22 @@ class VehicleImport implements ToModel, WithStartRow, WithBatchInserts, WithChun
             static::$sharedExistingPlates = Vehicle::withoutGlobalScopes()->pluck('no_polisi')->flip()->toArray();
         }
 
+        if (static::$sharedExistingRegisters === null) {
+            static::$sharedExistingRegisters = Vehicle::withoutGlobalScopes()
+                ->whereNotNull('nomor_register')
+                ->where('nomor_register', '!=', '')
+                ->pluck('nomor_register')
+                ->flip()
+                ->toArray();
+        }
+
         // Jika pemetaan kosong (mode fallback/legacy), gunakan pemetaan standar template E-RANDIS
         if (empty($mapping)) {
             $mapping = [
                 'jenis'           => 'Jenis Kendaraan',
                 'merk'            => 'Merk/Tipe',
                 'no_polisi'       => 'Nomor Polisi',
+                'nomor_register'  => 'Nomor Register',
                 'no_mesin'        => 'Nomor Mesin',
                 'no_rangka'       => 'Nomor Rangka',
                 'tgl_perolehan'   => 'Tanggal Perolehan (m/d/Y)',
@@ -173,6 +187,7 @@ class VehicleImport implements ToModel, WithStartRow, WithBatchInserts, WithChun
 
         // Ambil nilai-nilai kritikal (Revisi: 4 Kolom Krusial)
         $raw_no_polisi = $this->getVal($row, 'no_polisi');
+        $raw_nomor_register = $this->getVal($row, 'nomor_register');
         $raw_merk = $this->getVal($row, 'merk');
         $raw_no_mesin = $this->getVal($row, 'no_mesin');
         $raw_pemegang = $this->getVal($row, 'pemegang');
@@ -203,6 +218,17 @@ class VehicleImport implements ToModel, WithStartRow, WithBatchInserts, WithChun
 
         // Tandai plat ini sebagai 'terpakai' dalam sesi ini agar baris berikutnya tidak bentrok
         static::$sharedExistingPlates[$no_polisi] = true;
+
+        // 1b. Identifikasi Nomor Register
+        $nomor_register = trim((string)$raw_nomor_register);
+        if (empty($nomor_register) || in_array($nomor_register, ['-', '?', 'null', 'NULL'])) {
+            $nomor_register = null;
+        } else {
+            if (isset(static::$sharedExistingRegisters[$nomor_register])) {
+                throw new \Exception("Nomor register '{$nomor_register}' sudah digunakan oleh kendaraan lain di sistem atau terdapat duplikat pada berkas Excel. Proses impor dibatalkan.");
+            }
+            static::$sharedExistingRegisters[$nomor_register] = true;
+        }
 
         // 2. Proses Jenis Kendaraan menggunakan Cache Memori (Dinamis)
         $jenisName = trim($this->getVal($row, 'jenis', 'Lainnya'));
@@ -282,6 +308,7 @@ class VehicleImport implements ToModel, WithStartRow, WithBatchInserts, WithChun
             'merk'            => $finalMerk,
             'tipe'            => $finalTipe,
             'no_polisi'       => $no_polisi,
+            'nomor_register'  => $nomor_register,
             'user_id'         => $user?->id,
             'no_mesin'        => $this->getVal($row, 'no_mesin'),
             'no_rangka'       => $this->getVal($row, 'no_rangka'),

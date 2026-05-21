@@ -26,6 +26,7 @@ class OpdAssetReport implements ReportStrategy
             ->select([
                 'id',
                 'no_polisi',
+                'nomor_register',
                 'merk',
                 'tipe',
                 'opd_id',
@@ -65,6 +66,7 @@ class OpdAssetReport implements ReportStrategy
         return [
             'opd'             => 'Instansi Pengelola',
             'no_polisi'       => 'Plat Nomor',
+            'nomor_register'  => 'Nomor Register',
             'merk'            => 'Merek',
             'tipe'            => 'Tipe',
             'pemegang'        => 'Pemegang / Penanggung Jawab',
