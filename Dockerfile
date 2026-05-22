@@ -28,6 +28,9 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 # Copy custom Nginx configuration
 COPY docker/nginx.conf /etc/nginx/sites-available/default
 
+# Copy custom PHP configuration
+COPY docker/uploads.ini /usr/local/etc/php/conf.d/uploads.ini
+
 # Copy Supervisor configuration
 COPY docker/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
