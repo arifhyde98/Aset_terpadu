@@ -126,11 +126,15 @@ class ReportController extends Controller implements HasMiddleware
 
         // 5. Jika strategi mengimplementasikan pengayaan data (PostProcessesReportRows), gunakan ekspor berbasis Koleksi
         if ($strategy instanceof PostProcessesReportRows) {
-            $data = $strategy->query($filters)->get();
+            $query = $strategy->query($filters);
+            $query = $this->reportService->applySorting($query, $filters);
+            $data = $query->get();
 
-            $referenceRows = method_exists($strategy, 'referenceQuery')
-                ? $strategy->referenceQuery($filters)->get()
-                : $data;
+            $refQuery = method_exists($strategy, 'referenceQuery')
+                ? $strategy->referenceQuery($filters)
+                : $strategy->query($filters);
+            $refQuery = $this->reportService->applySorting($refQuery, $filters);
+            $referenceRows = $refQuery->get();
 
             $strategy->postProcess($data, $referenceRows);
 
@@ -141,8 +145,10 @@ class ReportController extends Controller implements HasMiddleware
         }
 
         // 6. Jika strategi standar, gunakan kueri streaming (FromQuery) hemat memori untuk data besar
+        $query = $strategy->query($filters);
+        $query = $this->reportService->applySorting($query, $filters);
         return Excel::download(
-            new DynamicQueryReportExport($strategy->query($filters), $strategy->headers(), $filters, $reportTitle, $docSettings),
+            new DynamicQueryReportExport($query, $strategy->headers(), $filters, $reportTitle, $docSettings),
             $filename
         );
     }
@@ -162,13 +168,17 @@ class ReportController extends Controller implements HasMiddleware
         $strategy = $this->registry->resolve($type);
 
         // 2. Tarik data (tanpa paginasi untuk cetak, agar seluruh data keluar di kertas)
-        $data = $strategy->query($filters)->get();
+        $query = $strategy->query($filters);
+        $query = $this->reportService->applySorting($query, $filters);
+        $data = $query->get();
 
         // 3. Jalankan pengayaan data jika strategi mengimplementasikan PostProcessesReportRows
         if ($strategy instanceof PostProcessesReportRows) {
-            $referenceRows = method_exists($strategy, 'referenceQuery')
-                ? $strategy->referenceQuery($filters)->get()
-                : $data;
+            $refQuery = method_exists($strategy, 'referenceQuery')
+                ? $strategy->referenceQuery($filters)
+                : $strategy->query($filters);
+            $refQuery = $this->reportService->applySorting($refQuery, $filters);
+            $referenceRows = $refQuery->get();
 
             $strategy->postProcess($data, $referenceRows);
         }
@@ -204,19 +214,23 @@ class ReportController extends Controller implements HasMiddleware
         $strategy = $this->registry->resolve($type);
 
         // 2. Mencegah overload memori produksi (Data Guard > 1000 baris)
-        $count = $strategy->query($filters)->count();
+        $query = $strategy->query($filters);
+        $query = $this->reportService->applySorting($query, $filters);
+        $count = $query->count();
         if ($count > 1000) {
             return redirect()->route('reports.index')->with('error', 'Jumlah data mencapai ' . number_format($count) . ' baris. Demi menjaga stabilitas server, ekspor lebih dari 1.000 data wajib menggunakan format Excel.');
         }
 
         // 3. Tarik data kueri
-        $data = $strategy->query($filters)->get();
+        $data = $query->get();
 
         // 4. Jalankan pengayaan data jika strategi mengimplementasikan PostProcessesReportRows
         if ($strategy instanceof PostProcessesReportRows) {
-            $referenceRows = method_exists($strategy, 'referenceQuery')
-                ? $strategy->referenceQuery($filters)->get()
-                : $data;
+            $refQuery = method_exists($strategy, 'referenceQuery')
+                ? $strategy->referenceQuery($filters)
+                : $strategy->query($filters);
+            $refQuery = $this->reportService->applySorting($refQuery, $filters);
+            $referenceRows = $refQuery->get();
 
             $strategy->postProcess($data, $referenceRows);
         }

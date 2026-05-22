@@ -59,14 +59,47 @@
             </form>
         </x-slot:filters>
 
+        @php
+            $currentSortBy = request('sort_by');
+            $currentSortOrder = request('sort_order', 'asc');
+            $nextSortOrder = $currentSortOrder === 'asc' ? 'desc' : 'asc';
+        @endphp
+
         <x-slot:thead>
             <tr>
-                <th class="py-3 px-4 border-bottom-0 fw-semibold" style="width: 50px;">No</th>
-                <th class="py-3 border-bottom-0 fw-semibold">Nama Pengguna</th>
-                <th class="py-3 border-bottom-0 fw-semibold">Email / Akun</th>
-                <th class="py-3 border-bottom-0 fw-semibold">Role</th>
+                <th class="py-3 px-4 border-bottom-0 fw-semibold text-center" style="width: 50px;">No</th>
+                <th class="py-3 border-bottom-0 fw-semibold">
+                    <a href="{{ request()->fullUrlWithQuery(['sort_by' => 'name', 'sort_order' => $currentSortBy === 'name' ? $nextSortOrder : 'asc']) }}" class="text-navy text-decoration-none d-inline-flex align-items-center gap-1">
+                        <span>Nama Pengguna</span>
+                        @if($currentSortBy === 'name')
+                            <i class="bi bi-sort-alpha-{{ $currentSortOrder === 'asc' ? 'down' : 'up' }} text-primary"></i>
+                        @else
+                            <i class="bi bi-arrow-down-up text-secondary opacity-50 small" style="font-size: 0.75rem;"></i>
+                        @endif
+                    </a>
+                </th>
+                <th class="py-3 border-bottom-0 fw-semibold">
+                    <a href="{{ request()->fullUrlWithQuery(['sort_by' => 'email', 'sort_order' => $currentSortBy === 'email' ? $nextSortOrder : 'asc']) }}" class="text-navy text-decoration-none d-inline-flex align-items-center gap-1">
+                        <span>Email / Akun</span>
+                        @if($currentSortBy === 'email')
+                            <i class="bi bi-sort-alpha-{{ $currentSortOrder === 'asc' ? 'down' : 'up' }} text-primary"></i>
+                        @else
+                            <i class="bi bi-arrow-down-up text-secondary opacity-50 small" style="font-size: 0.75rem;"></i>
+                        @endif
+                    </a>
+                </th>
+                <th class="py-3 border-bottom-0 fw-semibold">
+                    <a href="{{ request()->fullUrlWithQuery(['sort_by' => 'role', 'sort_order' => $currentSortBy === 'role' ? $nextSortOrder : 'asc']) }}" class="text-navy text-decoration-none d-inline-flex align-items-center gap-1">
+                        <span>Role</span>
+                        @if($currentSortBy === 'role')
+                            <i class="bi bi-sort-alpha-{{ $currentSortOrder === 'asc' ? 'down' : 'up' }} text-primary"></i>
+                        @else
+                            <i class="bi bi-arrow-down-up text-secondary opacity-50 small" style="font-size: 0.75rem;"></i>
+                        @endif
+                    </a>
+                </th>
                 <th class="py-3 border-bottom-0 fw-semibold">Instansi (OPD)</th>
-                <th class="py-3 px-4 border-bottom-0 fw-semibold text-center">Aksi</th>
+                <th class="py-3 px-4 border-bottom-0 fw-semibold text-center" style="width: 100px;">Aksi</th>
             </tr>
         </x-slot:thead>
 

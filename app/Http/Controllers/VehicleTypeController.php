@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\VehicleType;
 use App\Http\Requests\StoreVehicleTypeRequest;
 use App\Http\Requests\UpdateVehicleTypeRequest;
+use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
 
@@ -29,11 +30,25 @@ class VehicleTypeController extends Controller implements HasMiddleware
     /**
      * Menampilkan daftar semua tipe kendaraan beserta jumlah unit masing-masing.
      * 
+     * @param Request $request
      * @return \Illuminate\View\View
      */
-    public function index(): \Illuminate\View\View
+    public function index(Request $request): \Illuminate\View\View
     {
-        $types = VehicleType::withCount('vehicles')->latest()->get();
+        $sortBy = $request->input('sort_by');
+        $sortOrder = $request->input('sort_order', 'asc');
+        $allowedSorts = ['name', 'vehicles_count'];
+
+        $query = VehicleType::withCount('vehicles');
+
+        if ($sortBy && in_array($sortBy, $allowedSorts)) {
+            $query->orderBy($sortBy, $sortOrder);
+        } else {
+            $query->latest();
+        }
+
+        $types = $query->get();
+
         return view('vehicle-types.index', compact('types'));
     }
 

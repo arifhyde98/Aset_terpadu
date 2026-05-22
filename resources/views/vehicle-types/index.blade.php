@@ -39,12 +39,36 @@
         emptyText="Belum ada data jenis kendaraan" 
         emptyIcon="bi-grid">
         
+        @php
+            $currentSortBy = request('sort_by');
+            $currentSortOrder = request('sort_order', 'asc');
+            $nextSortOrder = $currentSortOrder === 'asc' ? 'desc' : 'asc';
+        @endphp
+
         <x-slot:thead>
             <tr>
                 <th class="py-3 px-4 border-bottom-0 fw-semibold" style="width: 50px;">No</th>
-                <th class="py-3 border-bottom-0 fw-semibold">Nama Jenis</th>
+                <th class="py-3 border-bottom-0 fw-semibold">
+                    <a href="{{ request()->fullUrlWithQuery(['sort_by' => 'name', 'sort_order' => $currentSortBy === 'name' ? $nextSortOrder : 'asc']) }}" class="text-navy text-decoration-none d-inline-flex align-items-center gap-1">
+                        <span>Nama Jenis</span>
+                        @if($currentSortBy === 'name')
+                            <i class="bi bi-sort-alpha-{{ $currentSortOrder === 'asc' ? 'down' : 'up' }} text-primary"></i>
+                        @else
+                            <i class="bi bi-arrow-down-up text-secondary opacity-50 small" style="font-size: 0.75rem;"></i>
+                        @endif
+                    </a>
+                </th>
                 <th class="py-3 border-bottom-0 fw-semibold d-none d-md-table-cell">Deskripsi</th>
-                <th class="py-3 border-bottom-0 fw-semibold text-center">Total Kendaraan</th>
+                <th class="py-3 border-bottom-0 fw-semibold text-center">
+                    <a href="{{ request()->fullUrlWithQuery(['sort_by' => 'vehicles_count', 'sort_order' => $currentSortBy === 'vehicles_count' ? $nextSortOrder : 'asc']) }}" class="text-navy text-decoration-none d-inline-flex align-items-center gap-1 justify-content-center">
+                        <span>Total Kendaraan</span>
+                        @if($currentSortBy === 'vehicles_count')
+                            <i class="bi bi-sort-numeric-{{ $currentSortOrder === 'asc' ? 'down' : 'up' }} text-primary"></i>
+                        @else
+                            <i class="bi bi-arrow-down-up text-secondary opacity-50 small" style="font-size: 0.75rem;"></i>
+                        @endif
+                    </a>
+                </th>
                 <th class="py-3 px-4 border-bottom-0 fw-semibold text-end">Aksi</th>
             </tr>
         </x-slot:thead>

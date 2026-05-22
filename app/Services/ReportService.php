@@ -115,20 +115,53 @@ class ReportService
         $queryBuilder = $strategy->query($filters);
 
         // Eksekusi query dengan paginasi (15 baris per halaman)
+        // Terapkan pengurutan dinamis secara aman
+        $queryBuilder = $this->applySorting($queryBuilder, $filters);
+
+        // Eksekusi query dengan paginasi (15 baris per halaman)
         $paginatedData = $queryBuilder->paginate(15)->withQueryString();
 
         // Jalankan pengayaan data in-memory jika strategi mengimplementasikan PostProcessesReportRows
         if ($strategy instanceof \App\Reports\Contracts\PostProcessesReportRows) {
-            $referenceRows = method_exists($strategy, 'referenceQuery')
-                ? $strategy->referenceQuery($filters)->get()
-                : $strategy->query($filters)->get();
+            $refQuery = method_exists($strategy, 'referenceQuery')
+                ? $strategy->referenceQuery($filters)
+                : $strategy->query($filters);
+            $refQuery = $this->applySorting($refQuery, $filters);
+            $referenceRows = $refQuery->get();
+
             $strategy->postProcess($paginatedData->getCollection(), $referenceRows);
         }
 
         return [
-            'data'    => $paginatedData,
-            'headers' => $strategy->headers(),
-            'type'    => $type,
+            'data'       => $paginatedData,
+            'headers'    => $strategy->headers(),
+            'type'       => $type,
+            'sort_by'    => $filters['sort_by'] ?? null,
+            'sort_order' => $filters['sort_order'] ?? 'asc',
         ];
+    }
+
+    /**
+     * Menerapkan pengurutan (sorting) dinamis berbasis whitelist pada Query Builder Laporan.
+     *
+     * @param \Illuminate\Database\Eloquent\Builder $queryBuilder
+     * @param array<string, mixed> $filters
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function applySorting(\Illuminate\Database\Eloquent\Builder $queryBuilder, array $filters): \Illuminate\Database\Eloquent\Builder
+    {
+        $sortBy = $filters['sort_by'] ?? null;
+        $sortOrder = $filters['sort_order'] ?? 'asc';
+        $allowedSorts = [
+            'no_polisi', 'nomor_register', 'merk', 'tipe', 'status', 'kondisi', 
+            'opd', 'pemegang', 'nilai_perolehan', 'stnk_ada', 'tgl_stnk', 
+            'bpkb_ada', 'no_mesin', 'no_rangka'
+        ];
+
+        if ($sortBy && in_array($sortBy, $allowedSorts)) {
+            $queryBuilder->reorder($sortBy, $sortOrder);
+        }
+
+        return $queryBuilder;
     }
 }

@@ -53,7 +53,17 @@ class OpdController extends Controller implements HasMiddleware
                   ->orWhere('singkatan', 'like', '%' . $request->q . '%');
         }
 
-        $opds = $query->orderBy('nama')->paginate(15);
+        $sortBy = $request->input('sort_by');
+        $sortOrder = $request->input('sort_order', 'asc');
+        $allowedSorts = ['nama', 'singkatan'];
+
+        if ($sortBy && in_array($sortBy, $allowedSorts)) {
+            $query->orderBy($sortBy, $sortOrder);
+        } else {
+            $query->orderBy('nama'); // Default
+        }
+
+        $opds = $query->paginate(15)->withQueryString();
         
         return view('opds.index', compact('opds'));
     }

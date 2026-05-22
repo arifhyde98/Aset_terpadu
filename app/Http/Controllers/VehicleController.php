@@ -69,7 +69,17 @@ class VehicleController extends Controller implements HasMiddleware
      */
     public function index(Request $request): View
     {
-        $query = Vehicle::with(['user', 'vehicleType', 'opdRelation'])->latest();
+        $sortBy = $request->input('sort_by');
+        $sortOrder = $request->input('sort_order', 'asc');
+        $allowedSorts = ['no_polisi', 'merk', 'tahun_pembuatan', 'pemegang', 'kondisi', 'status'];
+
+        $query = Vehicle::with(['user', 'vehicleType', 'opdRelation']);
+
+        if ($sortBy && in_array($sortBy, $allowedSorts)) {
+            $query->orderBy($sortBy, $sortOrder);
+        } else {
+            $query->latest();
+        }
 
         // Filter Pencarian Global
         if ($request->filled('q')) {

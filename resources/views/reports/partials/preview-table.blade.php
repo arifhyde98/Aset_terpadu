@@ -18,9 +18,27 @@
     <!-- Slot Header -->
     <x-slot:thead>
         <tr>
-            <th class="text-center" style="width: 60px;">#</th>
+            <th class="text-center align-middle" style="width: 60px;">#</th>
             @foreach($headers as $key => $label)
-                <th class="text-navy fw-semibold">{{ $label }}</th>
+                @php
+                    $isSorted = ($sort_by ?? '') === $key;
+                @endphp
+                <th class="align-middle">
+                    <button type="button" 
+                            onclick="sortByField('{{ $key }}')" 
+                            class="btn btn-link text-navy text-decoration-none fw-semibold p-0 border-0 d-inline-flex align-items-center gap-1 shadow-none">
+                        <span>{{ $label }}</span>
+                        @if($isSorted)
+                            @if(in_array($key, ['nilai_perolehan', 'tgl_stnk', 'tahun_pembuatan']))
+                                <i class="bi bi-sort-numeric-{{ ($sort_order ?? 'asc') === 'asc' ? 'down' : 'up' }} text-primary"></i>
+                            @else
+                                <i class="bi bi-sort-alpha-{{ ($sort_order ?? 'asc') === 'asc' ? 'down' : 'up' }} text-primary"></i>
+                            @endif
+                        @else
+                            <i class="bi bi-arrow-down-up text-secondary opacity-50 small" style="font-size: 0.75rem;"></i>
+                        @endif
+                    </button>
+                </th>
             @endforeach
         </tr>
     </x-slot:thead>

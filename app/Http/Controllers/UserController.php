@@ -50,7 +50,17 @@ class UserController extends Controller implements HasMiddleware
             });
         }
 
-        $users = $query->latest()->paginate(15);
+        $sortBy = $request->input('sort_by');
+        $sortOrder = $request->input('sort_order', 'asc');
+        $allowedSorts = ['name', 'email', 'role'];
+
+        if ($sortBy && in_array($sortBy, $allowedSorts)) {
+            $query->orderBy($sortBy, $sortOrder);
+        } else {
+            $query->latest();
+        }
+
+        $users = $query->paginate(15)->withQueryString();
         $opds = Opd::orderBy('nama')->get();
         $roles = UserRole::cases();
 

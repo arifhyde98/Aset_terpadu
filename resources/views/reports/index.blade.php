@@ -66,6 +66,8 @@
         </div>
         <div class="card-body p-4 bg-white">
             <form id="filter-form" onsubmit="submitFilterForm(event)">
+                <input type="hidden" name="sort_by" id="sort_by" value="">
+                <input type="hidden" name="sort_order" id="sort_order" value="asc">
                 <div class="row g-3">
                     
                     <!-- 1. Pilihan Jenis Laporan -->
@@ -180,13 +182,26 @@
         const wrapper = document.getElementById('report-table-wrapper');
         const form = document.getElementById('filter-form');
         
-        // Buat payload pencarian dari parameter form
-        const formData = new FormData(form);
-        const params = new URLSearchParams(formData);
-        
         // Tentukan target URL (jika paginasi memakai URL bawaan Laravel links)
         let targetUrl = url;
-        if (!targetUrl) {
+        if (targetUrl) {
+            try {
+                // Sinkronkan form inputs dengan parameter di URL jika ada
+                const urlObj = new URL(targetUrl, window.location.origin || 'http://localhost');
+                const sortByParam = urlObj.searchParams.get('sort_by');
+                const sortOrderParam = urlObj.searchParams.get('sort_order');
+                if (sortByParam !== null) {
+                    document.getElementById('sort_by').value = sortByParam;
+                }
+                if (sortOrderParam !== null) {
+                    document.getElementById('sort_order').value = sortOrderParam;
+                }
+            } catch (e) {
+                console.error('Gagal mensinkronisasi URL paginasi:', e);
+            }
+        } else {
+            const formData = new FormData(form);
+            const params = new URLSearchParams(formData);
             targetUrl = "{{ route('reports.preview') }}?" + params.toString();
         }
 
@@ -256,6 +271,27 @@
     function resetFilterForm() {
         const form = document.getElementById('filter-form');
         form.reset();
+        document.getElementById('sort_by').value = '';
+        document.getElementById('sort_order').value = 'asc';
+        fetchPreview();
+    }
+
+    /**
+     * Memperbarui parameter pengurutan tersembunyi dan memicu reload data.
+     *
+     * @param {string} fieldName Nama kolom untuk pengurutan
+     */
+    function sortByField(fieldName) {
+        const sortByInput = document.getElementById('sort_by');
+        const sortOrderInput = document.getElementById('sort_order');
+        
+        if (sortByInput.value === fieldName) {
+            sortOrderInput.value = sortOrderInput.value === 'asc' ? 'desc' : 'asc';
+        } else {
+            sortByInput.value = fieldName;
+            sortOrderInput.value = 'asc';
+        }
+        
         fetchPreview();
     }
 

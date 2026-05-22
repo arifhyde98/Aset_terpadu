@@ -55,14 +55,38 @@
             </form>
         </x-slot:filters>
 
+        @php
+            $currentSortBy = request('sort_by');
+            $currentSortOrder = request('sort_order', 'asc');
+            $nextSortOrder = $currentSortOrder === 'asc' ? 'desc' : 'asc';
+        @endphp
+
         <x-slot:thead>
             <tr>
                 <th class="py-3 px-4 border-bottom-0 fw-semibold" style="width: 50px;">No</th>
-                <th class="py-3 border-bottom-0 fw-semibold">Nama Instansi / OPD</th>
-                <th class="py-3 border-bottom-0 fw-semibold">Singkatan</th>
+                <th class="py-3 border-bottom-0 fw-semibold">
+                    <a href="{{ request()->fullUrlWithQuery(['sort_by' => 'nama', 'sort_order' => $currentSortBy === 'nama' ? $nextSortOrder : 'asc']) }}" class="text-navy text-decoration-none d-inline-flex align-items-center gap-1">
+                        <span>Nama Instansi / OPD</span>
+                        @if($currentSortBy === 'nama')
+                            <i class="bi bi-sort-alpha-{{ $currentSortOrder === 'asc' ? 'down' : 'up' }} text-primary"></i>
+                        @else
+                            <i class="bi bi-arrow-down-up text-secondary opacity-50 small" style="font-size: 0.75rem;"></i>
+                        @endif
+                    </a>
+                </th>
+                <th class="py-3 border-bottom-0 fw-semibold">
+                    <a href="{{ request()->fullUrlWithQuery(['sort_by' => 'singkatan', 'sort_order' => $currentSortBy === 'singkatan' ? $nextSortOrder : 'asc']) }}" class="text-navy text-decoration-none d-inline-flex align-items-center gap-1">
+                        <span>Singkatan</span>
+                        @if($currentSortBy === 'singkatan')
+                            <i class="bi bi-sort-alpha-{{ $currentSortOrder === 'asc' ? 'down' : 'up' }} text-primary"></i>
+                        @else
+                            <i class="bi bi-arrow-down-up text-secondary opacity-50 small" style="font-size: 0.75rem;"></i>
+                        @endif
+                    </a>
+                </th>
                 <th class="py-3 border-bottom-0 fw-semibold">Akun Admin</th>
                 <th class="py-3 border-bottom-0 fw-semibold d-none d-md-table-cell">Alamat</th>
-                <th class="py-3 px-4 border-bottom-0 fw-semibold text-center">Aksi</th>
+                <th class="py-3 px-4 border-bottom-0 fw-semibold text-center" style="width: 100px;">Aksi</th>
             </tr>
         </x-slot:thead>
 

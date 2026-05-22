@@ -92,16 +92,76 @@
             </form>
         </x-slot:filters>
 
+        @php
+            $currentSortBy = request('sort_by');
+            $currentSortOrder = request('sort_order', 'asc');
+            $nextSortOrder = $currentSortOrder === 'asc' ? 'desc' : 'asc';
+        @endphp
+
         <x-slot:thead>
             <tr>
                 <th class="py-3 px-4 border-bottom-0 fw-semibold text-center" style="width: 50px;">No.</th>
-                <th class="py-3 border-bottom-0 fw-semibold">No. Polisi</th>
-                <th class="py-3 border-bottom-0 fw-semibold">Nama Kendaraan</th>
-                <th class="py-3 border-bottom-0 fw-semibold d-none d-md-table-cell">Jenis / Tahun</th>
-                <th class="py-3 border-bottom-0 fw-semibold">Pengguna / OPD</th>
-                <th class="py-3 border-bottom-0 fw-semibold text-center">Kondisi Fisik</th>
-                <th class="py-3 border-bottom-0 fw-semibold text-center">Status</th>
-                <th class="py-3 px-4 border-bottom-0 fw-semibold text-center">Aksi</th>
+                <th class="py-3 border-bottom-0 fw-semibold">
+                    <a href="{{ request()->fullUrlWithQuery(['sort_by' => 'no_polisi', 'sort_order' => $currentSortBy === 'no_polisi' ? $nextSortOrder : 'asc']) }}" class="text-navy text-decoration-none d-inline-flex align-items-center gap-1">
+                        <span>No. Polisi</span>
+                        @if($currentSortBy === 'no_polisi')
+                            <i class="bi bi-sort-alpha-{{ $currentSortOrder === 'asc' ? 'down' : 'up' }} text-primary"></i>
+                        @else
+                            <i class="bi bi-arrow-down-up text-secondary opacity-50 small" style="font-size: 0.75rem;"></i>
+                        @endif
+                    </a>
+                </th>
+                <th class="py-3 border-bottom-0 fw-semibold">
+                    <a href="{{ request()->fullUrlWithQuery(['sort_by' => 'merk', 'sort_order' => $currentSortBy === 'merk' ? $nextSortOrder : 'asc']) }}" class="text-navy text-decoration-none d-inline-flex align-items-center gap-1">
+                        <span>Nama Kendaraan</span>
+                        @if($currentSortBy === 'merk')
+                            <i class="bi bi-sort-alpha-{{ $currentSortOrder === 'asc' ? 'down' : 'up' }} text-primary"></i>
+                        @else
+                            <i class="bi bi-arrow-down-up text-secondary opacity-50 small" style="font-size: 0.75rem;"></i>
+                        @endif
+                    </a>
+                </th>
+                <th class="py-3 border-bottom-0 fw-semibold d-none d-md-table-cell">
+                    <a href="{{ request()->fullUrlWithQuery(['sort_by' => 'tahun_pembuatan', 'sort_order' => $currentSortBy === 'tahun_pembuatan' ? $nextSortOrder : 'asc']) }}" class="text-navy text-decoration-none d-inline-flex align-items-center gap-1">
+                        <span>Jenis / Tahun</span>
+                        @if($currentSortBy === 'tahun_pembuatan')
+                            <i class="bi bi-sort-numeric-{{ $currentSortOrder === 'asc' ? 'down' : 'up' }} text-primary"></i>
+                        @else
+                            <i class="bi bi-arrow-down-up text-secondary opacity-50 small" style="font-size: 0.75rem;"></i>
+                        @endif
+                    </a>
+                </th>
+                <th class="py-3 border-bottom-0 fw-semibold">
+                    <a href="{{ request()->fullUrlWithQuery(['sort_by' => 'pemegang', 'sort_order' => $currentSortBy === 'pemegang' ? $nextSortOrder : 'asc']) }}" class="text-navy text-decoration-none d-inline-flex align-items-center gap-1">
+                        <span>Pengguna / OPD</span>
+                        @if($currentSortBy === 'pemegang')
+                            <i class="bi bi-sort-alpha-{{ $currentSortOrder === 'asc' ? 'down' : 'up' }} text-primary"></i>
+                        @else
+                            <i class="bi bi-arrow-down-up text-secondary opacity-50 small" style="font-size: 0.75rem;"></i>
+                        @endif
+                    </a>
+                </th>
+                <th class="py-3 border-bottom-0 fw-semibold text-center">
+                    <a href="{{ request()->fullUrlWithQuery(['sort_by' => 'kondisi', 'sort_order' => $currentSortBy === 'kondisi' ? $nextSortOrder : 'asc']) }}" class="text-navy text-decoration-none d-inline-flex align-items-center gap-1">
+                        <span>Kondisi Fisik</span>
+                        @if($currentSortBy === 'kondisi')
+                            <i class="bi bi-sort-alpha-{{ $currentSortOrder === 'asc' ? 'down' : 'up' }} text-primary"></i>
+                        @else
+                            <i class="bi bi-arrow-down-up text-secondary opacity-50 small" style="font-size: 0.75rem;"></i>
+                        @endif
+                    </a>
+                </th>
+                <th class="py-3 border-bottom-0 fw-semibold text-center">
+                    <a href="{{ request()->fullUrlWithQuery(['sort_by' => 'status', 'sort_order' => $currentSortBy === 'status' ? $nextSortOrder : 'asc']) }}" class="text-navy text-decoration-none d-inline-flex align-items-center gap-1">
+                        <span>Status</span>
+                        @if($currentSortBy === 'status')
+                            <i class="bi bi-sort-alpha-{{ $currentSortOrder === 'asc' ? 'down' : 'up' }} text-primary"></i>
+                        @else
+                            <i class="bi bi-arrow-down-up text-secondary opacity-50 small" style="font-size: 0.75rem;"></i>
+                        @endif
+                    </a>
+                </th>
+                <th class="py-3 px-4 border-bottom-0 fw-semibold text-center" style="width: 100px;">Aksi</th>
             </tr>
         </x-slot:thead>
 

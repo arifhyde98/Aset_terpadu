@@ -143,6 +143,7 @@ Status implementasi fitur utama sistem.
 | Modul Laporan | DONE | Strategy modular (4 tipe), otorisasi ketat (403 untuk OPD pada laporan ganda), preview AJAX, ekspor Excel, cetak browser, PDF mPDF, dan isolasi tenant |
 | Pengaturan Dokumen Laporan | DONE | Kop surat, logo, pejabat TTD, ukuran/orientasi kertas, ringkasan, dan tanda tangan per tipe laporan khusus superadmin |
 | Visual & Animasi Mikro Premium (Vanilla CSS) | DONE | Transisi modal bouncy, skeleton shimmer loading, glassmorphism navbar scroll, efek hover elevate, dan tombol premium glow |
+| Sorting Dinamis Interaktif | DONE | Pengurutan aman berbasis whitelist pada modul kendaraan, OPD, jenis kendaraan, manajemen pengguna, pratinjau laporan AJAX, cetak, PDF mPDF, dan ekspor Excel |
 
 ---
 
@@ -156,6 +157,7 @@ Status implementasi fitur utama sistem.
 - **Modul Laporan Modular**: Menyediakan laporan status kendaraan, distribusi aset OPD, masa berlaku dokumen, serta laporan kendaraan ganda/identik melalui arsitektur strategy modular, preview HTML AJAX, ekspor Excel berbasis kueri streaming atau koleksi ter-enrich, cetak browser, dan PDF formal mPDF dengan otorisasi ketat (HTTP 403 bagi OPD) serta isolasi data multi-tenant yang kokoh. Didukung oleh analisis duplikasi global lintas OPD meskipun laporan difilter berdasarkan instansi tertentu.
 - **Pengaturan Dokumen Laporan**: Superadmin dapat mengatur kop surat, logo, pejabat penanda tangan, gambar tanda tangan, ukuran kertas, orientasi, ringkasan, dan blok tanda tangan per tipe laporan. Data disimpan pada `report_letterheads`, `report_signatories`, dan `report_export_settings`; file publik berada di `public/uploads/report/`.
 - **Sentuhan Visual & Animasi Mikro Premium (Vanilla CSS)**: Penambahan visual premium dan animasi mikro kustom yang terisolasi sepenuhnya di `_vanilla-touches.scss`. Meliputi bouncy transition pada seluruh modal, glassmorphism navbar saat di-scroll, skeleton shimmer loading, hover elevate card, dan efek sapuan kilat premium glow pada tombol aksi utama. Kompilasi aset bersih via Vite menjamin visual premium tanpa merusak fungsionalitas core Laravel 12.
+- **Fitur Sorting Dinamis Terpusat & Aman**: Integrasi pengurutan interaktif di semua halaman master data (Kendaraan, OPD, Jenis Kendaraan, Pengguna) dan Modul Laporan. Mengamankan kueri dengan validasi whitelist ketat pada parameter `sort_by` dan `sort_order` di `ReportFilterRequest`, menggunakan `applySorting()` terpusat di `ReportService`, dan memperluas dukungan pengurutan ke pratinjau asinkron AJAX, cetak, PDF formal (mPDF), serta ekspor Excel (Maatwebsite).
 
 ---
 

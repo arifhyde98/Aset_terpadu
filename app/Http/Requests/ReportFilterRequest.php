@@ -48,6 +48,12 @@ class ReportFilterRequest extends FormRequest
             'kondisi' => ['nullable', 'string', Rule::enum(VehicleCondition::class)],
             'opd_id'  => ['nullable', 'integer', 'exists:opds,id'],
             'tahun'   => ['nullable', 'integer', 'min:1950', 'max:' . (now()->year + 1)],
+            'sort_by' => ['nullable', 'string', Rule::in([
+                'no_polisi', 'nomor_register', 'merk', 'tipe', 'status', 'kondisi', 
+                'opd', 'pemegang', 'nilai_perolehan', 'stnk_ada', 'tgl_stnk', 
+                'bpkb_ada', 'no_mesin', 'no_rangka'
+            ])],
+            'sort_order' => ['nullable', 'string', Rule::in(['asc', 'desc'])],
         ];
     }
 
@@ -66,6 +72,8 @@ class ReportFilterRequest extends FormRequest
             'tahun.integer'  => 'Format Tahun tidak valid.',
             'tahun.min'      => 'Tahun minimal adalah 1950.',
             'tahun.max'      => 'Tahun maksimal tidak boleh melebihi tahun depan.',
+            'sort_by.in'     => 'Kolom pengurutan laporan tidak valid.',
+            'sort_order.in'  => 'Arah pengurutan laporan tidak valid.',
         ];
     }
 
