@@ -27,11 +27,7 @@
                 <span class="btn-action-icon"><i class="bi bi-file-earmark-arrow-up"></i></span>
                 <span class="d-none d-sm-inline">Import</span>
             </button>
-            <a href="{{ route('vehicles.export') }}" class="btn btn-action btn-action-primary shadow-sm fw-semibold d-flex align-items-center gap-2" data-export-button>
-                <span class="btn-action-icon"><i class="bi bi-download"></i></span>
-                <span class="d-none d-sm-inline" data-export-label>Export</span>
-            </a>
-            <button type="button" class="btn btn-outline-warning shadow-sm fw-semibold d-flex align-items-center gap-2" id="btnCheckDuplicates">
+                 <button type="button" class="btn btn-outline-warning shadow-sm fw-semibold d-flex align-items-center gap-2" id="btnCheckDuplicates">
                 <i class="bi bi-magic text-warning"></i> <span class="d-none d-sm-inline">Cek Duplikasi</span>
             </button>
             <button type="button" class="btn btn-primary shadow-sm fw-medium d-flex align-items-center gap-2" data-bs-toggle="modal" data-bs-target="#addVehicleModal">
