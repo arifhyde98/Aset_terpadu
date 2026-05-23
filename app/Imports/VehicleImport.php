@@ -11,6 +11,8 @@ use Maatwebsite\Excel\Concerns\WithBatchInserts;
 use Maatwebsite\Excel\Concerns\WithChunkReading;
 use Maatwebsite\Excel\Concerns\WithEvents;
 use Maatwebsite\Excel\Events\BeforeSheet;
+use Maatwebsite\Excel\Concerns\WithCalculatedFormulas;
+use Maatwebsite\Excel\Concerns\HasReferencesToOtherSheets;
 use Carbon\Carbon;
 
 /**
@@ -18,7 +20,7 @@ use Carbon\Carbon;
  * 
  * Mendukung pemetaan kolom dinamis hasil analisis AI semantik.
  */
-class VehicleImport implements ToModel, WithStartRow, WithBatchInserts, WithChunkReading, WithEvents
+class VehicleImport implements ToModel, WithStartRow, WithBatchInserts, WithChunkReading, WithEvents, WithCalculatedFormulas, HasReferencesToOtherSheets
 {
     /** @var array Shared cache memori untuk seluruh sheet (menghindari duplikasi plat antar sheet) */
     private static $sharedExistingPlates = null;
