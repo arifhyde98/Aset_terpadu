@@ -61,7 +61,7 @@ class ProfileController extends Controller implements HasMiddleware
         if ($request->hasFile('avatar')) {
             // Hapus avatar lama jika ada
             if ($user->avatar) {
-                Storage::delete($user->avatar);
+                Storage::disk('public')->delete($user->avatar);
             }
 
             $path = $request->file('avatar')->store('avatars', 'public');
