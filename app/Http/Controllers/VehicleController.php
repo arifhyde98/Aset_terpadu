@@ -44,7 +44,7 @@ class VehicleController extends Controller implements HasMiddleware
     {
         return [
             new Middleware('auth', except: ['search', 'searchLandingVehicle']),
-            new Middleware('role:superadmin', only: ['truncate']),
+            new Middleware('role:superadmin', only: ['truncate', 'sanitizeIdentifiers']),
             new Middleware('role:superadmin,admin', only: ['checkDuplicates', 'resolveDuplicateVehicle', 'resolveDuplicateOpd']),
         ];
     }
@@ -349,6 +349,23 @@ class VehicleController extends Controller implements HasMiddleware
         $this->vehicleService->invalidateDashboardStats(invalidateAllOpd: true);
 
         return redirect()->route('vehicles.index')->with('success', 'Seluruh data kendaraan berhasil dikosongkan.');
+    }
+
+    /**
+     * Membersihkan massal seluruh nomor rangka dan nomor mesin kendaraan dari karakter khusus.
+     * 
+     * Khusus diakses oleh Superadmin.
+     * 
+     * @return RedirectResponse
+     */
+    public function sanitizeIdentifiers(): RedirectResponse
+    {
+        $count = $this->vehicleService->sanitizeIdentifiers();
+
+        // Catat audit log
+        \App\Models\Activity::log("Melakukan pembersihan massal karakter khusus nomor mesin dan nomor rangka kendaraan [Jumlah data: {$count}]", 'info');
+
+        return redirect()->route('vehicles.index')->with('success', "Pembersihan berhasil. {$count} data kendaraan telah diperbarui.");
     }
 
     /**

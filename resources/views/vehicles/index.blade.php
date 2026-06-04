@@ -30,6 +30,14 @@
                  <button type="button" class="btn btn-outline-warning shadow-sm fw-semibold d-flex align-items-center gap-2" id="btnCheckDuplicates">
                 <i class="bi bi-magic text-warning"></i> <span class="d-none d-sm-inline">Cek Duplikasi</span>
             </button>
+            @if(auth()->user()->role === \App\Enums\UserRole::SUPERADMIN)
+                <form id="sanitizeIdentifiersForm" action="{{ route('vehicles.sanitize-identifiers') }}" method="POST" class="d-inline">
+                    @csrf
+                    <button type="submit" class="btn btn-outline-secondary shadow-sm fw-medium d-flex align-items-center gap-2" id="btnSanitizeIdentifiers" title="Pembersihan Karakter Nomor Rangka & Mesin">
+                        <i class="bi bi-shield-check"></i> <span class="d-none d-sm-inline">Generate</span>
+                    </button>
+                </form>
+            @endif
             <button type="button" class="btn btn-primary shadow-sm fw-medium d-flex align-items-center gap-2" data-bs-toggle="modal" data-bs-target="#addVehicleModal">
                 <i class="bi bi-plus-lg"></i> Tambah Kendaraan
             </button>
@@ -1476,6 +1484,36 @@
                             });
                         }
                     });
+                });
+            });
+        }
+
+        // Sanitasi Identifikasi Kendaraan (Nomor Rangka & Mesin)
+        const sanitizeForm = document.getElementById('sanitizeIdentifiersForm');
+        if (sanitizeForm) {
+            sanitizeForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                Swal.fire({
+                    title: 'Konfirmasi Pembersihan?',
+                    text: 'Aksi ini akan membersihkan semua karakter spesial (spasi, tanda hubung, titik, dll) kecuali huruf dan angka pada kolom Nomor Rangka dan Nomor Mesin untuk SELURUH kendaraan di sistem.',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#1e40af',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: 'Ya, Bersihkan!',
+                    cancelButtonText: 'Batal'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        Swal.fire({
+                            title: 'Memproses data...',
+                            text: 'Mohon tunggu sebentar.',
+                            allowOutsideClick: false,
+                            didOpen: () => {
+                                Swal.showLoading();
+                            }
+                        });
+                        this.submit();
+                    }
                 });
             });
         }

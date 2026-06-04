@@ -424,5 +424,42 @@ class VehicleService
             return true;
         });
     }
+
+    /**
+     * Membersihkan kolom no_rangka dan no_mesin dari seluruh kendaraan yang dapat diakses.
+     * 
+     * Menghapus semua karakter kecuali huruf (A-Z, a-z) dan angka (0-9).
+     * 
+     * @return int Jumlah kendaraan yang berhasil diperbarui
+     */
+    public function sanitizeIdentifiers(): int
+    {
+        $count = 0;
+
+        \DB::transaction(function () use (&$count) {
+            Vehicle::chunk(100, function ($vehicles) use (&$count) {
+                foreach ($vehicles as $vehicle) {
+                    $dirtyRangka = $vehicle->no_rangka;
+                    $dirtyMesin = $vehicle->no_mesin;
+
+                    $cleanRangka = $dirtyRangka ? preg_replace('/[^a-zA-Z0-9]/', '', $dirtyRangka) : $dirtyRangka;
+                    $cleanMesin = $dirtyMesin ? preg_replace('/[^a-zA-Z0-9]/', '', $dirtyMesin) : $dirtyMesin;
+
+                    if ($dirtyRangka !== $cleanRangka || $dirtyMesin !== $cleanMesin) {
+                        $vehicle->no_rangka = $cleanRangka;
+                        $vehicle->no_mesin = $cleanMesin;
+                        $vehicle->save();
+                        $count++;
+                    }
+                }
+            });
+        });
+
+        if ($count > 0) {
+            $this->invalidateDashboardStats(invalidateAllOpd: true);
+        }
+
+        return $count;
+    }
 }
 
