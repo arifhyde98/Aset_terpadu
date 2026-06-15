@@ -187,7 +187,7 @@
         if (targetUrl) {
             try {
                 // Sinkronkan form inputs dengan parameter di URL jika ada
-                const urlObj = new URL(targetUrl, window.location.origin || 'http://localhost');
+                const urlObj = new URL(targetUrl, window.location.origin);
                 const sortByParam = urlObj.searchParams.get('sort_by');
                 const sortOrderParam = urlObj.searchParams.get('sort_order');
                 if (sortByParam !== null) {
@@ -196,13 +196,17 @@
                 if (sortOrderParam !== null) {
                     document.getElementById('sort_order').value = sortOrderParam;
                 }
+
+                // Selalu gunakan origin halaman aktif agar tidak terkena mixed content
+                // ketika aplikasi berada di balik reverse proxy HTTPS.
+                targetUrl = urlObj.pathname + urlObj.search + urlObj.hash;
             } catch (e) {
                 console.error('Gagal mensinkronisasi URL paginasi:', e);
             }
         } else {
             const formData = new FormData(form);
             const params = new URLSearchParams(formData);
-            targetUrl = "{{ route('reports.preview') }}?" + params.toString();
+            targetUrl = "{{ route('reports.preview', [], false) }}?" + params.toString();
         }
 
         // Tampilkan visual loading spinner yang premium
