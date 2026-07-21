@@ -22,6 +22,9 @@ class AppServiceProvider extends ServiceProvider
     {
         Paginator::useBootstrapFive();
         \Illuminate\Support\Facades\URL::forceRootUrl(config('app.url'));
+        if (str_contains(config('app.url'), 'https://')) {
+            \Illuminate\Support\Facades\URL::forceScheme('https');
+        }
 
         // Register Observers
         \App\Models\Vehicle::observe(\App\Observers\VehicleObserver::class);
