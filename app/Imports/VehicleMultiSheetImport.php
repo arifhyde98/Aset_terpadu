@@ -25,6 +25,9 @@ class VehicleMultiSheetImport implements WithMultipleSheets
     /** @var string Path absolut ke file Excel */
     private $filePath;
 
+    /** @var string Model tujuan import */
+    private $modelClass;
+
     /**
      * Konstruktor wrapper multi-sheet.
      * 
@@ -32,16 +35,18 @@ class VehicleMultiSheetImport implements WithMultipleSheets
      * @param array $headers Daftar header asli Excel
      * @param int $startRow Baris mulai membaca data (1-based)
      * @param string $filePath Path fisik ke berkas Excel
+     * @param string $modelClass Kelas model target
      */
-    public function __construct(array $mapping = [], array $headers = [], int $startRow = 4, string $filePath = '')
+    public function __construct(array $mapping = [], array $headers = [], int $startRow = 4, string $filePath = '', string $modelClass = \App\Models\Vehicle::class)
     {
         $this->mapping = $mapping;
         $this->headers = $headers;
         $this->startRow = $startRow;
         $this->filePath = $filePath;
+        $this->modelClass = $modelClass;
 
         // Reset status memori bersama antar-sheet agar penomoran TANPA-PLAT berjalan bersih untuk impor baru
-        VehicleImport::resetSharedState();
+        VehicleImport::resetSharedState($this->modelClass);
     }
 
     /**
@@ -63,19 +68,19 @@ class VehicleMultiSheetImport implements WithMultipleSheets
                 $worksheetNames = $reader->listWorksheetNames($this->filePath);
 
                 foreach ($worksheetNames as $index => $name) {
-                    $sheets[$index] = new VehicleImport($this->mapping, $this->headers, $this->startRow);
+                    $sheets[$index] = new VehicleImport($this->mapping, $this->headers, $this->startRow, $this->modelClass);
                 }
             }
         } catch (\Exception $e) {
             // Fallback: Jika gagal menganalisis sheet, daftarkan 10 slot sheet default
             for ($i = 0; $i < 10; $i++) {
-                $sheets[$i] = new VehicleImport($this->mapping, $this->headers, $this->startRow);
+                $sheets[$i] = new VehicleImport($this->mapping, $this->headers, $this->startRow, $this->modelClass);
             }
         }
 
         // Jika tidak ada sheet yang terdaftar, pastikan minimal ada 1 sheet untuk diimpor
         if (empty($sheets)) {
-            $sheets[0] = new VehicleImport($this->mapping, $this->headers, $this->startRow);
+            $sheets[0] = new VehicleImport($this->mapping, $this->headers, $this->startRow, $this->modelClass);
         }
 
         return $sheets;

@@ -49,6 +49,7 @@ Route::get('vehicles/check-duplicates', [VehicleController::class, 'checkDuplica
 Route::post('vehicles/resolve-duplicate-vehicle', [VehicleController::class, 'resolveDuplicateVehicle'])->name('vehicles.resolve-duplicate-vehicle');
 Route::post('vehicles/resolve-duplicate-opd', [VehicleController::class, 'resolveDuplicateOpd'])->name('vehicles.resolve-duplicate-opd');
 Route::post('vehicles/sanitize-identifiers', [VehicleController::class, 'sanitizeIdentifiers'])->name('vehicles.sanitize-identifiers');
+Route::post('vehicles/{vehicle}/sync-to-real', [VehicleController::class, 'syncToReal'])->name('vehicles.sync-to-real');
 Route::resource('vehicles', VehicleController::class)->except(['create', 'edit', 'show']);
 
 // Master Data Hub

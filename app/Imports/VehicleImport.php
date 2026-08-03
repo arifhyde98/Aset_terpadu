@@ -47,6 +47,9 @@ class VehicleImport implements ToModel, WithStartRow, WithBatchInserts, WithChun
     /** @var int Baris awal pembacaan data */
     private $startRow = 4;
 
+    /** @var string Target model */
+    private $modelClass;
+
     /**
      * Reset shared state untuk proses impor baru.
      */
@@ -63,20 +66,23 @@ class VehicleImport implements ToModel, WithStartRow, WithBatchInserts, WithChun
      * @param array $mapping Peta dari user [target_db => excel_header]
      * @param array $headers Daftar header kolom dari file Excel
      * @param int $startRow Baris mulai membaca data (1-indexed)
+     * @param string $modelClass Model tujuan
      */
-    public function __construct(array $mapping = [], array $headers = [], int $startRow = 4)
+    public function __construct(array $mapping = [], array $headers = [], int $startRow = 4, string $modelClass = \App\Models\Vehicle::class)
     {
+        $this->modelClass = $modelClass;
+
         // Pre-load Master Data ke Memori untuk menghindari kueri N+1
         $this->typeCache = VehicleType::pluck('id', 'name')->toArray();
         $this->opdCache = Opd::pluck('id', 'nama')->toArray();
         
         // FIX (High Risk): Gunakan withoutGlobalScopes() agar bisa melihat plat secara GLOBAL.
         if (static::$sharedExistingPlates === null) {
-            static::$sharedExistingPlates = Vehicle::withoutGlobalScopes()->pluck('no_polisi')->flip()->toArray();
+            static::$sharedExistingPlates = $this->modelClass::withoutGlobalScopes()->pluck('no_polisi')->flip()->toArray();
         }
 
         if (static::$sharedExistingRegisters === null) {
-            static::$sharedExistingRegisters = Vehicle::withoutGlobalScopes()
+            static::$sharedExistingRegisters = $this->modelClass::withoutGlobalScopes()
                 ->whereNotNull('nomor_register')
                 ->where('nomor_register', '!=', '')
                 ->pluck('nomor_register')
@@ -226,8 +232,13 @@ class VehicleImport implements ToModel, WithStartRow, WithBatchInserts, WithChun
         if (empty($nomor_register) || in_array($nomor_register, ['-', '?', 'null', 'NULL'])) {
             $nomor_register = null;
         } else {
+            // Auto-Rename untuk Nomor Register ganda
             if (isset(static::$sharedExistingRegisters[$nomor_register])) {
-                throw new \Exception("Nomor register '{$nomor_register}' sudah digunakan oleh kendaraan lain di sistem atau terdapat duplikat pada berkas Excel. Proses impor dibatalkan.");
+                $original_nomor_register = $nomor_register;
+                $i = 2;
+                while (isset(static::$sharedExistingRegisters[$nomor_register])) {
+                    $nomor_register = $original_nomor_register . " (" . $i++ . ")";
+                }
             }
             static::$sharedExistingRegisters[$nomor_register] = true;
         }
@@ -304,7 +315,7 @@ class VehicleImport implements ToModel, WithStartRow, WithBatchInserts, WithChun
             }
         }
 
-        return new Vehicle([
+        return new $this->modelClass([
             'jenis'           => $jenisName,
             'vehicle_type_id' => $typeId,
             'merk'            => $finalMerk,

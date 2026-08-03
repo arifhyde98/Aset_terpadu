@@ -49,9 +49,9 @@ class StoreVehicleRequest extends FormRequest
      */
     public function rules(): array
     {
-        return [
-            'no_polisi' => 'required|unique:vehicles,no_polisi',
-            'nomor_register' => 'nullable|string|max:255|unique:vehicles,nomor_register',
+        $rules = [
+            'no_polisi' => 'required',
+            'nomor_register' => 'nullable|string|max:255',
             'merk' => 'required',
             'tipe' => 'required',
             'jenis' => 'required',
@@ -75,6 +75,17 @@ class StoreVehicleRequest extends FormRequest
             'user_id' => 'nullable|exists:users,id',
             'opd_id' => 'nullable|exists:opds,id',
         ];
+
+        if ($this->input('target_table') === 'ebmd') {
+            $rules['tgl_perolehan'] = 'required|date';
+            $rules['no_polisi'] = 'required|unique:ebmd_vehicles,no_polisi';
+            $rules['nomor_register'] = 'nullable|string|max:255|unique:ebmd_vehicles,nomor_register';
+        } else {
+            $rules['no_polisi'] = 'required|unique:vehicles,no_polisi';
+            $rules['nomor_register'] = 'nullable|string|max:255|unique:vehicles,nomor_register';
+        }
+
+        return $rules;
     }
 
     /**

@@ -48,19 +48,52 @@
 
     <!-- OPTIONAL SIDEBAR SUMMARY (Displayed as top cards on smaller screens) -->
     <div class="row g-3 mb-4">
-        <div class="col-sm-6 col-lg-3">
-            <x-stat-card title="Kondisi Baik" :value="$stats['baik']" icon="check-circle" gradient="success" subtitle="Aset Layak Pakai" />
-        </div>
-        <div class="col-sm-6 col-lg-3">
-            <x-stat-card title="Rusak Ringan" :value="$stats['rusak_ringan']" icon="exclamation-triangle" gradient="warning" subtitle="Butuh Maintenance" />
-        </div>
-        <div class="col-sm-6 col-lg-3">
-            <x-stat-card title="Rusak Berat" :value="$stats['rusak_berat']" icon="x-octagon" gradient="danger" subtitle="Tidak Operasional" />
-        </div>
-        <div class="col-sm-6 col-lg-3">
-            <x-stat-card title="Hilang / TD" :value="$stats['hilang']" icon="question-circle" gradient="secondary" subtitle="Dalam Penelusuran" />
-        </div>
+        @if(request('tab') === 'ebmd')
+            @forelse($ebmdStats as $jenis => $total)
+                <div class="col-sm-6 col-md-4 col-lg-3">
+                    <x-stat-card title="{{ $jenis }}" :value="$total" icon="car-front" gradient="success" subtitle="Total Kendaraan" />
+                </div>
+            @empty
+                <div class="col-12">
+                    <div class="alert alert-light border border-secondary border-opacity-25 shadow-sm text-secondary mb-0">
+                        <i class="bi bi-info-circle me-2"></i> Belum ada data e-BMD untuk menampilkan statistik jenis kendaraan.
+                    </div>
+                </div>
+            @endforelse
+        @else
+            <div class="col-sm-6 col-lg-3">
+                <x-stat-card title="Kondisi Baik" :value="$stats['baik']" icon="check-circle" gradient="success" subtitle="Aset Layak Pakai" />
+            </div>
+            <div class="col-sm-6 col-lg-3">
+                <x-stat-card title="Rusak Ringan" :value="$stats['rusak_ringan']" icon="exclamation-triangle" gradient="warning" subtitle="Butuh Maintenance" />
+            </div>
+            <div class="col-sm-6 col-lg-3">
+                <x-stat-card title="Rusak Berat" :value="$stats['rusak_berat']" icon="x-octagon" gradient="danger" subtitle="Tidak Operasional" />
+            </div>
+            <div class="col-sm-6 col-lg-3">
+                <x-stat-card title="Hilang / TD" :value="$stats['hilang']" icon="question-circle" gradient="secondary" subtitle="Dalam Penelusuran" />
+            </div>
+        @endif
     </div>
+
+    <!-- TABS NAVIGATION -->
+    @php
+        $activeTab = request('tab', 'real');
+    @endphp
+    <ul class="nav nav-tabs nav-fill mb-4 border-bottom" role="tablist">
+        <li class="nav-item" role="presentation">
+            <a href="?tab=real" class="nav-link fw-bold py-3 d-flex align-items-center justify-content-center gap-2 {{ $activeTab === 'real' ? 'active text-navy' : 'text-secondary' }}" role="tab">
+                <i class="bi bi-car-front-fill fs-5 {{ $activeTab === 'real' ? 'text-primary' : '' }}"></i>
+                <span>Data Real (Fisik)</span>
+            </a>
+        </li>
+        <li class="nav-item" role="presentation">
+            <a href="?tab=ebmd" class="nav-link fw-bold py-3 d-flex align-items-center justify-content-center gap-2 {{ $activeTab === 'ebmd' ? 'active text-navy' : 'text-secondary' }}" role="tab">
+                <i class="bi bi-file-earmark-spreadsheet-fill fs-5 {{ $activeTab === 'ebmd' ? 'text-success' : '' }}"></i>
+                <span>Data e-BMD</span>
+            </a>
+        </li>
+    </ul>
 
     <!-- MAIN TABLE SECTION -->
     <x-table-card 
@@ -71,6 +104,7 @@
         
         <x-slot:filters>
             <form action="{{ route('vehicles.index') }}" method="GET" class="row g-2 align-items-center">
+                <input type="hidden" name="tab" value="{{ request('tab', 'real') }}">
                 <div class="col-md-4">
                     <div class="input-group input-group-sm">
                         <span class="input-group-text bg-white border-end-0"><i class="bi bi-search text-secondary"></i></span>
@@ -110,7 +144,7 @@
             <tr>
                 <th class="py-3 px-4 border-bottom-0 fw-semibold text-center" style="width: 50px;">No.</th>
                 <th class="py-3 border-bottom-0 fw-semibold">
-                    <a href="{{ request()->fullUrlWithQuery(['sort_by' => 'no_polisi', 'sort_order' => $currentSortBy === 'no_polisi' ? $nextSortOrder : 'asc']) }}" class="text-navy text-decoration-none d-inline-flex align-items-center gap-1">
+                    <a href="{{ request()->fullUrlWithQuery(['sort_by' => 'no_polisi', 'sort_order' => $currentSortBy === 'no_polisi' ? $nextSortOrder : 'asc', 'tab' => request('tab', 'real')]) }}" class="text-navy text-decoration-none d-inline-flex align-items-center gap-1">
                         <span>No. Polisi</span>
                         @if($currentSortBy === 'no_polisi')
                             <i class="bi bi-sort-alpha-{{ $currentSortOrder === 'asc' ? 'down' : 'up' }} text-primary"></i>
@@ -130,14 +164,25 @@
                     </a>
                 </th>
                 <th class="py-3 border-bottom-0 fw-semibold d-none d-md-table-cell">
-                    <a href="{{ request()->fullUrlWithQuery(['sort_by' => 'tahun_pembuatan', 'sort_order' => $currentSortBy === 'tahun_pembuatan' ? $nextSortOrder : 'asc']) }}" class="text-navy text-decoration-none d-inline-flex align-items-center gap-1">
-                        <span>Jenis / Tahun</span>
-                        @if($currentSortBy === 'tahun_pembuatan')
-                            <i class="bi bi-sort-numeric-{{ $currentSortOrder === 'asc' ? 'down' : 'up' }} text-primary"></i>
-                        @else
-                            <i class="bi bi-arrow-down-up text-secondary opacity-50 small" style="font-size: 0.75rem;"></i>
-                        @endif
-                    </a>
+                    @if(request('tab') === 'ebmd')
+                        <a href="{{ request()->fullUrlWithQuery(['sort_by' => 'tgl_perolehan', 'sort_order' => $currentSortBy === 'tgl_perolehan' ? $nextSortOrder : 'asc', 'tab' => request('tab', 'real')]) }}" class="text-navy text-decoration-none d-inline-flex align-items-center gap-1">
+                            <span>Jenis / Tgl Perolehan</span>
+                            @if($currentSortBy === 'tgl_perolehan')
+                                <i class="bi bi-sort-numeric-{{ $currentSortOrder === 'asc' ? 'down' : 'up' }} text-primary"></i>
+                            @else
+                                <i class="bi bi-arrow-down-up text-secondary opacity-50 small" style="font-size: 0.75rem;"></i>
+                            @endif
+                        </a>
+                    @else
+                        <a href="{{ request()->fullUrlWithQuery(['sort_by' => 'tahun_pembuatan', 'sort_order' => $currentSortBy === 'tahun_pembuatan' ? $nextSortOrder : 'asc', 'tab' => request('tab', 'real')]) }}" class="text-navy text-decoration-none d-inline-flex align-items-center gap-1">
+                            <span>Jenis / Tahun</span>
+                            @if($currentSortBy === 'tahun_pembuatan')
+                                <i class="bi bi-sort-numeric-{{ $currentSortOrder === 'asc' ? 'down' : 'up' }} text-primary"></i>
+                            @else
+                                <i class="bi bi-arrow-down-up text-secondary opacity-50 small" style="font-size: 0.75rem;"></i>
+                            @endif
+                        </a>
+                    @endif
                 </th>
                 <th class="py-3 border-bottom-0 fw-semibold">
                     <a href="{{ request()->fullUrlWithQuery(['sort_by' => 'pemegang', 'sort_order' => $currentSortBy === 'pemegang' ? $nextSortOrder : 'asc']) }}" class="text-navy text-decoration-none d-inline-flex align-items-center gap-1">
@@ -193,7 +238,11 @@
                 <td class="py-3 d-none d-md-table-cell">
                     <div class="text-dark fw-medium">{{ $vehicle->vehicleType->name ?? ($vehicle->jenis ?? 'Mobil Dinas') }}</div>
                     <div class="small text-secondary">
-                        {{ $vehicle->tahun_pembuatan ?? ($vehicle->tgl_perolehan ? \Carbon\Carbon::parse($vehicle->tgl_perolehan)->year : '-') }}
+                        @if(request('tab') === 'ebmd')
+                            {{ $vehicle->tgl_perolehan ? \Carbon\Carbon::parse($vehicle->tgl_perolehan)->translatedFormat('d M Y') : '-' }}
+                        @else
+                            {{ $vehicle->tahun_pembuatan ?? ($vehicle->tgl_perolehan ? \Carbon\Carbon::parse($vehicle->tgl_perolehan)->year : '-') }}
+                        @endif
                     </div>
                 </td>
                 <td class="py-3">
@@ -208,6 +257,19 @@
                 </td>
                 <td class="px-4 py-3 text-center">
                     <div class="d-flex justify-content-center gap-2">
+                        @if(request('tab') === 'ebmd')
+                            @if(!$vehicle->is_synced)
+                                <form action="{{ route('vehicles.sync-to-real', $vehicle->id) }}" method="POST" class="d-inline">
+                                    @csrf
+                                    <button type="submit" class="btn btn-sm btn-light border shadow-none text-success fw-bold" data-bs-toggle="tooltip" title="Jadikan Data Real">
+                                        <i class="bi bi-arrow-left-right"></i> Sinkron
+                                    </button>
+                                </form>
+                            @else
+                                <span class="badge bg-success text-white border border-success border-opacity-25 px-2 py-1 fs-7 rounded-2 fw-medium">Sudah Real</span>
+                            @endif
+                        @endif
+
                         <button type="button" class="btn btn-sm btn-light border shadow-none text-navy" 
                                 data-bs-toggle="modal" data-bs-target="#detailVehicleModal" 
                                 data-id="{{ $vehicle->id }}" title="Detail Kendaraan">
@@ -218,9 +280,10 @@
                                 data-id="{{ $vehicle->id }}" title="Edit Data">
                             <i class="bi bi-pencil-square"></i>
                         </button>
-                        <form action="{{ route('vehicles.destroy', $vehicle) }}" method="POST" class="d-inline delete-confirm">
+                        <form action="{{ route('vehicles.destroy', $vehicle->id) }}" method="POST" class="d-inline delete-confirm">
                             @csrf
                             @method('DELETE')
+                            <input type="hidden" name="target_table" value="{{ request('tab', 'real') }}">
                             <button type="submit" class="btn btn-sm btn-light border shadow-none text-danger" data-bs-toggle="tooltip" title="Hapus Data">
                                 <i class="bi bi-trash3"></i>
                             </button>
@@ -253,6 +316,7 @@
             <div id="importModalContainer">
                 <form action="{{ route('vehicles.import-preview') }}" method="POST" enctype="multipart/form-data" id="importPreviewForm">
                     @csrf
+                    <input type="hidden" name="target_table" value="{{ request('tab', 'real') }}">
                     <div class="modal-body p-4">
                         <div class="import-helper d-flex border rounded-3 p-3 mb-4">
                             <div class="me-3 text-primary">
@@ -291,6 +355,7 @@
     <x-modal id="addVehicleModal" title="Tambah Kendaraan Dinas Baru" size="xl" submitLabel="Simpan Data" form="addVehicleForm">
         <form id="addVehicleForm" action="{{ route('vehicles.store') }}" method="POST" enctype="multipart/form-data">
             @csrf
+            <input type="hidden" name="target_table" value="{{ request('tab', 'real') }}">
             <div class="row g-3">
                 <div class="col-md-3">
                     <label class="form-label fw-semibold small text-uppercase">No. Polisi <span class="text-danger">*</span></label>
@@ -356,10 +421,12 @@
                         @endforeach
                     </select>
                 </div>
+                @if(request('tab') !== 'ebmd')
                 <div class="col-md-3">
                     <label class="form-label fw-semibold small text-uppercase">Tahun</label>
                     <input type="number" name="tahun_pembuatan" class="form-control" placeholder="2024">
                 </div>
+                @endif
                 <div class="col-md-3">
                     <label class="form-label fw-semibold small text-uppercase">Warna</label>
                     <input type="text" name="warna" class="form-control" placeholder="Hitam">
@@ -383,8 +450,8 @@
                     <input type="date" name="tgl_stnk" class="form-control">
                 </div>
                 <div class="col-md-3">
-                    <label class="form-label fw-semibold small text-uppercase">Tgl Perolehan</label>
-                    <input type="date" name="tgl_perolehan" class="form-control">
+                    <label class="form-label fw-semibold small text-uppercase">Tgl Perolehan @if(request('tab') === 'ebmd') <span class="text-danger">*</span> @endif</label>
+                    <input type="date" name="tgl_perolehan" class="form-control" @if(request('tab') === 'ebmd') required @endif>
                 </div>
                 <div class="col-md-6">
                     <label class="form-label fw-semibold small text-uppercase">Nilai Perolehan (Rp)</label>
@@ -424,6 +491,7 @@
         <form id="editVehicleForm" method="POST" enctype="multipart/form-data">
             @csrf
             @method('PUT')
+            <input type="hidden" name="target_table" value="{{ request('tab', 'real') }}">
             <div class="row g-3">
                 <div class="col-md-3">
                     <label class="form-label fw-semibold small text-uppercase">No. Polisi <span class="text-danger">*</span></label>
@@ -489,10 +557,12 @@
                         @endforeach
                     </select>
                 </div>
+                @if(request('tab') !== 'ebmd')
                 <div class="col-md-3">
                     <label class="form-label fw-semibold small text-uppercase">Tahun</label>
                     <input type="number" name="tahun_pembuatan" id="edit_tahun_pembuatan" class="form-control">
                 </div>
+                @endif
                 <div class="col-md-3">
                     <label class="form-label fw-semibold small text-uppercase">Warna</label>
                     <input type="text" name="warna" id="edit_warna" class="form-control">
@@ -516,8 +586,8 @@
                     <input type="date" name="tgl_stnk" id="edit_tgl_stnk" class="form-control">
                 </div>
                 <div class="col-md-3">
-                    <label class="form-label fw-semibold small text-uppercase">Tgl Perolehan</label>
-                    <input type="date" name="tgl_perolehan" id="edit_tgl_perolehan" class="form-control">
+                    <label class="form-label fw-semibold small text-uppercase">Tgl Perolehan @if(request('tab') === 'ebmd') <span class="text-danger">*</span> @endif</label>
+                    <input type="date" name="tgl_perolehan" id="edit_tgl_perolehan" class="form-control" @if(request('tab') === 'ebmd') required @endif>
                 </div>
                 <div class="col-md-6">
                     <label class="form-label fw-semibold small text-uppercase">Nilai Perolehan (Rp)</label>
@@ -1014,6 +1084,7 @@
                     @csrf
                     <input type="hidden" name="import_token" value="${escapeHtml(importToken)}">
                     <input type="hidden" name="header_row_index" value="${headerRowIndex}">
+                    <input type="hidden" name="target_table" value="{{ request('tab', 'real') }}">
                     
                     <!-- Simpan nama header Excel asli ke input JSON untuk dipetakan indeksnya di Backend -->
                     ${headers.map((h, idx) => `<input type="hidden" name="headers[${idx}]" value="${escapeHtml(h)}">`).join('')}
