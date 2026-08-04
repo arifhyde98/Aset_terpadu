@@ -44,7 +44,7 @@ class VehicleController extends Controller implements HasMiddleware
     {
         return [
             new Middleware('auth', except: ['search', 'searchLandingVehicle']),
-            new Middleware('role:superadmin', only: ['truncate', 'sanitizeIdentifiers']),
+            new Middleware('role:superadmin', only: ['truncate', 'sanitizeIdentifiers', 'sanitizeSwappedIdentifiers']),
             new Middleware('role:superadmin,admin', only: ['checkDuplicates', 'resolveDuplicateVehicle', 'resolveDuplicateOpd']),
         ];
     }
@@ -71,7 +71,7 @@ class VehicleController extends Controller implements HasMiddleware
     {
         $sortBy = $request->input('sort_by');
         $sortOrder = $request->input('sort_order', 'asc');
-        $allowedSorts = ['no_polisi', 'merk', 'tahun_pembuatan', 'pemegang', 'kondisi', 'status'];
+        $allowedSorts = ['no_polisi', 'jenis', 'merk', 'tahun_pembuatan', 'pemegang', 'kondisi', 'status'];
 
         $isEbmd = $request->input('tab') === 'ebmd';
         $modelClass = $isEbmd ? \App\Models\EbmdVehicle::class : Vehicle::class;
@@ -122,12 +122,35 @@ class VehicleController extends Controller implements HasMiddleware
         
         $ebmdStats = [];
         if ($isEbmd) {
-            $ebmdStats = \App\Models\EbmdVehicle::query()
+            $rawStats = \App\Models\EbmdVehicle::query()
                 ->leftJoin('vehicle_types', 'ebmd_vehicles.vehicle_type_id', '=', 'vehicle_types.id')
                 ->selectRaw('COALESCE(vehicle_types.name, ebmd_vehicles.jenis, "Lainnya") as jenis_kendaraan, count(*) as total')
                 ->groupBy('jenis_kendaraan')
                 ->pluck('total', 'jenis_kendaraan')
                 ->toArray();
+
+            $ebmdStats = [
+                'Mobil' => 0,
+                'Motor' => 0,
+                'Lainnya' => 0
+            ];
+
+            foreach ($rawStats as $jenis => $total) {
+                $jenisLower = strtolower($jenis);
+                
+                // Kategori Motor
+                if (str_contains($jenisLower, 'motor') && !str_contains($jenisLower, 'tak bermotor') && !str_contains($jenisLower, 'khusus') || str_contains($jenisLower, 'scooter') || str_contains($jenisLower, 'roda dua')) {
+                    $ebmdStats['Motor'] += $total;
+                } 
+                // Kategori Mobil
+                elseif (str_contains($jenisLower, 'mobil') || str_contains($jenisLower, 'bus') || str_contains($jenisLower, 'pick up') || str_contains($jenisLower, 'jeep') || str_contains($jenisLower, 'truck') || str_contains($jenisLower, 'wagon') || str_contains($jenisLower, 'roda empat') || str_contains($jenisLower, 'sedan')) {
+                    $ebmdStats['Mobil'] += $total;
+                } 
+                // Kategori Lainnya
+                else {
+                    $ebmdStats['Lainnya'] += $total;
+                }
+            }
         }
 
         $opds = Opd::orderBy('nama')->get();
@@ -363,17 +386,25 @@ class VehicleController extends Controller implements HasMiddleware
      * 
      * @return RedirectResponse
      */
-    public function truncate(): RedirectResponse
+    public function truncate(Request $request): RedirectResponse
     {
-        // Hapus seluruh folder foto kendaraan
-        Storage::disk('public')->deleteDirectory('vehicles');
-        
-        Vehicle::truncate();
+        $isEbmd = $request->input('target_table') === 'ebmd';
+
+        if ($isEbmd) {
+            // Kosongkan tabel e-BMD
+            \App\Models\EbmdVehicle::truncate();
+            $tabLabel = 'e-BMD';
+        } else {
+            // Kosongkan tabel Data Real beserta foto fisik
+            Storage::disk('public')->deleteDirectory('vehicles');
+            Vehicle::truncate();
+            $tabLabel = 'Data Real';
+        }
         
         // Invalidation massal seluruh OPD (Dashboard stats)
         $this->vehicleService->invalidateDashboardStats(invalidateAllOpd: true);
 
-        return redirect()->route('vehicles.index')->with('success', 'Seluruh data kendaraan berhasil dikosongkan.');
+        return redirect()->route('vehicles.index', ['tab' => $request->input('target_table', 'real')])->with('success', "Seluruh data kendaraan {$tabLabel} berhasil dikosongkan.");
     }
 
     /**
@@ -391,6 +422,23 @@ class VehicleController extends Controller implements HasMiddleware
         \App\Models\Activity::log("Melakukan pembersihan massal karakter khusus nomor mesin dan nomor rangka kendaraan [Jumlah data: {$count}]", 'info');
 
         return redirect()->route('vehicles.index')->with('success', "Pembersihan berhasil. {$count} data kendaraan telah diperbarui.");
+    }
+
+    /**
+     * Memperbaiki posisi massal nomor mesin dan rangka yang tertukar.
+     * 
+     * Khusus diakses oleh Superadmin.
+     * 
+     * @return RedirectResponse
+     */
+    public function sanitizeSwappedIdentifiers(): RedirectResponse
+    {
+        $count = $this->vehicleService->fixSwappedIdentifiers();
+
+        // Catat audit log
+        \App\Models\Activity::log("Melakukan perbaikan massal posisi Nomor Mesin dan Nomor Rangka yang tertukar [Jumlah data: {$count}]", 'info');
+
+        return redirect()->route('vehicles.index')->with('success', "Perbaikan berhasil. {$count} data kendaraan telah ditukar posisinya (Nomor Mesin & Rangka).");
     }
 
     /**
@@ -774,9 +822,15 @@ class VehicleController extends Controller implements HasMiddleware
             $originalId = (int)$request->input('original_id');
             $duplicateId = (int)$request->input('duplicate_id');
             $action = $request->input('action');
+            $direction = $request->input('direction', 'keep_original');
 
             if ($action === 'merge') {
-                $success = $this->vehicleService->mergeVehicles($originalId, $duplicateId);
+                if ($direction === 'keep_duplicate') {
+                    $success = $this->vehicleService->mergeVehicles($duplicateId, $originalId);
+                } else {
+                    $success = $this->vehicleService->mergeVehicles($originalId, $duplicateId);
+                }
+                
                 if (!$success) {
                     return response()->json([
                         'success' => false,

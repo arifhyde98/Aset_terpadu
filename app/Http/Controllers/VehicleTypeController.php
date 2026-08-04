@@ -39,7 +39,7 @@ class VehicleTypeController extends Controller implements HasMiddleware
         $sortOrder = $request->input('sort_order', 'asc');
         $allowedSorts = ['name', 'vehicles_count'];
 
-        $query = VehicleType::withCount('vehicles');
+        $query = VehicleType::withCount(['vehicles', 'ebmdVehicles']);
 
         if ($sortBy && in_array($sortBy, $allowedSorts)) {
             $query->orderBy($sortBy, $sortOrder);
@@ -95,8 +95,8 @@ class VehicleTypeController extends Controller implements HasMiddleware
      */
     public function destroy(VehicleType $vehicleType): \Illuminate\Http\RedirectResponse
     {
-        // Pastikan tidak ada kendaraan yang menggunakan jenis ini
-        if ($vehicleType->vehicles()->count() > 0) {
+        // Pastikan tidak ada kendaraan yang menggunakan jenis ini (baik Real maupun e-BMD)
+        if ($vehicleType->vehicles()->count() > 0 || $vehicleType->ebmdVehicles()->count() > 0) {
             return back()->with('error', 'Gagal menghapus! Masih ada kendaraan yang menggunakan jenis ini.');
         }
 
@@ -113,9 +113,70 @@ class VehicleTypeController extends Controller implements HasMiddleware
      */
     public function cleanup(): \Illuminate\Http\RedirectResponse
     {
-        $deletedCount = VehicleType::whereDoesntHave('vehicles')->delete();
+        $deletedCount = VehicleType::whereDoesntHave('vehicles')->whereDoesntHave('ebmdVehicles')->delete();
 
         return redirect()->route('vehicle-types.index')
             ->with('success', "$deletedCount Jenis kendaraan yang kosong berhasil dibersihkan.");
+    }
+
+    /**
+     * Menggabungkan (merge) beberapa jenis kendaraan ke satu jenis tujuan.
+     * 
+     * Memindahkan seluruh kendaraan dari jenis sumber ke jenis tujuan,
+     * lalu menghapus jenis sumber yang sudah kosong.
+     * 
+     * @param Request $request
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    public function merge(Request $request): \Illuminate\Http\RedirectResponse
+    {
+        $request->validate([
+            'target_id' => 'required|exists:vehicle_types,id',
+            'source_ids' => 'required|array|min:1',
+            'source_ids.*' => 'exists:vehicle_types,id',
+        ]);
+
+        $targetId = (int) $request->input('target_id');
+        $sourceIds = collect($request->input('source_ids'))
+            ->map(fn($id) => (int) $id)
+            ->reject(fn($id) => $id === $targetId) // Jangan merge ke diri sendiri
+            ->values()
+            ->toArray();
+
+        if (empty($sourceIds)) {
+            return back()->with('error', 'Tidak ada jenis sumber yang valid untuk digabungkan.');
+        }
+
+        $target = VehicleType::findOrFail($targetId);
+
+        $mergedCount = \DB::transaction(function () use ($sourceIds, $targetId, $target) {
+            $count = 0;
+
+            // Pindahkan kendaraan di tabel vehicles
+            $count += \App\Models\Vehicle::withoutGlobalScopes()
+                ->whereIn('vehicle_type_id', $sourceIds)
+                ->update([
+                    'vehicle_type_id' => $targetId,
+                    'jenis' => $target->name,
+                ]);
+
+            // Pindahkan kendaraan di tabel ebmd_vehicles
+            $count += \App\Models\EbmdVehicle::withoutGlobalScopes()
+                ->whereIn('vehicle_type_id', $sourceIds)
+                ->update([
+                    'vehicle_type_id' => $targetId,
+                    'jenis' => $target->name,
+                ]);
+
+            // Hapus jenis sumber yang sudah kosong
+            VehicleType::whereIn('id', $sourceIds)->delete();
+
+            return $count;
+        });
+
+        $deletedNames = count($sourceIds);
+
+        return redirect()->route('vehicle-types.index')
+            ->with('success', "Berhasil menggabungkan {$deletedNames} jenis ke \"{$target->name}\". {$mergedCount} kendaraan dipindahkan.");
     }
 }

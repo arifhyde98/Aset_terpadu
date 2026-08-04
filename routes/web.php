@@ -12,6 +12,7 @@ use App\Http\Controllers\SettingController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\ActivityController;
 use App\Http\Controllers\ReportController;
+use App\Http\Controllers\HealthCheckController;
 
 /*
 |--------------------------------------------------------------------------
@@ -49,12 +50,14 @@ Route::get('vehicles/check-duplicates', [VehicleController::class, 'checkDuplica
 Route::post('vehicles/resolve-duplicate-vehicle', [VehicleController::class, 'resolveDuplicateVehicle'])->name('vehicles.resolve-duplicate-vehicle');
 Route::post('vehicles/resolve-duplicate-opd', [VehicleController::class, 'resolveDuplicateOpd'])->name('vehicles.resolve-duplicate-opd');
 Route::post('vehicles/sanitize-identifiers', [VehicleController::class, 'sanitizeIdentifiers'])->name('vehicles.sanitize-identifiers');
+Route::post('vehicles/sanitize-swapped-identifiers', [VehicleController::class, 'sanitizeSwappedIdentifiers'])->name('vehicles.sanitize-swapped-identifiers');
 Route::post('vehicles/{vehicle}/sync-to-real', [VehicleController::class, 'syncToReal'])->name('vehicles.sync-to-real');
 Route::resource('vehicles', VehicleController::class)->except(['create', 'edit', 'show']);
 
 // Master Data Hub
 Route::get('master-data', [MasterDataController::class, 'index'])->name('master-data.index');
 Route::post('vehicle-types/cleanup', [VehicleTypeController::class, 'cleanup'])->name('vehicle-types.cleanup');
+Route::post('vehicle-types/merge', [VehicleTypeController::class, 'merge'])->name('vehicle-types.merge');
 Route::resource('vehicle-types', VehicleTypeController::class)->except(['create', 'edit', 'show']);
 Route::delete('opds/truncate', [OpdController::class, 'truncate'])->name('opds.truncate');
 Route::resource('opds', OpdController::class)->except(['create', 'edit', 'show']);
@@ -88,3 +91,5 @@ Route::get('maintenance', function () {
     return view('maintenance.index');
 })->name('maintenance.index');
 
+// Monitoring API (Spoke)
+Route::get('api/health-check', [HealthCheckController::class, 'check'])->name('api.health-check');

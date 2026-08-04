@@ -41,6 +41,7 @@ class ResolveDuplicateVehicleRequest extends FormRequest
             'original_id'  => ['required', 'integer', 'exists:vehicles,id'],
             'duplicate_id' => ['required', 'integer', 'exists:vehicles,id'],
             'action'       => ['required', 'string', 'in:merge,delete'],
+            'direction'    => ['nullable', 'string', 'in:keep_original,keep_duplicate'],
         ];
     }
 

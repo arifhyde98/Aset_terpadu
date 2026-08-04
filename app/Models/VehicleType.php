@@ -28,5 +28,15 @@ class VehicleType extends Model
     {
         return $this->hasMany(Vehicle::class);
     }
+
+    /**
+     * Mendapatkan daftar kendaraan e-BMD yang memiliki tipe ini.
+     * 
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function ebmdVehicles()
+    {
+        return $this->hasMany(EbmdVehicle::class);
+    }
 }
 

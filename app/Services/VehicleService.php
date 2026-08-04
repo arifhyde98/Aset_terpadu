@@ -461,5 +461,41 @@ class VehicleService
 
         return $count;
     }
+    /**
+     * Memperbaiki posisi Nomor Mesin dan Nomor Rangka yang tertukar.
+     * 
+     * Menggunakan heuristik: jika panjang nomor mesin lebih besar dari nomor rangka,
+     * kemungkinan besar mereka tertukar posisinya (karena VIN/No Rangka biasanya lebih panjang, yaitu 17 digit).
+     * 
+     * @return int Jumlah kendaraan yang posisinya ditukar
+     */
+    public function fixSwappedIdentifiers(): int
+    {
+        $count = 0;
+
+        \DB::transaction(function () use (&$count) {
+            Vehicle::chunk(100, function ($vehicles) use (&$count) {
+                foreach ($vehicles as $vehicle) {
+                    $mesin = trim($vehicle->no_mesin ?? '');
+                    $rangka = trim($vehicle->no_rangka ?? '');
+
+                    // Heuristik: Nomor Mesin lebih panjang dari Nomor Rangka
+                    // (Biasanya VIN itu panjangnya pas 17 karakter, sedangkan mesin lebih pendek)
+                    if (!empty($mesin) && !empty($rangka) && strlen($mesin) > strlen($rangka)) {
+                        $vehicle->no_mesin = $rangka;
+                        $vehicle->no_rangka = $mesin;
+                        $vehicle->save();
+                        $count++;
+                    }
+                }
+            });
+        });
+
+        if ($count > 0) {
+            $this->invalidateDashboardStats(invalidateAllOpd: true);
+        }
+
+        return $count;
+    }
 }
 

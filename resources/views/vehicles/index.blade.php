@@ -6,21 +6,22 @@
 <div class="container-fluid px-0">
     
     <!-- PAGE HEADER -->
-    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4">
-        <div class="mb-3 mb-md-0">
+    <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center mb-4 gap-3 flex-wrap">
+        <div class="mb-3 mb-lg-0">
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb mb-1 small">
                     <li class="breadcrumb-item"><a href="{{ route('home') }}" class="text-decoration-none text-secondary">Dashboard</a></li>
                     <li class="breadcrumb-item active text-navy fw-medium" aria-current="page">Data Kendaraan</li>
                 </ol>
             </nav>
-            <h3 class="fw-bold text-navy mb-0">Manajemen Data Kendaraan</h3>
+            <h4 class="fw-bold text-navy mb-0">Manajemen Data Kendaraan</h4>
         </div>
         <div class="action-toolbar d-flex flex-wrap gap-2">
             <form action="{{ route('vehicles.truncate') }}" method="POST" class="delete-confirm">
                 @csrf
+                <input type="hidden" name="target_table" value="{{ request('tab', 'real') }}">
                 <button type="submit" class="btn btn-outline-danger shadow-sm fw-medium d-flex align-items-center gap-2">
-                    <i class="bi bi-trash3"></i> <span class="d-none d-sm-inline">Kosongkan</span>
+                    <i class="bi bi-trash3"></i> <span class="d-none d-sm-inline">Kosongkan {{ request('tab') === 'ebmd' ? 'e-BMD' : 'Data Real' }}</span>
                 </button>
             </form>
             <button type="button" class="btn btn-action btn-action-success shadow-sm fw-semibold d-flex align-items-center gap-2" data-bs-toggle="modal" data-bs-target="#importModal">
@@ -35,6 +36,12 @@
                     @csrf
                     <button type="submit" class="btn btn-outline-secondary shadow-sm fw-medium d-flex align-items-center gap-2" id="btnSanitizeIdentifiers" title="Pembersihan Karakter Nomor Rangka & Mesin">
                         <i class="bi bi-shield-check"></i> <span class="d-none d-sm-inline">Generate</span>
+                    </button>
+                </form>
+                <form id="sanitizeSwappedIdentifiersForm" action="{{ route('vehicles.sanitize-swapped-identifiers') }}" method="POST" class="d-inline">
+                    @csrf
+                    <button type="submit" class="btn btn-outline-info shadow-sm fw-medium d-flex align-items-center gap-2" id="btnSanitizeSwappedIdentifiers" title="Tukar Posisi Mesin & Rangka (Jika Tertukar)">
+                        <i class="bi bi-arrow-left-right"></i> <span class="d-none d-sm-inline">Tukar Posisi</span>
                     </button>
                 </form>
             @endif
@@ -154,9 +161,9 @@
                     </a>
                 </th>
                 <th class="py-3 border-bottom-0 fw-semibold">
-                    <a href="{{ request()->fullUrlWithQuery(['sort_by' => 'merk', 'sort_order' => $currentSortBy === 'merk' ? $nextSortOrder : 'asc']) }}" class="text-navy text-decoration-none d-inline-flex align-items-center gap-1">
-                        <span>Nama Kendaraan</span>
-                        @if($currentSortBy === 'merk')
+                    <a href="{{ request()->fullUrlWithQuery(['sort_by' => 'jenis', 'sort_order' => $currentSortBy === 'jenis' ? $nextSortOrder : 'asc', 'tab' => request('tab', 'real')]) }}" class="text-navy text-decoration-none d-inline-flex align-items-center gap-1">
+                        <span>Jenis Kendaraan</span>
+                        @if($currentSortBy === 'jenis')
                             <i class="bi bi-sort-alpha-{{ $currentSortOrder === 'asc' ? 'down' : 'up' }} text-primary"></i>
                         @else
                             <i class="bi bi-arrow-down-up text-secondary opacity-50 small" style="font-size: 0.75rem;"></i>
@@ -165,19 +172,19 @@
                 </th>
                 <th class="py-3 border-bottom-0 fw-semibold d-none d-md-table-cell">
                     @if(request('tab') === 'ebmd')
-                        <a href="{{ request()->fullUrlWithQuery(['sort_by' => 'tgl_perolehan', 'sort_order' => $currentSortBy === 'tgl_perolehan' ? $nextSortOrder : 'asc', 'tab' => request('tab', 'real')]) }}" class="text-navy text-decoration-none d-inline-flex align-items-center gap-1">
-                            <span>Jenis / Tgl Perolehan</span>
-                            @if($currentSortBy === 'tgl_perolehan')
-                                <i class="bi bi-sort-numeric-{{ $currentSortOrder === 'asc' ? 'down' : 'up' }} text-primary"></i>
+                        <a href="{{ request()->fullUrlWithQuery(['sort_by' => 'merk', 'sort_order' => $currentSortBy === 'merk' ? $nextSortOrder : 'asc', 'tab' => request('tab', 'real')]) }}" class="text-navy text-decoration-none d-inline-flex align-items-center gap-1">
+                            <span>Merk / Tgl Perolehan</span>
+                            @if($currentSortBy === 'merk')
+                                <i class="bi bi-sort-alpha-{{ $currentSortOrder === 'asc' ? 'down' : 'up' }} text-primary"></i>
                             @else
                                 <i class="bi bi-arrow-down-up text-secondary opacity-50 small" style="font-size: 0.75rem;"></i>
                             @endif
                         </a>
                     @else
-                        <a href="{{ request()->fullUrlWithQuery(['sort_by' => 'tahun_pembuatan', 'sort_order' => $currentSortBy === 'tahun_pembuatan' ? $nextSortOrder : 'asc', 'tab' => request('tab', 'real')]) }}" class="text-navy text-decoration-none d-inline-flex align-items-center gap-1">
-                            <span>Jenis / Tahun</span>
-                            @if($currentSortBy === 'tahun_pembuatan')
-                                <i class="bi bi-sort-numeric-{{ $currentSortOrder === 'asc' ? 'down' : 'up' }} text-primary"></i>
+                        <a href="{{ request()->fullUrlWithQuery(['sort_by' => 'merk', 'sort_order' => $currentSortBy === 'merk' ? $nextSortOrder : 'asc', 'tab' => request('tab', 'real')]) }}" class="text-navy text-decoration-none d-inline-flex align-items-center gap-1">
+                            <span>Merk / Tahun</span>
+                            @if($currentSortBy === 'merk')
+                                <i class="bi bi-sort-alpha-{{ $currentSortOrder === 'asc' ? 'down' : 'up' }} text-primary"></i>
                             @else
                                 <i class="bi bi-arrow-down-up text-secondary opacity-50 small" style="font-size: 0.75rem;"></i>
                             @endif
@@ -232,11 +239,11 @@
                     @endif
                 </td>
                 <td class="py-3">
-                    <div class="fw-bold text-navy">{{ $vehicle->merk }}</div>
-                    <div class="small text-secondary">{{ $vehicle->tipe }}</div>
+                    <div class="fw-bold text-navy">{{ $vehicle->vehicleType->name ?? ($vehicle->jenis ?? '-') }}</div>
+                    <div class="small text-secondary">{{ $vehicle->tipe ?: '-' }}</div>
                 </td>
                 <td class="py-3 d-none d-md-table-cell">
-                    <div class="text-dark fw-medium">{{ $vehicle->vehicleType->name ?? ($vehicle->jenis ?? 'Mobil Dinas') }}</div>
+                    <div class="text-dark fw-medium">{{ $vehicle->merk ?: '-' }}</div>
                     <div class="small text-secondary">
                         @if(request('tab') === 'ebmd')
                             {{ $vehicle->tgl_perolehan ? \Carbon\Carbon::parse($vehicle->tgl_perolehan)->translatedFormat('d M Y') : '-' }}
@@ -1403,80 +1410,106 @@
                     const action = this.getAttribute('data-action');
                     const originalId = this.getAttribute('data-original-id');
                     const duplicateId = this.getAttribute('data-duplicate-id');
-                    const row = document.getElementById(`vehicle-dup-row-${duplicateId}`);
+                    const btnElement = this;
+                    
+                    const executeResolve = (direction = 'keep_original') => {
+                        // Tampilkan loading di baris tersebut
+                        const actionsCell = btnElement.closest('td');
+                        const originalHtml = actionsCell.innerHTML;
+                        actionsCell.innerHTML = '<span class="spinner-border spinner-border-sm text-primary" role="status"></span>';
 
-                    const confirmText = action === 'merge' 
-                        ? 'Apakah Anda yakin ingin menggabungkan data? Kolom-kolom yang kosong pada data asli akan diisi dari data ganda, lalu data ganda dihapus.'
-                        : 'Apakah Anda yakin ingin menghapus data kendaraan ganda ini dari database?';
-
-                    Swal.fire({
-                        title: 'Konfirmasi Resolusi',
-                        text: confirmText,
-                        icon: 'question',
-                        showCancelButton: true,
-                        confirmButtonColor: '#1e40af',
-                        cancelButtonColor: '#6c757d',
-                        confirmButtonText: action === 'merge' ? 'Ya, Gabungkan!' : 'Ya, Hapus!',
-                        cancelButtonText: 'Batal'
-                    }).then((result) => {
-                        if (result.isConfirmed) {
-                            // Tampilkan loading di baris tersebut
-                            const actionsCell = this.closest('td');
-                            const originalHtml = actionsCell.innerHTML;
-                            actionsCell.innerHTML = '<span class="spinner-border spinner-border-sm text-primary" role="status"></span>';
-
-                            fetch("{{ route('vehicles.resolve-duplicate-vehicle') }}", {
-                                method: 'POST',
-                                headers: {
-                                    'Content-Type': 'application/json',
-                                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                                    'X-Requested-With': 'XMLHttpRequest'
-                                },
-                                body: JSON.stringify({
-                                    original_id: originalId,
-                                    duplicate_id: duplicateId,
-                                    action: action
-                                })
+                        fetch("{{ route('vehicles.resolve-duplicate-vehicle') }}", {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                'X-Requested-With': 'XMLHttpRequest'
+                            },
+                            body: JSON.stringify({
+                                original_id: originalId,
+                                duplicate_id: duplicateId,
+                                action: action,
+                                direction: direction
                             })
-                            .then(response => response.json())
-                            .then(data => {
-                                if (data.success) {
-                                    Swal.fire({
-                                        icon: 'success',
-                                        title: 'Sukses',
-                                        text: data.message,
-                                        timer: 2000,
-                                        showConfirmButton: false
-                                    });
-                                    // Hapus baris dari tabel diagnosis
-                                    row.style.transition = 'all 0.5s ease';
-                                    row.style.opacity = '0';
-                                    setTimeout(() => {
-                                        row.remove();
-                                        // Update counter
-                                        const countEl = document.getElementById('vehicle-dup-count');
-                                        const newCount = Math.max(0, parseInt(countEl.textContent) - 1);
-                                        countEl.textContent = newCount;
-                                        if (newCount === 0) {
-                                            renderDuplicateVehicles([]);
-                                        }
-                                    }, 500);
-                                } else {
-                                    Swal.fire({
-                                        icon: 'error',
-                                        title: 'Gagal Resolusi',
-                                        text: data.message,
-                                        confirmButtonColor: '#1e40af'
-                                    });
-                                    actionsCell.innerHTML = originalHtml;
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'Sukses',
+                                    text: data.message,
+                                    timer: 2000,
+                                    showConfirmButton: false
+                                });
+                                // Hapus baris dari tabel
+                                const row = document.getElementById(`vehicle-dup-row-${duplicateId}`);
+                                if (row) row.remove();
+                                
+                                // Update counter
+                                const countEl = document.getElementById('vehicle-dup-count');
+                                const currentCount = parseInt(countEl.textContent);
+                                countEl.textContent = Math.max(0, currentCount - 1);
+                                
+                                if (currentCount - 1 <= 0) {
+                                    document.getElementById('vehicle-dup-list').innerHTML = `
+                                        <tr>
+                                            <td colspan="4" class="text-center py-5 text-success">
+                                                <i class="bi bi-patch-check-fill fs-1 text-success d-block mb-2"></i>
+                                                <h6 class="fw-bold mb-1">Database Bersih!</h6>
+                                                <p class="mb-0 small text-secondary">Semua duplikasi telah diselesaikan.</p>
+                                            </td>
+                                        </tr>
+                                    `;
                                 }
-                            })
-                            .catch(error => {
-                                console.error('Error:', error);
+                            } else {
                                 actionsCell.innerHTML = originalHtml;
-                            });
-                        }
-                    });
+                                attachVehicleResolveEvents(); // Re-attach event listeners
+                                Swal.fire('Gagal', data.message || 'Terjadi kesalahan.', 'error');
+                            }
+                        })
+                        .catch(error => {
+                            actionsCell.innerHTML = originalHtml;
+                            attachVehicleResolveEvents(); // Re-attach event listeners
+                            Swal.fire('Error', 'Gagal terhubung ke server.', 'error');
+                        });
+                    };
+
+                    if (action === 'merge') {
+                        Swal.fire({
+                            title: 'Pilih Data Utama',
+                            text: 'Pilih data mana yang akan menjadi data utama (dipertahankan). Data lainnya akan dihapus setelah melengkapi kolom yang kosong.',
+                            icon: 'question',
+                            showDenyButton: true,
+                            showCancelButton: true,
+                            confirmButtonText: 'Pertahankan Data Induk',
+                            denyButtonText: 'Pertahankan Data Ganda',
+                            cancelButtonText: 'Batal',
+                            confirmButtonColor: '#1e40af',
+                            denyButtonColor: '#0ea5e9'
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                executeResolve('keep_original');
+                            } else if (result.isDenied) {
+                                executeResolve('keep_duplicate');
+                            }
+                        });
+                    } else {
+                        Swal.fire({
+                            title: 'Konfirmasi Penghapusan',
+                            text: 'Apakah Anda yakin ingin menghapus data kendaraan ganda ini dari database?',
+                            icon: 'warning',
+                            showCancelButton: true,
+                            confirmButtonColor: '#dc3545',
+                            cancelButtonColor: '#6c757d',
+                            confirmButtonText: 'Ya, Hapus!',
+                            cancelButtonText: 'Batal'
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                executeResolve('keep_original');
+                            }
+                        });
+                    }
                 });
             });
         }

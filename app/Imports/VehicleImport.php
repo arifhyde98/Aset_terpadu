@@ -300,6 +300,15 @@ class VehicleImport implements ToModel, WithStartRow, WithBatchInserts, WithChun
         $rawMerk = trim($this->getVal($row, 'merk', '-'));
         $rawTipe = trim($this->getVal($row, 'tipe', '-'));
 
+        // Bersihkan label prefix umum dari data Excel (e-BMD/SIMDA sering menulis "Merk: Toyota" alih-alih "Toyota")
+        $labelPrefixes = '/^(merk|merek|brand|type|tipe|model)\s*[:\/\-]\s*/iu';
+        $rawMerk = trim(preg_replace($labelPrefixes, '', $rawMerk));
+        $rawTipe = trim(preg_replace($labelPrefixes, '', $rawTipe));
+
+        // Pastikan tidak kosong setelah pembersihan
+        if (empty($rawMerk)) $rawMerk = '-';
+        if (empty($rawTipe)) $rawTipe = '-';
+
         $finalMerk = $rawMerk;
         $finalTipe = $rawTipe;
 

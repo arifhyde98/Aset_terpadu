@@ -141,6 +141,15 @@
     margin-left: var(--sidebar-width);
 }
 
+@media (max-width: 1366px) {
+    :root {
+        --sidebar-width: 240px;
+    }
+    #content {
+        padding: 1.25rem;
+    }
+}
+
 @media (max-width: 768px) {
     #sidebar {
         margin-left: calc(-1 * var(--sidebar-width));

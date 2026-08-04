@@ -38,4 +38,9 @@
             color: $primary;
         }
     }
+
+    @media (max-width: 1366px) {
+        padding: 0.5rem 1rem;
+        top: 0.5rem;
+    }
 }
