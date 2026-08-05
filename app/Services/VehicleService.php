@@ -51,6 +51,59 @@ class VehicleService
     }
 
     /**
+     * Mendapatkan statistik e-BMD.
+     * 
+     * Data di-cache selama 5 menit.
+     * 
+     * @return array<string, int>
+     */
+    public function getEbmdStats(): array
+    {
+        $user = auth()->user();
+        $cacheKey = 'ebmd.stats.' . ($user?->role?->value ?? 'guest') . '.' . ($user?->opd_id ?? 'global');
+
+        return cache()->remember($cacheKey, 300, function () {
+            // Hanya query `vehicle_type_id` yang lebih cepat daripada query join string
+            $rawStats = \App\Models\EbmdVehicle::query()
+                ->selectRaw('vehicle_type_id, count(*) as total')
+                ->groupBy('vehicle_type_id')
+                ->pluck('total', 'vehicle_type_id')
+                ->toArray();
+            
+            // Query tipe kendaraan (cepat & sedikit row)
+            $types = \App\Models\VehicleType::pluck('name', 'id')->toArray();
+
+            $ebmdStats = [
+                'Mobil' => 0,
+                'Motor' => 0,
+                'Lainnya' => 0
+            ];
+
+            foreach ($rawStats as $typeId => $total) {
+                // Tangani kasus typeId null (kendaraan tak terhubung dengan type)
+                $jenis = $typeId && isset($types[$typeId]) ? $types[$typeId] : 'Lainnya';
+                
+                $jenisLower = strtolower($jenis);
+                
+                // Kategori Motor
+                if (str_contains($jenisLower, 'motor') && !str_contains($jenisLower, 'tak bermotor') && !str_contains($jenisLower, 'khusus') || str_contains($jenisLower, 'scooter') || str_contains($jenisLower, 'roda dua')) {
+                    $ebmdStats['Motor'] += $total;
+                } 
+                // Kategori Mobil
+                elseif (str_contains($jenisLower, 'mobil') || str_contains($jenisLower, 'bus') || str_contains($jenisLower, 'pick up') || str_contains($jenisLower, 'jeep') || str_contains($jenisLower, 'truck') || str_contains($jenisLower, 'wagon') || str_contains($jenisLower, 'roda empat') || str_contains($jenisLower, 'sedan')) {
+                    $ebmdStats['Mobil'] += $total;
+                } 
+                // Kategori Lainnya
+                else {
+                    $ebmdStats['Lainnya'] += $total;
+                }
+            }
+
+            return $ebmdStats;
+        });
+    }
+
+    /**
      * Membersihkan cache statistik dashboard secara terarah.
      * 
      * Digunakan setelah operasi CRUD kendaraan atau OPD untuk memastikan
@@ -67,16 +120,23 @@ class VehicleService
         \Illuminate\Support\Facades\Cache::forget('dashboard.stats.superadmin.global');
         \Illuminate\Support\Facades\Cache::forget('dashboard.stats.admin.global');
         \Illuminate\Support\Facades\Cache::forget('dashboard.stats.guest.global');
+        
+        \Illuminate\Support\Facades\Cache::forget('ebmd.stats.superadmin.global');
+        \Illuminate\Support\Facades\Cache::forget('ebmd.stats.admin.global');
+        \Illuminate\Support\Facades\Cache::forget('ebmd.stats.guest.global');
 
         // 2. Hapus statistik OPD spesifik atau global OPD role jika ada
         if ($opdId) {
             \Illuminate\Support\Facades\Cache::forget("dashboard.stats.opd.{$opdId}");
+            \Illuminate\Support\Facades\Cache::forget("ebmd.stats.opd.{$opdId}");
         }
         \Illuminate\Support\Facades\Cache::forget("dashboard.stats.opd.global");
+        \Illuminate\Support\Facades\Cache::forget("ebmd.stats.opd.global");
 
         // 3. Hapus statistik OPD lama (kasus pindah instansi)
         if ($oldOpdId && $oldOpdId !== $opdId) {
             \Illuminate\Support\Facades\Cache::forget("dashboard.stats.opd.{$oldOpdId}");
+            \Illuminate\Support\Facades\Cache::forget("ebmd.stats.opd.{$oldOpdId}");
         }
 
         // 4. Invalidation massal (untuk Import/Truncate/Hapus OPD)
@@ -85,11 +145,14 @@ class VehicleService
             $opdIds = \App\Models\Opd::pluck('id');
             foreach ($opdIds as $id) {
                 \Illuminate\Support\Facades\Cache::forget("dashboard.stats.opd.{$id}");
+                \Illuminate\Support\Facades\Cache::forget("ebmd.stats.opd.{$id}");
             }
             
             // Tambahan: Pastikan cache admin/superadmin juga terhapus (sudah di poin 1 tapi dipertegas)
             \Illuminate\Support\Facades\Cache::forget('dashboard.stats.superadmin.global');
             \Illuminate\Support\Facades\Cache::forget('dashboard.stats.admin.global');
+            \Illuminate\Support\Facades\Cache::forget('ebmd.stats.superadmin.global');
+            \Illuminate\Support\Facades\Cache::forget('ebmd.stats.admin.global');
         }
 
         // 5. Selaraskan invalidasi cache summary laporan secara otomatis

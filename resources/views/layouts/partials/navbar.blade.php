@@ -39,16 +39,38 @@
                             <small class="text-secondary" style="font-size: 0.75rem;">{{ Auth::user()->role->label() }}</small>
                         </div>
                     </a>
-                    <ul class="dropdown-menu dropdown-menu-end border-0 shadow mt-2 rounded-3">
-                        <li><a class="dropdown-item py-2" href="{{ route('profile.index') }}"><i class="bi bi-person me-2 text-secondary"></i> Profil Saya</a></li>
-                        @if(Auth::user()->role === \App\Enums\UserRole::SUPERADMIN)
-                            <li><a class="dropdown-item py-2" href="{{ route('settings.index') }}"><i class="bi bi-gear me-2 text-secondary"></i> Pengaturan Sistem</a></li>
-                        @endif
-                        <li><hr class="dropdown-divider"></li>
+                    <ul class="dropdown-menu dropdown-menu-end border-0 shadow-lg mt-2 rounded-4" style="min-width: 220px; animation: fadeIn 0.2s ease-in-out;">
+                        <li class="px-3 py-3 border-bottom mb-2 text-center bg-light bg-gradient rounded-top-4">
+                            <img src="{{ Auth::user()->avatar_url }}" alt="{{ Auth::user()->name }}" class="rounded-circle mb-2 border border-2 border-white shadow-sm" style="width: 60px; height: 60px; object-fit: cover;">
+                            <div class="fw-bold text-dark fs-6">{{ Auth::user()->name }}</div>
+                            <div class="text-secondary small">{{ Auth::user()->email }}</div>
+                        </li>
                         <li>
-                            <a class="dropdown-item py-2 text-danger fw-medium" href="{{ route('logout') }}"
-                               onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
-                                <i class="bi bi-box-arrow-right me-2"></i> Keluar
+                            <a class="dropdown-item py-2 px-3 d-flex align-items-center fw-medium rounded-3 mx-2 my-1" href="{{ route('profile.index') }}" style="transition: all 0.2s;">
+                                <div class="bg-primary bg-opacity-10 text-primary rounded-circle me-3 d-flex align-items-center justify-content-center shadow-sm" style="width: 36px; height: 36px;">
+                                    <i class="bi bi-person-badge-fill fs-5"></i>
+                                </div>
+                                Edit Profil
+                            </a>
+                        </li>
+                        @if(Auth::user()->role === \App\Enums\UserRole::SUPERADMIN)
+                            <li>
+                                <a class="dropdown-item py-2 px-3 d-flex align-items-center fw-medium rounded-3 mx-2 my-1" href="{{ route('settings.index') }}" style="transition: all 0.2s;">
+                                    <div class="bg-secondary bg-opacity-10 text-secondary rounded-circle me-3 d-flex align-items-center justify-content-center shadow-sm" style="width: 36px; height: 36px;">
+                                        <i class="bi bi-gear-fill fs-5"></i>
+                                    </div>
+                                    Pengaturan
+                                </a>
+                            </li>
+                        @endif
+                        <li><hr class="dropdown-divider my-2 opacity-25"></li>
+                        <li>
+                            <a class="dropdown-item py-2 px-3 d-flex align-items-center text-danger fw-bold rounded-3 mx-2 mb-2" href="{{ route('logout') }}"
+                               onclick="event.preventDefault(); document.getElementById('logout-form').submit();" style="transition: all 0.2s;">
+                                <div class="bg-danger bg-opacity-10 text-danger rounded-circle me-3 d-flex align-items-center justify-content-center shadow-sm" style="width: 36px; height: 36px;">
+                                    <i class="bi bi-box-arrow-right fs-5 fw-bold"></i>
+                                </div>
+                                Signout
                             </a>
                             <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">
                                 @csrf

@@ -120,38 +120,7 @@ class VehicleController extends Controller implements HasMiddleware
         $vehicleTypes = VehicleType::orderBy('name')->get();
         $stats = $this->vehicleService->getDashboardStats();
         
-        $ebmdStats = [];
-        if ($isEbmd) {
-            $rawStats = \App\Models\EbmdVehicle::query()
-                ->leftJoin('vehicle_types', 'ebmd_vehicles.vehicle_type_id', '=', 'vehicle_types.id')
-                ->selectRaw('COALESCE(vehicle_types.name, ebmd_vehicles.jenis, "Lainnya") as jenis_kendaraan, count(*) as total')
-                ->groupBy('jenis_kendaraan')
-                ->pluck('total', 'jenis_kendaraan')
-                ->toArray();
-
-            $ebmdStats = [
-                'Mobil' => 0,
-                'Motor' => 0,
-                'Lainnya' => 0
-            ];
-
-            foreach ($rawStats as $jenis => $total) {
-                $jenisLower = strtolower($jenis);
-                
-                // Kategori Motor
-                if (str_contains($jenisLower, 'motor') && !str_contains($jenisLower, 'tak bermotor') && !str_contains($jenisLower, 'khusus') || str_contains($jenisLower, 'scooter') || str_contains($jenisLower, 'roda dua')) {
-                    $ebmdStats['Motor'] += $total;
-                } 
-                // Kategori Mobil
-                elseif (str_contains($jenisLower, 'mobil') || str_contains($jenisLower, 'bus') || str_contains($jenisLower, 'pick up') || str_contains($jenisLower, 'jeep') || str_contains($jenisLower, 'truck') || str_contains($jenisLower, 'wagon') || str_contains($jenisLower, 'roda empat') || str_contains($jenisLower, 'sedan')) {
-                    $ebmdStats['Mobil'] += $total;
-                } 
-                // Kategori Lainnya
-                else {
-                    $ebmdStats['Lainnya'] += $total;
-                }
-            }
-        }
+        $ebmdStats = $isEbmd ? $this->vehicleService->getEbmdStats() : [];
 
         $opds = Opd::orderBy('nama')->get();
         $statuses = $modelClass::getStatuses();

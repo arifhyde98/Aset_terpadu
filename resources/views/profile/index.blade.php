@@ -140,7 +140,58 @@
         if (avatarInput) {
             avatarInput.addEventListener('change', function() {
                 const file = this.files[0];
-                if (file) {
+                if (!file) return;
+
+                // Jika file lebih besar dari 2MB, perkecil ukurannya
+                if (file.size > 2 * 1024 * 1024) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        const img = new Image();
+                        img.onload = function() {
+                            const canvas = document.createElement('canvas');
+                            const ctx = canvas.getContext('2d');
+                            
+                            // Tentukan ukuran maksimal
+                            const MAX_WIDTH = 800;
+                            const MAX_HEIGHT = 800;
+                            let width = img.width;
+                            let height = img.height;
+                            
+                            if (width > height) {
+                                if (width > MAX_WIDTH) {
+                                    height *= MAX_WIDTH / width;
+                                    width = MAX_WIDTH;
+                                }
+                            } else {
+                                if (height > MAX_HEIGHT) {
+                                    width *= MAX_HEIGHT / height;
+                                    height = MAX_HEIGHT;
+                                }
+                            }
+                            
+                            canvas.width = width;
+                            canvas.height = height;
+                            ctx.drawImage(img, 0, 0, width, height);
+                            
+                            // Konversi ke JPEG dengan kualitas 80% agar ukuran kecil
+                            const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
+                            avatarPreview.src = dataUrl;
+                            
+                            // Ganti file input dengan file yang sudah dikompresi
+                            fetch(dataUrl)
+                                .then(res => res.blob())
+                                .then(blob => {
+                                    const newFile = new File([blob], file.name.replace(/\.[^/.]+$/, "") + ".jpg", { type: 'image/jpeg' });
+                                    const dataTransfer = new DataTransfer();
+                                    dataTransfer.items.add(newFile);
+                                    avatarInput.files = dataTransfer.files;
+                                });
+                        };
+                        img.src = e.target.result;
+                    };
+                    reader.readAsDataURL(file);
+                } else {
+                    // Jika kurang dari 2MB, tampilkan preview langsung
                     const reader = new FileReader();
                     reader.onload = function(e) {
                         avatarPreview.src = e.target.result;
