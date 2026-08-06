@@ -6,6 +6,8 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
     <title>{{ config('app.name', 'E-RANDIS PHP') }} - Admin Dashboard</title>
+    <link rel="icon" type="image/png" href="{{ asset('favicon.ico') }}">
+    <link rel="shortcut icon" type="image/png" href="{{ asset('favicon.ico') }}">
 
     @vite(['resources/css/app.scss', 'resources/js/app.js'])
 </head>
@@ -52,6 +54,8 @@
             @include('layouts.partials.footer')
         </div>
     </div>
+
+    @include('layouts.partials.bottom-nav')
 
     @stack('modals')
     @stack('scripts')

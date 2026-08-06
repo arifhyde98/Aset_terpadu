@@ -4,6 +4,8 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>E-RANDIS | Sistem Monitoring Kendaraan Dinas</title>
+    <link rel="icon" type="image/png" href="{{ asset('favicon.ico') }}">
+    <link rel="shortcut icon" type="image/png" href="{{ asset('favicon.ico') }}">
     
     @vite(['resources/css/app.scss', 'resources/js/app.js'])
 </head>
@@ -20,16 +22,18 @@
                 @endphp
                 
                 @if($siteLogo)
-                    <img src="{{ \App\Models\Setting::imageUrl($siteLogo) }}" alt="Logo" style="height: 40px; width: auto;">
+                    <img src="{{ \App\Models\Setting::imageUrl($siteLogo) }}" alt="Logo" class="bg-white rounded-circle p-1 navbar-brand-logo">
                 @else
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 120" style="width: 32px; height: 38px;">
-                        <!-- Shield outline -->
-                        <path d="M50 0 L90 20 V70 C90 95 50 120 50 120 C50 120 10 95 10 70 V20 Z" fill="#15803d" stroke="#facc15" stroke-width="6"/>
-                        <!-- Inner elements to match government crest look -->
-                        <circle cx="50" cy="30" r="8" fill="#facc15"/>
-                        <path d="M30 65 C40 50 60 50 70 65 Z" fill="#facc15"/>
-                        <path d="M40 85 L50 70 L60 85 Z" fill="#ffffff"/>
-                    </svg>
+                    <div class="bg-white rounded-circle p-1 d-flex align-items-center justify-content-center navbar-brand-logo">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 120">
+                            <!-- Shield outline -->
+                            <path d="M50 0 L90 20 V70 C90 95 50 120 50 120 C50 120 10 95 10 70 V20 Z" fill="#15803d" stroke="#facc15" stroke-width="6"/>
+                            <!-- Inner elements to match government crest look -->
+                            <circle cx="50" cy="30" r="8" fill="#facc15"/>
+                            <path d="M30 65 C40 50 60 50 70 65 Z" fill="#facc15"/>
+                            <path d="M40 85 L50 70 L60 85 Z" fill="#ffffff"/>
+                        </svg>
+                    </div>
                 @endif
                 <span class="fw-bold text-white fs-6" style="letter-spacing: 0.05em;">{{ $siteName }}</span>
             </a>
@@ -71,11 +75,11 @@
             <div class="row align-items-center pt-3 pt-lg-0">
                 <div class="col-lg-7 mb-5 mb-lg-0 pe-lg-4">
                     <!-- Judul 1 baris persis seperti referensi -->
-                    <h1 class="mb-4 fw-bold text-white lh-sm" style="font-size: 2.85rem; text-shadow: 0 2px 4px rgba(0,0,0,0.3);">{{ $settings['hero_title'] }}</h1>
-                    <p class="lead mb-5 text-white opacity-90 fw-normal" style="max-width: 560px; font-size: 1.15rem; line-height: 1.6; text-shadow: 0 1px 2px rgba(0,0,0,0.2);">
+                    <h1 class="mb-4 fw-bold text-white lh-sm hero-title">{{ $settings['hero_title'] }}</h1>
+                    <p class="lead mb-5 text-white opacity-90 fw-normal hero-subtitle">
                         {{ $settings['hero_subtitle'] }}
                     </p>
-                    <div class="d-flex flex-wrap gap-3">
+                    <div class="d-flex flex-column flex-sm-row justify-content-lg-start justify-content-center gap-3">
                         <a href="#search-section" class="btn btn-primary btn-premium-glow px-4 py-2 fs-6 fw-semibold">Cek Kendaraan</a>
                         <a href="#feature-section" class="btn btn-outline-white px-4 py-2 fs-6 fw-semibold">Pelajari Sistem</a>
                     </div>
@@ -248,14 +252,16 @@
             <!-- Logo Replikasi Persis Referensi di Footer -->
             <div class="d-flex align-items-center justify-content-center gap-2 mb-3">
                 @if($settings['site_logo'])
-                    <img src="{{ \App\Models\Setting::imageUrl($settings['site_logo']) }}" alt="Logo" style="height: 30px; width: auto;">
+                    <img src="{{ \App\Models\Setting::imageUrl($settings['site_logo']) }}" alt="Logo" class="bg-white rounded-circle p-1" style="height: 30px; width: 30px; object-fit: contain; border: 1px solid #e2e8f0;">
                 @else
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 120" style="width: 24px; height: 28px;">
-                        <path d="M50 0 L90 20 V70 C90 95 50 120 50 120 C50 120 10 95 10 70 V20 Z" fill="#15803d" stroke="#facc15" stroke-width="6"/>
-                        <circle cx="50" cy="30" r="8" fill="#facc15"/>
-                        <path d="M30 65 C40 50 60 50 70 65 Z" fill="#facc15"/>
-                        <path d="M40 85 L50 70 L60 85 Z" fill="#ffffff"/>
-                    </svg>
+                    <div class="bg-white rounded-circle p-1 d-flex align-items-center justify-content-center" style="width: 30px; height: 30px; border: 1px solid #e2e8f0;">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 120" style="width: 18px; height: 22px;">
+                            <path d="M50 0 L90 20 V70 C90 95 50 120 50 120 C50 120 10 95 10 70 V20 Z" fill="#15803d" stroke="#facc15" stroke-width="6"/>
+                            <circle cx="50" cy="30" r="8" fill="#facc15"/>
+                            <path d="M30 65 C40 50 60 50 70 65 Z" fill="#facc15"/>
+                            <path d="M40 85 L50 70 L60 85 Z" fill="#ffffff"/>
+                        </svg>
+                    </div>
                 @endif
                 <span class="fw-bold text-navy fs-6 letter-spacing-1">{{ $settings['site_name'] }}</span>
             </div>

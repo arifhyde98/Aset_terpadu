@@ -227,10 +227,10 @@
 
         @foreach($vehicles as $vehicle)
             <tr>
-                <td class="px-4 py-3 text-center fw-medium text-secondary">
+                <td data-label="No." class="px-4 py-3 text-center fw-medium text-secondary">
                     {{ ($vehicles->currentPage() - 1) * $vehicles->perPage() + $loop->iteration }}
                 </td>
-                <td class="py-3">
+                <td data-label="No. Polisi" class="py-3">
                     <span class="badge bg-light text-dark border border-secondary border-opacity-25 px-3 py-2 fs-6 rounded-3 fw-bold plate-number">{{ $vehicle->no_polisi }}</span>
                     @if($vehicle->nomor_register)
                         <div class="mt-1 small text-secondary fw-semibold" style="font-size: 0.75rem;">
@@ -238,11 +238,11 @@
                         </div>
                     @endif
                 </td>
-                <td class="py-3">
+                <td data-label="Jenis Kendaraan" class="py-3">
                     <div class="fw-bold text-navy">{{ $vehicle->vehicleType->name ?? ($vehicle->jenis ?? '-') }}</div>
                     <div class="small text-secondary">{{ $vehicle->tipe ?: '-' }}</div>
                 </td>
-                <td class="py-3 d-none d-md-table-cell">
+                <td data-label="Merk/Tahun" class="py-3 d-none d-md-table-cell">
                     <div class="text-dark fw-medium">{{ $vehicle->merk ?: '-' }}</div>
                     <div class="small text-secondary">
                         @if(request('tab') === 'ebmd')
@@ -252,17 +252,17 @@
                         @endif
                     </div>
                 </td>
-                <td class="py-3">
+                <td data-label="Pengguna" class="py-3">
                     <div class="fw-medium text-dark"><i class="bi bi-person-fill text-secondary me-1"></i> {{ $vehicle->pemegang }}</div>
                     <div class="small text-secondary">{{ Str::limit($vehicle->opdRelation?->nama ?? $vehicle->opd, 40) }}</div>
                 </td>
-                <td class="text-center">
+                <td data-label="Kondisi Fisik" class="text-center">
                     <x-condition-badge :kondisi="$vehicle->kondisi" />
                 </td>
-                <td class="text-center">
+                <td data-label="Status" class="text-center">
                     <x-status-badge :status="$vehicle->status" />
                 </td>
-                <td class="px-4 py-3 text-center">
+                <td data-label="Aksi" class="px-4 py-3 text-center">
                     <div class="d-flex justify-content-center gap-2">
                         @if(request('tab') === 'ebmd')
                             @if(!$vehicle->is_synced)

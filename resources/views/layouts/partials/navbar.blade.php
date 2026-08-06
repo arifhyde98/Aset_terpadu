@@ -2,7 +2,7 @@
 <nav class="navbar navbar-expand-lg navbar-admin rounded-3 mb-4">
     <div class="container-fluid px-0">
         <div class="d-flex align-items-center gap-3">
-            <button type="button" id="sidebarCollapse" class="btn btn-light rounded-3 shadow-sm border">
+            <button type="button" id="sidebarCollapse" class="btn btn-light rounded-3 shadow-sm border d-none d-md-block">
                 <i class="bi bi-list"></i>
             </button>
             <h5 class="fw-bold text-navy mb-0 d-none d-md-block">@yield('title', 'Admin Dashboard')</h5>

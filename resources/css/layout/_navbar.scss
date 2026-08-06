@@ -16,6 +16,88 @@
         opacity: 0.9;
         &:hover { opacity: 1; }
     }
+
+    @media (max-width: 767.98px) {
+        padding: 1rem 0;
+
+        &.scrolled {
+            padding: 0.5rem 0;
+        }
+
+        .navbar-brand {
+            max-width: 75%;
+            gap: 0.5rem !important;
+
+            span {
+                font-size: 0.75rem !important;
+                white-space: normal;
+                line-height: 1.2;
+                display: -webkit-box;
+                -webkit-line-clamp: 2;
+                line-clamp: 2;
+                -webkit-box-orient: vertical;
+                overflow: hidden;
+            }
+
+            .navbar-brand-logo {
+                width: 36px !important;
+                height: 36px !important;
+                padding: 3px !important;
+
+                svg {
+                    width: 22px !important;
+                    height: 26px !important;
+                }
+            }
+        }
+
+        .navbar-collapse {
+            background-color: #1e3a8a; /* Solid background untuk menu dropdown mobile */
+            border-radius: 0.75rem;
+            margin-top: 1rem;
+            padding: 1rem;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+
+            .navbar-nav {
+                align-items: stretch !important;
+                gap: 0.25rem;
+
+                .nav-item {
+                    width: 100%;
+
+                    .nav-link {
+                        padding: 0.75rem 1rem !important;
+                        border-radius: 0.5rem;
+                        transition: all 0.2s ease;
+
+                        &:hover, &.active {
+                            background-color: rgba(255, 255, 255, 0.1);
+                        }
+                    }
+
+                    /* Sembunyikan garis aktif horizontal pada dropdown vertikal */
+                    div[style*="height: 3px"] {
+                        display: none !important;
+                    }
+                }
+            }
+        }
+    }
+}
+
+/* Desktop sizing for navbar logo */
+.navbar-brand-logo {
+    width: 48px;
+    height: 48px;
+    transition: all 0.3s ease;
+    object-fit: contain;
+
+    svg {
+        width: 30px;
+        height: 34px;
+        transition: all 0.3s ease;
+    }
 }
 
 // Admin Navbar

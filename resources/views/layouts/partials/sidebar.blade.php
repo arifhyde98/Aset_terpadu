@@ -1,5 +1,5 @@
 <!-- Sidebar -->
-<nav id="sidebar">
+<nav id="sidebar" class="d-none d-md-block">
     <div class="sidebar-header d-flex align-items-center gap-2">
         @php
             $siteLogo = \App\Models\Setting::get('site_logo');

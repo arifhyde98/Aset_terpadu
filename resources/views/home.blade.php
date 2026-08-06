@@ -67,22 +67,22 @@
 
                 @foreach($latestVehicles as $v)
                     <tr>
-                        <td class="px-4 py-3 text-center fw-medium text-secondary">{{ $loop->iteration }}</td>
-                        <td class="py-3">
+                        <td data-label="#" class="px-4 py-3 text-center fw-medium text-secondary">{{ $loop->iteration }}</td>
+                        <td data-label="Kendaraan" class="py-3">
                             <div class="fw-bold text-navy plate-number">{{ $v->no_polisi }}</div>
                             <small class="text-secondary">{{ $v->merk }} {{ $v->tipe }}</small>
                         </td>
-                        <td class="py-3">
+                        <td data-label="Pengguna / OPD" class="py-3">
                             <div class="fw-medium text-dark"><i class="bi bi-person-fill text-secondary me-1"></i> {{ $v->pemegang }}</div>
                             <small class="text-secondary">{{ Str::limit($v->opd, 30) }}</small>
                         </td>
-                        <td class="py-3 text-center">
+                        <td data-label="Kondisi" class="py-3 text-center">
                             <x-condition-badge :kondisi="$v->kondisi" />
                         </td>
-                        <td class="py-3 text-center">
+                        <td data-label="Status" class="py-3 text-center">
                             <x-status-badge :status="$v->status" />
                         </td>
-                        <td class="px-4 py-3 text-end">
+                        <td data-label="Aksi" class="px-4 py-3 text-end">
                             <a href="{{ route('vehicles.index', ['q' => $v->no_polisi]) }}" class="btn btn-sm btn-light rounded-3 text-primary border shadow-sm">
                                 Detail <i class="bi bi-chevron-right ms-1" style="font-size:0.7rem;"></i>
                             </a>

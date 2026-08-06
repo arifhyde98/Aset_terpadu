@@ -128,6 +128,10 @@ class UserController extends Controller implements HasMiddleware
      */
     public function generateAllOpdAccounts(\App\Services\AccountService $accountService)
     {
+        // 1. Perpanjang batas waktu eksekusi & memori untuk proses bulk generation
+        set_time_limit(300);
+        ini_set('memory_limit', '256M');
+
         $opdsWithoutAccount = Opd::whereDoesntHave('user')->get();
         $count = 0;
 
@@ -135,12 +139,17 @@ class UserController extends Controller implements HasMiddleware
             return redirect()->route('users.index')->with('info', 'Semua OPD sudah memiliki akun admin.');
         }
 
-        \Illuminate\Support\Facades\DB::transaction(function () use ($opdsWithoutAccount, $accountService, &$count) {
-            foreach ($opdsWithoutAccount as $opd) {
-                $accountService->createOpdAccount($opd);
+        // 2. Gunakan transaksi per-OPD untuk mencegah Deadlock pada MySQL
+        foreach ($opdsWithoutAccount as $opd) {
+            try {
+                \Illuminate\Support\Facades\DB::transaction(function () use ($opd, $accountService) {
+                    $accountService->createOpdAccount($opd);
+                });
                 $count++;
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::error("Gagal generate akun OPD [ID: {$opd->id} - {$opd->nama}]: " . $e->getMessage());
             }
-        });
+        }
 
         return redirect()->route('users.index')->with('success', "Berhasil men-generate {$count} akun admin OPD baru.");
     }

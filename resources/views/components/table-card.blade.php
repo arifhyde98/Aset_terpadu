@@ -47,7 +47,7 @@
     @endif
 
     <!-- Konten Utama Tabel -->
-    <div class="table-responsive">
+    <div class="table-responsive table-responsive-mobile">
         <table class="table table-hover align-middle mb-0">
             @if($thead)
                 <thead class="bg-white text-secondary small text-uppercase">
