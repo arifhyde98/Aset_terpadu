@@ -106,40 +106,87 @@
                 });
             }
             
-            // 3. Sidebar Logic
+            // 3. Sidebar Logic (Mobile Drawer + Compact Desktop Mode)
             const sidebarCollapse = document.getElementById('sidebarCollapse');
+            const sidebarToggleCompact = document.getElementById('sidebarToggleCompact');
             const sidebar = document.getElementById('sidebar');
             const content = document.getElementById('content');
             const overlay = document.getElementById('sidebarOverlay');
+
+            // Initialize Tooltips
+            let tooltipList = [];
+            function initTooltips() {
+                tooltipList.forEach(t => t.dispose());
+                const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+                tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl));
+            }
+            initTooltips();
             
-            function toggleSidebar() {
-                sidebar.classList.toggle('active');
-                if(window.innerWidth > 768) {
-                    content.style.marginLeft = sidebar.classList.contains('active') ? '0' : '260px';
+            function setCompactMode(isCompact) {
+                if (!sidebar) return;
+                if (isCompact) {
+                    sidebar.classList.add('compact');
+                    document.body.classList.add('sidebar-compact');
+                    localStorage.setItem('sidebarMode', 'compact');
+                    if (window.innerWidth > 768) {
+                        content.style.marginLeft = '70px';
+                    }
                 } else {
-                    overlay.classList.toggle('show');
-                    // Lock body scroll when sidebar is open on mobile
-                    document.body.style.overflow = sidebar.classList.contains('active') ? 'hidden' : 'auto';
+                    sidebar.classList.remove('compact');
+                    document.body.classList.remove('sidebar-compact');
+                    localStorage.setItem('sidebarMode', 'normal');
+                    if (window.innerWidth > 768) {
+                        content.style.marginLeft = '250px';
+                    }
                 }
+                initTooltips();
             }
 
-            if(sidebarCollapse) {
-                sidebarCollapse.addEventListener('click', toggleSidebar);
+            // Restore Compact Mode State
+            const savedSidebarMode = localStorage.getItem('sidebarMode') || 'normal';
+            if (window.innerWidth > 768 && savedSidebarMode === 'compact') {
+                setCompactMode(true);
             }
 
-            if(overlay) {
-                overlay.addEventListener('click', toggleSidebar);
+            if (sidebarToggleCompact) {
+                sidebarToggleCompact.addEventListener('click', function () {
+                    const isCurrentlyCompact = sidebar.classList.contains('compact');
+                    setCompactMode(!isCurrentlyCompact);
+                });
+            }
+            
+            function toggleSidebarMobile() {
+                sidebar.classList.toggle('active');
+                overlay.classList.toggle('show');
+                document.body.style.overflow = sidebar.classList.contains('active') ? 'hidden' : 'auto';
+            }
+
+            if (sidebarCollapse) {
+                sidebarCollapse.addEventListener('click', function() {
+                    if (window.innerWidth <= 768) {
+                        toggleSidebarMobile();
+                    } else {
+                        const isCurrentlyCompact = sidebar.classList.contains('compact');
+                        setCompactMode(!isCurrentlyCompact);
+                    }
+                });
+            }
+
+            if (overlay) {
+                overlay.addEventListener('click', toggleSidebarMobile);
             }
             
             function handleResize() {
-                if(window.innerWidth <= 768) {
+                if (!sidebar) return;
+                if (window.innerWidth <= 768) {
                     sidebar.classList.remove('active');
                     overlay.classList.remove('show');
                     content.style.marginLeft = '0';
                     document.body.style.overflow = 'auto';
                 } else {
                     sidebar.classList.remove('active');
-                    content.style.marginLeft = '260px';
+                    const isCompact = sidebar.classList.contains('compact');
+                    content.style.marginLeft = isCompact ? '70px' : '250px';
                 }
             }
 

@@ -16,7 +16,7 @@
             <span>Maintenance</span>
         </a>
 
-        @if(auth()->user()->role === \App\Enums\UserRole::SUPERADMIN)
+        @if(auth()->check() && auth()->user()?->role === \App\Enums\UserRole::SUPERADMIN)
         <a href="{{ route('users.index') }}" class="bottom-nav-item {{ Request::is('users*') ? 'active' : '' }}">
             <i class="bi bi-people{{ Request::is('users*') ? '-fill' : '' }}"></i>
             <span>Pengguna</span>
@@ -44,7 +44,7 @@
     <div class="offcanvas-body">
         <div class="list-group list-group-flush">
             <!-- Pindahkan link dari sidebar yang tidak muat ke sini -->
-            @if(auth()->user()->role !== \App\Enums\UserRole::OPD)
+            @if(auth()->user()?->role !== \App\Enums\UserRole::OPD)
                 <div class="fw-bold text-muted small mb-2 mt-3 text-uppercase">Master Data</div>
                 <a href="{{ route('vehicle-types.index') }}" class="list-group-item list-group-item-action border-0 {{ Request::is('vehicle-types*') ? 'active rounded' : '' }}">
                     <i class="bi bi-grid me-2"></i> Jenis Kendaraan

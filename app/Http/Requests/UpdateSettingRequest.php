@@ -26,13 +26,17 @@ class UpdateSettingRequest extends FormRequest
     public function rules(): array
     {
         $rules = [
-            'settings' => ['required', 'array'],
+            'settings' => ['nullable', 'array'],
         ];
 
         foreach (Setting::all() as $setting) {
-            $rules["settings.{$setting->key}"] = $setting->type === 'image'
-                ? ['nullable', 'image', 'mimes:jpeg,png,jpg,webp', 'max:2048']
-                : ['nullable', 'string'];
+            if ($setting->type === 'image') {
+                if ($this->hasFile("settings.{$setting->key}")) {
+                    $rules["settings.{$setting->key}"] = ['nullable', 'image', 'mimes:jpeg,png,jpg,webp,svg', 'max:5120'];
+                }
+            } else {
+                $rules["settings.{$setting->key}"] = ['nullable', 'string'];
+            }
         }
 
         return $rules;
@@ -47,8 +51,8 @@ class UpdateSettingRequest extends FormRequest
     {
         return [
             'settings.*.image' => 'File pengaturan gambar harus berupa gambar.',
-            'settings.*.mimes' => 'Format gambar harus jpeg, png, jpg, atau webp.',
-            'settings.*.max' => 'Ukuran setiap gambar tidak boleh lebih dari 2MB.',
+            'settings.*.mimes' => 'Format gambar harus jpeg, png, jpg, webp, atau svg.',
+            'settings.*.max' => 'Ukuran setiap gambar tidak boleh lebih dari 5MB.',
         ];
     }
 }

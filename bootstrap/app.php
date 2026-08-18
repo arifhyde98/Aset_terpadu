@@ -14,6 +14,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->trustProxies(at: '*');
         $middleware->alias([
             'role' => \App\Http\Middleware\CheckRole::class,
+            'sso'  => \App\Http\Middleware\SsoAuthenticate::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

@@ -34,6 +34,37 @@ Auth::routes();
 
 // Rute Dashboard & Internal (Middleware dikelola di Controller)
 Route::get('/home', [HomeController::class, 'index'])->name('home');
+Route::get('/sipat/dashboard', [\App\Http\Controllers\SipatDashboardController::class, 'index'])->name('sipat.dashboard');
+Route::get('/elabel/dashboard', [HomeController::class, 'index'])->name('elabel.dashboard');
+Route::get('/erandis/dashboard', [HomeController::class, 'index'])->name('erandis.dashboard');
+
+// Modul SIPAT (Aset Tanah)
+Route::get('/sipat/aset', [\App\Http\Controllers\Sipat\AsetTanahController::class, 'index'])->name('sipat.aset.index');
+Route::get('/sipat/aset/create', [\App\Http\Controllers\Sipat\AsetTanahController::class, 'create'])->name('sipat.aset.create');
+Route::post('/sipat/aset', [\App\Http\Controllers\Sipat\AsetTanahController::class, 'store'])->name('sipat.aset.store');
+Route::get('/sipat/aset/{id}', [\App\Http\Controllers\Sipat\AsetTanahController::class, 'show'])->name('sipat.aset.show');
+Route::get('/sipat/aset/{id}/modal', [\App\Http\Controllers\Sipat\AsetTanahController::class, 'modal'])->name('sipat.aset.modal');
+Route::get('/sipat/aset/{id}/edit', [\App\Http\Controllers\Sipat\AsetTanahController::class, 'edit'])->name('sipat.aset.edit');
+Route::put('/sipat/aset/{id}', [\App\Http\Controllers\Sipat\AsetTanahController::class, 'update'])->name('sipat.aset.update');
+Route::delete('/sipat/aset/{id}', [\App\Http\Controllers\Sipat\AsetTanahController::class, 'destroy'])->name('sipat.aset.destroy');
+Route::post('/sipat/aset/{id}/proses', [\App\Http\Controllers\Sipat\AsetTanahController::class, 'storeProses'])->name('sipat.aset.storeProses');
+Route::post('/sipat/aset/{id}/pengamanan', [\App\Http\Controllers\Sipat\AsetTanahController::class, 'storePengamanan'])->name('sipat.aset.storePengamanan');
+Route::post('/sipat/aset/{id}/dokumen', [\App\Http\Controllers\Sipat\AsetTanahController::class, 'storeDokumen'])->name('sipat.aset.storeDokumen');
+
+// Modul SIPAT (Laporan)
+Route::get('/sipat/laporan', [\App\Http\Controllers\Sipat\LaporanController::class, 'index'])->name('sipat.laporan.index');
+Route::get('/sipat/laporan/export/csv', [\App\Http\Controllers\Sipat\LaporanController::class, 'exportCsv'])->name('sipat.laporan.exportCsv');
+Route::get('/sipat/laporan/export/xlsx', [\App\Http\Controllers\Sipat\LaporanController::class, 'exportXlsx'])->name('sipat.laporan.exportXlsx');
+Route::get('/sipat/laporan/preview-pdf', [\App\Http\Controllers\Sipat\LaporanController::class, 'previewPdf'])->name('sipat.laporan.previewPdf');
+Route::get('/sipat/laporan/download-pdf', [\App\Http\Controllers\Sipat\LaporanController::class, 'downloadPdf'])->name('sipat.laporan.downloadPdf');
+
+Route::resource('master-data/status-proses', \App\Http\Controllers\StatusProsesController::class)->names('status-proses');
+Route::resource('master-data/opd-sipat', \App\Http\Controllers\MasterSipatOpdController::class)->names('opd-sipat');
+Route::get('master-data/opd-sipat-list', [\App\Http\Controllers\MasterSipatOpdController::class, 'index'])->name('master.opd-sipat.index');
+Route::get('master-data/kop-surat', [\App\Http\Controllers\KopSettingsController::class, 'index'])->name('master.kop-settings.index');
+Route::post('master-data/kop-surat', [\App\Http\Controllers\KopSettingsController::class, 'update'])->name('master.kop-settings.update');
+Route::get('master-data/log-aktivitas', [\App\Http\Controllers\AuditLogsController::class, 'index'])->name('master.logs.index');
+Route::get('master-data/log-aktivitas/{id}', [\App\Http\Controllers\AuditLogsController::class, 'show'])->name('master.logs.show');
 
 // Profil Pengguna
 Route::get('profile', [ProfileController::class, 'index'])->name('profile.index');
