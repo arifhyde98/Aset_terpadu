@@ -63,15 +63,15 @@
 
         <div class="sidebar-divider my-3"></div>
 
-        <!-- 2. MODULE ACCORDION (HANYA 1 MODUL TERBUKA DALAM SATU WAKTU) -->
+        <!-- 2. MODULE ACCORDION (TERSTRUKTUR PER MODUL) -->
         <div class="accordion sidebar-accordion" id="moduleAccordion">
 
             <!-- MODUL: SIPAT -->
             <div class="module-group">
-                <a class="module-header {{ Request::is('sipat*') ? '' : 'collapsed' }}" 
+                <a class="module-header {{ Request::is('sipat*') || Request::is('master-data/status-proses*', 'master-data/wilayah*', 'master-data/kop-surat*', 'master-data/opd-sipat*', 'master-data/import*', 'master-data/log-aktivitas*') ? '' : 'collapsed' }}" 
                    data-bs-toggle="collapse" 
                    data-bs-target="#moduleSipat" 
-                   aria-expanded="{{ Request::is('sipat*') ? 'true' : 'false' }}"
+                   aria-expanded="{{ Request::is('sipat*') || Request::is('master-data/status-proses*', 'master-data/wilayah*', 'master-data/kop-surat*', 'master-data/opd-sipat*', 'master-data/import*', 'master-data/log-aktivitas*') ? 'true' : 'false' }}"
                    data-bs-toggle-tooltip="tooltip" data-bs-placement="right" title="SIPAT">
                     <div class="module-header-title">
                         <i class="bi bi-geo-alt-fill module-icon text-primary"></i>
@@ -79,60 +79,161 @@
                     </div>
                     <i class="bi bi-chevron-down chevron-icon"></i>
                 </a>
-                <div id="moduleSipat" class="collapse {{ Request::is('sipat*') ? 'show' : '' }}" data-bs-parent="#moduleAccordion">
-                    <ul class="submenu-list">
-                        <li class="{{ Request::is('sipat/aset*') ? 'active' : '' }}">
-                            <a href="{{ Route::has('sipat.aset.index') ? route('sipat.aset.index') : '#' }}" data-bs-toggle="tooltip" data-bs-placement="right" title="Data Aset Tanah">
-                                <i class="bi bi-journal-text"></i>
-                                <span>Data Aset Tanah</span>
+                <div id="moduleSipat" class="collapse {{ Request::is('sipat*') || Request::is('master-data/status-proses*', 'master-data/wilayah*', 'master-data/kop-surat*', 'master-data/opd-sipat*', 'master-data/import*', 'master-data/log-aktivitas*') ? 'show' : '' }}" data-bs-parent="#moduleAccordion">
+                    
+                    <!-- Nested Submenu 1: Aset & Inventaris -->
+                    <div class="nested-group">
+                        <a class="nested-header {{ Request::is('sipat/aset*', 'sipat/peta*') ? '' : 'collapsed' }}"
+                           data-bs-toggle="collapse"
+                           href="#sipatSubAset"
+                           role="button"
+                           aria-expanded="{{ Request::is('sipat/aset*', 'sipat/peta*') ? 'true' : 'false' }}">
+                            <span><i class="bi bi-journal-album me-1 text-primary"></i> ASET & INVENTARIS</span>
+                            <i class="bi bi-chevron-down nested-chevron"></i>
+                        </a>
+                        <div id="sipatSubAset" class="collapse {{ Request::is('sipat/aset*', 'sipat/peta*') ? 'show' : '' }}">
+                            <ul class="submenu-list">
+                                <li class="{{ Request::is('sipat/aset*') ? 'active' : '' }}">
+                                    <a href="{{ Route::has('sipat.aset.index') ? route('sipat.aset.index') : '#' }}" data-bs-toggle="tooltip" data-bs-placement="right" title="Data Aset Tanah">
+                                        <i class="bi bi-journal-text"></i>
+                                        <span>Data Aset Tanah</span>
+                                    </a>
+                                </li>
+                                <li class="{{ Request::is('sipat/peta*') ? 'active' : '' }}">
+                                    <a href="{{ Route::has('sipat.peta.index') ? route('sipat.peta.index') : '#' }}" data-bs-toggle="tooltip" data-bs-placement="right" title="Peta Geografis GIS">
+                                        <i class="bi bi-map"></i>
+                                        <span>Peta Geografis GIS</span>
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Nested Submenu 2: Legalitas & Pengamanan -->
+                    <div class="nested-group">
+                        <a class="nested-header {{ Request::is('sipat/proses*', 'sipat/pengamanan*') ? '' : 'collapsed' }}"
+                           data-bs-toggle="collapse"
+                           href="#sipatSubLegalitas"
+                           role="button"
+                           aria-expanded="{{ Request::is('sipat/proses*', 'sipat/pengamanan*') ? 'true' : 'false' }}">
+                            <span><i class="bi bi-shield-lock me-1 text-warning"></i> LEGALITAS & PROSES</span>
+                            <i class="bi bi-chevron-down nested-chevron"></i>
+                        </a>
+                        <div id="sipatSubLegalitas" class="collapse {{ Request::is('sipat/proses*', 'sipat/pengamanan*') ? 'show' : '' }}">
+                            <ul class="submenu-list">
+                                <li class="{{ Request::is('sipat/proses*') ? 'active' : '' }}">
+                                    <a href="{{ Route::has('sipat.proses.index') ? route('sipat.proses.index') : '#' }}" data-bs-toggle="tooltip" data-bs-placement="right" title="Status & Proses BPN">
+                                        <i class="bi bi-hourglass-split"></i>
+                                        <span>Status & Proses BPN</span>
+                                    </a>
+                                </li>
+                                <li class="{{ Request::is('sipat/pengamanan*') ? 'active' : '' }}">
+                                    <a href="{{ Route::has('sipat.pengamanan.index') ? route('sipat.pengamanan.index') : '#' }}" data-bs-toggle="tooltip" data-bs-placement="right" title="Pengamanan Fisik">
+                                        <i class="bi bi-shield-check"></i>
+                                        <span>Pengamanan Fisik</span>
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Nested Submenu 3: Dokumen & Laporan -->
+                    <div class="nested-group">
+                        <a class="nested-header {{ Request::is('sipat/surat*', 'sipat/laporan*', 'sipat/rekonsiliasi*') ? '' : 'collapsed' }}"
+                           data-bs-toggle="collapse"
+                           href="#sipatSubDokumen"
+                           role="button"
+                           aria-expanded="{{ Request::is('sipat/surat*', 'sipat/laporan*', 'sipat/rekonsiliasi*') ? 'true' : 'false' }}">
+                            <span><i class="bi bi-file-earmark-bar-graph me-1 text-info"></i> DOKUMEN & LAPORAN</span>
+                            <i class="bi bi-chevron-down nested-chevron"></i>
+                        </a>
+                        <div id="sipatSubDokumen" class="collapse {{ Request::is('sipat/surat*', 'sipat/laporan*', 'sipat/rekonsiliasi*') ? 'show' : '' }}">
+                            <ul class="submenu-list">
+                                <li class="{{ Request::is('sipat/surat*') ? 'active' : '' }}">
+                                    <a href="{{ Route::has('sipat.surat.skpt') ? route('sipat.surat.skpt') : '#' }}" data-bs-toggle="tooltip" data-bs-placement="right" title="Cetak Surat SKPT">
+                                        <i class="bi bi-file-earmark-word"></i>
+                                        <span>Cetak Surat SKPT</span>
+                                    </a>
+                                </li>
+                                <li class="{{ Request::is('sipat/laporan*') ? 'active' : '' }}">
+                                    <a href="{{ route('sipat.laporan.index') }}" data-bs-toggle="tooltip" data-bs-placement="right" title="Laporan Aset Tanah">
+                                        <i class="bi bi-file-earmark-text"></i>
+                                        <span>Laporan Aset Tanah</span>
+                                    </a>
+                                </li>
+                                <li class="{{ Request::is('sipat/rekonsiliasi*') ? 'active' : '' }}">
+                                    <a href="{{ Route::has('sipat.rekonsiliasi.index') ? route('sipat.rekonsiliasi.index') : '#' }}" data-bs-toggle="tooltip" data-bs-placement="right" title="Rekonsiliasi Arsip">
+                                        <i class="bi bi-arrow-left-right"></i>
+                                        <span>Rekonsiliasi Arsip</span>
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Nested Submenu 4: Master Data & Pengaturan SIPAT -->
+                    @if(auth()->user()?->role !== \App\Enums\UserRole::OPD)
+                        <div class="nested-group">
+                            <a class="nested-header {{ Request::is('master-data/status-proses*', 'master-data/wilayah*', 'master-data/kop-surat*', 'master-data/opd-sipat*', 'master-data/import*', 'master-data/log-aktivitas*') ? '' : 'collapsed' }}"
+                               data-bs-toggle="collapse"
+                               href="#sipatSubMaster"
+                               role="button"
+                               aria-expanded="{{ Request::is('master-data/status-proses*', 'master-data/wilayah*', 'master-data/kop-surat*', 'master-data/opd-sipat*', 'master-data/import*', 'master-data/log-aktivitas*') ? 'true' : 'false' }}">
+                                <span><i class="bi bi-sliders me-1 text-success"></i> MASTER SIPAT</span>
+                                <i class="bi bi-chevron-down nested-chevron"></i>
                             </a>
-                        </li>
-                        <li class="{{ Request::is('sipat/proses*') ? 'active' : '' }}">
-                            <a href="{{ Route::has('sipat.proses.index') ? route('sipat.proses.index') : '#' }}" data-bs-toggle="tooltip" data-bs-placement="right" title="Status & Proses BPN">
-                                <i class="bi bi-hourglass-split"></i>
-                                <span>Status & Proses BPN</span>
-                            </a>
-                        </li>
-                        <li class="{{ Request::is('sipat/pengamanan*') ? 'active' : '' }}">
-                            <a href="{{ Route::has('sipat.pengamanan.index') ? route('sipat.pengamanan.index') : '#' }}" data-bs-toggle="tooltip" data-bs-placement="right" title="Pengamanan Fisik">
-                                <i class="bi bi-shield-check"></i>
-                                <span>Pengamanan Fisik</span>
-                            </a>
-                        </li>
-                        <li class="{{ Request::is('sipat/peta*') ? 'active' : '' }}">
-                            <a href="{{ Route::has('sipat.peta.index') ? route('sipat.peta.index') : '#' }}" data-bs-toggle="tooltip" data-bs-placement="right" title="Peta Geografis GIS">
-                                <i class="bi bi-map"></i>
-                                <span>Peta Geografis GIS</span>
-                            </a>
-                        </li>
-                        <li class="{{ Request::is('sipat/surat*') ? 'active' : '' }}">
-                            <a href="{{ Route::has('sipat.surat.skpt') ? route('sipat.surat.skpt') : '#' }}" data-bs-toggle="tooltip" data-bs-placement="right" title="Cetak Surat SKPT">
-                                <i class="bi bi-file-earmark-word"></i>
-                                <span>Cetak Surat SKPT</span>
-                            </a>
-                        </li>
-                        <li class="{{ Request::is('sipat/laporan*') ? 'active' : '' }}">
-                            <a href="{{ route('sipat.laporan.index') }}" data-bs-toggle="tooltip" data-bs-placement="right" title="Laporan Aset Tanah">
-                                <i class="bi bi-file-earmark-bar-graph"></i>
-                                <span>Laporan Aset Tanah</span>
-                            </a>
-                        </li>
-                        <li class="{{ Request::is('sipat/rekonsiliasi*') ? 'active' : '' }}">
-                            <a href="{{ Route::has('sipat.rekonsiliasi.index') ? route('sipat.rekonsiliasi.index') : '#' }}" data-bs-toggle="tooltip" data-bs-placement="right" title="Rekonsiliasi Arsip">
-                                <i class="bi bi-arrow-left-right"></i>
-                                <span>Rekonsiliasi Arsip</span>
-                            </a>
-                        </li>
-                    </ul>
+                            <div id="sipatSubMaster" class="collapse {{ Request::is('master-data/status-proses*', 'master-data/wilayah*', 'master-data/kop-surat*', 'master-data/opd-sipat*', 'master-data/import*', 'master-data/log-aktivitas*') ? 'show' : '' }}">
+                                <ul class="submenu-list">
+                                    <li class="{{ Request::is('master-data/status-proses*') ? 'active' : '' }}">
+                                        <a href="{{ route('status-proses.index') }}" data-bs-toggle="tooltip" data-bs-placement="right" title="Status Proses Pensertifikatan">
+                                            <i class="bi bi-tags"></i>
+                                            <span>Master Status Proses</span>
+                                        </a>
+                                    </li>
+                                    <li class="{{ Request::is('master-data/wilayah*') ? 'active' : '' }}">
+                                        <a href="{{ route('master.wilayah.index') }}" data-bs-toggle="tooltip" data-bs-placement="right" title="Master Wilayah & Pejabat (SKPT)">
+                                            <i class="bi bi-geo-alt"></i>
+                                            <span>Wilayah & Pejabat</span>
+                                        </a>
+                                    </li>
+                                    <li class="{{ Request::is('master-data/kop-surat*') ? 'active' : '' }}">
+                                        <a href="{{ route('master.kop-settings.index') }}" data-bs-toggle="tooltip" data-bs-placement="right" title="Master KOP Surat Pemda">
+                                            <i class="bi bi-file-earmark-pdf"></i>
+                                            <span>KOP Surat Pemda</span>
+                                        </a>
+                                    </li>
+                                    <li class="{{ Request::is('master-data/opd-sipat*') ? 'active' : '' }}">
+                                        <a href="{{ route('master.opd-sipat.index') }}" data-bs-toggle="tooltip" data-bs-placement="right" title="OPD / Instansi (SIPAT)">
+                                            <i class="bi bi-diagram-3"></i>
+                                            <span>OPD Instansi (SIPAT)</span>
+                                        </a>
+                                    </li>
+                                    <li class="{{ Request::is('master-data/import*') ? 'active' : '' }}">
+                                        <a href="{{ route('master.import.index') }}" data-bs-toggle="tooltip" data-bs-placement="right" title="Import Aset Tanah & Status Proses">
+                                            <i class="bi bi-file-earmark-arrow-up"></i>
+                                            <span>Import Data SIPAT</span>
+                                        </a>
+                                    </li>
+                                    <li class="{{ Request::is('master-data/log-aktivitas*') ? 'active' : '' }}">
+                                        <a href="{{ route('master.logs.index') }}" data-bs-toggle="tooltip" data-bs-placement="right" title="Log Aktivitas (SIPAT)">
+                                            <i class="bi bi-journal-check"></i>
+                                            <span>Log Aktivitas SIPAT</span>
+                                        </a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    @endif
+
                 </div>
             </div>
 
             <!-- MODUL: ERANDIS -->
             <div class="module-group">
-                <a class="module-header {{ (Request::is('vehicles*', 'maintenance*', 'reports*') && !Request::is('sipat*') && !Request::is('elabel*')) ? '' : 'collapsed' }}" 
+                <a class="module-header {{ (Request::is('vehicles*', 'maintenance*', 'reports*', 'opds*', 'vehicle-types*', 'activities*') && !Request::is('sipat*') && !Request::is('elabel*')) ? '' : 'collapsed' }}" 
                    data-bs-toggle="collapse" 
                    data-bs-target="#moduleErandis" 
-                   aria-expanded="{{ (Request::is('vehicles*', 'maintenance*', 'reports*') && !Request::is('sipat*') && !Request::is('elabel*')) ? 'true' : 'false' }}"
+                   aria-expanded="{{ (Request::is('vehicles*', 'maintenance*', 'reports*', 'opds*', 'vehicle-types*', 'activities*') && !Request::is('sipat*') && !Request::is('elabel*')) ? 'true' : 'false' }}"
                    data-bs-toggle-tooltip="tooltip" data-bs-placement="right" title="ERANDIS">
                     <div class="module-header-title">
                         <i class="bi bi-car-front-fill module-icon text-warning"></i>
@@ -140,27 +241,112 @@
                     </div>
                     <i class="bi bi-chevron-down chevron-icon"></i>
                 </a>
-                <div id="moduleErandis" class="collapse {{ (Request::is('vehicles*', 'maintenance*', 'reports*') && !Request::is('sipat*') && !Request::is('elabel*')) ? 'show' : '' }}" data-bs-parent="#moduleAccordion">
-                    <ul class="submenu-list">
-                        <li class="{{ Request::is('vehicles*') ? 'active' : '' }}">
-                            <a href="{{ route('vehicles.index') }}" data-bs-toggle="tooltip" data-bs-placement="right" title="Data Kendaraan">
-                                <i class="bi bi-car-front"></i>
-                                <span>Data Kendaraan</span>
+                <div id="moduleErandis" class="collapse {{ (Request::is('vehicles*', 'maintenance*', 'reports*', 'opds*', 'vehicle-types*', 'activities*') && !Request::is('sipat*') && !Request::is('elabel*')) ? 'show' : '' }}" data-bs-parent="#moduleAccordion">
+                    
+                    <!-- Nested Submenu 1: Inventaris Kendaraan -->
+                    <div class="nested-group">
+                        <a class="nested-header {{ Request::is('vehicles*') ? '' : 'collapsed' }}"
+                           data-bs-toggle="collapse"
+                           href="#erandisSubKendaraan"
+                           role="button"
+                           aria-expanded="{{ Request::is('vehicles*') ? 'true' : 'false' }}">
+                            <span><i class="bi bi-car-front me-1 text-warning"></i> MANAJEMEN KENDARAAN</span>
+                            <i class="bi bi-chevron-down nested-chevron"></i>
+                        </a>
+                        <div id="erandisSubKendaraan" class="collapse {{ Request::is('vehicles*') ? 'show' : '' }}">
+                            <ul class="submenu-list">
+                                <li class="{{ Request::is('vehicles*') ? 'active' : '' }}">
+                                    <a href="{{ route('vehicles.index') }}" data-bs-toggle="tooltip" data-bs-placement="right" title="Data Kendaraan">
+                                        <i class="bi bi-truck"></i>
+                                        <span>Data Kendaraan Dinas</span>
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Nested Submenu 2: Operasional & Pemeliharaan -->
+                    <div class="nested-group">
+                        <a class="nested-header {{ Request::is('maintenance*') ? '' : 'collapsed' }}"
+                           data-bs-toggle="collapse"
+                           href="#erandisSubPemeliharaan"
+                           role="button"
+                           aria-expanded="{{ Request::is('maintenance*') ? 'true' : 'false' }}">
+                            <span><i class="bi bi-tools me-1 text-info"></i> SERVIS & PEMELIHARAAN</span>
+                            <i class="bi bi-chevron-down nested-chevron"></i>
+                        </a>
+                        <div id="erandisSubPemeliharaan" class="collapse {{ Request::is('maintenance*') ? 'show' : '' }}">
+                            <ul class="submenu-list">
+                                <li class="{{ Request::is('maintenance*') ? 'active' : '' }}">
+                                    <a href="{{ route('maintenance.index') }}" data-bs-toggle="tooltip" data-bs-placement="right" title="Servis & Pemeliharaan">
+                                        <i class="bi bi-wrench-adjusts"></i>
+                                        <span>Riwayat & Jadwal Servis</span>
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Nested Submenu 3: Pelaporan -->
+                    <div class="nested-group">
+                        <a class="nested-header {{ Request::is('reports*') ? '' : 'collapsed' }}"
+                           data-bs-toggle="collapse"
+                           href="#erandisSubPelaporan"
+                           role="button"
+                           aria-expanded="{{ Request::is('reports*') ? 'true' : 'false' }}">
+                            <span><i class="bi bi-file-earmark-bar-graph me-1 text-success"></i> PELAPORAN</span>
+                            <i class="bi bi-chevron-down nested-chevron"></i>
+                        </a>
+                        <div id="erandisSubPelaporan" class="collapse {{ Request::is('reports*') ? 'show' : '' }}">
+                            <ul class="submenu-list">
+                                <li class="{{ Request::is('reports*') ? 'active' : '' }}">
+                                    <a href="{{ route('reports.index') }}" data-bs-toggle="tooltip" data-bs-placement="right" title="Laporan Kendaraan">
+                                        <i class="bi bi-graph-up"></i>
+                                        <span>Laporan Kendaraan Dinas</span>
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Nested Submenu 4: Master Data ERANDIS -->
+                    @if(auth()->user()?->role !== \App\Enums\UserRole::OPD)
+                        <div class="nested-group">
+                            <a class="nested-header {{ Request::is('opds*', 'vehicle-types*', 'activities*') ? '' : 'collapsed' }}"
+                               data-bs-toggle="collapse"
+                               href="#erandisSubMaster"
+                               role="button"
+                               aria-expanded="{{ Request::is('opds*', 'vehicle-types*', 'activities*') ? 'true' : 'false' }}">
+                                <span><i class="bi bi-sliders me-1 text-primary"></i> MASTER ERANDIS</span>
+                                <i class="bi bi-chevron-down nested-chevron"></i>
                             </a>
-                        </li>
-                        <li class="{{ Request::is('maintenance*') ? 'active' : '' }}">
-                            <a href="{{ route('maintenance.index') }}" data-bs-toggle="tooltip" data-bs-placement="right" title="Servis & Pemeliharaan">
-                                <i class="bi bi-tools"></i>
-                                <span>Servis & Pemeliharaan</span>
-                            </a>
-                        </li>
-                        <li class="{{ Request::is('reports*') ? 'active' : '' }}">
-                            <a href="{{ route('reports.index') }}" data-bs-toggle="tooltip" data-bs-placement="right" title="Laporan Kendaraan">
-                                <i class="bi bi-file-earmark-bar-graph"></i>
-                                <span>Laporan Kendaraan</span>
-                            </a>
-                        </li>
-                    </ul>
+                            <div id="erandisSubMaster" class="collapse {{ Request::is('opds*', 'vehicle-types*', 'activities*') ? 'show' : '' }}">
+                                <ul class="submenu-list">
+                                    <li class="{{ Request::is('opds*') ? 'active' : '' }}">
+                                        <a href="{{ route('opds.index') }}" data-bs-toggle="tooltip" data-bs-placement="right" title="OPD / Instansi">
+                                            <i class="bi bi-building"></i>
+                                            <span>OPD / Instansi</span>
+                                        </a>
+                                    </li>
+                                    <li class="{{ Request::is('vehicle-types*') ? 'active' : '' }}">
+                                        <a href="{{ route('vehicle-types.index') }}" data-bs-toggle="tooltip" data-bs-placement="right" title="Jenis Kendaraan">
+                                            <i class="bi bi-grid-3x3-gap"></i>
+                                            <span>Jenis Kendaraan</span>
+                                        </a>
+                                    </li>
+                                    @if(auth()->check() && auth()->user()?->role === \App\Enums\UserRole::SUPERADMIN)
+                                        <li class="{{ Request::is('activities*') ? 'active' : '' }}">
+                                            <a href="{{ Route::has('activities.index') ? route('activities.index') : '#' }}" data-bs-toggle="tooltip" data-bs-placement="right" title="Audit Log (ERANDIS)">
+                                                <i class="bi bi-shield-lock"></i>
+                                                <span>Audit Log ERANDIS</span>
+                                            </a>
+                                        </li>
+                                    @endif
+                                </ul>
+                            </div>
+                        </div>
+                    @endif
+
                 </div>
             </div>
 
@@ -178,109 +364,136 @@
                     <i class="bi bi-chevron-down chevron-icon"></i>
                 </a>
                 <div id="moduleElabel" class="collapse {{ Request::is('elabel*') ? 'show' : '' }}" data-bs-parent="#moduleAccordion">
-                    <ul class="submenu-list">
-                        <li class="{{ Request::is('elabel/boxes*') ? 'active' : '' }}">
-                            <a href="{{ Route::has('elabel.boxes.index') ? route('elabel.boxes.index') : '#' }}" data-bs-toggle="tooltip" data-bs-placement="right" title="Box & Lokasi Rak">
-                                <i class="bi bi-box-seam"></i>
-                                <span>Box & Lokasi Rak</span>
-                            </a>
-                        </li>
-                        <li class="{{ Request::is('elabel/sertifikat*') ? 'active' : '' }}">
-                            <a href="{{ Route::has('elabel.sertifikat.index') ? route('elabel.sertifikat.index') : '#' }}" data-bs-toggle="tooltip" data-bs-placement="right" title="Katalog Sertifikat Tanah">
-                                <i class="bi bi-patch-check"></i>
-                                <span>Katalog Sertifikat Tanah</span>
-                            </a>
-                        </li>
-                        <li class="{{ Request::is('elabel/bpkb*') ? 'active' : '' }}">
-                            <a href="{{ Route::has('elabel.bpkb.index') ? route('elabel.bpkb.index') : '#' }}" data-bs-toggle="tooltip" data-bs-placement="right" title="Katalog BPKB Kendaraan">
-                                <i class="bi bi-card-heading"></i>
-                                <span>Katalog BPKB Kendaraan</span>
-                            </a>
-                        </li>
-                        <li class="{{ Request::is('elabel/surat-penyerahan*') ? 'active' : '' }}">
-                            <a href="{{ Route::has('elabel.surat-penyerahan.index') ? route('elabel.surat-penyerahan.index') : '#' }}" data-bs-toggle="tooltip" data-bs-placement="right" title="Surat Penyerahan Arsip">
-                                <i class="bi bi-file-earmark-text"></i>
-                                <span>Surat Penyerahan Arsip</span>
-                            </a>
-                        </li>
-                        <li class="{{ Request::is('elabel/peminjaman*') ? 'active' : '' }}">
-                            <a href="{{ Route::has('elabel.peminjaman.index') ? route('elabel.peminjaman.index') : '#' }}" data-bs-toggle="tooltip" data-bs-placement="right" title="Peminjaman & Riwayat">
-                                <i class="bi bi-clock-history"></i>
-                                <span>Peminjaman & Riwayat</span>
+                    
+                    <!-- Dashboard eLABEL -->
+                    <ul class="submenu-list mb-2">
+                        <li class="{{ Request::is('elabel/dashboard*') ? 'active' : '' }}">
+                            <a href="{{ route('elabel.dashboard') }}" data-bs-toggle="tooltip" data-bs-placement="right" title="Dashboard eLABEL">
+                                <i class="bi bi-speedometer2 text-info"></i>
+                                <span>Dashboard eLABEL</span>
                             </a>
                         </li>
                     </ul>
+
+                    <!-- Nested Submenu 1: Dokumen BPKB -->
+                    <div class="nested-group">
+                        <a class="nested-header {{ Request::is('elabel/bpkb*', 'elabel/boxes*') ? '' : 'collapsed' }}"
+                           data-bs-toggle="collapse"
+                           href="#elabelSubBpkb"
+                           role="button"
+                           aria-expanded="{{ Request::is('elabel/bpkb*', 'elabel/boxes*') ? 'true' : 'false' }}">
+                            <span><i class="bi bi-card-heading me-1 text-primary"></i> DOKUMEN BPKB</span>
+                            <i class="bi bi-chevron-down nested-chevron"></i>
+                        </a>
+                        <div id="elabelSubBpkb" class="collapse {{ Request::is('elabel/bpkb*', 'elabel/boxes*') ? 'show' : '' }}">
+                            <ul class="submenu-list">
+                                <li class="{{ Request::is('elabel/bpkb') || Request::is('elabel/bpkb/*') && !Request::is('elabel/bpkb-deleted*') ? 'active' : '' }}">
+                                    <a href="{{ route('elabel.bpkb.index') }}" data-bs-toggle="tooltip" data-bs-placement="right" title="Katalog BPKB Kendaraan">
+                                        <i class="bi bi-card-checklist"></i>
+                                        <span>Katalog BPKB</span>
+                                    </a>
+                                </li>
+                                <li class="{{ Request::is('elabel/bpkb-deleted*') ? 'active' : '' }}">
+                                    <a href="{{ route('elabel.bpkb-deleted.index') }}" data-bs-toggle="tooltip" data-bs-placement="right" title="BPKB Keluar">
+                                        <i class="bi bi-box-arrow-right"></i>
+                                        <span>BPKB Keluar</span>
+                                    </a>
+                                </li>
+                                <li class="{{ Request::is('elabel/boxes*') ? 'active' : '' }}">
+                                    <a href="{{ route('elabel.boxes.index') }}" data-bs-toggle="tooltip" data-bs-placement="right" title="Box & Lokasi Rak BPKB">
+                                        <i class="bi bi-box-seam"></i>
+                                        <span>Box BPKB</span>
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Nested Submenu 2: Sertifikat Tanah -->
+                    <div class="nested-group">
+                        <a class="nested-header {{ Request::is('elabel/sertifikat*') ? '' : 'collapsed' }}"
+                           data-bs-toggle="collapse"
+                           href="#elabelSubSertifikat"
+                           role="button"
+                           aria-expanded="{{ Request::is('elabel/sertifikat*') ? 'true' : 'false' }}">
+                            <span><i class="bi bi-patch-check me-1 text-success"></i> SERTIFIKAT TANAH</span>
+                            <i class="bi bi-chevron-down nested-chevron"></i>
+                        </a>
+                        <div id="elabelSubSertifikat" class="collapse {{ Request::is('elabel/sertifikat*') ? 'show' : '' }}">
+                            <ul class="submenu-list">
+                                <li class="{{ Request::is('elabel/sertifikat') || Request::is('elabel/sertifikat/*') && !Request::is('elabel/sertifikat-boxes*') ? 'active' : '' }}">
+                                    <a href="{{ route('elabel.sertifikat.index') }}" data-bs-toggle="tooltip" data-bs-placement="right" title="Katalog Sertifikat Tanah">
+                                        <i class="bi bi-patch-check-fill"></i>
+                                        <span>Katalog Sertifikat</span>
+                                    </a>
+                                </li>
+                                <li class="{{ Request::is('elabel/sertifikat-boxes*') ? 'active' : '' }}">
+                                    <a href="{{ route('elabel.sertifikat-boxes.index') }}" data-bs-toggle="tooltip" data-bs-placement="right" title="Box Sertifikat Tanah">
+                                        <i class="bi bi-archive"></i>
+                                        <span>Box Sertifikat Tanah</span>
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Nested Submenu 3: Surat Penyerahan & Layanan -->
+                    <div class="nested-group">
+                        <a class="nested-header {{ Request::is('elabel/surat-penyerahan*', 'elabel/peminjaman*') ? '' : 'collapsed' }}"
+                           data-bs-toggle="collapse"
+                           href="#elabelSubSurat"
+                           role="button"
+                           aria-expanded="{{ Request::is('elabel/surat-penyerahan*', 'elabel/peminjaman*') ? 'true' : 'false' }}">
+                            <span><i class="bi bi-folder-symlink me-1 text-warning"></i> SURAT & LAYANAN</span>
+                            <i class="bi bi-chevron-down nested-chevron"></i>
+                        </a>
+                        <div id="elabelSubSurat" class="collapse {{ Request::is('elabel/surat-penyerahan*', 'elabel/peminjaman*') ? 'show' : '' }}">
+                            <ul class="submenu-list">
+                                <li class="{{ Request::is('elabel/surat-penyerahan') || Request::is('elabel/surat-penyerahan/*') && !Request::is('elabel/surat-penyerahan-boxes*') ? 'active' : '' }}">
+                                    <a href="{{ route('elabel.surat-penyerahan.index') }}" data-bs-toggle="tooltip" data-bs-placement="right" title="Surat Penyerahan Arsip">
+                                        <i class="bi bi-file-earmark-text"></i>
+                                        <span>Surat Penyerahan</span>
+                                    </a>
+                                </li>
+                                <li class="{{ Request::is('elabel/surat-penyerahan-boxes*') ? 'active' : '' }}">
+                                    <a href="{{ route('elabel.surat-penyerahan-boxes.index') }}" data-bs-toggle="tooltip" data-bs-placement="right" title="Box Surat Penyerahan">
+                                        <i class="bi bi-folder2-open"></i>
+                                        <span>Box Surat Penyerahan</span>
+                                    </a>
+                                </li>
+                                <li class="{{ Request::is('elabel/peminjaman*') ? 'active' : '' }}">
+                                    <a href="{{ route('elabel.peminjaman.index') }}" data-bs-toggle="tooltip" data-bs-placement="right" title="Peminjaman & Riwayat">
+                                        <i class="bi bi-clock-history"></i>
+                                        <span>Request Scan & Pinjam</span>
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+
                 </div>
             </div>
 
-            <!-- MODUL: MASTER & SISTEM -->
+            <!-- MODUL: PENGATURAN SISTEM (GLOBAL UTILITY & ADMIN) -->
             <div class="module-group">
-                <a class="module-header {{ Request::is('master-data*', 'opds*', 'vehicle-types*', 'users*', 'activities*', 'settings*') ? '' : 'collapsed' }}" 
+                <a class="module-header {{ Request::is('users*', 'settings*', 'master-data/opd-mapping*') ? '' : 'collapsed' }}" 
                    data-bs-toggle="collapse" 
                    data-bs-target="#moduleSystem" 
-                   aria-expanded="{{ Request::is('master-data*', 'opds*', 'vehicle-types*', 'users*', 'activities*', 'settings*') ? 'true' : 'false' }}"
-                   data-bs-toggle-tooltip="tooltip" data-bs-placement="right" title="MASTER & SISTEM">
+                   aria-expanded="{{ Request::is('users*', 'settings*', 'master-data/opd-mapping*') ? 'true' : 'false' }}"
+                   data-bs-toggle-tooltip="tooltip" data-bs-placement="right" title="PENGATURAN SISTEM">
                     <div class="module-header-title">
                         <i class="bi bi-gear-wide-connected module-icon text-success"></i>
-                        <span class="module-name">MASTER & SISTEM</span>
+                        <span class="module-name">PENGATURAN SISTEM</span>
                     </div>
                     <i class="bi bi-chevron-down chevron-icon"></i>
                 </a>
-                <div id="moduleSystem" class="collapse {{ Request::is('master-data*', 'opds*', 'vehicle-types*', 'users*', 'activities*', 'settings*') ? 'show' : '' }}" data-bs-parent="#moduleAccordion">
+                <div id="moduleSystem" class="collapse {{ Request::is('users*', 'settings*', 'master-data/opd-mapping*') ? 'show' : '' }}" data-bs-parent="#moduleAccordion">
                     <ul class="submenu-list">
                         @if(auth()->user()?->role !== \App\Enums\UserRole::OPD)
-                            <li class="{{ Request::is('opds*') ? 'active' : '' }}">
-                                <a href="{{ route('opds.index') }}" data-bs-toggle="tooltip" data-bs-placement="right" title="OPD / Instansi">
-                                    <i class="bi bi-building"></i>
-                                    <span>OPD / Instansi</span>
-                                </a>
-                            </li>
-                            <li class="{{ Request::is('vehicle-types*') ? 'active' : '' }}">
-                                <a href="{{ route('vehicle-types.index') }}" data-bs-toggle="tooltip" data-bs-placement="right" title="Jenis Kendaraan">
-                                    <i class="bi bi-grid-3x3-gap"></i>
-                                    <span>Jenis Kendaraan</span>
-                                </a>
-                            </li>
-                            <li class="{{ Request::is('master-data/status-proses*') ? 'active' : '' }}">
-                                <a href="{{ route('status-proses.index') }}" data-bs-toggle="tooltip" data-bs-placement="right" title="Status Proses Pensertifikatan">
-                                    <i class="bi bi-tags"></i>
-                                    <span>Master Status Proses</span>
-                                </a>
-                            </li>
-                            <li class="{{ Request::is('master-data/opd-sipat*') ? 'active' : '' }}">
-                                <a href="{{ route('master.opd-sipat.index') }}" data-bs-toggle="tooltip" data-bs-placement="right" title="OPD / Instansi (SIPAT)">
-                                    <i class="bi bi-diagram-3"></i>
-                                    <span>OPD (SIPAT)</span>
-                                </a>
-                            </li>
-                            <li class="{{ Request::is('master-data/kop-surat*') ? 'active' : '' }}">
-                                <a href="{{ route('master.kop-settings.index') }}" data-bs-toggle="tooltip" data-bs-placement="right" title="Master KOP Surat Pemda">
-                                    <i class="bi bi-file-earmark-pdf text-warning"></i>
-                                    <span>Master KOP Surat</span>
-                                </a>
-                            </li>
-                            <li class="{{ Request::is('master-data/wilayah*') ? 'active' : '' }}">
-                                <a href="{{ route('master.wilayah.index') }}" data-bs-toggle="tooltip" data-bs-placement="right" title="Master Wilayah & Pejabat (SKPT)">
-                                    <i class="bi bi-geo-alt text-success"></i>
-                                    <span>Master Wilayah & Pejabat</span>
-                                </a>
-                            </li>
                             <li class="{{ Request::is('master-data/opd-mapping*') ? 'active' : '' }}">
                                 <a href="{{ route('master.opd-mapping.index') }}" data-bs-toggle="tooltip" data-bs-placement="right" title="Pemetaan OPD Terpadu (SIPAT ↔ E-RANDIS)">
                                     <i class="bi bi-link-45deg text-info"></i>
                                     <span>Pemetaan OPD Terpadu</span>
-                                </a>
-                            </li>
-                            <li class="{{ Request::is('master-data/log-aktivitas*') ? 'active' : '' }}">
-                                <a href="{{ route('master.logs.index') }}" data-bs-toggle="tooltip" data-bs-placement="right" title="Log Aktivitas (SIPAT)">
-                                    <i class="bi bi-journal-check text-primary"></i>
-                                    <span>Log Aktivitas (SIPAT)</span>
-                                </a>
-                            </li>
-                            <li class="{{ Request::is('master-data/import*') ? 'active' : '' }}">
-                                <a href="{{ route('master.import.index') }}" data-bs-toggle="tooltip" data-bs-placement="right" title="Import Aset Tanah & Status Proses SIPAT">
-                                    <i class="bi bi-file-earmark-arrow-up text-warning"></i>
-                                    <span>Import Data SIPAT</span>
                                 </a>
                             </li>
                         @endif
@@ -290,12 +503,6 @@
                                 <a href="{{ route('users.index') }}" data-bs-toggle="tooltip" data-bs-placement="right" title="Manajemen Pengguna">
                                     <i class="bi bi-people-fill"></i>
                                     <span>Manajemen Pengguna</span>
-                                </a>
-                            </li>
-                            <li class="{{ Request::is('activities*') ? 'active' : '' }}">
-                                <a href="{{ Route::has('activities.index') ? route('activities.index') : '#' }}" data-bs-toggle="tooltip" data-bs-placement="right" title="Audit Log (ERANDIS)">
-                                    <i class="bi bi-shield-lock text-warning"></i>
-                                    <span>Audit Log (ERANDIS)</span>
                                 </a>
                             </li>
                             <li class="{{ request()->routeIs('settings.*') ? 'active' : '' }}">

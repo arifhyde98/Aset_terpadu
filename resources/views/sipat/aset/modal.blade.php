@@ -393,24 +393,128 @@
         <div class="tab-pane fade" id="tab-elabel" role="tabpanel">
             <div class="detail-card-surface p-4">
                 <div class="d-flex align-items-center justify-content-between mb-3 border-bottom pb-2">
-                    <h6 class="fw-bold mb-0 text-body"><i class="bi bi-box-seam me-1 text-primary"></i> Lokasi Gudang Arsip Fisik (eLabel)</h6>
-                    <span class="badge bg-primary-subtle text-primary">Integrasi eLABEL</span>
+                    <h6 class="fw-bold mb-0 text-body"><i class="bi bi-box-seam me-1 text-primary"></i> Integrasi Arsip Fisik (eLabel)</h6>
+                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-3 py-1.5 fs-6 fw-bold">Modul eLABEL</span>
                 </div>
-                <p class="text-secondary small mb-3">Status ketersediaan dokumen fisik sertifikat di Box Gudang Aset Daerah</p>
-                <div class="row g-3">
-                    <div class="col-md-4">
-                        <small class="text-secondary d-block fw-semibold">NOMOR BOX GUDANG</small>
-                        <span class="fw-bold font-monospace text-body fs-6">BOX-TANAH-2026-{{ sprintf('%03d', $aset->id_aset) }}</span>
+
+                @if($elabelSertifikat)
+                    <div class="alert alert-success border-0 bg-success bg-opacity-10 text-success rounded-3 mb-4 d-flex align-items-center justify-content-between">
+                        <div>
+                            <i class="bi bi-check-circle-fill me-2 fs-5"></i>
+                            <strong>Sertifikat Terverifikasi di Modul eLabel</strong> - Data fisik arsip telah tersimpan di gudang aset.
+                        </div>
+                        <a href="{{ route('elabel.sertifikat.show', $elabelSertifikat->id) }}" target="_blank" class="btn btn-sm btn-success fw-bold">
+                            <i class="bi bi-eye me-1"></i> Buka Katalog eLabel
+                        </a>
                     </div>
-                    <div class="col-md-4">
-                        <small class="text-secondary d-block fw-semibold">LOKASI RAK GUDANG</small>
-                        <span class="fw-bold text-body fs-6">RAK A{{ ($aset->id_aset % 5) + 1 }} - BARIS 2</span>
+
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-4">
+                            <div class="p-3 bg-body rounded-3 border h-100">
+                                <small class="text-secondary d-block fw-semibold text-uppercase mb-1">KODE BOX GUDANG</small>
+                                <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 px-3 py-2 fs-6 rounded-3 fw-bold">
+                                    <i class="bi bi-archive me-1"></i> {{ $elabelSertifikat->box->box_code ?? 'Box Belum Ditentukan' }}
+                                </span>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="p-3 bg-body rounded-3 border h-100">
+                                <small class="text-secondary d-block fw-semibold text-uppercase mb-1">LOKASI RAK / WILAYAH</small>
+                                <span class="fw-bold text-dark fs-6"><i class="bi bi-geo-alt text-danger me-1"></i> {{ $elabelSertifikat->box->lokasi ?? $elabelSertifikat->lokasi ?? '-' }}</span>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="p-3 bg-body rounded-3 border h-100">
+                                <small class="text-secondary d-block fw-semibold text-uppercase mb-1">NO. SERTIPIKAT (eLABEL)</small>
+                                <span class="fw-bold text-navy font-monospace fs-6">{{ $elabelSertifikat->no_sertipikat }}</span>
+                            </div>
+                        </div>
                     </div>
-                    <div class="col-md-4">
-                        <small class="text-secondary d-block fw-semibold">STATUS ARSIP FISIK</small>
-                        <span class="badge bg-success-subtle text-success fs-6 mt-1 px-3 py-1.5">Tersimpan di Gudang</span>
+
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-4">
+                            <small class="text-secondary d-block fw-semibold text-uppercase mb-1">STATUS PENGGUNAAN</small>
+                            <div class="fw-semibold text-dark">{{ $elabelSertifikat->status_penggunaan ?: '-' }}</div>
+                        </div>
+                        <div class="col-md-4">
+                            <small class="text-secondary d-block fw-semibold text-uppercase mb-1">ATAS NAMA PEMILIK</small>
+                            <div class="fw-semibold text-dark">{{ $elabelSertifikat->nama_pemilik ?: '-' }}</div>
+                        </div>
+                        <div class="col-md-4">
+                            <small class="text-secondary d-block fw-semibold text-uppercase mb-1">DINAS / OPD PENGGUNA</small>
+                            <div class="fw-semibold text-dark">{{ $elabelSertifikat->dinas ?: '-' }}</div>
+                        </div>
                     </div>
-                </div>
+
+                    <div class="d-flex flex-wrap gap-2 pt-3 border-top">
+                        @if($elabelSertifikat->pdf_path && \Illuminate\Support\Facades\Storage::disk('public')->exists($elabelSertifikat->pdf_path))
+                            <a href="{{ route('elabel.sertifikat.view-pdf', $elabelSertifikat->id) }}" target="_blank" class="btn btn-primary fw-medium shadow-sm">
+                                <i class="bi bi-file-earmark-pdf me-1"></i> Buka Fullscreen PDF
+                            </a>
+                        @endif
+
+                        @if($elabelSertifikat->box_id)
+                            <a href="{{ route('elabel.sertifikat-boxes.label', ['id' => $elabelSertifikat->box_id, 'autoprint' => 1]) }}" target="_blank" class="btn btn-outline-success fw-medium">
+                                <i class="bi bi-printer me-1"></i> Cetak Label Box Fisik
+                            </a>
+                            <a href="{{ route('elabel.sertifikat-boxes.show', $elabelSertifikat->box_id) }}" target="_blank" class="btn btn-light border fw-medium">
+                                <i class="bi bi-box-seam me-1"></i> Detail Box Gudang
+                            </a>
+                        @endif
+                    </div>
+
+                    <!-- DIRECT LIVE PREVIEW SCAN PDF SERTIFIKAT -->
+                    @if($elabelSertifikat->pdf_path && \Illuminate\Support\Facades\Storage::disk('public')->exists($elabelSertifikat->pdf_path))
+                        <div class="mt-4 pt-3 border-top">
+                            <div class="d-flex align-items-center justify-content-between mb-2">
+                                <h6 class="fw-bold mb-0 text-navy"><i class="bi bi-file-earmark-pdf text-danger me-1"></i> Viewer Scan PDF Sertifikat Tanah (eLabel)</h6>
+                                <span class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25 px-2.5 py-1 small">PDF Viewer</span>
+                            </div>
+                            <div class="rounded-4 overflow-hidden border shadow-sm" style="height: 520px; background: #525659;">
+                                <iframe src="{{ route('elabel.sertifikat.view-pdf', $elabelSertifikat->id) }}" style="width: 100%; height: 100%; border: none;"></iframe>
+                            </div>
+                        </div>
+                    @else
+                        <div class="mt-4 pt-3 border-top">
+                            <div class="p-3 bg-light rounded-3 border text-center text-secondary">
+                                <i class="bi bi-file-earmark-x fs-2 d-block mb-1 text-warning opacity-75"></i>
+                                <span class="small fw-semibold">File scan PDF sertifikat belum diunggah di Katalog eLabel.</span>
+                                <div class="mt-2">
+                                    <a href="{{ route('elabel.sertifikat.edit', $elabelSertifikat->id) }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-upload me-1"></i> Upload Scan PDF Sekarang
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    @endif
+                @else
+                    <div class="alert alert-warning border-0 bg-warning bg-opacity-10 text-dark rounded-3 mb-4">
+                        <div class="d-flex align-items-center">
+                            <i class="bi bi-exclamation-triangle-fill text-warning me-2 fs-5"></i>
+                            <div>
+                                <strong>Sertifikat Belum Terdaftar di Modul eLabel</strong>
+                                <div class="small text-secondary mt-1">Dokumen fisik sertifikat untuk aset ini belum tercatat dalam sistem penataan box gudang eLabel.</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="p-4 bg-body rounded-3 border text-center my-3">
+                        <i class="bi bi-folder-plus text-primary fs-1 d-block mb-2"></i>
+                        <h6 class="fw-bold text-dark mb-1">Daftarkan Sertifikat Fisik Sekarang</h6>
+                        <p class="text-secondary small mb-3">Klik tombol di bawah untuk mendaftarkan sertifikat tanah ini langsung ke Katalog eLabel dengan data terisi otomatis.</p>
+                        
+                        <a href="{{ route('elabel.sertifikat.create', [
+                            'no_sertipikat' => $aset->no_sertifikat ?? '',
+                            'nibar' => $aset->kode_aset ?? '',
+                            'nama_pemilik' => 'Pemerintah Kabupaten Donggala',
+                            'dinas' => $aset->opd ?? '',
+                            'luas' => $aset->luas ?? '',
+                            'alamat' => $aset->alamat ?? '',
+                        ]) }}" target="_blank" class="btn btn-primary fw-bold px-4 py-2 shadow-sm">
+                            <i class="bi bi-plus-lg me-1"></i> + Daftarkan ke Katalog eLabel
+                        </a>
+                    </div>
+                @endif
             </div>
         </div>
     </div>

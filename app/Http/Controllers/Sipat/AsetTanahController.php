@@ -119,7 +119,30 @@ class AsetTanahController extends Controller
         $pengamanan = DB::table('pengamanan_fisik')->where('id_aset', $id)->first();
         $dokumenList = DB::table('dokumen_aset')->where('id_aset', $id)->orderBy('uploaded_at', 'desc')->get();
 
-        return view('sipat.aset.modal', compact('aset', 'prosesList', 'statusList', 'pengamanan', 'dokumenList'));
+        // Integrasi Real Model eLabel (ElabelSertifikat & ElabelSertifikatBox)
+        $elabelSertifikat = null;
+        if (!empty($aset->no_sertifikat)) {
+            $cleanNo = trim($aset->no_sertifikat);
+            $elabelSertifikat = \App\Models\Elabel\ElabelSertifikat::with('box')
+                ->where('no_sertipikat', $cleanNo)
+                ->orWhere('no_sertipikat', 'LIKE', '%' . $cleanNo . '%')
+                ->first();
+        }
+
+        if (!$elabelSertifikat && (!empty($aset->kode_aset) || !empty($aset->nama_aset))) {
+            $elabelSertifikat = \App\Models\Elabel\ElabelSertifikat::with('box')
+                ->where(function ($q) use ($aset) {
+                    if (!empty($aset->kode_aset)) {
+                        $q->where('nibar', $aset->kode_aset);
+                    }
+                    if (!empty($aset->nama_aset)) {
+                        $q->orWhere('nama_pemilik', 'LIKE', '%' . $aset->nama_aset . '%');
+                    }
+                })
+                ->first();
+        }
+
+        return view('sipat.aset.modal', compact('aset', 'prosesList', 'statusList', 'pengamanan', 'dokumenList', 'elabelSertifikat'));
     }
 
     public function edit($id)
