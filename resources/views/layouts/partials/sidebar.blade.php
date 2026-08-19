@@ -277,6 +277,12 @@
                                     <span>Log Aktivitas (SIPAT)</span>
                                 </a>
                             </li>
+                            <li class="{{ Request::is('master-data/import*') ? 'active' : '' }}">
+                                <a href="{{ route('master.import.index') }}" data-bs-toggle="tooltip" data-bs-placement="right" title="Import Aset Tanah & Status Proses SIPAT">
+                                    <i class="bi bi-file-earmark-arrow-up text-warning"></i>
+                                    <span>Import Data SIPAT</span>
+                                </a>
+                            </li>
                         @endif
 
                         @if(auth()->check() && auth()->user()?->role === \App\Enums\UserRole::SUPERADMIN)

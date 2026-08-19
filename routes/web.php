@@ -79,6 +79,16 @@ Route::post('master-data/kop-surat', [\App\Http\Controllers\KopSettingsControlle
 Route::get('master-data/log-aktivitas', [\App\Http\Controllers\AuditLogsController::class, 'index'])->name('master.logs.index');
 Route::get('master-data/log-aktivitas/{id}', [\App\Http\Controllers\AuditLogsController::class, 'show'])->name('master.logs.show');
 
+// Master Data Import Sertifikat & Status Proses (2 Tab Khas SIPAT)
+Route::get('master-data/import', [\App\Http\Controllers\SipatImportController::class, 'index'])->name('master.import.index');
+Route::post('master-data/import/data', [\App\Http\Controllers\SipatImportController::class, 'importData'])->name('master.import.data');
+Route::post('master-data/import/update', [\App\Http\Controllers\SipatImportController::class, 'importUpdate'])->name('master.import.update');
+Route::get('master-data/import/template-status', [\App\Http\Controllers\SipatImportController::class, 'downloadTemplateStatus'])->name('master.import.template-status');
+Route::get('master-data/import/template-data', [\App\Http\Controllers\SipatImportController::class, 'downloadTemplateData'])->name('master.import.template-data');
+
+
+
+
 // Profil Pengguna
 Route::get('profile', [ProfileController::class, 'index'])->name('profile.index');
 Route::put('profile', [ProfileController::class, 'update'])->name('profile.update');
