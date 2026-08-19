@@ -265,6 +265,12 @@
                                     <span>Master Wilayah & Pejabat</span>
                                 </a>
                             </li>
+                            <li class="{{ Request::is('master-data/opd-mapping*') ? 'active' : '' }}">
+                                <a href="{{ route('master.opd-mapping.index') }}" data-bs-toggle="tooltip" data-bs-placement="right" title="Pemetaan OPD Terpadu (SIPAT ↔ E-RANDIS)">
+                                    <i class="bi bi-link-45deg text-info"></i>
+                                    <span>Pemetaan OPD Terpadu</span>
+                                </a>
+                            </li>
                             <li class="{{ Request::is('master-data/log-aktivitas*') ? 'active' : '' }}">
                                 <a href="{{ route('master.logs.index') }}" data-bs-toggle="tooltip" data-bs-placement="right" title="Log Aktivitas (SIPAT)">
                                     <i class="bi bi-journal-check text-primary"></i>

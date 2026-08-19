@@ -101,6 +101,10 @@ Route::resource('vehicles', VehicleController::class)->except(['create', 'edit',
 // Master Data Hub
 Route::get('master-data', [MasterDataController::class, 'index'])->name('master-data.index');
 
+// Pemetaan OPD Terpadu (SIPAT ↔ E-RANDIS)
+Route::get('master-data/opd-mapping', [\App\Http\Controllers\MasterOpdMappingController::class, 'index'])->name('master.opd-mapping.index');
+Route::delete('master-data/opd-mapping/{id}', [\App\Http\Controllers\MasterOpdMappingController::class, 'destroy'])->name('master.opd-mapping.destroy');
+
 // Master Data Wilayah (SIPAT)
 Route::prefix('master-data/wilayah')->name('master.')->group(function () {
     Route::get('/', [\App\Http\Controllers\MasterDataWilayahController::class, 'index'])->name('wilayah.index');

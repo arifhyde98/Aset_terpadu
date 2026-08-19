@@ -42,5 +42,18 @@ class Opd extends Model
     {
         return $this->hasOne(User::class);
     }
+
+    /**
+     * Relasi pemetaan ke OPD SIPAT.
+     */
+    public function sipatOpds()
+    {
+        return $this->belongsToMany(
+            OpdSipat::class,
+            'opd_mappings',
+            'erandis_opd_id',
+            'sipat_opd_id'
+        );
+    }
 }
 
