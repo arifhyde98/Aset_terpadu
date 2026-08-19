@@ -88,14 +88,14 @@
     </div>
 
     <!-- Filter Card -->
-    <div class="card border-0 shadow-sm rounded-4 mb-4">
+    <div class="card clean-card border-0 shadow-sm rounded-4 mb-4">
         <div class="card-body p-3">
             <form method="GET" action="{{ route('sipat.aset.index') }}" id="filterForm">
                 <div class="row g-2 align-items-end">
                     <!-- 1. OPD Filter -->
                     <div class="col-12 col-sm-6 col-md-3 col-xl-3">
                         <label class="form-label small fw-semibold text-secondary mb-1">OPD Pengelola</label>
-                        <select name="opd" class="form-select bg-body-tertiary border-0" onchange="document.getElementById('filterForm').submit()">
+                        <select name="opd" class="form-select" onchange="document.getElementById('filterForm').submit()">
                             <option value="">-- Semua OPD --</option>
                             <option value="KOSONG" {{ request('opd') === 'KOSONG' ? 'selected' : '' }}>[Tanpa OPD / Kosong]</option>
                             @foreach($opdList as $opd)
@@ -107,10 +107,10 @@
                     <!-- 2. Multi-select Checkbox Status Filter Dropdown -->
                     <div class="col-12 col-sm-6 col-md-3 col-xl-2">
                         <label class="form-label small fw-semibold text-secondary mb-1">
-                            Status BPN <span class="badge bg-warning-subtle text-dark px-1.5 py-0.5 rounded-pill" style="font-size: 0.65rem;">Centang</span>
+                            Status BPN <span class="badge bg-warning-subtle text-body px-1.5 py-0.5 rounded-pill" style="font-size: 0.65rem;">Centang</span>
                         </label>
                         <div class="dropdown">
-                            <button class="btn btn-outline-secondary bg-body-tertiary border-0 text-start w-100 dropdown-toggle d-flex align-items-center justify-content-between py-2" type="button" id="dropdownStatusFilter" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">
+                            <button class="btn btn-outline-secondary bg-body border-0 text-start w-100 dropdown-toggle d-flex align-items-center justify-content-between py-2" type="button" id="dropdownStatusFilter" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">
                                 <span class="text-truncate small">
                                     @php
                                         $selectedStatuses = (array) request('status');
@@ -142,13 +142,13 @@
                     <!-- 3. Tgl Perolehan -->
                     <div class="col-12 col-sm-6 col-md-2 col-xl-2">
                         <label class="form-label small fw-semibold text-secondary mb-1">Tgl Perolehan</label>
-                        <input type="date" name="tanggal_perolehan" class="form-control bg-body-tertiary border-0" value="{{ request('tanggal_perolehan') }}" onchange="document.getElementById('filterForm').submit()">
+                        <input type="date" name="tanggal_perolehan" class="form-control" value="{{ request('tanggal_perolehan') }}" onchange="document.getElementById('filterForm').submit()">
                     </div>
 
                     <!-- 4. Per Page Limit -->
                     <div class="col-6 col-sm-3 col-md-1 col-xl-1">
                         <label class="form-label small fw-semibold text-secondary mb-1">Tampil</label>
-                        <select name="per_page" class="form-select bg-body-tertiary border-0 px-2" onchange="document.getElementById('filterForm').submit()">
+                        <select name="per_page" class="form-select px-2" onchange="document.getElementById('filterForm').submit()">
                             <option value="15" {{ request('per_page') == '15' ? 'selected' : '' }}>15</option>
                             <option value="50" {{ request('per_page') == '50' ? 'selected' : '' }}>50</option>
                             <option value="100" {{ request('per_page') == '100' ? 'selected' : '' }}>100</option>
@@ -160,8 +160,8 @@
                     <div class="col-12 col-sm-9 col-md-3 col-xl-4">
                         <label class="form-label small fw-semibold text-secondary mb-1">Pencarian Cepat</label>
                         <div class="input-group">
-                            <span class="input-group-text bg-body-tertiary border-0 text-secondary"><i class="bi bi-search"></i></span>
-                            <input type="text" name="search" class="form-control bg-body-tertiary border-0" placeholder="Kode Aset, Nama Aset, Alamat..." value="{{ request('search') }}">
+                            <span class="input-group-text bg-body border-0 text-secondary"><i class="bi bi-search"></i></span>
+                            <input type="text" name="search" class="form-control" placeholder="Kode Aset, Nama Aset, Alamat..." value="{{ request('search') }}">
                             <button type="submit" class="btn btn-primary px-3">Cari</button>
                             @if(request()->hasAny(['search', 'opd', 'status', 'tanggal_perolehan']))
                                 <a href="{{ route('sipat.aset.index') }}" class="btn btn-outline-secondary px-3"><i class="bi bi-x-circle"></i> Reset</a>
@@ -174,10 +174,10 @@
     </div>
 
     <!-- Data Table Container -->
-    <div class="card border-0 shadow-sm table-container-sipat overflow-hidden mb-4">
+    <div class="card clean-card border-0 shadow-sm table-container-sipat overflow-hidden mb-4">
         <div class="table-responsive">
             <table class="table table-hover align-middle mb-0 aset-table">
-                <thead class="bg-body-tertiary text-secondary">
+                <thead class="bg-body text-secondary">
                     <tr>
                         <th class="ps-3 py-3" style="width: 40px;">
                             <input type="checkbox" id="checkAll" class="form-check-input">
@@ -287,11 +287,82 @@
 <!-- Floating Bulk Action Bar -->
 <div id="bulkFloatingBar" class="bulk-floating-bar">
     <span class="small"><strong id="selectedCount">0</strong> aset dipilih</span>
-    <button type="button" class="btn btn-sm btn-primary rounded-pill px-3">Ubah Status Massal</button>
+    <button type="button" class="btn btn-sm btn-primary rounded-pill px-3" data-bs-toggle="modal" data-bs-target="#modalBulkStatus">Ubah Status Massal</button>
     <button type="button" class="btn btn-sm btn-outline-light rounded-pill px-3" id="btnClearBulk">Batal</button>
 </div>
 
 @push('modals')
+<!-- Modal Ubah Status Massal -->
+<div class="modal fade" id="modalBulkStatus" tabindex="-1" aria-hidden="true" style="z-index: 1060;">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content rounded-4 border-0 shadow-lg overflow-hidden">
+            <div class="modal-header bg-primary-subtle border-bottom px-4 py-3">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 38px; height: 38px;">
+                        <i class="bi bi-layers-fill fs-5"></i>
+                    </div>
+                    <div>
+                        <h5 class="modal-title fw-bold text-dark mb-0">Ubah Status Massal</h5>
+                        <small class="text-primary fw-medium">Pembaruan Riwayat Status Kolektif</small>
+                    </div>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form action="{{ route('sipat.aset.bulkProses') }}" method="post" id="formBulkStatus" onsubmit="handleBulkSubmit(this)">
+                @csrf
+                <div id="bulkSelectedInputsContainer"></div>
+                <div class="modal-body p-4">
+                    <div class="alert alert-primary border-0 d-flex align-items-center gap-3 mb-3 p-3 rounded-3" style="font-size: 0.85rem;">
+                        <i class="bi bi-info-circle-fill fs-4 text-primary"></i>
+                        <div>Anda akan memperbarui status untuk <strong id="modalBulkCount" class="badge bg-primary fs-6 px-2 py-1 ms-1">0</strong> aset sekaligus.</div>
+                    </div>
+
+                    <div class="card bg-light border-0 rounded-3 p-3 mb-3">
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold text-secondary mb-1">Pilih Status Proses Baru <span class="text-danger">*</span></label>
+                            <select name="id_status" class="form-select" required>
+                                <option value="">-- Pilih Status Proses --</option>
+                                @foreach ($statusList as $st)
+                                    <option value="{{ $st->id_status }}">{{ $st->nama_status }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <div class="row g-2 mb-2">
+                            <div class="col-6">
+                                <label class="form-label small fw-semibold text-secondary mb-1">Tanggal Mulai</label>
+                                <input type="date" name="tgl_mulai" class="form-control" value="{{ date('Y-m-d') }}">
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label small fw-semibold text-secondary mb-1">Tanggal Selesai</label>
+                                <input type="date" name="tgl_selesai" class="form-control">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card bg-light border-0 rounded-3 p-3 mb-3">
+                        <a class="small text-decoration-none fw-semibold text-primary d-inline-flex align-items-center gap-2" data-bs-toggle="collapse" href="#collapseNibarList" role="button" aria-expanded="false">
+                            <i class="bi bi-clipboard-plus fs-6"></i> + Tempel / Masukkan Daftar NIBAR Massal
+                        </a>
+                        <div class="collapse mt-2" id="collapseNibarList">
+                            <textarea name="nibar_list" class="form-control font-monospace p-2" rows="3" style="font-size: 0.8rem;" placeholder="Tempel daftar NIBAR di sini (dipisahkan baris/koma)...&#10;Contoh:&#10;12.01.02.01.001&#10;12.01.02.01.002"></textarea>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="form-label small fw-semibold text-secondary mb-1">Keterangan / Catatan</label>
+                        <textarea name="keterangan" class="form-control" rows="2" placeholder="Catatan proses massal (opsional)...">Update status massal</textarea>
+                    </div>
+                </div>
+                <div class="modal-footer border-top pt-2 px-4 pb-3">
+                    <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-primary rounded-pill px-4 fw-semibold shadow-sm" id="btnSubmitBulk">Simpan Pembaruan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 <!-- Modal Detail Remote Container (Renders at document body root level) -->
 <div class="modal fade" id="modalDetailAset" tabindex="-1" aria-hidden="true" style="z-index: 1060;">
     <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
@@ -315,13 +386,28 @@
         const selectedCount = document.getElementById('selectedCount');
         const btnClearBulk = document.getElementById('btnClearBulk');
 
-        function updateBulkBar() {
+        // Pindahkan bulkBar ke body utama agar terlepas dari container yang memiliki CSS transform/overflow
+        if (bulkBar && bulkBar.parentNode !== document.body) {
+            document.body.appendChild(bulkBar);
+        }
+
+        console.log('Bulk init:', { checkAll: !!checkAll, cbCount: checkboxes.length, bulkBar: !!bulkBar });
+
+        window.updateBulkBar = function() {
             const checked = document.querySelectorAll('.aset-checkbox:checked');
+            console.log('checked count:', checked.length);
             if (checked.length > 0) {
-                selectedCount.innerText = checked.length;
-                bulkBar.style.display = 'flex';
+                if (selectedCount) selectedCount.innerText = checked.length;
+                const modalCount = document.getElementById('modalBulkCount');
+                if (modalCount) modalCount.innerText = checked.length;
+                if (bulkBar) {
+                    bulkBar.classList.remove('d-none');
+                    bulkBar.style.setProperty('display', 'flex', 'important');
+                }
             } else {
-                bulkBar.style.display = 'none';
+                if (bulkBar) {
+                    bulkBar.style.setProperty('display', 'none', 'important');
+                }
             }
         }
 
@@ -382,6 +468,21 @@
                     </div>
                 `;
             });
+    }
+
+    function handleBulkSubmit(form) {
+        const checked = document.querySelectorAll('.aset-checkbox:checked');
+        const container = document.getElementById('bulkSelectedInputsContainer');
+        container.innerHTML = '';
+        checked.forEach(cb => {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'aset_ids[]';
+            input.value = cb.value;
+            container.appendChild(input);
+        });
+        document.getElementById('btnSubmitBulk').innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Menyimpan...';
+        document.getElementById('btnSubmitBulk').disabled = true;
     }
 </script>
 @endpush

@@ -106,7 +106,7 @@
                             </a>
                         </li>
                         <li class="{{ Request::is('sipat/surat*') ? 'active' : '' }}">
-                            <a href="{{ Route::has('sipat.surat.index') ? route('sipat.surat.index') : '#' }}" data-bs-toggle="tooltip" data-bs-placement="right" title="Cetak Surat SKPT">
+                            <a href="{{ Route::has('sipat.surat.skpt') ? route('sipat.surat.skpt') : '#' }}" data-bs-toggle="tooltip" data-bs-placement="right" title="Cetak Surat SKPT">
                                 <i class="bi bi-file-earmark-word"></i>
                                 <span>Cetak Surat SKPT</span>
                             </a>
@@ -257,6 +257,12 @@
                                 <a href="{{ route('master.kop-settings.index') }}" data-bs-toggle="tooltip" data-bs-placement="right" title="Master KOP Surat Pemda">
                                     <i class="bi bi-file-earmark-pdf text-warning"></i>
                                     <span>Master KOP Surat</span>
+                                </a>
+                            </li>
+                            <li class="{{ Request::is('master-data/wilayah*') ? 'active' : '' }}">
+                                <a href="{{ route('master.wilayah.index') }}" data-bs-toggle="tooltip" data-bs-placement="right" title="Master Wilayah & Pejabat (SKPT)">
+                                    <i class="bi bi-geo-alt text-success"></i>
+                                    <span>Master Wilayah & Pejabat</span>
                                 </a>
                             </li>
                             <li class="{{ Request::is('master-data/log-aktivitas*') ? 'active' : '' }}">

@@ -16,6 +16,7 @@
         // Pre-initialization theme check to avoid flicker
         (function() {
             const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-bs-theme', savedTheme);
             document.getElementById('theme-root').setAttribute('data-theme', savedTheme);
             if(savedTheme === 'dark') {
                 document.body.classList.remove('bg-light');
@@ -84,6 +85,7 @@
             const root = document.getElementById('theme-root');
             
             function updateTheme(theme) {
+                document.documentElement.setAttribute('data-bs-theme', theme);
                 root.setAttribute('data-theme', theme);
                 localStorage.setItem('theme', theme);
                 

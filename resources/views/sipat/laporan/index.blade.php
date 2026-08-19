@@ -107,7 +107,7 @@
     <div class="report-shell">
         <!-- Kolom Kiri: Filter Laporan & Summary -->
         <div class="d-flex flex-column gap-4">
-            <div class="card report-card">
+            <div class="card clean-card report-card">
                 <div class="report-card-header">
                     <div class="header-icon">
                         <i class="bi bi-funnel"></i>
@@ -119,7 +119,7 @@
                         <div class="row g-3">
                             <div class="col-md-6">
                                 <label class="form-label small fw-semibold text-secondary mb-1"><i class="bi bi-building me-1"></i> OPD Pengelola</label>
-                                <select name="opd" class="form-select bg-body-tertiary border-0">
+                                <select name="opd" class="form-select">
                                     <option value="">-- Semua OPD --</option>
                                     <option value="KOSONG" {{ request('opd') === 'KOSONG' ? 'selected' : '' }}>[Tanpa OPD / Kosong]</option>
                                     @foreach($opdList as $opd)
@@ -130,7 +130,7 @@
 
                             <div class="col-md-6">
                                 <label class="form-label small fw-semibold text-secondary mb-1"><i class="bi bi-tag me-1"></i> Status Sertifikasi BPN</label>
-                                <select name="status[]" class="form-select bg-body-tertiary border-0">
+                                <select name="status[]" class="form-select">
                                     <option value="">-- Semua Status --</option>
                                     @foreach($statusList as $st)
                                         <option value="{{ $st->id_status }}" {{ (is_array(request('status')) && in_array($st->id_status, request('status'))) || request('status') == $st->id_status ? 'selected' : '' }}>
@@ -142,12 +142,12 @@
 
                             <div class="col-md-6">
                                 <label class="form-label small fw-semibold text-secondary mb-1"><i class="bi bi-calendar-event me-1"></i> Tanggal Perolehan</label>
-                                <input type="date" name="tanggal_perolehan" class="form-control bg-body-tertiary border-0" value="{{ request('tanggal_perolehan') }}">
+                                <input type="date" name="tanggal_perolehan" class="form-control" value="{{ request('tanggal_perolehan') }}">
                             </div>
 
                             <div class="col-md-6">
                                 <label class="form-label small fw-semibold text-secondary mb-1"><i class="bi bi-search me-1"></i> Kata Kunci Pencarian</label>
-                                <input type="text" name="q" class="form-control bg-body-tertiary border-0" placeholder="Kode Aset, Nama, Alamat..." value="{{ request('q') }}">
+                                <input type="text" name="q" class="form-control" placeholder="Kode Aset, Nama, Alamat..." value="{{ request('q') }}">
                             </div>
 
                             <div class="col-12 mt-3 pt-3 border-top">
@@ -168,7 +168,7 @@
                                 </div>
 
                                 <div id="boxTitleMaster" class="mt-2">
-                                    <select name="report_title_id" class="form-select bg-body-tertiary border-0">
+                                    <select name="report_title_id" class="form-select">
                                         @foreach($reportTitles as $rt)
                                             <option value="{{ $rt->id }}" {{ request('report_title_id') == $rt->id ? 'selected' : '' }}>{{ $rt->judul }}</option>
                                         @endforeach
@@ -176,7 +176,7 @@
                                 </div>
 
                                 <div id="boxTitleManual" class="mt-2" style="display: none;">
-                                    <input type="text" name="manual_title" class="form-control bg-body-tertiary border-0" placeholder="Contoh: LAPORAN REKAPITULASI ASET TANAH DINAS PENDIDIKAN" value="{{ request('manual_title') }}">
+                                    <input type="text" name="manual_title" class="form-control" placeholder="Contoh: LAPORAN REKAPITULASI ASET TANAH DINAS PENDIDIKAN" value="{{ request('manual_title') }}">
                                 </div>
                             </div>
                         </div>
@@ -194,7 +194,7 @@
             </div>
 
             <!-- Ringkasan Hasil Filter -->
-            <div class="card report-card p-4">
+            <div class="card clean-card report-card p-4">
                 <h6 class="fw-bold text-body mb-3">Ringkasan Hasil Filter Data</h6>
                 <div class="row g-3 mb-3">
                     <div class="col-md-4">
@@ -217,7 +217,7 @@
                     </div>
                 </div>
 
-                <div class="p-3 bg-body-tertiary rounded-3 border">
+                <div class="p-3 bg-body rounded-3 border">
                     <small class="fw-bold text-secondary text-uppercase d-block mb-1" style="font-size: 0.72rem;">Filter Aktif Saat Ini:</small>
                     <div class="d-flex flex-wrap gap-1.5">
                         @forelse($summary['activeFilters'] as $f)
@@ -236,7 +236,7 @@
 
         <!-- Kolom Kanan: Aksi Download & Print -->
         <div class="d-flex flex-column gap-3">
-            <div class="card report-card p-4">
+            <div class="card clean-card report-card p-4">
                 <div class="d-flex align-items-center gap-2 mb-3 border-bottom pb-2">
                     <i class="bi bi-cloud-download text-primary fs-4"></i>
                     <h5 class="fw-bold text-body mb-0">Aksi Cetak & Unduh</h5>

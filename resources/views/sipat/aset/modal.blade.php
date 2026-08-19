@@ -148,7 +148,7 @@
 
                     <div class="col-lg-6">
                         <div class="detail-label">ALAMAT / LOKASI TANAH</div>
-                        <div class="p-3 bg-body-tertiary rounded-3 border text-body fw-medium" style="font-size: 0.9rem;">
+                        <div class="p-3 bg-body rounded-3 border text-body fw-medium" style="font-size: 0.9rem;">
                             <i class="bi bi-geo-alt text-danger me-1"></i> {{ $aset->alamat ?? '-' }}
                         </div>
                     </div>
@@ -231,7 +231,7 @@
                         @foreach($prosesList as $proses)
                             <li class="v-timeline-item">
                                 <div class="v-timeline-node bg-primary"></div>
-                                <div class="p-3 bg-body-tertiary rounded-3 border">
+                                <div class="p-3 bg-body rounded-3 border">
                                     <div class="d-flex justify-content-between align-items-start">
                                         <div>
                                             <span class="badge bg-primary-subtle text-primary border border-primary-subtle mb-2">
@@ -265,25 +265,25 @@
                     @csrf
                     <div class="row g-3 mb-4">
                         <div class="col-md-6">
-                            <div class="form-check form-switch p-3 border rounded-3 bg-body-tertiary d-flex align-items-center justify-content-between">
+                            <div class="form-check form-switch p-3 border rounded-3 bg-body d-flex align-items-center justify-content-between">
                                 <label class="form-check-label fw-semibold text-body cursor-pointer" for="chk_sertifikat">Sertifikat Ada & Valid</label>
                                 <input class="form-check-input ms-0 mt-0" type="checkbox" role="switch" name="sertifikat_ada" id="chk_sertifikat" value="1" {{ !empty($pengamanan->sertifikat_ada) ? 'checked' : '' }}>
                             </div>
                         </div>
                         <div class="col-md-6">
-                            <div class="form-check form-switch p-3 border rounded-3 bg-body-tertiary d-flex align-items-center justify-content-between">
+                            <div class="form-check form-switch p-3 border rounded-3 bg-body d-flex align-items-center justify-content-between">
                                 <label class="form-check-label fw-semibold text-body cursor-pointer" for="chk_papan">Papan Nama Pemda</label>
                                 <input class="form-check-input ms-0 mt-0" type="checkbox" role="switch" name="papan_nama" id="chk_papan" value="1" {{ !empty($pengamanan->papan_nama) ? 'checked' : '' }}>
                             </div>
                         </div>
                         <div class="col-md-6">
-                            <div class="form-check form-switch p-3 border rounded-3 bg-body-tertiary d-flex align-items-center justify-content-between">
+                            <div class="form-check form-switch p-3 border rounded-3 bg-body d-flex align-items-center justify-content-between">
                                 <label class="form-check-label fw-semibold text-body cursor-pointer" for="chk_pagar">Pagar Batas/Patok</label>
                                 <input class="form-check-input ms-0 mt-0" type="checkbox" role="switch" name="pagar" id="chk_pagar" value="1" {{ !empty($pengamanan->pagar) ? 'checked' : '' }}>
                             </div>
                         </div>
                         <div class="col-md-6">
-                            <div class="form-check form-switch p-3 border rounded-3 bg-body-tertiary d-flex align-items-center justify-content-between">
+                            <div class="form-check form-switch p-3 border rounded-3 bg-body d-flex align-items-center justify-content-between">
                                 <label class="form-check-label fw-semibold text-body cursor-pointer" for="chk_dikuasai">Dikuasai Pihak Lain</label>
                                 <input class="form-check-input ms-0 mt-0" type="checkbox" role="switch" name="dikuasai_pihak_lain" id="chk_dikuasai" value="1" {{ !empty($pengamanan->dikuasai_pihak_lain) ? 'checked' : '' }}>
                             </div>
@@ -359,7 +359,7 @@
                 @else
                     <div class="table-responsive">
                         <table class="table table-hover align-middle mb-0">
-                            <thead class="bg-body-tertiary text-secondary small">
+                            <thead class="bg-body text-secondary small">
                                 <tr>
                                     <th class="ps-4 py-3">JENIS DOKUMEN</th>
                                     <th class="py-3">STATUS</th>

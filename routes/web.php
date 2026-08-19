@@ -42,6 +42,7 @@ Route::get('/erandis/dashboard', [HomeController::class, 'index'])->name('erandi
 Route::get('/sipat/aset', [\App\Http\Controllers\Sipat\AsetTanahController::class, 'index'])->name('sipat.aset.index');
 Route::get('/sipat/aset/create', [\App\Http\Controllers\Sipat\AsetTanahController::class, 'create'])->name('sipat.aset.create');
 Route::post('/sipat/aset', [\App\Http\Controllers\Sipat\AsetTanahController::class, 'store'])->name('sipat.aset.store');
+Route::post('/sipat/aset/bulk-proses', [\App\Http\Controllers\Sipat\AsetTanahController::class, 'bulkStoreProses'])->name('sipat.aset.bulkProses');
 Route::get('/sipat/aset/{id}', [\App\Http\Controllers\Sipat\AsetTanahController::class, 'show'])->name('sipat.aset.show');
 Route::get('/sipat/aset/{id}/modal', [\App\Http\Controllers\Sipat\AsetTanahController::class, 'modal'])->name('sipat.aset.modal');
 Route::get('/sipat/aset/{id}/edit', [\App\Http\Controllers\Sipat\AsetTanahController::class, 'edit'])->name('sipat.aset.edit');
@@ -58,6 +59,18 @@ Route::get('/sipat/laporan/export/xlsx', [\App\Http\Controllers\Sipat\LaporanCon
 Route::get('/sipat/laporan/preview-pdf', [\App\Http\Controllers\Sipat\LaporanController::class, 'previewPdf'])->name('sipat.laporan.previewPdf');
 Route::get('/sipat/laporan/download-pdf', [\App\Http\Controllers\Sipat\LaporanController::class, 'downloadPdf'])->name('sipat.laporan.downloadPdf');
 
+// Modul SIPAT (Rekonsiliasi, Peta, Surat)
+Route::get('/sipat/rekonsiliasi', [\App\Http\Controllers\Sipat\RekonsiliasiController::class, 'index'])->name('sipat.rekonsiliasi.index');
+Route::get('/sipat/peta', [\App\Http\Controllers\Sipat\PetaController::class, 'index'])->name('sipat.peta.index');
+
+Route::get('/sipat/surat/skpt', [\App\Http\Controllers\Sipat\SuratController::class, 'skpt'])->name('sipat.surat.skpt');
+Route::post('/sipat/surat/skpt', [\App\Http\Controllers\Sipat\SuratController::class, 'storeSkpt'])->name('sipat.surat.storeSkpt');
+Route::get('/sipat/surat/skpt/{id}', [\App\Http\Controllers\Sipat\SuratController::class, 'showSkpt'])->name('sipat.surat.showSkpt');
+Route::delete('/sipat/surat/skpt/{id}', [\App\Http\Controllers\Sipat\SuratController::class, 'deleteSkpt'])->name('sipat.surat.deleteSkpt');
+Route::get('/sipat/surat/skpt/{id}/print', [\App\Http\Controllers\Sipat\SuratController::class, 'printSkpt'])->name('sipat.surat.printSkpt');
+Route::get('/sipat/surat/skpt/{id}/pdf', [\App\Http\Controllers\Sipat\SuratController::class, 'pdfSkpt'])->name('sipat.surat.pdfSkpt');
+Route::get('/sipat/surat/skpt/{id}/word', [\App\Http\Controllers\Sipat\SuratController::class, 'exportWordSkpt'])->name('sipat.surat.exportWordSkpt');
+Route::get('/sipat/surat/pernyataan-batas', [\App\Http\Controllers\Sipat\SuratController::class, 'pernyataanBatas'])->name('sipat.surat.pernyataanBatas');
 Route::resource('master-data/status-proses', \App\Http\Controllers\StatusProsesController::class)->names('status-proses');
 Route::resource('master-data/opd-sipat', \App\Http\Controllers\MasterSipatOpdController::class)->names('opd-sipat');
 Route::get('master-data/opd-sipat-list', [\App\Http\Controllers\MasterSipatOpdController::class, 'index'])->name('master.opd-sipat.index');
@@ -87,6 +100,35 @@ Route::resource('vehicles', VehicleController::class)->except(['create', 'edit',
 
 // Master Data Hub
 Route::get('master-data', [MasterDataController::class, 'index'])->name('master-data.index');
+
+// Master Data Wilayah (SIPAT)
+Route::prefix('master-data/wilayah')->name('master.')->group(function () {
+    Route::get('/', [\App\Http\Controllers\MasterDataWilayahController::class, 'index'])->name('wilayah.index');
+    
+    Route::post('kecamatan', [\App\Http\Controllers\MasterDataWilayahController::class, 'kecamatanStore'])->name('kecamatan.store');
+    Route::put('kecamatan/{id}', [\App\Http\Controllers\MasterDataWilayahController::class, 'kecamatanUpdate'])->name('kecamatan.update');
+    Route::delete('kecamatan/{id}', [\App\Http\Controllers\MasterDataWilayahController::class, 'kecamatanDestroy'])->name('kecamatan.destroy');
+
+    Route::post('desa', [\App\Http\Controllers\MasterDataWilayahController::class, 'desaStore'])->name('desa.store');
+    Route::put('desa/{id}', [\App\Http\Controllers\MasterDataWilayahController::class, 'desaUpdate'])->name('desa.update');
+    Route::delete('desa/{id}', [\App\Http\Controllers\MasterDataWilayahController::class, 'desaDestroy'])->name('desa.destroy');
+
+    Route::post('kepala-desa', [\App\Http\Controllers\MasterDataWilayahController::class, 'kadesStore'])->name('kades.store');
+    Route::put('kepala-desa/{id}', [\App\Http\Controllers\MasterDataWilayahController::class, 'kadesUpdate'])->name('kades.update');
+    Route::delete('kepala-desa/{id}', [\App\Http\Controllers\MasterDataWilayahController::class, 'kadesDestroy'])->name('kades.destroy');
+
+    Route::post('camat', [\App\Http\Controllers\MasterDataWilayahController::class, 'camatStore'])->name('camat.store');
+    Route::put('camat/{id}', [\App\Http\Controllers\MasterDataWilayahController::class, 'camatUpdate'])->name('camat.update');
+    Route::delete('camat/{id}', [\App\Http\Controllers\MasterDataWilayahController::class, 'camatDestroy'])->name('camat.destroy');
+
+    Route::post('pemohon', [\App\Http\Controllers\MasterDataWilayahController::class, 'pemohonStore'])->name('pemohon.store');
+    Route::put('pemohon/{id}', [\App\Http\Controllers\MasterDataWilayahController::class, 'pemohonUpdate'])->name('pemohon.update');
+    Route::delete('pemohon/{id}', [\App\Http\Controllers\MasterDataWilayahController::class, 'pemohonDestroy'])->name('pemohon.destroy');
+
+    Route::post('judul-laporan', [\App\Http\Controllers\MasterDataWilayahController::class, 'judulStore'])->name('judul.store');
+    Route::put('judul-laporan/{id}', [\App\Http\Controllers\MasterDataWilayahController::class, 'judulUpdate'])->name('judul.update');
+    Route::delete('judul-laporan/{id}', [\App\Http\Controllers\MasterDataWilayahController::class, 'judulDestroy'])->name('judul.destroy');
+});
 Route::post('vehicle-types/cleanup', [VehicleTypeController::class, 'cleanup'])->name('vehicle-types.cleanup');
 Route::post('vehicle-types/merge', [VehicleTypeController::class, 'merge'])->name('vehicle-types.merge');
 Route::resource('vehicle-types', VehicleTypeController::class)->except(['create', 'edit', 'show']);

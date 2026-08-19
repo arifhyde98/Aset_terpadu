@@ -256,7 +256,7 @@
                         <h6 class="fw-bold mb-0 text-body">Progres Pensertifikatan Bulanan</h6>
                         <small class="text-secondary">Akumulasi tren status pensertifikatan tanah (Jan - Des {{ $chartYear }})</small>
                     </div>
-                    <span class="badge bg-body-tertiary text-body border px-2.5 py-1 small">Tahun {{ $chartYear }}</span>
+                    <span class="badge bg-body text-body border px-2.5 py-1 small">Tahun {{ $chartYear }}</span>
                 </div>
 
                 <div class="d-flex flex-wrap align-items-center justify-content-center gap-3 mb-3 small text-secondary">
@@ -350,7 +350,7 @@
                                 </p>
                             </div>
                             <div class="text-end flex-shrink-0">
-                                <span class="badge bg-body-tertiary text-secondary font-monospace" style="font-size: 0.7rem;">
+                                <span class="badge bg-body text-secondary font-monospace" style="font-size: 0.7rem;">
                                     {{ \Carbon\Carbon::parse($log->created_at)->diffForHumans() }}
                                 </span>
                             </div>
@@ -372,7 +372,7 @@
                     <h6 class="fw-bold mb-3 text-body"><i class="bi bi-pie-chart-fill text-success me-2"></i>Ringkasan Kategori Sertifikasi</h6>
                     <div class="row g-3">
                         <div class="col-6 col-sm-3">
-                            <div class="mini-stat-card bg-body-tertiary h-100">
+                            <div class="mini-stat-card bg-body h-100">
                                 <div class="text-success fw-semibold small mb-1">Bersertifikat</div>
                                 <div class="d-flex align-items-baseline justify-content-between mb-2">
                                     <span class="fs-4 fw-bold text-body font-monospace">{{ number_format($asetBersertifikat) }}</span>
@@ -385,7 +385,7 @@
                         </div>
 
                         <div class="col-6 col-sm-3">
-                            <div class="mini-stat-card bg-body-tertiary h-100">
+                            <div class="mini-stat-card bg-body h-100">
                                 <div class="text-warning-emphasis fw-semibold small mb-1">Dalam Proses</div>
                                 <div class="d-flex align-items-baseline justify-content-between mb-2">
                                     <span class="fs-4 fw-bold text-body font-monospace">{{ number_format($asetProses) }}</span>
@@ -398,7 +398,7 @@
                         </div>
 
                         <div class="col-6 col-sm-3">
-                            <div class="mini-stat-card bg-body-tertiary h-100">
+                            <div class="mini-stat-card bg-body h-100">
                                 <div class="text-danger fw-semibold small mb-1">Ada Kendala</div>
                                 <div class="d-flex align-items-baseline justify-content-between mb-2">
                                     <span class="fs-4 fw-bold text-body font-monospace">{{ number_format($asetKendala) }}</span>
@@ -411,7 +411,7 @@
                         </div>
 
                         <div class="col-6 col-sm-3">
-                            <div class="mini-stat-card bg-body-tertiary h-100">
+                            <div class="mini-stat-card bg-body h-100">
                                 <div class="text-primary fw-semibold small mb-1">Belum Diurus</div>
                                 <div class="d-flex align-items-baseline justify-content-between mb-2">
                                     <span class="fs-4 fw-bold text-body font-monospace">{{ number_format($asetBelumDiurus) }}</span>

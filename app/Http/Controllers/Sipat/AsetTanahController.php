@@ -194,6 +194,67 @@ class AsetTanahController extends Controller
         return redirect()->route('sipat.aset.index')->with('success', 'Riwayat Proses BPN berhasil ditambahkan.');
     }
 
+    public function bulkStoreProses(Request $request)
+    {
+        $asetIds = (array) ($request->input('aset_ids') ?? []);
+        $idStatus = $request->input('id_status');
+        $nibarListRaw = (string) $request->input('nibar_list');
+
+        if (trim($nibarListRaw) !== '') {
+            $nibarItems = array_values(array_filter(array_map('trim', preg_split('/[\r\n,]+/', $nibarListRaw))));
+            if (!empty($nibarItems)) {
+                $rows = DB::table('aset_tanah')
+                    ->select('id_aset')
+                    ->whereIn('kode_aset', $nibarItems)
+                    ->get();
+                foreach ($rows as $r) {
+                    $asetIds[] = (int) $r->id_aset;
+                }
+            }
+        }
+
+        $asetIds = array_values(array_unique(array_filter(array_map('intval', $asetIds))));
+
+        if (empty($asetIds)) {
+            return redirect()->back()->with('error', 'Pilih minimal satu aset tanah atau masukkan NIBAR yang valid untuk diperbarui statusnya.');
+        }
+
+        if (empty($idStatus)) {
+            return redirect()->back()->with('error', 'Status proses wajib dipilih.');
+        }
+
+        $tglMulai = $request->input('tgl_mulai');
+        $tglSelesai = $request->input('tgl_selesai');
+        $keterangan = $request->input('keterangan');
+        $durasi = null;
+
+        if (!empty($tglMulai) && !empty($tglSelesai)) {
+            $durasi = (int) floor((strtotime($tglSelesai) - strtotime($tglMulai)) / 86400);
+            if ($durasi < 0) {
+                $durasi = null;
+            }
+        }
+
+        $insertedCount = 0;
+
+        foreach ($asetIds as $idAset) {
+            $idAset = (int) $idAset;
+            if ($idAset <= 0) continue;
+
+            ProsesAset::create([
+                'id_aset'     => $idAset,
+                'id_status'   => $idStatus,
+                'tgl_mulai'   => $tglMulai ?: null,
+                'tgl_selesai' => $tglSelesai ?: null,
+                'keterangan'  => $keterangan ?: 'Update status massal',
+                'durasi_hari' => $durasi,
+            ]);
+            $insertedCount++;
+        }
+
+        return redirect()->route('sipat.aset.index')->with('success', "Berhasil memperbarui status untuk {$insertedCount} aset.");
+    }
+
     public function storePengamanan(Request $request, $id)
     {
         $aset = AsetTanah::findOrFail($id);

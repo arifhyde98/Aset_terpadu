@@ -33,7 +33,7 @@
             </div>
 
             <!-- Modal Body -->
-            <div class="modal-body p-4 bg-body-tertiary">
+            <div class="modal-body p-4 bg-body">
                 @if ($errors->any())
                     <div class="alert alert-danger rounded-3 p-3 mb-3">
                         <ul class="mb-0 ps-3">
@@ -48,7 +48,7 @@
                     @csrf
                     
                     <!-- Section 1: Identitas & Pemilik Aset -->
-                    <div class="card border-0 rounded-4 p-3 mb-3 shadow-sm bg-body">
+                    <div class="card clean-card border-0 rounded-4 p-3 mb-3 shadow-sm bg-body">
                         <h6 class="fw-bold text-body mb-3">
                             <i class="bi bi-card-heading text-primary me-2"></i>1. Identitas & Pemilik Aset
                         </h6>
@@ -56,22 +56,22 @@
                             <div class="col-md-5">
                                 <label class="form-label small fw-semibold text-secondary mb-1">Kode Aset (NIBAR) <span class="text-danger">*</span></label>
                                 <div class="input-group">
-                                    <span class="input-group-text bg-body-tertiary border-0 text-secondary"><i class="bi bi-hash"></i></span>
-                                    <input type="text" name="kode_aset" class="form-control bg-body-tertiary border-0" placeholder="Contoh: 12.01.02.01.001" value="{{ old('kode_aset') }}" required>
+                                    <span class="input-group-text bg-body border-0 text-secondary"><i class="bi bi-hash"></i></span>
+                                    <input type="text" name="kode_aset" class="form-control" placeholder="Contoh: 12.01.02.01.001" value="{{ old('kode_aset') }}" required>
                                 </div>
                             </div>
                             <div class="col-md-7">
                                 <label class="form-label small fw-semibold text-secondary mb-1">Nama Aset Tanah <span class="text-danger">*</span></label>
                                 <div class="input-group">
-                                    <span class="input-group-text bg-body-tertiary border-0 text-secondary"><i class="bi bi-geo"></i></span>
-                                    <input type="text" name="nama_aset" class="form-control bg-body-tertiary border-0" placeholder="Nama aset tanah..." value="{{ old('nama_aset') }}" required>
+                                    <span class="input-group-text bg-body border-0 text-secondary"><i class="bi bi-geo"></i></span>
+                                    <input type="text" name="nama_aset" class="form-control" placeholder="Nama aset tanah..." value="{{ old('nama_aset') }}" required>
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label small fw-semibold text-secondary mb-1">OPD Pengelola</label>
                                 <div class="input-group">
-                                    <span class="input-group-text bg-body-tertiary border-0 text-secondary"><i class="bi bi-building"></i></span>
-                                    <select name="opd" class="form-select bg-body-tertiary border-0">
+                                    <span class="input-group-text bg-body border-0 text-secondary"><i class="bi bi-building"></i></span>
+                                    <select name="opd" class="form-select">
                                         <option value="">- Pilih OPD -</option>
                                         @foreach($opdList as $opd)
                                             <option value="{{ $opd->nama }}" {{ old('opd') == $opd->nama ? 'selected' : '' }}>{{ $opd->nama }}</option>
@@ -82,15 +82,15 @@
                             <div class="col-md-6">
                                 <label class="form-label small fw-semibold text-secondary mb-1">Peruntukan / Penggunaan</label>
                                 <div class="input-group">
-                                    <span class="input-group-text bg-body-tertiary border-0 text-secondary"><i class="bi bi-signpost-split"></i></span>
-                                    <input type="text" name="peruntukan" class="form-control bg-body-tertiary border-0" placeholder="Contoh: Kantor Kecamatan / Lapangan" value="{{ old('peruntukan') }}">
+                                    <span class="input-group-text bg-body border-0 text-secondary"><i class="bi bi-signpost-split"></i></span>
+                                    <input type="text" name="peruntukan" class="form-control" placeholder="Contoh: Kantor Kecamatan / Lapangan" value="{{ old('peruntukan') }}">
                                 </div>
                             </div>
                         </div>
                     </div>
 
                     <!-- Section 2: Legalitas & Nilai -->
-                    <div class="card border-0 rounded-4 p-3 mb-3 shadow-sm bg-body">
+                    <div class="card clean-card border-0 rounded-4 p-3 mb-3 shadow-sm bg-body">
                         <h6 class="fw-bold text-body mb-3">
                             <i class="bi bi-file-earmark-spreadsheet text-success me-2"></i>2. Legalitas, Luas & Nilai Perolehan
                         </h6>
@@ -98,61 +98,61 @@
                             <div class="col-md-4">
                                 <label class="form-label small fw-semibold text-secondary mb-1">Luas Tanah (m²)</label>
                                 <div class="input-group">
-                                    <span class="input-group-text bg-body-tertiary border-0 text-secondary"><i class="bi bi-aspect-ratio"></i></span>
-                                    <input type="number" step="0.01" name="luas" class="form-control bg-body-tertiary border-0" placeholder="0.00" value="{{ old('luas') }}">
+                                    <span class="input-group-text bg-body border-0 text-secondary"><i class="bi bi-aspect-ratio"></i></span>
+                                    <input type="number" step="0.01" name="luas" class="form-control" placeholder="0.00" value="{{ old('luas') }}">
                                 </div>
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label small fw-semibold text-secondary mb-1">Tanggal Perolehan</label>
                                 <div class="input-group">
-                                    <span class="input-group-text bg-body-tertiary border-0 text-secondary"><i class="bi bi-calendar-event"></i></span>
-                                    <input type="date" name="tanggal_perolehan" class="form-control bg-body-tertiary border-0" value="{{ old('tanggal_perolehan') }}">
+                                    <span class="input-group-text bg-body border-0 text-secondary"><i class="bi bi-calendar-event"></i></span>
+                                    <input type="date" name="tanggal_perolehan" class="form-control" value="{{ old('tanggal_perolehan') }}">
                                 </div>
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label small fw-semibold text-secondary mb-1">Harga Perolehan (Rp)</label>
                                 <div class="input-group">
-                                    <span class="input-group-text bg-body-tertiary border-0 text-secondary">Rp</span>
-                                    <input type="number" step="0.01" name="harga_perolehan" class="form-control bg-body-tertiary border-0" placeholder="0" value="{{ old('harga_perolehan') }}">
+                                    <span class="input-group-text bg-body border-0 text-secondary">Rp</span>
+                                    <input type="number" step="0.01" name="harga_perolehan" class="form-control" placeholder="0" value="{{ old('harga_perolehan') }}">
                                 </div>
                             </div>
                             <div class="col-12">
                                 <label class="form-label small fw-semibold text-secondary mb-1">Dasar Perolehan / Dokumen Awal</label>
                                 <div class="input-group">
-                                    <span class="input-group-text bg-body-tertiary border-0 text-secondary"><i class="bi bi-journal-text"></i></span>
-                                    <input type="text" name="dasar_perolehan" class="form-control bg-body-tertiary border-0" placeholder="Contoh: Hibah / Pembelian APBD / SK Bupati..." value="{{ old('dasar_perolehan') }}">
+                                    <span class="input-group-text bg-body border-0 text-secondary"><i class="bi bi-journal-text"></i></span>
+                                    <input type="text" name="dasar_perolehan" class="form-control" placeholder="Contoh: Hibah / Pembelian APBD / SK Bupati..." value="{{ old('dasar_perolehan') }}">
                                 </div>
                             </div>
                         </div>
                     </div>
 
                     <!-- Section 3: Geospasial & Alamat -->
-                    <div class="card border-0 rounded-4 p-3 mb-3 shadow-sm bg-body">
+                    <div class="card clean-card border-0 rounded-4 p-3 mb-3 shadow-sm bg-body">
                         <h6 class="fw-bold text-body mb-3">
                             <i class="bi bi-geo-alt-fill text-danger me-2"></i>3. Lokasi Geospasial & Catatan
                         </h6>
                         <div class="row g-3">
                             <div class="col-12">
                                 <label class="form-label small fw-semibold text-secondary mb-1">Alamat Lengkap</label>
-                                <textarea name="alamat" class="form-control bg-body-tertiary border-0" rows="2" placeholder="Jalan, Desa/Kelurahan, Kecamatan...">{{ old('alamat') }}</textarea>
+                                <textarea name="alamat" class="form-control" rows="2" placeholder="Jalan, Desa/Kelurahan, Kecamatan...">{{ old('alamat') }}</textarea>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label small fw-semibold text-secondary mb-1">Latitude (Koordinat Y)</label>
                                 <div class="input-group">
-                                    <span class="input-group-text bg-body-tertiary border-0 text-secondary"><i class="bi bi-pin-map"></i></span>
-                                    <input type="text" name="lat" class="form-control bg-body-tertiary border-0" placeholder="-0.xxxxxx" value="{{ old('lat') }}">
+                                    <span class="input-group-text bg-body border-0 text-secondary"><i class="bi bi-pin-map"></i></span>
+                                    <input type="text" name="lat" class="form-control" placeholder="-0.xxxxxx" value="{{ old('lat') }}">
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label small fw-semibold text-secondary mb-1">Longitude (Koordinat X)</label>
                                 <div class="input-group">
-                                    <span class="input-group-text bg-body-tertiary border-0 text-secondary"><i class="bi bi-pin-map"></i></span>
-                                    <input type="text" name="lng" class="form-control bg-body-tertiary border-0" placeholder="119.xxxxxx" value="{{ old('lng') }}">
+                                    <span class="input-group-text bg-body border-0 text-secondary"><i class="bi bi-pin-map"></i></span>
+                                    <input type="text" name="lng" class="form-control" placeholder="119.xxxxxx" value="{{ old('lng') }}">
                                 </div>
                             </div>
                             <div class="col-12">
                                 <label class="form-label small fw-semibold text-secondary mb-1">Keterangan Tambahan</label>
-                                <textarea name="keterangan" class="form-control bg-body-tertiary border-0" rows="2" placeholder="Catatan fisik tanah, batas-batas, atau kondisi saat ini...">{{ old('keterangan') }}</textarea>
+                                <textarea name="keterangan" class="form-control" rows="2" placeholder="Catatan fisik tanah, batas-batas, atau kondisi saat ini...">{{ old('keterangan') }}</textarea>
                             </div>
                         </div>
                     </div>
