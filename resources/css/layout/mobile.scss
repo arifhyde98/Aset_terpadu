@@ -69,6 +69,21 @@
             font-weight: 700;
         }
     }
+
+    &.nav-item-sipat.active {
+        color: #2563eb;
+        i { color: #2563eb; }
+    }
+
+    &.nav-item-erandis.active {
+        color: #d97706;
+        i { color: #d97706; }
+    }
+
+    &.nav-item-elabel.active {
+        color: #0891b2;
+        i { color: #0891b2; }
+    }
 }
 
 [data-theme="dark"] .bottom-nav-item {
@@ -79,6 +94,219 @@
     }
     &.active i {
         color: #60a5fa;
+    }
+
+    &.nav-item-sipat.active {
+        color: #60a5fa;
+        i { color: #60a5fa; }
+    }
+
+    &.nav-item-erandis.active {
+        color: #fbbf24;
+        i { color: #fbbf24; }
+    }
+
+    &.nav-item-elabel.active {
+        color: #22d3ee;
+        i { color: #22d3ee; }
+    }
+}
+
+/* Offcanvas Mobile Sheet */
+.mobile-offcanvas-sheet {
+    height: 80dvh !important;
+    max-height: 85dvh;
+    border-top-left-radius: 1.25rem !important;
+    border-top-right-radius: 1.25rem !important;
+    background-color: var(--card-bg, #ffffff);
+    border-top: 1px solid var(--border-color, #e2e8f0);
+    box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.15);
+
+    .offcanvas-header {
+        border-bottom-color: var(--border-color, #f1f5f9) !important;
+        padding: 0.85rem 1.25rem;
+    }
+
+    .offcanvas-body {
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: thin;
+        padding: 1rem 1.25rem 2rem 1.25rem !important;
+    }
+
+    /* Dashboard Quick Buttons */
+    .mobile-dash-btn {
+        background-color: var(--card-bg, #ffffff);
+        border-color: var(--border-color, #e2e8f0) !important;
+        transition: all 0.2s ease;
+        min-height: 48px;
+        display: flex;
+        align-items: center;
+
+        &:hover, &:active {
+            background-color: rgba(0, 0, 0, 0.03);
+            transform: translateY(-1px);
+        }
+
+        &.active-terpadu {
+            background: rgba(37, 99, 235, 0.08);
+            border-color: #2563eb !important;
+        }
+        &.active-sipat {
+            background: rgba(2, 132, 199, 0.08);
+            border-color: #0284c7 !important;
+        }
+        &.active-erandis {
+            background: rgba(217, 119, 6, 0.08);
+            border-color: #d97706 !important;
+        }
+        &.active-elabel {
+            background: rgba(16, 185, 129, 0.08);
+            border-color: #10b981 !important;
+        }
+    }
+
+    /* Accordion in Mobile Menu */
+    .mobile-menu-accordion {
+        .accordion-item {
+            border-color: var(--border-color, #e2e8f0) !important;
+            background-color: var(--card-bg, #ffffff);
+        }
+
+        .accordion-button {
+            background-color: var(--card-bg, #ffffff);
+            color: var(--text-color, #1e293b);
+            font-size: 0.88rem;
+            box-shadow: none;
+            min-height: 48px;
+            padding: 0.75rem 1rem;
+
+            &:not(.collapsed) {
+                background-color: rgba(0, 0, 0, 0.02);
+            }
+        }
+
+        .list-group-item {
+            background-color: transparent;
+            font-size: 0.82rem;
+            color: #475569;
+            transition: all 0.2s ease;
+            min-height: 44px;
+            padding: 0.65rem 0.85rem;
+            display: flex;
+            align-items: center;
+            border-left: 3px solid transparent !important;
+
+            &:hover {
+                background-color: rgba(0, 0, 0, 0.04);
+                color: #0f172a;
+            }
+
+            &.active-sub-sipat {
+                background-color: rgba(37, 99, 235, 0.12);
+                color: #1d4ed8;
+                font-weight: 600;
+                border-left: 3px solid #2563eb !important;
+            }
+
+            &.active-sub-erandis {
+                background-color: rgba(217, 119, 6, 0.12);
+                color: #b45309;
+                font-weight: 600;
+                border-left: 3px solid #d97706 !important;
+            }
+
+            &.active-sub-elabel {
+                background-color: rgba(8, 145, 178, 0.12);
+                color: #0e7490;
+                font-weight: 600;
+                border-left: 3px solid #0891b2 !important;
+            }
+        }
+    }
+}
+
+/* Dark Mode Overrides for Mobile Offcanvas */
+[data-theme="dark"] .mobile-offcanvas-sheet {
+    background-color: #0f172a;
+    border-top-color: #334155;
+
+    .mobile-user-card {
+        background-color: #1e293b !important;
+        border-color: #334155 !important;
+        .text-dark { color: #f1f5f9 !important; }
+    }
+
+    .mobile-dash-btn {
+        background-color: #1e293b;
+        border-color: #334155 !important;
+        .text-dark { color: #f1f5f9 !important; }
+
+        &.active-terpadu {
+            background: rgba(37, 99, 235, 0.2);
+            border-color: #3b82f6 !important;
+        }
+        &.active-sipat {
+            background: rgba(2, 132, 199, 0.2);
+            border-color: #38bdf8 !important;
+        }
+        &.active-erandis {
+            background: rgba(217, 119, 6, 0.2);
+            border-color: #fbbf24 !important;
+        }
+        &.active-elabel {
+            background: rgba(16, 185, 129, 0.2);
+            border-color: #34d399 !important;
+        }
+    }
+
+    .mobile-menu-accordion {
+        .accordion-item {
+            background-color: #1e293b;
+            border-color: #334155 !important;
+        }
+
+        .accordion-button {
+            background-color: #1e293b;
+            color: #f1f5f9;
+
+            &:not(.collapsed) {
+                background-color: #1e293b;
+            }
+
+            .text-dark { color: #f1f5f9 !important; }
+        }
+
+        .accordion-body {
+            background-color: #0f172a !important;
+        }
+
+        .list-group-item {
+            color: #94a3b8;
+
+            &:hover {
+                background-color: rgba(255, 255, 255, 0.05);
+                color: #ffffff;
+            }
+
+            &.active-sub-sipat {
+                background-color: rgba(59, 130, 246, 0.2);
+                color: #93c5fd;
+                border-left-color: #60a5fa !important;
+            }
+
+            &.active-sub-erandis {
+                background-color: rgba(245, 158, 11, 0.2);
+                color: #fde68a;
+                border-left-color: #fbbf24 !important;
+            }
+
+            &.active-sub-elabel {
+                background-color: rgba(6, 182, 212, 0.2);
+                color: #a5f3fc;
+                border-left-color: #22d3ee !important;
+            }
+        }
     }
 }
 
@@ -239,4 +467,78 @@
             row-gap: 5px;
         }
     }
+
+    /* Specific narrow viewport adjustments */
+    @media (max-width: 576px) {
+        .bottom-nav-container {
+            height: 60px;
+        }
+        .bottom-nav-item {
+            i {
+                font-size: 1.15rem;
+            }
+            span {
+                font-size: 0.6rem;
+            }
+        }
+        .mobile-offcanvas-sheet {
+            height: 85dvh !important;
+            max-height: 90dvh;
+            
+            .offcanvas-body {
+                padding: 0.75rem 1rem 2rem 1rem !important;
+            }
+        }
+        .table-responsive-mobile table td {
+            padding: 0.65rem 0.5rem 0.65rem 40% !important;
+            font-size: 0.8rem;
+            
+            &::before {
+                width: 35%;
+                font-size: 0.78rem;
+            }
+        }
+    }
+
+    @media (max-width: 390px) {
+        .bottom-nav-container {
+            height: 56px;
+        }
+        .bottom-nav-item {
+            i {
+                font-size: 1.1rem;
+            }
+            span {
+                font-size: 0.55rem;
+            }
+        }
+        .table-responsive-mobile table td {
+            padding: 0.6rem 0.25rem 0.6rem 35% !important;
+            
+            &::before {
+                width: 30%;
+                font-size: 0.75rem;
+            }
+        }
+        
+        .mobile-dash-btn {
+            padding: 0.5rem !important;
+            gap: 0.25rem !important;
+            
+            .dash-icon-box {
+                width: 26px !important;
+                height: 26px !important;
+                i {
+                    font-size: 0.85rem;
+                }
+            }
+            span {
+                font-size: 0.7rem !important;
+            }
+            small {
+                font-size: 0.6rem !important;
+            }
+        }
+    }
 }
+

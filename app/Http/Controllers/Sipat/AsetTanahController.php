@@ -22,7 +22,17 @@ class AsetTanahController extends Controller
                 $q->where('kode_aset', 'LIKE', "%{$search}%")
                   ->orWhere('nama_aset', 'LIKE', "%{$search}%")
                   ->orWhere('opd', 'LIKE', "%{$search}%")
-                  ->orWhere('alamat', 'LIKE', "%{$search}%");
+                  ->orWhere('peruntukan', 'LIKE', "%{$search}%")
+                  ->orWhere('alamat', 'LIKE', "%{$search}%")
+                  ->orWhereExists(function($sub) use ($search) {
+                      $sub->select(DB::raw(1))
+                          ->from('elabel_sertifikat_tanah')
+                          ->whereColumn('elabel_sertifikat_tanah.nibar', 'aset_tanah.kode_aset')
+                          ->where(function($sub2) use ($search) {
+                              $sub2->where('nama_pemilik', 'LIKE', "%{$search}%")
+                                   ->orWhere('status_penggunaan', 'LIKE', "%{$search}%");
+                          });
+                  });
             });
         }
 

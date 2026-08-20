@@ -1,5 +1,5 @@
 <!-- Sidebar -->
-<nav id="sidebar" class="sidebar-modern d-none d-md-block">
+<nav id="sidebar" class="sidebar-modern">
     <!-- Header / Brand -->
     <div class="sidebar-header d-flex align-items-center justify-content-between px-3 py-3">
         <a href="{{ route('home') }}" class="d-flex align-items-center gap-2 text-decoration-none">
@@ -16,9 +16,14 @@
                 <small class="text-white-50 d-block mt-1" style="font-size: 0.65rem;">Sistem Aset Daerah</small>
             </div>
         </a>
-        <button type="button" id="sidebarToggleCompact" class="btn btn-sm text-white-50 hover-white p-0 d-none d-md-inline-block border-0" data-bs-toggle="tooltip" data-bs-placement="right" title="Toggle Mode Ringkasan">
-            <i class="bi bi-layout-sidebar-inset fs-5"></i>
-        </button>
+        <div class="d-flex align-items-center gap-1">
+            <button type="button" id="sidebarToggleCompact" class="btn btn-sm text-white-50 hover-white p-0 d-none d-md-inline-block border-0" data-bs-toggle="tooltip" data-bs-placement="right" title="Toggle Mode Ringkasan">
+                <i class="bi bi-layout-sidebar-inset fs-5"></i>
+            </button>
+            <button type="button" id="sidebarCloseMobile" class="btn btn-sm text-white-50 hover-white p-1 d-md-none border-0" aria-label="Tutup Menu">
+                <i class="bi bi-x-lg fs-5"></i>
+            </button>
+        </div>
     </div>
 
     <div class="sidebar-body px-2 py-3">

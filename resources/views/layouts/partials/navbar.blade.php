@@ -1,11 +1,16 @@
 <!-- Top Navbar -->
 <nav class="navbar navbar-expand-lg navbar-admin rounded-3 mb-4">
     <div class="container-fluid px-0">
-        <div class="d-flex align-items-center gap-3">
-            <button type="button" id="sidebarCollapse" class="btn btn-light rounded-3 shadow-sm border d-none d-md-block">
-                <i class="bi bi-list"></i>
+        <div class="d-flex align-items-center gap-2 gap-md-3">
+            <button type="button" id="sidebarCollapse" class="btn btn-light rounded-3 shadow-sm border" aria-label="Buka Menu Navigasi">
+                <i class="bi bi-list fs-5"></i>
             </button>
-            <h5 class="fw-bold text-navy mb-0 d-none d-md-block">@yield('title', 'Admin Dashboard')</h5>
+            <div class="d-flex align-items-center gap-2">
+                <a href="{{ route('home') }}" class="d-flex d-md-none align-items-center gap-1.5 text-decoration-none">
+                    <span class="fw-bold text-navy fs-6 mb-0">SIPAT <span class="badge bg-primary text-white rounded-pill px-2 py-0.5" style="font-size: 0.65rem;">TERPADU</span></span>
+                </a>
+                <h5 class="fw-bold text-navy mb-0 d-none d-md-block">@yield('title', 'Admin Dashboard')</h5>
+            </div>
         </div>
         
         <div class="ms-auto d-flex align-items-center gap-3">

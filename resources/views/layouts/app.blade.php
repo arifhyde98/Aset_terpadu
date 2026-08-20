@@ -64,6 +64,39 @@
     <!-- Theme Toggle & UI Interactivity JS -->
     <script>
         document.addEventListener('DOMContentLoaded', function () {
+            // 0. Global Modal Backdrop & Freeze Fix: Relocate all modals to document.body root
+            // to bypass CSS transform/opacity stacking issues from animated layouts.
+            const relocateModals = () => {
+                document.querySelectorAll('.modal').forEach(modal => {
+                    if (modal.parentNode !== document.body) {
+                        document.body.appendChild(modal);
+                    }
+                });
+            };
+            relocateModals();
+
+            // Observe dynamic additions
+            const modalObserver = new MutationObserver((mutations) => {
+                mutations.forEach(mutation => {
+                    mutation.addedNodes.forEach(node => {
+                        if (node.nodeType === 1) {
+                            if (node.classList.contains('modal')) {
+                                if (node.parentNode !== document.body) {
+                                    document.body.appendChild(node);
+                                }
+                            } else {
+                                node.querySelectorAll('.modal').forEach(modal => {
+                                    if (modal.parentNode !== document.body) {
+                                        document.body.appendChild(modal);
+                                    }
+                                });
+                            }
+                        }
+                    });
+                });
+            });
+            modalObserver.observe(document.body, { childList: true, subtree: true });
+
             // 1. Intersection Observer for fade-in animations
             const observerOptions = { threshold: 0.1 };
             const scrollObserver = new IntersectionObserver((entries) => {
@@ -130,16 +163,10 @@
                     sidebar.classList.add('compact');
                     document.body.classList.add('sidebar-compact');
                     localStorage.setItem('sidebarMode', 'compact');
-                    if (window.innerWidth > 768) {
-                        content.style.marginLeft = '70px';
-                    }
                 } else {
                     sidebar.classList.remove('compact');
                     document.body.classList.remove('sidebar-compact');
                     localStorage.setItem('sidebarMode', 'normal');
-                    if (window.innerWidth > 768) {
-                        content.style.marginLeft = '250px';
-                    }
                 }
                 initTooltips();
             }
@@ -163,6 +190,11 @@
                 document.body.style.overflow = sidebar.classList.contains('active') ? 'hidden' : 'auto';
             }
 
+            const sidebarCloseMobile = document.getElementById('sidebarCloseMobile');
+            if (sidebarCloseMobile) {
+                sidebarCloseMobile.addEventListener('click', toggleSidebarMobile);
+            }
+
             if (sidebarCollapse) {
                 sidebarCollapse.addEventListener('click', function() {
                     if (window.innerWidth <= 768) {
@@ -180,16 +212,9 @@
             
             function handleResize() {
                 if (!sidebar) return;
-                if (window.innerWidth <= 768) {
-                    sidebar.classList.remove('active');
-                    overlay.classList.remove('show');
-                    content.style.marginLeft = '0';
-                    document.body.style.overflow = 'auto';
-                } else {
-                    sidebar.classList.remove('active');
-                    const isCompact = sidebar.classList.contains('compact');
-                    content.style.marginLeft = isCompact ? '70px' : '250px';
-                }
+                sidebar.classList.remove('active');
+                if (overlay) overlay.classList.remove('show');
+                document.body.style.overflow = 'auto';
             }
 
             window.addEventListener('resize', handleResize);
