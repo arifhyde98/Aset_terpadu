@@ -35,7 +35,7 @@ Auth::routes();
 // Rute Dashboard & Internal (Middleware dikelola di Controller)
 Route::get('/home', [HomeController::class, 'index'])->name('home');
 Route::get('/sipat/dashboard', [\App\Http\Controllers\SipatDashboardController::class, 'index'])->name('sipat.dashboard');
-Route::get('/erandis/dashboard', [HomeController::class, 'index'])->name('erandis.dashboard');
+Route::get('/erandis/dashboard', [HomeController::class, 'erandisDashboard'])->name('erandis.dashboard');
 
 // ===== MODUL ELABEL =====
 Route::prefix('elabel')->name('elabel.')->group(function () {

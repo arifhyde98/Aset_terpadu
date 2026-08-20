@@ -22,42 +22,46 @@
     </div>
 
     <div class="sidebar-body px-2 py-3">
-        <!-- 1. KELOMPOK DASHBOARD (4 DASHBOARD SEPARATED AT TOP) -->
-        <div class="sidebar-dashboard-group mb-3">
-            <div class="px-2 mb-2">
-                <small class="text-uppercase fw-bold text-white-50" style="font-size: 0.65rem; letter-spacing: 0.5px;">DASHBOARD</small>
-            </div>
-            
-            <!-- Dashboard 1: Utama -->
-            <div class="mb-1">
-                <a href="{{ route('home') }}" class="sidebar-link-main {{ Request::is('home') ? 'active' : '' }}" data-bs-toggle="tooltip" data-bs-placement="right" title="Dashboard Utama">
-                    <i class="bi bi-grid-1x2-fill link-icon text-primary"></i>
-                    <span class="link-text">Dashboard Utama</span>
-                </a>
-            </div>
-
-            <!-- Dashboard 2: SIPAT -->
-            <div class="mb-1">
-                <a href="{{ route('sipat.dashboard') }}" class="sidebar-link-main {{ Request::is('sipat/dashboard*') ? 'active' : '' }}" data-bs-toggle="tooltip" data-bs-placement="right" title="Dashboard SIPAT">
-                    <i class="bi bi-geo-alt-fill link-icon text-info"></i>
-                    <span class="link-text">Dashboard SIPAT</span>
-                </a>
-            </div>
-
-            <!-- Dashboard 3: eLABEL -->
-            <div class="mb-1">
-                <a href="{{ route('elabel.dashboard') }}" class="sidebar-link-main {{ Request::is('elabel/dashboard*') ? 'active' : '' }}" data-bs-toggle="tooltip" data-bs-placement="right" title="Dashboard eLABEL">
-                    <i class="bi bi-box-seam-fill link-icon text-success"></i>
-                    <span class="link-text">Dashboard eLABEL</span>
-                </a>
-            </div>
-
-            <!-- Dashboard 4: eRANDIS -->
-            <div class="mb-1">
-                <a href="{{ route('erandis.dashboard') }}" class="sidebar-link-main {{ Request::is('erandis/dashboard*') ? 'active' : '' }}" data-bs-toggle="tooltip" data-bs-placement="right" title="Dashboard eRANDIS">
-                    <i class="bi bi-car-front-fill link-icon text-warning"></i>
-                    <span class="link-text">Dashboard eRANDIS</span>
-                </a>
+        <!-- 1. DASHBOARD UTAMA (COLLAPSIBLE GROUP FOR ALL 4 DASHBOARDS) -->
+        <div class="module-group module-sipat mb-2">
+            <a class="module-header {{ Request::is('home') || Request::is('sipat/dashboard*') || Request::is('elabel/dashboard*') || Request::is('erandis/dashboard*') ? '' : 'collapsed' }}" 
+               data-bs-toggle="collapse" 
+               data-bs-target="#moduleDashboardGroup" 
+               aria-expanded="{{ Request::is('home') || Request::is('sipat/dashboard*') || Request::is('elabel/dashboard*') || Request::is('erandis/dashboard*') ? 'true' : 'false' }}"
+               data-bs-toggle-tooltip="tooltip" data-bs-placement="right" title="DASHBOARD UTAMA">
+                <div class="module-header-title">
+                    <i class="bi bi-grid-1x2-fill module-icon text-primary"></i>
+                    <span class="module-name">DASHBOARD</span>
+                </div>
+                <i class="bi bi-chevron-down chevron-icon"></i>
+            </a>
+            <div id="moduleDashboardGroup" class="collapse {{ Request::is('home') || Request::is('sipat/dashboard*') || Request::is('elabel/dashboard*') || Request::is('erandis/dashboard*') ? 'show' : '' }}" data-bs-parent="#moduleAccordion">
+                <ul class="submenu-list py-1">
+                    <li class="{{ Request::is('home') ? 'active' : '' }}">
+                        <a href="{{ route('home') }}" data-bs-toggle="tooltip" data-bs-placement="right" title="Dashboard Utama (Ringkasan Terpadu)">
+                            <i class="bi bi-grid-1x2-fill text-primary"></i>
+                            <span>Dashboard Utama</span>
+                        </a>
+                    </li>
+                    <li class="{{ Request::is('sipat/dashboard*') ? 'active' : '' }}">
+                        <a href="{{ route('sipat.dashboard') }}" data-bs-toggle="tooltip" data-bs-placement="right" title="Dashboard SIPAT">
+                            <i class="bi bi-geo-alt-fill text-info"></i>
+                            <span>Dashboard SIPAT</span>
+                        </a>
+                    </li>
+                    <li class="{{ Request::is('elabel/dashboard*') ? 'active' : '' }}">
+                        <a href="{{ route('elabel.dashboard') }}" data-bs-toggle="tooltip" data-bs-placement="right" title="Dashboard eLABEL">
+                            <i class="bi bi-box-seam-fill text-success"></i>
+                            <span>Dashboard eLABEL</span>
+                        </a>
+                    </li>
+                    <li class="{{ Request::is('erandis/dashboard*') ? 'active' : '' }}">
+                        <a href="{{ route('erandis.dashboard') }}" data-bs-toggle="tooltip" data-bs-placement="right" title="Dashboard eRANDIS">
+                            <i class="bi bi-car-front-fill text-warning"></i>
+                            <span>Dashboard eRANDIS</span>
+                        </a>
+                    </li>
+                </ul>
             </div>
         </div>
 
@@ -66,8 +70,8 @@
         <!-- 2. MODULE ACCORDION (TERSTRUKTUR PER MODUL) -->
         <div class="accordion sidebar-accordion" id="moduleAccordion">
 
-            <!-- MODUL: SIPAT -->
-            <div class="module-group">
+            <!-- MODUL: SIPAT (Blue Accent) -->
+            <div class="module-group module-sipat">
                 <a class="module-header {{ Request::is('sipat*') || Request::is('master-data/status-proses*', 'master-data/wilayah*', 'master-data/kop-surat*', 'master-data/opd-sipat*', 'master-data/import*', 'master-data/log-aktivitas*') ? '' : 'collapsed' }}" 
                    data-bs-toggle="collapse" 
                    data-bs-target="#moduleSipat" 
@@ -228,8 +232,8 @@
                 </div>
             </div>
 
-            <!-- MODUL: ERANDIS -->
-            <div class="module-group">
+            <!-- MODUL: ERANDIS (Yellow/Orange Accent) -->
+            <div class="module-group module-erandis">
                 <a class="module-header {{ (Request::is('vehicles*', 'maintenance*', 'reports*', 'opds*', 'vehicle-types*', 'activities*') && !Request::is('sipat*') && !Request::is('elabel*')) ? '' : 'collapsed' }}" 
                    data-bs-toggle="collapse" 
                    data-bs-target="#moduleErandis" 
@@ -241,7 +245,7 @@
                     </div>
                     <i class="bi bi-chevron-down chevron-icon"></i>
                 </a>
-                <div id="moduleErandis" class="collapse {{ (Request::is('vehicles*', 'maintenance*', 'reports*', 'opds*', 'vehicle-types*', 'activities*') && !Request::is('sipat*') && !Request::is('elabel*')) ? 'show' : '' }}" data-bs-parent="#moduleAccordion">
+                <div id="moduleErandis" class="collapse {{ (Request::is('erandis*', 'vehicles*', 'maintenance*', 'reports*', 'opds*', 'vehicle-types*', 'activities*') && !Request::is('sipat*') && !Request::is('elabel*')) ? 'show' : '' }}" data-bs-parent="#moduleAccordion">
                     
                     <!-- Nested Submenu 1: Inventaris Kendaraan -->
                     <div class="nested-group">
@@ -350,8 +354,8 @@
                 </div>
             </div>
 
-            <!-- MODUL: ELABEL -->
-            <div class="module-group">
+            <!-- MODUL: ELABEL (Light Blue/Cyan Accent) -->
+            <div class="module-group module-elabel">
                 <a class="module-header {{ Request::is('elabel*') ? '' : 'collapsed' }}" 
                    data-bs-toggle="collapse" 
                    data-bs-target="#moduleElabel" 
@@ -365,16 +369,6 @@
                 </a>
                 <div id="moduleElabel" class="collapse {{ Request::is('elabel*') ? 'show' : '' }}" data-bs-parent="#moduleAccordion">
                     
-                    <!-- Dashboard eLABEL -->
-                    <ul class="submenu-list mb-2">
-                        <li class="{{ Request::is('elabel/dashboard*') ? 'active' : '' }}">
-                            <a href="{{ route('elabel.dashboard') }}" data-bs-toggle="tooltip" data-bs-placement="right" title="Dashboard eLABEL">
-                                <i class="bi bi-speedometer2 text-info"></i>
-                                <span>Dashboard eLABEL</span>
-                            </a>
-                        </li>
-                    </ul>
-
                     <!-- Nested Submenu 1: Dokumen BPKB -->
                     <div class="nested-group">
                         <a class="nested-header {{ Request::is('elabel/bpkb*', 'elabel/boxes*') ? '' : 'collapsed' }}"
