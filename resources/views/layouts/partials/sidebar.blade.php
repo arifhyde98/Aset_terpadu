@@ -97,7 +97,7 @@
                            href="#sipatSubAset"
                            role="button"
                            aria-expanded="{{ Request::is('sipat/aset*', 'sipat/peta*') ? 'true' : 'false' }}">
-                            <span><i class="bi bi-journal-album me-1 text-primary"></i> ASET & INVENTARIS</span>
+                            <span><i class="bi bi-journal-album me-1 text-primary"></i> ASET TANAH & PENGGUNAAN</span>
                             <i class="bi bi-chevron-down nested-chevron"></i>
                         </a>
                         <div id="sipatSubAset" class="collapse {{ Request::is('sipat/aset*', 'sipat/peta*') ? 'show' : '' }}">
@@ -153,7 +153,7 @@
                            href="#sipatSubDokumen"
                            role="button"
                            aria-expanded="{{ Request::is('sipat/surat*', 'sipat/laporan*', 'sipat/rekonsiliasi*') ? 'true' : 'false' }}">
-                            <span><i class="bi bi-file-earmark-bar-graph me-1 text-info"></i> DOKUMEN & LAPORAN</span>
+                            <span><i class="bi bi-file-earmark-bar-graph me-1 text-info"></i> DOKUMEN & PELAPORAN</span>
                             <i class="bi bi-chevron-down nested-chevron"></i>
                         </a>
                         <div id="sipatSubDokumen" class="collapse {{ Request::is('sipat/surat*', 'sipat/laporan*', 'sipat/rekonsiliasi*') ? 'show' : '' }}">
@@ -188,7 +188,7 @@
                                href="#sipatSubMaster"
                                role="button"
                                aria-expanded="{{ Request::is('master-data/status-proses*', 'master-data/wilayah*', 'master-data/kop-surat*', 'master-data/opd-sipat*', 'master-data/import*', 'master-data/log-aktivitas*') || (Request::is('activities*') && request('module') === 'sipat') ? 'true' : 'false' }}">
-                                <span><i class="bi bi-sliders me-1 text-success"></i> MASTER SIPAT</span>
+                                <span><i class="bi bi-sliders me-1 text-success"></i> PENGATURAN SIPAT</span>
                                 <i class="bi bi-chevron-down nested-chevron"></i>
                             </a>
                             <div id="sipatSubMaster" class="collapse {{ Request::is('master-data/status-proses*', 'master-data/wilayah*', 'master-data/kop-surat*', 'master-data/opd-sipat*', 'master-data/import*', 'master-data/log-aktivitas*') || (Request::is('activities*') && request('module') === 'sipat') ? 'show' : '' }}">

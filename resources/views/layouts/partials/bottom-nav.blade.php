@@ -7,7 +7,7 @@
             <span>Home</span>
         </a>
         
-        <!-- 2. SIPAT (Aset Tanah) -->
+        <!-- 2. SIPAT (Aset Tanah & Penggunaan Kantor) -->
         <a href="{{ route('sipat.aset.index') }}" class="bottom-nav-item nav-item-sipat {{ (Request::is('sipat*') || Request::is('master-data/status-proses*', 'master-data/wilayah*', 'master-data/kop-surat*', 'master-data/opd-sipat*', 'master-data/import*', 'master-data/log-aktivitas*') || (Request::is('activities*') && request('module') === 'sipat')) ? 'active' : '' }}">
             <i class="bi bi-geo-alt{{ (Request::is('sipat*') || Request::is('master-data/status-proses*', 'master-data/wilayah*', 'master-data/kop-surat*', 'master-data/opd-sipat*', 'master-data/import*', 'master-data/log-aktivitas*') || (Request::is('activities*') && request('module') === 'sipat')) ? '-fill' : '' }}"></i>
             <span>SIPAT</span>
@@ -135,7 +135,7 @@
                             <span class="badge bg-primary text-white rounded-pill p-1.5"><i class="bi bi-geo-alt-fill"></i></span>
                             <div class="lh-1">
                                 <span class="fw-bold fs-6 text-dark d-block">MODUL SIPAT</span>
-                                <small class="text-secondary" style="font-size: 0.68rem;">Aset Tanah, Peta & SKPT</small>
+                                <small class="text-secondary" style="font-size: 0.68rem;">Aset Tanah & Penggunaan Kantor</small>
                             </div>
                         </div>
                     </button>
@@ -144,7 +144,7 @@
                     <div class="accordion-body p-2 bg-light bg-opacity-50">
                         <div class="list-group list-group-flush rounded-2 overflow-hidden border-0">
                             <!-- Aset & Peta -->
-                            <div class="text-muted fw-bold px-2 pt-1 pb-1" style="font-size: 0.65rem; text-transform: uppercase;">Aset & Inventaris</div>
+                            <div class="text-muted fw-bold px-2 pt-1 pb-1" style="font-size: 0.65rem; text-transform: uppercase;">Aset Tanah & Penggunaan</div>
                             <a href="{{ route('sipat.aset.index') }}" class="list-group-item list-group-item-action border-0 py-2 rounded-2 {{ Request::is('sipat/aset*') ? 'active-sub-sipat' : '' }}">
                                 <i class="bi bi-journal-text me-2 text-primary"></i> Data Aset Tanah
                             </a>
@@ -153,7 +153,7 @@
                             </a>
 
                             <!-- Legalitas -->
-                            <div class="text-muted fw-bold px-2 pt-2 pb-1" style="font-size: 0.65rem; text-transform: uppercase;">Legalitas & Laporan</div>
+                            <div class="text-muted fw-bold px-2 pt-2 pb-1" style="font-size: 0.65rem; text-transform: uppercase;">Legalitas & Pelaporan</div>
                             <a href="{{ route('sipat.surat.skpt') }}" class="list-group-item list-group-item-action border-0 py-2 rounded-2 {{ Request::is('sipat/surat*') ? 'active-sub-sipat' : '' }}">
                                 <i class="bi bi-file-earmark-word me-2 text-info"></i> Cetak Surat SKPT
                             </a>
@@ -166,7 +166,7 @@
 
                             <!-- Master Data SIPAT (Non-OPD) -->
                             @if(auth()->user()?->role !== \App\Enums\UserRole::OPD)
-                                <div class="text-muted fw-bold px-2 pt-2 pb-1" style="font-size: 0.65rem; text-transform: uppercase;">Master & Pengaturan SIPAT</div>
+                                <div class="text-muted fw-bold px-2 pt-2 pb-1" style="font-size: 0.65rem; text-transform: uppercase;">Pengaturan SIPAT</div>
                                 <a href="{{ route('status-proses.index') }}" class="list-group-item list-group-item-action border-0 py-2 rounded-2 {{ Request::is('master-data/status-proses*') ? 'active-sub-sipat' : '' }}">
                                     <i class="bi bi-tags me-2 text-success"></i> Master Status Proses
                                 </a>
