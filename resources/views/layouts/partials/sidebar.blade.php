@@ -77,10 +77,10 @@
 
             <!-- MODUL: SIPAT (Blue Accent) -->
             <div class="module-group module-sipat">
-                <a class="module-header {{ Request::is('sipat*') || Request::is('master-data/status-proses*', 'master-data/wilayah*', 'master-data/kop-surat*', 'master-data/opd-sipat*', 'master-data/import*', 'master-data/log-aktivitas*') ? '' : 'collapsed' }}" 
+                <a class="module-header {{ Request::is('sipat*') || Request::is('master-data/status-proses*', 'master-data/wilayah*', 'master-data/kop-surat*', 'master-data/opd-sipat*', 'master-data/import*', 'master-data/log-aktivitas*') || (Request::is('activities*') && request('module') === 'sipat') ? '' : 'collapsed' }}" 
                    data-bs-toggle="collapse" 
                    data-bs-target="#moduleSipat" 
-                   aria-expanded="{{ Request::is('sipat*') || Request::is('master-data/status-proses*', 'master-data/wilayah*', 'master-data/kop-surat*', 'master-data/opd-sipat*', 'master-data/import*', 'master-data/log-aktivitas*') ? 'true' : 'false' }}"
+                   aria-expanded="{{ Request::is('sipat*') || Request::is('master-data/status-proses*', 'master-data/wilayah*', 'master-data/kop-surat*', 'master-data/opd-sipat*', 'master-data/import*', 'master-data/log-aktivitas*') || (Request::is('activities*') && request('module') === 'sipat') ? 'true' : 'false' }}"
                    data-bs-toggle-tooltip="tooltip" data-bs-placement="right" title="SIPAT">
                     <div class="module-header-title">
                         <i class="bi bi-geo-alt-fill module-icon text-primary"></i>
@@ -88,7 +88,7 @@
                     </div>
                     <i class="bi bi-chevron-down chevron-icon"></i>
                 </a>
-                <div id="moduleSipat" class="collapse {{ Request::is('sipat*') || Request::is('master-data/status-proses*', 'master-data/wilayah*', 'master-data/kop-surat*', 'master-data/opd-sipat*', 'master-data/import*', 'master-data/log-aktivitas*') ? 'show' : '' }}" data-bs-parent="#moduleAccordion">
+                <div id="moduleSipat" class="collapse {{ Request::is('sipat*') || Request::is('master-data/status-proses*', 'master-data/wilayah*', 'master-data/kop-surat*', 'master-data/opd-sipat*', 'master-data/import*', 'master-data/log-aktivitas*') || (Request::is('activities*') && request('module') === 'sipat') ? 'show' : '' }}" data-bs-parent="#moduleAccordion">
                     
                     <!-- Nested Submenu 1: Aset & Inventaris -->
                     <div class="nested-group">
@@ -183,15 +183,15 @@
                     <!-- Nested Submenu 4: Master Data & Pengaturan SIPAT -->
                     @if(auth()->user()?->role !== \App\Enums\UserRole::OPD)
                         <div class="nested-group">
-                            <a class="nested-header {{ Request::is('master-data/status-proses*', 'master-data/wilayah*', 'master-data/kop-surat*', 'master-data/opd-sipat*', 'master-data/import*', 'master-data/log-aktivitas*') ? '' : 'collapsed' }}"
+                            <a class="nested-header {{ Request::is('master-data/status-proses*', 'master-data/wilayah*', 'master-data/kop-surat*', 'master-data/opd-sipat*', 'master-data/import*', 'master-data/log-aktivitas*') || (Request::is('activities*') && request('module') === 'sipat') ? '' : 'collapsed' }}"
                                data-bs-toggle="collapse"
                                href="#sipatSubMaster"
                                role="button"
-                               aria-expanded="{{ Request::is('master-data/status-proses*', 'master-data/wilayah*', 'master-data/kop-surat*', 'master-data/opd-sipat*', 'master-data/import*', 'master-data/log-aktivitas*') ? 'true' : 'false' }}">
+                               aria-expanded="{{ Request::is('master-data/status-proses*', 'master-data/wilayah*', 'master-data/kop-surat*', 'master-data/opd-sipat*', 'master-data/import*', 'master-data/log-aktivitas*') || (Request::is('activities*') && request('module') === 'sipat') ? 'true' : 'false' }}">
                                 <span><i class="bi bi-sliders me-1 text-success"></i> MASTER SIPAT</span>
                                 <i class="bi bi-chevron-down nested-chevron"></i>
                             </a>
-                            <div id="sipatSubMaster" class="collapse {{ Request::is('master-data/status-proses*', 'master-data/wilayah*', 'master-data/kop-surat*', 'master-data/opd-sipat*', 'master-data/import*', 'master-data/log-aktivitas*') ? 'show' : '' }}">
+                            <div id="sipatSubMaster" class="collapse {{ Request::is('master-data/status-proses*', 'master-data/wilayah*', 'master-data/kop-surat*', 'master-data/opd-sipat*', 'master-data/import*', 'master-data/log-aktivitas*') || (Request::is('activities*') && request('module') === 'sipat') ? 'show' : '' }}">
                                 <ul class="submenu-list">
                                     <li class="{{ Request::is('master-data/status-proses*') ? 'active' : '' }}">
                                         <a href="{{ route('status-proses.index') }}" data-bs-toggle="tooltip" data-bs-placement="right" title="Status Proses Pensertifikatan">
@@ -223,8 +223,8 @@
                                             <span>Import Data SIPAT</span>
                                         </a>
                                     </li>
-                                    <li class="{{ Request::is('master-data/log-aktivitas*') ? 'active' : '' }}">
-                                        <a href="{{ route('master.logs.index') }}" data-bs-toggle="tooltip" data-bs-placement="right" title="Log Aktivitas (SIPAT)">
+                                    <li class="{{ Request::is('activities*') && request('module') === 'sipat' ? 'active' : '' }}">
+                                        <a href="{{ route('activities.index', ['module' => 'sipat']) }}" data-bs-toggle="tooltip" data-bs-placement="right" title="Log Aktivitas (SIPAT)">
                                             <i class="bi bi-journal-check"></i>
                                             <span>Log Aktivitas SIPAT</span>
                                         </a>
@@ -239,10 +239,10 @@
 
             <!-- MODUL: ERANDIS (Yellow/Orange Accent) -->
             <div class="module-group module-erandis">
-                <a class="module-header {{ (Request::is('vehicles*', 'maintenance*', 'reports*', 'opds*', 'vehicle-types*', 'activities*') && !Request::is('sipat*') && !Request::is('elabel*')) ? '' : 'collapsed' }}" 
+                <a class="module-header {{ (Request::is('vehicles*', 'maintenance*', 'reports*', 'opds*', 'vehicle-types*', 'activities*') && request('module') !== 'sipat' && !Request::is('sipat*') && !Request::is('elabel*')) ? '' : 'collapsed' }}" 
                    data-bs-toggle="collapse" 
                    data-bs-target="#moduleErandis" 
-                   aria-expanded="{{ (Request::is('vehicles*', 'maintenance*', 'reports*', 'opds*', 'vehicle-types*', 'activities*') && !Request::is('sipat*') && !Request::is('elabel*')) ? 'true' : 'false' }}"
+                   aria-expanded="{{ (Request::is('vehicles*', 'maintenance*', 'reports*', 'opds*', 'vehicle-types*', 'activities*') && request('module') !== 'sipat' && !Request::is('sipat*') && !Request::is('elabel*')) ? 'true' : 'false' }}"
                    data-bs-toggle-tooltip="tooltip" data-bs-placement="right" title="ERANDIS">
                     <div class="module-header-title">
                         <i class="bi bi-car-front-fill module-icon text-warning"></i>
@@ -250,7 +250,7 @@
                     </div>
                     <i class="bi bi-chevron-down chevron-icon"></i>
                 </a>
-                <div id="moduleErandis" class="collapse {{ (Request::is('erandis*', 'vehicles*', 'maintenance*', 'reports*', 'opds*', 'vehicle-types*', 'activities*') && !Request::is('sipat*') && !Request::is('elabel*')) ? 'show' : '' }}" data-bs-parent="#moduleAccordion">
+                <div id="moduleErandis" class="collapse {{ (Request::is('erandis*', 'vehicles*', 'maintenance*', 'reports*', 'opds*', 'vehicle-types*', 'activities*') && request('module') !== 'sipat' && !Request::is('sipat*') && !Request::is('elabel*')) ? 'show' : '' }}" data-bs-parent="#moduleAccordion">
                     
                     <!-- Nested Submenu 1: Inventaris Kendaraan -->
                     <div class="nested-group">
@@ -345,9 +345,9 @@
                                     </li>
                                     @if(auth()->check() && auth()->user()?->role === \App\Enums\UserRole::SUPERADMIN)
                                         <li class="{{ Request::is('activities*') ? 'active' : '' }}">
-                                            <a href="{{ Route::has('activities.index') ? route('activities.index') : '#' }}" data-bs-toggle="tooltip" data-bs-placement="right" title="Audit Log (ERANDIS)">
+                                            <a href="{{ Route::has('activities.index') ? route('activities.index') : '#' }}" data-bs-toggle="tooltip" data-bs-placement="right" title="Log Aktivitas Terpadu">
                                                 <i class="bi bi-shield-lock"></i>
-                                                <span>Audit Log ERANDIS</span>
+                                                <span>Log Aktivitas Terpadu</span>
                                             </a>
                                         </li>
                                     @endif
@@ -475,10 +475,10 @@
 
             <!-- MODUL: PENGATURAN SISTEM (GLOBAL UTILITY & ADMIN) -->
             <div class="module-group">
-                <a class="module-header {{ Request::is('users*', 'settings*', 'master-data/opd-mapping*') ? '' : 'collapsed' }}" 
+                <a class="module-header {{ (Request::is('users*', 'settings*', 'activities*', 'master-data/opd-mapping*') && request('module') !== 'sipat') ? '' : 'collapsed' }}" 
                    data-bs-toggle="collapse" 
                    data-bs-target="#moduleSystem" 
-                   aria-expanded="{{ Request::is('users*', 'settings*', 'master-data/opd-mapping*') ? 'true' : 'false' }}"
+                   aria-expanded="{{ (Request::is('users*', 'settings*', 'activities*', 'master-data/opd-mapping*') && request('module') !== 'sipat') ? 'true' : 'false' }}"
                    data-bs-toggle-tooltip="tooltip" data-bs-placement="right" title="PENGATURAN SISTEM">
                     <div class="module-header-title">
                         <i class="bi bi-gear-wide-connected module-icon text-success"></i>
@@ -486,7 +486,7 @@
                     </div>
                     <i class="bi bi-chevron-down chevron-icon"></i>
                 </a>
-                <div id="moduleSystem" class="collapse {{ Request::is('users*', 'settings*', 'master-data/opd-mapping*') ? 'show' : '' }}" data-bs-parent="#moduleAccordion">
+                <div id="moduleSystem" class="collapse {{ (Request::is('users*', 'settings*', 'activities*', 'master-data/opd-mapping*') && request('module') !== 'sipat') ? 'show' : '' }}" data-bs-parent="#moduleAccordion">
                     <ul class="submenu-list">
                         @if(auth()->user()?->role !== \App\Enums\UserRole::OPD)
                             <li class="{{ Request::is('master-data/opd-mapping*') ? 'active' : '' }}">
@@ -508,6 +508,12 @@
                                 <a href="{{ route('settings.index') }}" data-bs-toggle="tooltip" data-bs-placement="right" title="Pengaturan System">
                                     <i class="bi bi-gear"></i>
                                     <span>Pengaturan System</span>
+                                </a>
+                            </li>
+                            <li class="{{ Request::is('activities*') ? 'active' : '' }}">
+                                <a href="{{ route('activities.index') }}" data-bs-toggle="tooltip" data-bs-placement="right" title="Log Aktivitas Terpadu">
+                                    <i class="bi bi-shield-check"></i>
+                                    <span>Log Aktivitas Terpadu</span>
                                 </a>
                             </li>
                         @endif

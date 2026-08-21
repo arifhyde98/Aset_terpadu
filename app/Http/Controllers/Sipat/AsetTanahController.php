@@ -14,6 +14,7 @@ use App\Http\Requests\Sipat\StoreProsesAsetRequest;
 use App\Http\Requests\Sipat\BulkStoreProsesRequest;
 use App\Http\Requests\Sipat\StoreDokumenAsetRequest;
 use App\Http\Requests\Sipat\StorePengamananFisikRequest;
+use App\Models\Activity;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -107,6 +108,8 @@ class AsetTanahController extends Controller
             ]);
         }
 
+        Activity::logSipat("Menambahkan data aset tanah baru: {$aset->nama_aset} (NIB: {$aset->kode_aset})", 'success');
+
         return redirect()->route('sipat.aset.index')->with('success', 'Data Aset Tanah berhasil ditambahkan.');
     }
 
@@ -165,14 +168,24 @@ class AsetTanahController extends Controller
         $aset = AsetTanah::findOrFail($id);
         $aset->update($request->validated());
 
+        $konteks = $aset->peruntukan
+            ? "Peruntukan: {$aset->peruntukan}"
+            : "Peruntukan: -";
+
+        Activity::logSipat("Memperbarui informasi aset tanah: {$aset->nama_aset} ({$konteks})", 'info');
+
         return redirect()->route('sipat.aset.index')->with('success', 'Data Aset Tanah berhasil diperbarui.');
     }
 
     public function destroy($id)
     {
         $aset = AsetTanah::findOrFail($id);
+        $kodeAset = $aset->kode_aset;
+        $namaAset = $aset->nama_aset;
         ProsesAset::where('id_aset', $id)->delete();
         $aset->delete();
+
+        Activity::logSipat("Menghapus data aset tanah secara permanen: {$namaAset} (NIB: {$kodeAset})", 'danger');
 
         return redirect()->route('sipat.aset.index')->with('success', 'Data Aset Tanah berhasil dihapus.');
     }
@@ -184,7 +197,7 @@ class AsetTanahController extends Controller
         
         $durasi = $this->sipatService->calculateDuration($validated['tgl_mulai'] ?? null, $validated['tgl_selesai'] ?? null);
 
-        ProsesAset::create([
+        $proses = ProsesAset::create([
             'id_aset'     => $aset->id_aset,
             'id_status'   => $validated['id_status'],
             'tgl_mulai'   => $validated['tgl_mulai'] ?? null,
@@ -192,6 +205,8 @@ class AsetTanahController extends Controller
             'keterangan'  => $validated['keterangan'] ?? null,
             'durasi_hari' => $durasi,
         ]);
+
+        Activity::logSipat("Memperbarui status pengurusan BPN (Status baru: {$proses->statusProses->nama_status}) untuk aset tanah: {$aset->nama_aset}", 'success');
 
         return redirect()->route('sipat.aset.index')->with('success', 'Riwayat Proses BPN berhasil ditambahkan.');
     }
@@ -221,6 +236,9 @@ class AsetTanahController extends Controller
             return redirect()->back()->with('error', 'Tidak ada data aset yang ditemukan untuk diproses.');
         }
 
+        $statusName = \App\Models\StatusProses::find($idStatus)->nama_status ?? 'Unknown';
+        Activity::logSipat("Memperbarui status pengurusan BPN secara massal menjadi '{$statusName}' untuk {$insertedCount} aset tanah", 'success');
+
         return redirect()->route('sipat.aset.index')->with('success', "Berhasil memperbarui status untuk {$insertedCount} aset.");
     }
 
@@ -242,6 +260,8 @@ class AsetTanahController extends Controller
             ]
         );
 
+        Activity::logSipat("Mencatat laporan pengamanan fisik lapangan untuk aset tanah: {$aset->nama_aset}", 'info');
+
         return redirect()->route('sipat.aset.index')->with('success', 'Status pengamanan fisik aset berhasil diperbarui.');
     }
 
@@ -262,6 +282,8 @@ class AsetTanahController extends Controller
             'file_path' => $path,
             'uploaded_at' => now(),
         ]);
+
+        Activity::logSipat("Mengunggah dokumen pendukung ({$validated['jenis_dokumen']}) untuk aset tanah: {$aset->nama_aset}", 'success');
 
         return redirect()->route('sipat.aset.index')->with('success', 'Dokumen lampiran aset berhasil diunggah.');
     }

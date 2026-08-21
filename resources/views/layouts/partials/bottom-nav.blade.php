@@ -8,14 +8,14 @@
         </a>
         
         <!-- 2. SIPAT (Aset Tanah) -->
-        <a href="{{ route('sipat.aset.index') }}" class="bottom-nav-item nav-item-sipat {{ (Request::is('sipat*') || Request::is('master-data/status-proses*', 'master-data/wilayah*', 'master-data/kop-surat*', 'master-data/opd-sipat*', 'master-data/import*', 'master-data/log-aktivitas*')) ? 'active' : '' }}">
-            <i class="bi bi-geo-alt{{ (Request::is('sipat*') || Request::is('master-data/status-proses*', 'master-data/wilayah*', 'master-data/kop-surat*', 'master-data/opd-sipat*', 'master-data/import*', 'master-data/log-aktivitas*')) ? '-fill' : '' }}"></i>
+        <a href="{{ route('sipat.aset.index') }}" class="bottom-nav-item nav-item-sipat {{ (Request::is('sipat*') || Request::is('master-data/status-proses*', 'master-data/wilayah*', 'master-data/kop-surat*', 'master-data/opd-sipat*', 'master-data/import*', 'master-data/log-aktivitas*') || (Request::is('activities*') && request('module') === 'sipat')) ? 'active' : '' }}">
+            <i class="bi bi-geo-alt{{ (Request::is('sipat*') || Request::is('master-data/status-proses*', 'master-data/wilayah*', 'master-data/kop-surat*', 'master-data/opd-sipat*', 'master-data/import*', 'master-data/log-aktivitas*') || (Request::is('activities*') && request('module') === 'sipat')) ? '-fill' : '' }}"></i>
             <span>SIPAT</span>
         </a>
         
         <!-- 3. eRANDIS (Kendaraan Dinas) -->
-        <a href="{{ route('vehicles.index') }}" class="bottom-nav-item nav-item-erandis {{ ((Request::is('erandis*', 'vehicles*', 'maintenance*', 'reports*', 'opds*', 'vehicle-types*', 'activities*') && !Request::is('sipat*') && !Request::is('elabel*'))) ? 'active' : '' }}">
-            <i class="bi bi-car-front{{ ((Request::is('erandis*', 'vehicles*', 'maintenance*', 'reports*', 'opds*', 'vehicle-types*', 'activities*') && !Request::is('sipat*') && !Request::is('elabel*'))) ? '-fill' : '' }}"></i>
+        <a href="{{ route('vehicles.index') }}" class="bottom-nav-item nav-item-erandis {{ ((Request::is('erandis*', 'vehicles*', 'maintenance*', 'reports*', 'opds*', 'vehicle-types*', 'activities*') && request('module') !== 'sipat' && !Request::is('sipat*') && !Request::is('elabel*'))) ? 'active' : '' }}">
+            <i class="bi bi-car-front{{ ((Request::is('erandis*', 'vehicles*', 'maintenance*', 'reports*', 'opds*', 'vehicle-types*', 'activities*') && request('module') !== 'sipat' && !Request::is('sipat*') && !Request::is('elabel*'))) ? '-fill' : '' }}"></i>
             <span>eRANDIS</span>
         </a>
         
@@ -130,7 +130,7 @@
             <!-- 2. MODUL SIPAT (Aset Tanah) -->
             <div class="accordion-item border rounded-3 mb-2 overflow-hidden module-item-sipat">
                 <h2 class="accordion-header" id="headingMobileSipat">
-                    <button class="accordion-button py-2.5 px-3 {{ (Request::is('sipat*') || Request::is('master-data/status-proses*', 'master-data/wilayah*', 'master-data/kop-surat*', 'master-data/opd-sipat*', 'master-data/import*', 'master-data/log-aktivitas*')) ? '' : 'collapsed' }}" type="button" data-bs-toggle="collapse" data-bs-target="#collapseMobileSipat" aria-expanded="{{ (Request::is('sipat*') || Request::is('master-data/status-proses*', 'master-data/wilayah*', 'master-data/kop-surat*', 'master-data/opd-sipat*', 'master-data/import*', 'master-data/log-aktivitas*')) ? 'true' : 'false' }}">
+                    <button class="accordion-button py-2.5 px-3 {{ (Request::is('sipat*') || Request::is('master-data/status-proses*', 'master-data/wilayah*', 'master-data/kop-surat*', 'master-data/opd-sipat*', 'master-data/import*', 'master-data/log-aktivitas*') || (Request::is('activities*') && request('module') === 'sipat')) ? '' : 'collapsed' }}" type="button" data-bs-toggle="collapse" data-bs-target="#collapseMobileSipat" aria-expanded="{{ (Request::is('sipat*') || Request::is('master-data/status-proses*', 'master-data/wilayah*', 'master-data/kop-surat*', 'master-data/opd-sipat*', 'master-data/import*', 'master-data/log-aktivitas*') || (Request::is('activities*') && request('module') === 'sipat')) ? 'true' : 'false' }}">
                         <div class="d-flex align-items-center gap-2">
                             <span class="badge bg-primary text-white rounded-pill p-1.5"><i class="bi bi-geo-alt-fill"></i></span>
                             <div class="lh-1">
@@ -140,7 +140,7 @@
                         </div>
                     </button>
                 </h2>
-                <div id="collapseMobileSipat" class="accordion-collapse collapse {{ (Request::is('sipat*') || Request::is('master-data/status-proses*', 'master-data/wilayah*', 'master-data/kop-surat*', 'master-data/opd-sipat*', 'master-data/import*', 'master-data/log-aktivitas*')) ? 'show' : '' }}" data-bs-parent="#mobileModulesAccordion">
+                <div id="collapseMobileSipat" class="accordion-collapse collapse {{ (Request::is('sipat*') || Request::is('master-data/status-proses*', 'master-data/wilayah*', 'master-data/kop-surat*', 'master-data/opd-sipat*', 'master-data/import*', 'master-data/log-aktivitas*') || (Request::is('activities*') && request('module') === 'sipat')) ? 'show' : '' }}" data-bs-parent="#mobileModulesAccordion">
                     <div class="accordion-body p-2 bg-light bg-opacity-50">
                         <div class="list-group list-group-flush rounded-2 overflow-hidden border-0">
                             <!-- Aset & Peta -->
@@ -182,7 +182,7 @@
                                 <a href="{{ route('master.import.index') }}" class="list-group-item list-group-item-action border-0 py-2 rounded-2 {{ Request::is('master-data/import*') ? 'active-sub-sipat' : '' }}">
                                     <i class="bi bi-file-earmark-arrow-up me-2 text-success"></i> Import Data SIPAT
                                 </a>
-                                <a href="{{ route('master.logs.index') }}" class="list-group-item list-group-item-action border-0 py-2 rounded-2 {{ Request::is('master-data/log-aktivitas*') ? 'active-sub-sipat' : '' }}">
+                                <a href="{{ route('activities.index', ['module' => 'sipat']) }}" class="list-group-item list-group-item-action border-0 py-2 rounded-2 {{ Request::is('activities*') && request('module') === 'sipat' ? 'active-sub-sipat' : '' }}">
                                     <i class="bi bi-journal-check me-2 text-success"></i> Log Aktivitas SIPAT
                                 </a>
                             @endif
@@ -194,7 +194,7 @@
             <!-- 3. MODUL ERANDIS (Kendaraan Dinas) -->
             <div class="accordion-item border rounded-3 mb-2 overflow-hidden module-item-erandis">
                 <h2 class="accordion-header" id="headingMobileErandis">
-                    <button class="accordion-button py-2.5 px-3 {{ ((Request::is('erandis*', 'vehicles*', 'maintenance*', 'reports*', 'opds*', 'vehicle-types*', 'activities*') && !Request::is('sipat*') && !Request::is('elabel*'))) ? '' : 'collapsed' }}" type="button" data-bs-toggle="collapse" data-bs-target="#collapseMobileErandis" aria-expanded="{{ ((Request::is('erandis*', 'vehicles*', 'maintenance*', 'reports*', 'opds*', 'vehicle-types*', 'activities*') && !Request::is('sipat*') && !Request::is('elabel*'))) ? 'true' : 'false' }}">
+                    <button class="accordion-button py-2.5 px-3 {{ ((Request::is('erandis*', 'vehicles*', 'maintenance*', 'reports*', 'opds*', 'vehicle-types*', 'activities*') && request('module') !== 'sipat' && !Request::is('sipat*') && !Request::is('elabel*'))) ? '' : 'collapsed' }}" type="button" data-bs-toggle="collapse" data-bs-target="#collapseMobileErandis" aria-expanded="{{ ((Request::is('erandis*', 'vehicles*', 'maintenance*', 'reports*', 'opds*', 'vehicle-types*', 'activities*') && request('module') !== 'sipat' && !Request::is('sipat*') && !Request::is('elabel*'))) ? 'true' : 'false' }}">
                         <div class="d-flex align-items-center gap-2">
                             <span class="badge bg-warning text-dark rounded-pill p-1.5"><i class="bi bi-car-front-fill"></i></span>
                             <div class="lh-1">
@@ -204,7 +204,7 @@
                         </div>
                     </button>
                 </h2>
-                <div id="collapseMobileErandis" class="accordion-collapse collapse {{ ((Request::is('erandis*', 'vehicles*', 'maintenance*', 'reports*', 'opds*', 'vehicle-types*', 'activities*') && !Request::is('sipat*') && !Request::is('elabel*'))) ? 'show' : '' }}" data-bs-parent="#mobileModulesAccordion">
+                <div id="collapseMobileErandis" class="accordion-collapse collapse {{ ((Request::is('erandis*', 'vehicles*', 'maintenance*', 'reports*', 'opds*', 'vehicle-types*', 'activities*') && request('module') !== 'sipat' && !Request::is('sipat*') && !Request::is('elabel*'))) ? 'show' : '' }}" data-bs-parent="#mobileModulesAccordion">
                     <div class="accordion-body p-2 bg-light bg-opacity-50">
                         <div class="list-group list-group-flush rounded-2 overflow-hidden border-0">
                             <a href="{{ route('vehicles.index') }}" class="list-group-item list-group-item-action border-0 py-2 rounded-2 {{ Request::is('vehicles*') ? 'active-sub-erandis' : '' }}">
@@ -227,7 +227,7 @@
                                 </a>
                                 @if(auth()->check() && auth()->user()?->role === \App\Enums\UserRole::SUPERADMIN)
                                     <a href="{{ route('activities.index') }}" class="list-group-item list-group-item-action border-0 py-2 rounded-2 {{ Request::is('activities*') ? 'active-sub-erandis' : '' }}">
-                                        <i class="bi bi-shield-lock me-2 text-primary"></i> Audit Log ERANDIS
+                                        <i class="bi bi-shield-lock me-2 text-primary"></i> Log Aktivitas Terpadu
                                     </a>
                                 @endif
                             @endif
@@ -292,7 +292,7 @@
             <!-- 5. PENGATURAN SISTEM & GLOBAL -->
             <div class="accordion-item border rounded-3 mb-3 overflow-hidden">
                 <h2 class="accordion-header" id="headingMobileSystem">
-                    <button class="accordion-button py-2.5 px-3 {{ Request::is('users*', 'settings*', 'master-data/opd-mapping*') ? '' : 'collapsed' }}" type="button" data-bs-toggle="collapse" data-bs-target="#collapseMobileSystem" aria-expanded="{{ Request::is('users*', 'settings*', 'master-data/opd-mapping*') ? 'true' : 'false' }}">
+                    <button class="accordion-button py-2.5 px-3 {{ (Request::is('users*', 'settings*', 'activities*', 'master-data/opd-mapping*') && request('module') !== 'sipat') ? '' : 'collapsed' }}" type="button" data-bs-toggle="collapse" data-bs-target="#collapseMobileSystem" aria-expanded="{{ (Request::is('users*', 'settings*', 'activities*', 'master-data/opd-mapping*') && request('module') !== 'sipat') ? 'true' : 'false' }}">
                         <div class="d-flex align-items-center gap-2">
                             <span class="badge bg-secondary text-white rounded-pill p-1.5"><i class="bi bi-gear-wide-connected"></i></span>
                             <div class="lh-1">
@@ -302,7 +302,7 @@
                         </div>
                     </button>
                 </h2>
-                <div id="collapseMobileSystem" class="accordion-collapse collapse {{ Request::is('users*', 'settings*', 'master-data/opd-mapping*') ? 'show' : '' }}" data-bs-parent="#mobileModulesAccordion">
+                <div id="collapseMobileSystem" class="accordion-collapse collapse {{ (Request::is('users*', 'settings*', 'activities*', 'master-data/opd-mapping*') && request('module') !== 'sipat') ? 'show' : '' }}" data-bs-parent="#mobileModulesAccordion">
                     <div class="accordion-body p-2 bg-light bg-opacity-50">
                         <div class="list-group list-group-flush rounded-2 overflow-hidden border-0">
                             @if(auth()->user()?->role !== \App\Enums\UserRole::OPD)
@@ -316,6 +316,9 @@
                                 </a>
                                 <a href="{{ route('settings.index') }}" class="list-group-item list-group-item-action border-0 py-2 rounded-2 {{ request()->routeIs('settings.*') ? 'active rounded' : '' }}">
                                     <i class="bi bi-gear me-2 text-secondary"></i> Pengaturan System
+                                </a>
+                                <a href="{{ route('activities.index') }}" class="list-group-item list-group-item-action border-0 py-2 rounded-2 {{ Request::is('activities*') ? 'active rounded' : '' }}">
+                                    <i class="bi bi-shield-lock me-2 text-primary"></i> Log Aktivitas Terpadu
                                 </a>
                             @endif
                         </div>

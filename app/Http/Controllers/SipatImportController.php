@@ -74,7 +74,7 @@ class SipatImportController extends Controller implements HasMiddleware
                 $msg .= " Dilewati: {$notFound} data (Kode Aset / NIBAR tidak ditemukan / status tidak valid).";
             }
 
-            Activity::log("Mengunggah pembaruan status proses sertifikat massal ({$updated} aset diperbarui)", 'success');
+            Activity::logSipat("Berhasil memperbarui status BPN secara massal untuk {$updated} aset tanah.", 'success');
 
             return redirect()->route('master.import.index')
                 ->with('active_tab', 'status')
@@ -111,7 +111,7 @@ class SipatImportController extends Controller implements HasMiddleware
                 $msg .= " Dilewati: {$skipped} baris (duplikasi Kode Aset / data kosong).";
             }
 
-            Activity::log("Mengimpor data aset tanah & sertifikat baru secara massal ({$imported} aset baru)", 'success');
+            Activity::logSipat("Berhasil menambahkan {$imported} data aset tanah dan sertifikat baru secara massal.", 'success');
 
             return redirect()->route('master.import.index')
                 ->with('active_tab', 'aset')
