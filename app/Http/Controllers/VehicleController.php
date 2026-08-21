@@ -5,14 +5,13 @@ namespace App\Http\Controllers;
 use App\Models\Vehicle;
 use App\Models\User;
 use App\Models\VehicleType;
+use App\Models\Op;
 use App\Models\Opd;
 use Illuminate\Http\Request;
 use App\Http\Requests\StoreVehicleRequest;
 use App\Http\Requests\UpdateVehicleRequest;
 use App\Exports\VehicleExport;
 use App\Exports\VehicleTemplateExport;
-use App\Imports\VehicleImport;
-use App\Imports\VehicleMultiSheetImport;
 use App\Http\Requests\ImportVehicleRequest;
 use App\Http\Requests\ExecuteSmartImportRequest;
 use App\Http\Requests\ResolveDuplicateVehicleRequest;
@@ -22,11 +21,12 @@ use Illuminate\View\View;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
 
 use App\Services\VehicleService;
+use App\Services\VehicleQueryService;
+use App\Services\VehicleImportService;
 
 /**
  * Controller untuk Manajemen Data Kendaraan
@@ -35,6 +35,10 @@ use App\Services\VehicleService;
  */
 class VehicleController extends Controller implements HasMiddleware
 {
+    protected $vehicleService;
+    protected $vehicleQueryService;
+    protected $vehicleImportService;
+
     /**
      * Mendapatkan middleware yang ditugaskan ke controller ini.
      * 
@@ -49,16 +53,21 @@ class VehicleController extends Controller implements HasMiddleware
         ];
     }
 
-    protected $vehicleService;
-
     /**
-     * Konstruktor Controller.
+     * Konstruktor Controller dengan dependency injection.
      * 
      * @param VehicleService $vehicleService
+     * @param VehicleQueryService $vehicleQueryService
+     * @param VehicleImportService $vehicleImportService
      */
-    public function __construct(VehicleService $vehicleService)
-    {
+    public function __construct(
+        VehicleService $vehicleService,
+        VehicleQueryService $vehicleQueryService,
+        VehicleImportService $vehicleImportService
+    ) {
         $this->vehicleService = $vehicleService;
+        $this->vehicleQueryService = $vehicleQueryService;
+        $this->vehicleImportService = $vehicleImportService;
     }
 
     /**
@@ -69,78 +78,23 @@ class VehicleController extends Controller implements HasMiddleware
      */
     public function index(Request $request): View
     {
-        $sortBy = $request->input('sort_by');
-        $sortOrder = $request->input('sort_order', 'asc');
-        $allowedSorts = ['no_polisi', 'jenis', 'merk', 'tahun_pembuatan', 'pemegang', 'kondisi', 'status'];
-
-        $isEbmd = $request->input('tab') === 'ebmd';
-        $modelClass = $isEbmd ? \App\Models\EbmdVehicle::class : Vehicle::class;
-
-        $query = $modelClass::with(['user', 'vehicleType', 'opdRelation']);
-
-        if ($sortBy && in_array($sortBy, $allowedSorts)) {
-            $query->orderBy($sortBy, $sortOrder);
-        } else {
-            $query->latest();
-        }
-
-        // Filter Pencarian Global
-        if ($request->filled('q')) {
-            $search = strtoupper(preg_replace('/\s+/', ' ', trim($request->q)));
-            $query->where(function($q) use ($search) {
-                $q->where('no_polisi', 'LIKE', "%{$search}%")
-                  ->orWhere('nomor_register', 'LIKE', "%{$search}%")
-                  ->orWhere('pemegang', 'LIKE', "%{$search}%")
-                  ->orWhere('merk', 'LIKE', "%{$search}%")
-                  ->orWhere('opd', 'LIKE', "%{$search}%");
-            });
-        }
-
-        // Filter Berdasarkan Status Operasional
-        if ($request->filled('status')) {
-            $query->where('status', $request->status);
-        }
-
-        // Filter Berdasarkan Kondisi Fisik
-        if ($request->filled('kondisi')) {
-            $query->where('kondisi', $request->kondisi);
-        }
-
-        // Filter Berdasarkan Jenis Kendaraan
-        if ($request->filled('jenis')) {
-            $query->where(function($q) use ($request) {
-                $q->whereHas('vehicleType', function($sq) use ($request) {
-                    $sq->where('name', $request->jenis);
-                })->orWhere('jenis', $request->jenis);
-            });
-        }
-
-        $vehicles = $query->paginate(10)->withQueryString();
+        $data = $this->vehicleQueryService->getPaginatedVehicles($request->all());
         
+        $vehicles = $data['vehicles'];
+        $vehicleDataMap = $data['vehicleDataMap'];
+        $statuses = $data['statuses'];
+        $conditions = $data['conditions'];
+        $isEbmd = $data['isEbmd'];
+
         $vehicleTypes = VehicleType::orderBy('name')->get();
         $stats = $this->vehicleService->getDashboardStats();
-        
         $ebmdStats = $isEbmd ? $this->vehicleService->getEbmdStats() : [];
-
         $opds = Opd::orderBy('nama')->get();
-        $statuses = $modelClass::getStatuses();
-        $conditions = $modelClass::getConditions();
 
-        $vehicleDataMap = $vehicles->getCollection()->keyBy('id')->map(function($v) {
-            $data = $v->only([
-                'id', 'no_polisi', 'nomor_register', 'merk', 'tipe', 'jenis', 'opd_id', 'pemegang', 'status', 'kondisi',
-                'vehicle_type_id', 'tahun_pembuatan', 'warna', 'stnk_ada', 'bpkb_ada', 
-                'tgl_stnk', 'tgl_perolehan', 'nilai_perolehan', 'no_mesin', 'no_rangka', 
-                'keterangan', 'foto_kendaraan'
-            ]);
-            
-            // Gunakan nama OPD terbaru dari relasi untuk konsistensi Modal
-            $data['opd'] = $v->opdRelation?->nama ?? $v->opd;
-            
-            return $data;
-        });
-
-        return view('vehicles.index', compact('vehicles', 'stats', 'ebmdStats', 'vehicleTypes', 'opds', 'statuses', 'conditions', 'vehicleDataMap'));
+        return view('vehicles.index', compact(
+            'vehicles', 'stats', 'ebmdStats', 'vehicleTypes', 
+            'opds', 'statuses', 'conditions', 'vehicleDataMap'
+        ));
     }
 
     /**
@@ -160,7 +114,7 @@ class VehicleController extends Controller implements HasMiddleware
         $activeCount = $stats['available'];
         $activePercentage = $total > 0 ? round(($activeCount / $total) * 100) : 0;
 
-        // Ambil Pengaturan Web dalam satu kali proses (Optimasi Fase 2)
+        // Ambil Pengaturan Web dalam satu kali proses
         $settings = [
             'site_name' => \App\Models\Setting::get('site_name', 'PEMERINTAH DAERAH'),
             'site_logo' => \App\Models\Setting::get('site_logo'),
@@ -222,29 +176,14 @@ class VehicleController extends Controller implements HasMiddleware
      */
     public function store(StoreVehicleRequest $request): RedirectResponse
     {
-        $validated = $request->validated();
+        $this->vehicleService->storeVehicle(
+            $request->validated(),
+            $request->file('foto_kendaraan'),
+            $request->input('target_table')
+        );
 
-        // Format nomor polisi menggunakan Service
-        $validated['no_polisi'] = $this->vehicleService->formatPlateNumber($validated['no_polisi']);
-
-        // Handle Foto Kendaraan
-        if ($request->hasFile('foto_kendaraan')) {
-            $paths = [];
-            foreach ($request->file('foto_kendaraan') as $image) {
-                $paths[] = $image->store('vehicles', 'public');
-            }
-            $validated['foto_kendaraan'] = $paths;
-        }
-
-        $isEbmd = $request->input('target_table') === 'ebmd';
-        $modelClass = $isEbmd ? \App\Models\EbmdVehicle::class : Vehicle::class;
-
-        $vehicle = $modelClass::create($validated);
-        
-        // Invalidation terarah (Hanya dashboard stats)
-        $this->vehicleService->invalidateDashboardStats(opdId: $vehicle->opd_id);
-
-        return redirect()->route('vehicles.index', ['tab' => $request->input('target_table')])->with('success', 'Data kendaraan berhasil ditambahkan.');
+        return redirect()->route('vehicles.index', ['tab' => $request->input('target_table')])
+            ->with('success', 'Data kendaraan berhasil ditambahkan.');
     }
 
     /**
@@ -279,80 +218,41 @@ class VehicleController extends Controller implements HasMiddleware
      * Memperbarui data kendaraan di database.
      * 
      * @param UpdateVehicleRequest $request
-     * @param Vehicle $vehicle
+     * @param int $id
      * @return RedirectResponse
      */
     public function update(UpdateVehicleRequest $request, $id): RedirectResponse
     {
-        $isEbmd = $request->input('target_table') === 'ebmd';
-        $modelClass = $isEbmd ? \App\Models\EbmdVehicle::class : Vehicle::class;
-        $vehicle = $modelClass::findOrFail($id);
-
-        $validated = $request->validated();
-
-        // Format nomor polisi menggunakan Service
-        $validated['no_polisi'] = $this->vehicleService->formatPlateNumber($validated['no_polisi']);
-
-        // Handle Foto Kendaraan (Replace All)
-        if ($request->hasFile('foto_kendaraan')) {
-            // Hapus foto lama
-            if ($vehicle->foto_kendaraan) {
-                foreach ($vehicle->foto_kendaraan as $oldPath) {
-                    Storage::disk('public')->delete($oldPath);
-                }
-            }
-
-            // Simpan foto baru
-            $paths = [];
-            foreach ($request->file('foto_kendaraan') as $image) {
-                $paths[] = $image->store('vehicles', 'public');
-            }
-            $validated['foto_kendaraan'] = $paths;
-        }
-
-        $oldOpdId = $vehicle->opd_id;
-        $vehicle->update($validated);
-        
-        // Invalidation terarah (Handle kasus pindah instansi)
-        $this->vehicleService->invalidateDashboardStats(
-            opdId: $vehicle->opd_id, 
-            oldOpdId: $oldOpdId
+        $this->vehicleService->updateVehicle(
+            $id,
+            $request->validated(),
+            $request->file('foto_kendaraan'),
+            $request->input('target_table')
         );
 
-        return redirect()->route('vehicles.index', ['tab' => $request->input('target_table')])->with('success', 'Data kendaraan berhasil diperbarui.');
+        return redirect()->route('vehicles.index', ['tab' => $request->input('target_table')])
+            ->with('success', 'Data kendaraan berhasil diperbarui.');
     }
 
     /**
      * Menghapus data kendaraan dari database.
      * 
-     * @param Vehicle $vehicle
+     * @param Request $request
+     * @param int $id
      * @return RedirectResponse
      */
     public function destroy(Request $request, $id): RedirectResponse
     {
-        $isEbmd = $request->input('target_table') === 'ebmd';
-        $modelClass = $isEbmd ? \App\Models\EbmdVehicle::class : Vehicle::class;
-        $vehicle = $modelClass::findOrFail($id);
+        $this->vehicleService->deleteVehicle($id, $request->input('target_table'));
 
-        // Hapus foto fisik
-        if ($vehicle->foto_kendaraan) {
-            foreach ($vehicle->foto_kendaraan as $path) {
-                Storage::disk('public')->delete($path);
-            }
-        }
-        
-        $opdId = $vehicle->opd_id;
-        $vehicle->delete();
-        
-        // Invalidation terarah
-        $this->vehicleService->invalidateDashboardStats(opdId: $opdId);
-
-        return redirect()->route('vehicles.index', ['tab' => $request->input('target_table')])->with('success', 'Data kendaraan berhasil dihapus.');
+        return redirect()->route('vehicles.index', ['tab' => $request->input('target_table')])
+            ->with('success', 'Data kendaraan berhasil dihapus.');
     }
 
     /**
      * Mengosongkan seluruh data di tabel kendaraan.
      * 
+     * @param Request $request
      * @return RedirectResponse
      */
     public function truncate(Request $request): RedirectResponse
@@ -360,26 +260,22 @@ class VehicleController extends Controller implements HasMiddleware
         $isEbmd = $request->input('target_table') === 'ebmd';
 
         if ($isEbmd) {
-            // Kosongkan tabel e-BMD
             \App\Models\EbmdVehicle::truncate();
             $tabLabel = 'e-BMD';
         } else {
-            // Kosongkan tabel Data Real beserta foto fisik
-            Storage::disk('public')->deleteDirectory('vehicles');
+            \Illuminate\Support\Facades\Storage::disk('public')->deleteDirectory('vehicles');
             Vehicle::truncate();
             $tabLabel = 'Data Real';
         }
         
-        // Invalidation massal seluruh OPD (Dashboard stats)
         $this->vehicleService->invalidateDashboardStats(invalidateAllOpd: true);
 
-        return redirect()->route('vehicles.index', ['tab' => $request->input('target_table', 'real')])->with('success', "Seluruh data kendaraan {$tabLabel} berhasil dikosongkan.");
+        return redirect()->route('vehicles.index', ['tab' => $request->input('target_table', 'real')])
+            ->with('success', "Seluruh data kendaraan {$tabLabel} berhasil dikosongkan.");
     }
 
     /**
      * Membersihkan massal seluruh nomor rangka dan nomor mesin kendaraan dari karakter khusus.
-     * 
-     * Khusus diakses oleh Superadmin.
      * 
      * @return RedirectResponse
      */
@@ -387,7 +283,6 @@ class VehicleController extends Controller implements HasMiddleware
     {
         $count = $this->vehicleService->sanitizeIdentifiers();
 
-        // Catat audit log
         \App\Models\Activity::log("Melakukan pembersihan massal karakter khusus nomor mesin dan nomor rangka kendaraan [Jumlah data: {$count}]", 'info');
 
         return redirect()->route('vehicles.index')->with('success', "Pembersihan berhasil. {$count} data kendaraan telah diperbarui.");
@@ -396,15 +291,12 @@ class VehicleController extends Controller implements HasMiddleware
     /**
      * Memperbaiki posisi massal nomor mesin dan rangka yang tertukar.
      * 
-     * Khusus diakses oleh Superadmin.
-     * 
      * @return RedirectResponse
      */
     public function sanitizeSwappedIdentifiers(): RedirectResponse
     {
         $count = $this->vehicleService->fixSwappedIdentifiers();
 
-        // Catat audit log
         \App\Models\Activity::log("Melakukan perbaikan massal posisi Nomor Mesin dan Nomor Rangka yang tertukar [Jumlah data: {$count}]", 'info');
 
         return redirect()->route('vehicles.index')->with('success', "Perbaikan berhasil. {$count} data kendaraan telah ditukar posisinya (Nomor Mesin & Rangka).");
@@ -442,68 +334,22 @@ class VehicleController extends Controller implements HasMiddleware
         ini_set('max_execution_time', '300');
 
         try {
-            $importToken = $request->input('import_token');
-            
-            // Ambil metadata sesi impor dari cache
-            $metadata = \Illuminate\Support\Facades\Cache::get($importToken);
-            
-            // Validasi sesi impor
-            if (!$metadata) {
-                return redirect()->route('vehicles.index')->with('error', 'Sesi impor tidak valid atau sudah kedaluwarsa. Silakan unggah ulang berkas.');
-            }
-            
-            if ($metadata['user_id'] !== auth()->id()) {
-                return redirect()->route('vehicles.index')->with('error', 'Akses ditolak: Sesi impor ini milik pengguna lain.');
-            }
-            
-            if (now()->timestamp > $metadata['expires_at']) {
-                if (\Illuminate\Support\Facades\Storage::disk('local')->exists($metadata['file_path'])) {
-                    \Illuminate\Support\Facades\Storage::disk('local')->delete($metadata['file_path']);
-                }
-                \Illuminate\Support\Facades\Cache::forget($importToken);
-                return redirect()->route('vehicles.index')->with('error', 'Sesi impor sudah kedaluwarsa. Silakan lakukan proses ulang.');
-            }
+            $this->vehicleImportService->executeSmartImport(
+                $request->input('import_token'),
+                $request->input('mapping', []),
+                $request->input('headers', []),
+                (int) $request->input('header_row_index', 0),
+                $request->input('target_table', 'real'),
+                auth()->id()
+            );
 
-            $filePath = $metadata['file_path'];
-            $mapping = $request->input('mapping', []);
-            $headers = $request->input('headers', []);
-            $headerRowIndex = (int) $request->input('header_row_index', 0);
-            
-            // Konversi startRow (1-indexed, baris setelah header)
-            $startRow = $headerRowIndex + 2; 
-
-            // Pastikan file fisik temp benar-benar ada di storage
-            if (!\Illuminate\Support\Facades\Storage::disk('local')->exists($filePath)) {
-                \Illuminate\Support\Facades\Cache::forget($importToken);
-                return redirect()->route('vehicles.index')->with('error', 'Berkas impor temporer tidak ditemukan pada penyimpanan server.');
-            }
-
-            $fullPath = \Illuminate\Support\Facades\Storage::disk('local')->path($filePath);
-
-            $isEbmd = $request->input('target_table') === 'ebmd';
-            $modelClass = $isEbmd ? \App\Models\EbmdVehicle::class : Vehicle::class;
-
-            // Eksekusi impor dengan pemetaan dinamis (mendukung multi-sheet)
-            $modelClass::withoutEvents(function () use ($fullPath, $mapping, $headers, $startRow, $modelClass) {
-                Excel::import(
-                    new VehicleMultiSheetImport($mapping, $headers, $startRow, $fullPath, $modelClass), 
-                    $fullPath
-                );
-            });
-
-            // Bersihkan file sementara dan cache sesi setelah sukses eksekusi
-            \Illuminate\Support\Facades\Storage::disk('local')->delete($filePath);
-            \Illuminate\Support\Facades\Cache::forget($importToken);
-
-            // Catat log aktivitas untuk seluruh proses import
             \App\Models\Activity::log("Melakukan import data kendaraan secara massal (AI Smart Import)", 'success');
 
-            // Invalidation massal seluruh OPD (Dashboard stats)
-            $this->vehicleService->invalidateDashboardStats(invalidateAllOpd: true);
-
-            return redirect()->route('vehicles.index', ['tab' => $request->input('target_table')])->with('success', 'Data kendaraan berhasil diimport menggunakan AI Smart Import.');
+            return redirect()->route('vehicles.index', ['tab' => $request->input('target_table')])
+                ->with('success', 'Data kendaraan berhasil diimport menggunakan AI Smart Import.');
         } catch (\Exception $e) {
-            return redirect()->route('vehicles.index', ['tab' => $request->input('target_table')])->with('error', 'Gagal mengimport data: ' . $e->getMessage());
+            return redirect()->route('vehicles.index', ['tab' => $request->input('target_table')])
+                ->with('error', 'Gagal mengimport data: ' . $e->getMessage());
         }
     }
 
@@ -519,36 +365,23 @@ class VehicleController extends Controller implements HasMiddleware
         ini_set('max_execution_time', '300');
 
         try {
-            $file = $request->file('file');
-            $fullPath = $file->getRealPath();
+            $this->vehicleImportService->executeLegacyImport(
+                $request->file('file'),
+                $request->input('target_table', 'real')
+            );
 
-            $isEbmd = $request->input('target_table') === 'ebmd';
-            $modelClass = $isEbmd ? \App\Models\EbmdVehicle::class : Vehicle::class;
-
-            // Gunakan default mapping (legacy template) secara otomatis di konstruktor VehicleImport
-            $modelClass::withoutEvents(function () use ($fullPath, $modelClass) {
-                Excel::import(
-                    new VehicleMultiSheetImport([], [], 4, $fullPath, $modelClass), 
-                    $fullPath
-                );
-            });
-
-            // Catat log aktivitas
             \App\Models\Activity::log("Melakukan import data kendaraan secara massal (Legacy Template)", 'success');
             
-            // Invalidation massal seluruh OPD (Dashboard stats)
-            $this->vehicleService->invalidateDashboardStats(invalidateAllOpd: true);
-
-            return redirect()->route('vehicles.index', ['tab' => $request->input('target_table')])->with('success', 'Data kendaraan berhasil diimport menggunakan format template standar.');
+            return redirect()->route('vehicles.index', ['tab' => $request->input('target_table')])
+                ->with('success', 'Data kendaraan berhasil diimport menggunakan format template standar.');
         } catch (\Exception $e) {
-            return redirect()->route('vehicles.index', ['tab' => $request->input('target_table')])->with('error', 'Gagal mengimport data: ' . $e->getMessage());
+            return redirect()->route('vehicles.index', ['tab' => $request->input('target_table')])
+                ->with('error', 'Gagal mengimport data: ' . $e->getMessage());
         }
     }
 
     /**
      * Membaca file Excel yang diunggah dan mengembalikan preview header & data sampel.
-     * 
-     * Fitur pendukung utama AI Smart Import (Phase 3).
      * 
      * @param ImportVehicleRequest $request
      * @return JsonResponse
@@ -556,123 +389,13 @@ class VehicleController extends Controller implements HasMiddleware
     public function importPreview(ImportVehicleRequest $request): JsonResponse
     {
         try {
-            $file = $request->file('file');
-            
-            // Baca 15 baris pertama file Excel ke dalam array (Konsisten dengan importer: 15 baris)
-            $import = new \App\Imports\VehiclePreviewImport;
-            
-            // Cari sheet pertama yang valid secara dinamis (mencari baris pertama dengan 3+ kolom terisi)
-            $rows = [];
-            $activeSheetName = '';
-            
-            // Dapatkan seluruh data sheets
-            $sheets = Excel::toArray($import, $file);
-            
-            // Dapatkan daftar nama sheet dari berkas menggunakan PhpSpreadsheet dengan penanganan error anggun (offline / mock safe)
-            $sheetNames = [];
-            try {
-                $reader = \PhpOffice\PhpSpreadsheet\IOFactory::createReaderForFile($file->getRealPath());
-                $sheetNames = $reader->listWorksheetNames($file->getRealPath());
-            } catch (\Exception $e) {
-                // Abaikan error pembacaan jika format berkas tiruan tidak dikenali (terutama saat unit testing)
-            }
+            $preview = $this->vehicleImportService->generateImportPreview(
+                $request->file('file'),
+                $request->input('target_table', 'real'),
+                auth()->id()
+            );
 
-            $headerRowIndex = 0;
-            $headers = [];
-            
-            foreach ($sheets as $sheetIdx => $sheetRows) {
-                if (empty($sheetRows)) continue;
-                
-                foreach ($sheetRows as $rowIndex => $row) {
-                    $nonEmptyCells = array_filter($row, function($cell) {
-                        return !is_null($cell) && trim($cell) !== '';
-                    });
-
-                    if (count($nonEmptyCells) > 2) { // Minimal memiliki 3 kolom terisi
-                        $headerRowIndex = $rowIndex;
-                        $headers = array_map(function($header) {
-                            return trim($header);
-                        }, $row);
-                        $rows = $sheetRows;
-                        $activeSheetName = $sheetNames[$sheetIdx] ?? "Sheet " . ($sheetIdx + 1);
-                        break 2; // Pecahkan pencarian segera setelah menemukan sheet valid pertama!
-                    }
-                }
-            }
-
-            if (empty($rows) || empty($headers)) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'File Excel kosong atau tidak terdeteksi adanya kolom header di seluruh sheet.'
-                ], 422);
-            }
-
-            // Ambil maksimal 3 sampel baris data setelah header
-            $samples = [];
-            $sampleCount = 0;
-            for ($i = $headerRowIndex + 1; $i < count($rows); $i++) {
-                if ($sampleCount >= 3) break;
-                
-                $nonEmptyCells = array_filter($rows[$i], function($cell) {
-                    return !is_null($cell) && trim($cell) !== '';
-                });
-                
-                if (!empty($nonEmptyCells)) {
-                    $samples[] = $rows[$i];
-                    $sampleCount++;
-                }
-            }
-
-            // Kolom Target Database E-RANDIS yang diharapkan untuk dipetakan
-            $targetColumns = [
-                'no_polisi' => 'Nomor Polisi (Plat)',
-                'nomor_register' => 'Nomor Register',
-                'jenis' => 'Jenis Kendaraan (Roda 2 / Roda 4 / dll)',
-                'merk' => 'Merk / Pabrikan',
-                'tipe' => 'Tipe / Model',
-                'no_mesin' => 'Nomor Mesin',
-                'no_rangka' => 'Nomor Rangka',
-                'tahun_pembuatan' => 'Tahun Pembuatan',
-                'tgl_perolehan' => 'Tanggal Perolehan Aset',
-                'nilai_perolehan' => 'Harga / Nilai Perolehan',
-                'stnk_ada' => 'Status STNK (Ada/Tidak)',
-                'bpkb_ada' => 'Status BPKB (Ada/Tidak)',
-                'kondisi' => 'Kondisi Fisik Kendaraan',
-                'pemegang' => 'Nama Pemegang / Penanggung Jawab',
-                'keterangan' => 'Keterangan Tambahan',
-                'opd' => 'Nama OPD / Instansi (Jika Superadmin)',
-            ];
-            
-            if ($request->input('target_table') === 'ebmd') {
-                unset($targetColumns['tahun_pembuatan']);
-            }
-
-            // Analisis Semantik AI untuk mendapatkan rekomendasi pemetaan kolom
-            $suggestedMapping = $this->vehicleService->suggestColumnMapping($headers);
-
-            // Simpan file sementara di storage
-            $filePath = $file->store('temp_imports', 'local');
-            
-            // Generate token keamanan sesi impor temporer (Berlaku 30 Menit)
-            $importToken = 'import_' . \Illuminate\Support\Str::random(40);
-            
-            \Illuminate\Support\Facades\Cache::put($importToken, [
-                'file_path'  => $filePath,
-                'user_id'    => auth()->id(),
-                'expires_at' => now()->addMinutes(30)->timestamp,
-            ], now()->addMinutes(30));
-
-            return response()->json([
-                'success'           => true,
-                'headers'           => $headers,
-                'samples'           => $samples,
-                'target_columns'    => $targetColumns,
-                'suggested_mapping' => $suggestedMapping,
-                'header_row_index'  => $headerRowIndex,
-                'import_token'      => $importToken,
-                'active_sheet_name' => $activeSheetName,
-            ]);
-
+            return response()->json($preview);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
@@ -808,7 +531,6 @@ class VehicleController extends Controller implements HasMiddleware
                 }
                 $message = 'Data kendaraan berhasil digabungkan (kolom kosong terisi) dan duplikat dibersihkan.';
             } else {
-                // Pastikan yang dihapus adalah duplikat yang sah
                 $success = \DB::transaction(function () use ($duplicateId) {
                     $duplicate = Vehicle::withoutGlobalScopes()->find($duplicateId);
                     if ($duplicate) {
@@ -827,7 +549,6 @@ class VehicleController extends Controller implements HasMiddleware
                 $message = 'Kendaraan duplikat berhasil dibersihkan dari database.';
             }
 
-            // Simpan audit log lengkap dengan konteks detail (ID, aksi) (Rekomendasi PM #9)
             \App\Models\Activity::log(
                 "Pembersihan duplikasi kendaraan [Aksi: {$action}, ID Induk: {$originalId}, ID Duplikat: {$duplicateId}]", 
                 'success'
@@ -861,7 +582,6 @@ class VehicleController extends Controller implements HasMiddleware
                 ], 404);
             }
             
-            // Simpan audit log lengkap dengan konteks detail (ID OPD) (Rekomendasi PM #9)
             \App\Models\Activity::log(
                 "Pembersihan dan konsolidasi OPD duplikat [OPD Target ID: {$targetId}, OPD Sumber ID: {$sourceId}]", 
                 'success'
@@ -888,32 +608,15 @@ class VehicleController extends Controller implements HasMiddleware
     public function syncToReal(Request $request, $id): RedirectResponse
     {
         try {
-            $ebmdVehicle = \App\Models\EbmdVehicle::findOrFail($id);
+            $vehicle = $this->vehicleService->syncEbmdToReal($id);
             
-            if ($ebmdVehicle->is_synced) {
-                return redirect()->route('vehicles.index', ['tab' => 'ebmd'])->with('error', 'Data e-BMD ini sudah pernah disinkronkan sebelumnya.');
-            }
-
-            $data = $ebmdVehicle->toArray();
-            unset($data['id']);
-            unset($data['is_synced']);
-            unset($data['created_at']);
-            unset($data['updated_at']);
-
-            $data['no_polisi'] = $this->vehicleService->formatPlateNumber($data['no_polisi']);
-            
-            $vehicle = Vehicle::create($data);
-            $ebmdVehicle->update(['is_synced' => true]);
-            
-            $this->vehicleService->invalidateDashboardStats(opdId: $vehicle->opd_id);
-
-            // Log activity
             \App\Models\Activity::log("Menyinkronkan data e-BMD menjadi data fisik [Nopol: {$vehicle->no_polisi}]", 'success');
 
-            return redirect()->route('vehicles.index', ['tab' => 'ebmd'])->with('success', 'Data e-BMD berhasil disinkronkan menjadi data fisik.');
+            return redirect()->route('vehicles.index', ['tab' => 'ebmd'])
+                ->with('success', 'Data e-BMD berhasil disinkronkan menjadi data fisik.');
         } catch (\Exception $e) {
-            return redirect()->route('vehicles.index', ['tab' => 'ebmd'])->with('error', 'Gagal menyinkronkan data: ' . $e->getMessage());
+            return redirect()->route('vehicles.index', ['tab' => 'ebmd'])
+                ->with('error', 'Gagal menyinkronkan data: ' . $e->getMessage());
         }
     }
 }
-

@@ -560,5 +560,127 @@ class VehicleService
 
         return $count;
     }
+
+    /**
+     * Menyimpan data kendaraan baru beserta foto fisiknya.
+     *
+     * @param array $data
+     * @param array|null $images
+     * @param string|null $targetTable
+     * @return \Illuminate\Database\Eloquent\Model
+     */
+    public function storeVehicle(array $data, ?array $images, ?string $targetTable)
+    {
+        $data['no_polisi'] = $this->formatPlateNumber($data['no_polisi']);
+
+        if ($images) {
+            $paths = [];
+            foreach ($images as $image) {
+                $paths[] = $image->store('vehicles', 'public');
+            }
+            $data['foto_kendaraan'] = $paths;
+        }
+
+        $modelClass = $targetTable === 'ebmd' ? \App\Models\EbmdVehicle::class : Vehicle::class;
+        $vehicle = $modelClass::create($data);
+        
+        $this->invalidateDashboardStats(opdId: $vehicle->opd_id);
+
+        return $vehicle;
+    }
+
+    /**
+     * Memperbarui data kendaraan beserta foto fisiknya.
+     *
+     * @param int $id
+     * @param array $data
+     * @param array|null $images
+     * @param string|null $targetTable
+     * @return \Illuminate\Database\Eloquent\Model
+     */
+    public function updateVehicle(int $id, array $data, ?array $images, ?string $targetTable)
+    {
+        $modelClass = $targetTable === 'ebmd' ? \App\Models\EbmdVehicle::class : Vehicle::class;
+        $vehicle = $modelClass::findOrFail($id);
+
+        $data['no_polisi'] = $this->formatPlateNumber($data['no_polisi']);
+
+        if ($images) {
+            // Hapus foto lama
+            if ($vehicle->foto_kendaraan) {
+                foreach ($vehicle->foto_kendaraan as $oldPath) {
+                    Storage::disk('public')->delete($oldPath);
+                }
+            }
+
+            $paths = [];
+            foreach ($images as $image) {
+                $paths[] = $image->store('vehicles', 'public');
+            }
+            $data['foto_kendaraan'] = $paths;
+        }
+
+        $oldOpdId = $vehicle->opd_id;
+        $vehicle->update($data);
+        
+        $this->invalidateDashboardStats(opdId: $vehicle->opd_id, oldOpdId: $oldOpdId);
+
+        return $vehicle;
+    }
+
+    /**
+     * Menghapus data kendaraan beserta foto fisiknya.
+     *
+     * @param int $id
+     * @param string|null $targetTable
+     * @return void
+     */
+    public function deleteVehicle(int $id, ?string $targetTable): void
+    {
+        $modelClass = $targetTable === 'ebmd' ? \App\Models\EbmdVehicle::class : Vehicle::class;
+        $vehicle = $modelClass::findOrFail($id);
+
+        if ($vehicle->foto_kendaraan) {
+            foreach ($vehicle->foto_kendaraan as $path) {
+                Storage::disk('public')->delete($path);
+            }
+        }
+        
+        $opdId = $vehicle->opd_id;
+        $vehicle->delete();
+        
+        $this->invalidateDashboardStats(opdId: $opdId);
+    }
+
+    /**
+     * Menyinkronkan data dari e-BMD ke tabel Real.
+     *
+     * @param int $id
+     * @return Vehicle
+     * @throws \Exception
+     */
+    public function syncEbmdToReal(int $id): Vehicle
+    {
+        $ebmdVehicle = \App\Models\EbmdVehicle::findOrFail($id);
+        
+        if ($ebmdVehicle->is_synced) {
+            throw new \Exception('Data e-BMD ini sudah pernah disinkronkan sebelumnya.');
+        }
+
+        $data = $ebmdVehicle->toArray();
+        unset($data['id']);
+        unset($data['is_synced']);
+        unset($data['created_at']);
+        unset($data['updated_at']);
+
+        $data['no_polisi'] = $this->formatPlateNumber($data['no_polisi']);
+        
+        $vehicle = Vehicle::create($data);
+        $ebmdVehicle->update(['is_synced' => true]);
+        
+        $this->invalidateDashboardStats(opdId: $vehicle->opd_id);
+
+        return $vehicle;
+    }
 }
 
