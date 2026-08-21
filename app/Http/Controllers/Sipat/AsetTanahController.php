@@ -7,11 +7,25 @@ use App\Models\AsetTanah;
 use App\Models\OpdSipat;
 use App\Models\ProsesAset;
 use App\Models\StatusProses;
+use App\Services\SipatService;
+use App\Http\Requests\Sipat\StoreAsetTanahRequest;
+use App\Http\Requests\Sipat\UpdateAsetTanahRequest;
+use App\Http\Requests\Sipat\StoreProsesAsetRequest;
+use App\Http\Requests\Sipat\BulkStoreProsesRequest;
+use App\Http\Requests\Sipat\StoreDokumenAsetRequest;
+use App\Http\Requests\Sipat\StorePengamananFisikRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class AsetTanahController extends Controller
 {
+    protected $sipatService;
+
+    public function __construct(SipatService $sipatService)
+    {
+        $this->sipatService = $sipatService;
+    }
+
     public function index(Request $request)
     {
         $query = AsetTanah::with(['latestProses.statusProses']);
@@ -80,26 +94,10 @@ class AsetTanahController extends Controller
         return view('sipat.aset.create', compact('opdList', 'statusList'));
     }
 
-    public function store(Request $request)
+    public function store(StoreAsetTanahRequest $request)
     {
-        $request->validate([
-            'kode_aset' => 'required|string|max:50|unique:aset_tanah,kode_aset',
-            'nama_aset' => 'required|string|max:150',
-            'peruntukan' => 'nullable|string|max:150',
-            'luas' => 'nullable|numeric',
-            'opd' => 'nullable|string|max:150',
-            'alamat' => 'nullable|string',
-            'lat' => 'nullable|numeric',
-            'lng' => 'nullable|numeric',
-            'dasar_perolehan' => 'nullable|string|max:150',
-            'harga_perolehan' => 'nullable|numeric',
-            'tanggal_perolehan' => 'nullable|date',
-            'keterangan' => 'nullable|string',
-        ]);
+        $aset = AsetTanah::create($request->validated());
 
-        $aset = AsetTanah::create($request->all());
-
-        // Save initial status if provided
         if ($request->filled('initial_status_id')) {
             ProsesAset::create([
                 'id_aset' => $aset->id_aset,
@@ -129,7 +127,6 @@ class AsetTanahController extends Controller
         $pengamanan = DB::table('pengamanan_fisik')->where('id_aset', $id)->first();
         $dokumenList = DB::table('dokumen_aset')->where('id_aset', $id)->orderBy('uploaded_at', 'desc')->get();
 
-        // Integrasi Real Model eLabel (ElabelSertifikat & ElabelSertifikatBox)
         $elabelSertifikat = null;
         if (!empty($aset->no_sertifikat)) {
             $cleanNo = trim($aset->no_sertifikat);
@@ -163,26 +160,10 @@ class AsetTanahController extends Controller
         return view('sipat.aset.edit', compact('aset', 'opdList', 'statusList'));
     }
 
-    public function update(Request $request, $id)
+    public function update(UpdateAsetTanahRequest $request, $id)
     {
         $aset = AsetTanah::findOrFail($id);
-
-        $request->validate([
-            'kode_aset' => 'required|string|max:50|unique:aset_tanah,kode_aset,' . $id . ',id_aset',
-            'nama_aset' => 'required|string|max:150',
-            'peruntukan' => 'nullable|string|max:150',
-            'luas' => 'nullable|numeric',
-            'opd' => 'nullable|string|max:150',
-            'alamat' => 'nullable|string',
-            'lat' => 'nullable|numeric',
-            'lng' => 'nullable|numeric',
-            'dasar_perolehan' => 'nullable|string|max:150',
-            'harga_perolehan' => 'nullable|numeric',
-            'tanggal_perolehan' => 'nullable|date',
-            'keterangan' => 'nullable|string',
-        ]);
-
-        $aset->update($request->all());
+        $aset->update($request->validated());
 
         return redirect()->route('sipat.aset.index')->with('success', 'Data Aset Tanah berhasil diperbarui.');
     }
@@ -190,117 +171,73 @@ class AsetTanahController extends Controller
     public function destroy($id)
     {
         $aset = AsetTanah::findOrFail($id);
-        
-        // Delete related processes
         ProsesAset::where('id_aset', $id)->delete();
         $aset->delete();
 
         return redirect()->route('sipat.aset.index')->with('success', 'Data Aset Tanah berhasil dihapus.');
     }
 
-    public function storeProses(Request $request, $id)
+    public function storeProses(StoreProsesAsetRequest $request, $id)
     {
         $aset = AsetTanah::findOrFail($id);
-
-        $request->validate([
-            'id_status' => 'required|integer|exists:status_proses,id_status',
-            'tgl_mulai' => 'nullable|date',
-            'tgl_selesai' => 'nullable|date',
-            'keterangan' => 'nullable|string',
-        ]);
-
-        $durasi = null;
-        if ($request->filled('tgl_mulai') && $request->filled('tgl_selesai')) {
-            $durasi = (int) floor((strtotime($request->tgl_selesai) - strtotime($request->tgl_mulai)) / 86400);
-            if ($durasi < 0) $durasi = null;
-        }
+        $validated = $request->validated();
+        
+        $durasi = $this->sipatService->calculateDuration($validated['tgl_mulai'] ?? null, $validated['tgl_selesai'] ?? null);
 
         ProsesAset::create([
-            'id_aset' => $aset->id_aset,
-            'id_status' => $request->id_status,
-            'tgl_mulai' => $request->tgl_mulai,
-            'tgl_selesai' => $request->tgl_selesai,
-            'keterangan' => $request->keterangan,
+            'id_aset'     => $aset->id_aset,
+            'id_status'   => $validated['id_status'],
+            'tgl_mulai'   => $validated['tgl_mulai'] ?? null,
+            'tgl_selesai' => $validated['tgl_selesai'] ?? null,
+            'keterangan'  => $validated['keterangan'] ?? null,
             'durasi_hari' => $durasi,
         ]);
 
         return redirect()->route('sipat.aset.index')->with('success', 'Riwayat Proses BPN berhasil ditambahkan.');
     }
 
-    public function bulkStoreProses(Request $request)
+    public function bulkStoreProses(BulkStoreProsesRequest $request)
     {
-        $asetIds = (array) ($request->input('aset_ids') ?? []);
-        $idStatus = $request->input('id_status');
-        $nibarListRaw = (string) $request->input('nibar_list');
-
-        if (trim($nibarListRaw) !== '') {
-            $nibarItems = array_values(array_filter(array_map('trim', preg_split('/[\r\n,]+/', $nibarListRaw))));
-            if (!empty($nibarItems)) {
-                $rows = DB::table('aset_tanah')
-                    ->select('id_aset')
-                    ->whereIn('kode_aset', $nibarItems)
-                    ->get();
-                foreach ($rows as $r) {
-                    $asetIds[] = (int) $r->id_aset;
-                }
-            }
-        }
-
-        $asetIds = array_values(array_unique(array_filter(array_map('intval', $asetIds))));
-
-        if (empty($asetIds)) {
+        $validated = $request->validated();
+        
+        $asetIds = $validated['aset_ids'] ?? [];
+        $idStatus = $validated['id_status'];
+        $nibarListRaw = $validated['nibar_list'] ?? '';
+        
+        if (empty($asetIds) && empty($nibarListRaw)) {
             return redirect()->back()->with('error', 'Pilih minimal satu aset tanah atau masukkan NIBAR yang valid untuk diperbarui statusnya.');
         }
 
-        if (empty($idStatus)) {
-            return redirect()->back()->with('error', 'Status proses wajib dipilih.');
-        }
+        $insertedCount = $this->sipatService->bulkUpdateStatus(
+            $asetIds,
+            $nibarListRaw,
+            $idStatus,
+            $validated['tgl_mulai'] ?? null,
+            $validated['tgl_selesai'] ?? null,
+            $validated['keterangan'] ?? null
+        );
 
-        $tglMulai = $request->input('tgl_mulai');
-        $tglSelesai = $request->input('tgl_selesai');
-        $keterangan = $request->input('keterangan');
-        $durasi = null;
-
-        if (!empty($tglMulai) && !empty($tglSelesai)) {
-            $durasi = (int) floor((strtotime($tglSelesai) - strtotime($tglMulai)) / 86400);
-            if ($durasi < 0) {
-                $durasi = null;
-            }
-        }
-
-        $insertedCount = 0;
-
-        foreach ($asetIds as $idAset) {
-            $idAset = (int) $idAset;
-            if ($idAset <= 0) continue;
-
-            ProsesAset::create([
-                'id_aset'     => $idAset,
-                'id_status'   => $idStatus,
-                'tgl_mulai'   => $tglMulai ?: null,
-                'tgl_selesai' => $tglSelesai ?: null,
-                'keterangan'  => $keterangan ?: 'Update status massal',
-                'durasi_hari' => $durasi,
-            ]);
-            $insertedCount++;
+        if ($insertedCount === 0) {
+            return redirect()->back()->with('error', 'Tidak ada data aset yang ditemukan untuk diproses.');
         }
 
         return redirect()->route('sipat.aset.index')->with('success', "Berhasil memperbarui status untuk {$insertedCount} aset.");
     }
 
-    public function storePengamanan(Request $request, $id)
+    public function storePengamanan(StorePengamananFisikRequest $request, $id)
     {
         $aset = AsetTanah::findOrFail($id);
+        $validated = $request->validated();
 
         DB::table('pengamanan_fisik')->updateOrInsert(
             ['id_aset' => $id],
             [
-                'sertifikat_ada' => $request->has('sertifikat_ada') ? 1 : 0,
-                'papan_nama' => $request->has('papan_nama') ? 1 : 0,
-                'pagar' => $request->has('pagar') ? 1 : 0,
-                'dikuasai_pihak_lain' => $request->has('dikuasai_pihak_lain') ? 1 : 0,
-                'tgl_cek' => $request->input('tgl_cek') ?: date('Y-m-d'),
-                'catatan' => $request->input('catatan'),
+                'sertifikat_ada' => isset($validated['sertifikat_ada']) ? 1 : 0,
+                'papan_nama' => isset($validated['papan_nama']) ? 1 : 0,
+                'pagar' => isset($validated['pagar']) ? 1 : 0,
+                'dikuasai_pihak_lain' => isset($validated['dikuasai_pihak_lain']) ? 1 : 0,
+                'tgl_cek' => $validated['tgl_cek'] ?? date('Y-m-d'),
+                'catatan' => $validated['catatan'] ?? null,
                 'updated_at' => now(),
             ]
         );
@@ -308,14 +245,10 @@ class AsetTanahController extends Controller
         return redirect()->route('sipat.aset.index')->with('success', 'Status pengamanan fisik aset berhasil diperbarui.');
     }
 
-    public function storeDokumen(Request $request, $id)
+    public function storeDokumen(StoreDokumenAsetRequest $request, $id)
     {
         $aset = AsetTanah::findOrFail($id);
-
-        $request->validate([
-            'jenis_dokumen' => 'required|string|max:120',
-            'file' => 'required|file|mimes:pdf,jpg,jpeg,png|max:10240',
-        ]);
+        $validated = $request->validated();
 
         $path = null;
         if ($request->hasFile('file')) {
@@ -324,8 +257,8 @@ class AsetTanahController extends Controller
 
         DB::table('dokumen_aset')->insert([
             'id_aset' => $id,
-            'jenis_dokumen' => $request->input('jenis_dokumen'),
-            'status_dokumen' => $request->input('status_dokumen', 'Asli'),
+            'jenis_dokumen' => $validated['jenis_dokumen'],
+            'status_dokumen' => $validated['status_dokumen'] ?? 'Asli',
             'file_path' => $path,
             'uploaded_at' => now(),
         ]);

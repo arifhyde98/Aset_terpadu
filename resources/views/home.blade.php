@@ -57,9 +57,13 @@
                             <span><i class="bi bi-hourglass-split text-warning me-1"></i> Sedang Diproses BPN:</span>
                             <strong class="text-dark">{{ number_format($sipatProsesBpnCount) }} Berkas</strong>
                         </div>
+                        <div class="d-flex justify-content-between align-items-center text-secondary small mb-1">
+                            <span><i class="bi bi-exclamation-triangle-fill text-danger me-1"></i> Terkendala / Masalah:</span>
+                            <strong class="text-danger">{{ number_format($sipatKendalaCount) }} Bidang</strong>
+                        </div>
                         <div class="d-flex justify-content-between align-items-center text-secondary small">
-                            <span><i class="bi bi-exclamation-circle text-danger me-1"></i> Belum Bersertifikat:</span>
-                            <strong class="text-danger">{{ number_format($sipatBelumSertifikatCount) }} Bidang</strong>
+                            <span><i class="bi bi-dash-circle text-secondary me-1"></i> Belum Bersertifikat:</span>
+                            <strong class="text-secondary">{{ number_format($sipatBelumSertifikatCount) }} Bidang</strong>
                         </div>
                     </div>
                 </div>
@@ -319,10 +323,10 @@
             new Chart(ctxSipat, {
                 type: 'pie',
                 data: {
-                    labels: ['Bersertifikat', 'Sedang Diproses BPN', 'Belum Diproses'],
+                    labels: ['Bersertifikat', 'Sedang Diproses BPN', 'Terkendala', 'Belum Diproses'],
                     datasets: [{
-                        data: [{{ $sipatSertifikatCount }}, {{ $sipatProsesBpnCount }}, {{ $sipatBelumSertifikatCount }}],
-                        backgroundColor: ['#3b82f6', '#f59e0b', '#ef4444'],
+                        data: [{{ $sipatSertifikatCount }}, {{ $sipatProsesBpnCount }}, {{ $sipatKendalaCount }}, {{ $sipatBelumSertifikatCount }}],
+                        backgroundColor: ['#3b82f6', '#f59e0b', '#ef4444', '#9ca3af'],
                         borderWidth: 0
                     }]
                 },

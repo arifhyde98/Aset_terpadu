@@ -23,12 +23,15 @@ class HomeController extends Controller implements HasMiddleware
         ];
     }
 
+    protected $sipatService;
+    
     /**
      * Create a new controller instance.
      */
-    public function __construct(\App\Services\VehicleService $vehicleService)
+    public function __construct(\App\Services\VehicleService $vehicleService, \App\Services\SipatService $sipatService)
     {
         $this->vehicleService = $vehicleService;
+        $this->sipatService = $sipatService;
     }
 
     /**
@@ -39,27 +42,20 @@ class HomeController extends Controller implements HasMiddleware
     public function index()
     {
         // 1. STATISTIK MODUL SIPAT (Aset Tanah & Progres BPN)
-        $sipatTotalTanah = \App\Models\AsetTanah::count();
-        $sipatTotalLuas = \App\Models\AsetTanah::sum('luas');
+        $sipatStats = $this->sipatService->getDashboardStats();
         
-        $sipatSertifikatCount = \DB::table('proses_aset')
-            ->join('status_proses', 'status_proses.id_status', '=', 'proses_aset.id_status')
-            ->whereIn('status_proses.nama_status', ['Bersertifikat', 'Bersertifikat (Duplikat)'])
-            ->distinct('id_aset')
-            ->count('id_aset');
+        $sipatTotalTanah = $sipatStats['totalAset'];
+        $sipatTotalLuas = $sipatStats['totalLuas'] ?? 0;
+        
+        $sipatSertifikatCount = $sipatStats['asetBersertifikat'];
 
         if ($sipatSertifikatCount == 0) {
             $sipatSertifikatCount = \App\Models\Elabel\ElabelSertifikat::count();
         }
 
-        // Count Sedang Diproses (Permohonan PERTEK, Terbit PERTEK, Selesai Pengukuran, Bermasalah, dll.)
-        $sipatProsesBpnCount = \DB::table('proses_aset')
-            ->join('status_proses', 'status_proses.id_status', '=', 'proses_aset.id_status')
-            ->whereNotIn('status_proses.nama_status', ['Belum Diproses', 'Bersertifikat', 'Bersertifikat (Duplikat)'])
-            ->distinct('id_aset')
-            ->count('id_aset');
-
-        $sipatBelumSertifikatCount = max(0, $sipatTotalTanah - $sipatSertifikatCount - $sipatProsesBpnCount);
+        $sipatProsesBpnCount = $sipatStats['asetProses'];
+        $sipatKendalaCount = $sipatStats['asetKendala'];
+        $sipatBelumSertifikatCount = $sipatStats['asetBelumDiurus'];
 
         // 2. STATISTIK MODUL eLABEL (Digital Label & Box Gudang)
         $elabelTotalBpkb = \App\Models\Elabel\ElabelBpkb::where('status', '!=', 'Dihapus')->count();
@@ -95,6 +91,7 @@ class HomeController extends Controller implements HasMiddleware
             'sipatSertifikatCount',
             'sipatBelumSertifikatCount',
             'sipatProsesBpnCount',
+            'sipatKendalaCount',
             'elabelTotalBpkb',
             'elabelBpkbR4',
             'elabelBpkbR2',

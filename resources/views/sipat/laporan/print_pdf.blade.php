@@ -1,191 +1,281 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="id">
 <head>
-    <meta charset="UTF-8">
-    <title>{{ $selectedTitle }}</title>
+    <meta charset="utf-8">
+    <title>{{ $selectedTitle ?? 'Laporan Aset Tanah' }}</title>
     <style>
-        @page {
-            size: A4 landscape;
-            margin: 12mm;
-        }
         body {
-            font-family: Arial, sans-serif;
-            font-size: 9pt;
+            font-family: sans-serif;
             color: #0f172a;
-            margin: 0;
-            padding: 0;
-            background: #fff;
+            font-size: 10pt;
+        }
+        .header {
+            border-bottom: 3px double #1e293b;
+            padding-bottom: 10px;
+            margin-bottom: 14px;
         }
         .header-table {
             width: 100%;
             border-collapse: collapse;
-            border-bottom: 3px double #000;
-            margin-bottom: 12px;
-            padding-bottom: 8px;
         }
         .header-table td {
-            vertical-align: middle;
+            vertical-align: top;
         }
-        .kop-title-instansi {
-            font-size: 14pt;
-            font-weight: bold;
+        .logo-wrap {
+            width: 90px;
+        }
+        .logo {
+            width: 74px;
+            height: 74px;
+            object-fit: contain;
+        }
+        .header-main {
             text-align: center;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
         }
-        .kop-title-unit {
-            font-size: 12pt;
-            font-weight: bold;
-            text-align: center;
-            color: #1e3a8a;
-            text-transform: uppercase;
-        }
-        .kop-subunit {
-            font-size: 10pt;
-            text-align: center;
-            color: #475569;
-        }
-        .kop-alamat {
-            font-size: 8pt;
-            text-align: center;
-            color: #64748b;
-        }
-        .report-title-box {
-            text-align: center;
-            margin: 15px 0 10px 0;
-        }
-        .report-title-main {
+        .instansi {
             font-size: 13pt;
             font-weight: bold;
-            text-decoration: underline;
+            letter-spacing: 1px;
+        }
+        .unit {
+            font-size: 15pt;
+            font-weight: bold;
+            color: #0b4f84;
+            margin-top: 3px;
+        }
+        .subunit,
+        .meta-line {
+            font-size: 9pt;
+            color: #334155;
+        }
+        .report-title {
+            margin: 16px 0 8px;
+            text-align: center;
+        }
+        .report-title h2 {
+            margin: 0;
+            font-size: 15pt;
+            letter-spacing: .8px;
+        }
+        .report-title .subtitle {
+            margin-top: 4px;
+            color: #475569;
+            font-size: 9pt;
+        }
+        .meta-grid {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 10px 0;
+            margin: 8px 0 12px;
+        }
+        .meta-box {
+            background: #f8fafc;
+            border: 1px solid #dbe3ef;
+            border-radius: 10px;
+            padding: 10px 12px;
+        }
+        .meta-label {
+            color: #64748b;
+            font-size: 8.5pt;
             text-transform: uppercase;
         }
-        .report-sub {
+        .meta-value {
+            font-size: 12pt;
+            font-weight: bold;
+            margin-top: 2px;
+        }
+        .filter-box {
+            border: 1px solid #dbe3ef;
+            background: #ffffff;
+            border-radius: 10px;
+            padding: 10px 12px;
+            margin-bottom: 12px;
+        }
+        .filter-box h4 {
+            margin: 0 0 8px;
+            font-size: 10.5pt;
+            color: #0b4f84;
+        }
+        .filter-chip {
+            display: inline-block;
+            margin: 0 6px 6px 0;
+            padding: 5px 8px;
+            border-radius: 14px;
+            background: #eff6ff;
+            color: #1d4ed8;
+            font-size: 8.5pt;
+        }
+        .table-report {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 8.8pt;
+        }
+        .table-report th,
+        .table-report td {
+            border: 1px solid #cbd5e1;
+            padding: 7px 8px;
+        }
+        .table-report thead th {
+            background: #0b4f84;
+            color: #fff;
+            text-transform: uppercase;
+            font-size: 8pt;
+            letter-spacing: .4px;
+            text-align: center;
+        }
+        .table-report tbody tr:nth-child(even) {
+            background: #f8fafc;
+        }
+        .text-right {
+            text-align: right;
+        }
+        .text-center {
+            text-align: center;
+        }
+        .signature-wrap {
+            margin-top: 20px;
+            width: 320px;
+            margin-left: auto;
+            text-align: center;
+            page-break-inside: avoid;
+        }
+        .signature-city {
             font-size: 9pt;
+            color: #334155;
+            margin-bottom: 4px;
+        }
+        .signature-job {
+            font-size: 9.5pt;
+            color: #0f172a;
+            font-weight: bold;
+        }
+        .signature-space {
+            height: 52px;
+        }
+        .signature-name {
+            font-size: 10pt;
+            font-weight: bold;
+            text-decoration: underline;
+        }
+        .signature-nip {
+            font-size: 8.8pt;
             color: #475569;
             margin-top: 2px;
         }
-        .data-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 10px;
-            font-size: 8pt;
-        }
-        .data-table th {
-            background-color: #1e293b;
-            color: #ffffff;
-            font-weight: bold;
-            text-align: center;
-            padding: 6px 4px;
-            border: 1px solid #334155;
-            text-transform: uppercase;
-        }
-        .data-table td {
-            padding: 5px 4px;
-            border: 1px solid #cbd5e1;
-            vertical-align: top;
-        }
-        .data-table tr:nth-child(even) {
-            background-color: #f8fafc;
-        }
-        .text-center { text-align: center; }
-        .text-right { text-align: right; }
-        .font-mono { font-family: monospace; }
-        .signature-table {
-            width: 100%;
-            margin-top: 25px;
-            page-break-inside: avoid;
-        }
-        .signature-table td {
-            vertical-align: top;
-            font-size: 9pt;
-        }
-        @media print {
-            .no-print { display: none; }
+        .footer {
+            margin-top: 12px;
+            font-size: 8.5pt;
+            color: #64748b;
+            text-align: right;
         }
     </style>
 </head>
 <body>
-
-    <div class="no-print" style="position: fixed; top: 10px; right: 10px; z-index: 999;">
-        <button onclick="window.print()" style="padding: 10px 20px; background: #3b82f6; color: white; border: none; border-radius: 20px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.2);">
-            🖨️ Cetak Dokumen / PDF
-        </button>
+    <div class="header">
+        <table class="header-table">
+            <tr>
+                <td class="logo-wrap">
+                    {{-- Logo dinonaktifkan sementara untuk menghindari isu cache mPDF --}}
+                </td>
+                <td class="header-main">
+                    <div class="instansi">{{ $kop['kop_nama_instansi'] ?? '' }}</div>
+                    <div class="unit">{{ $kop['kop_nama_unit'] ?? '' }}</div>
+                    <div class="subunit">{{ $kop['kop_subunit'] ?? '' }}</div>
+                    <div class="meta-line">{{ $kop['kop_alamat'] ?? '' }}</div>
+                    <div class="meta-line">{{ $kop['kop_kontak'] ?? '' }}</div>
+                </td>
+            </tr>
+        </table>
     </div>
 
-    <!-- KOP SURAT PEMDA -->
-    <table class="header-table">
+    <div class="report-title">
+        <h2>{{ $selectedTitle ?? 'LAPORAN ASET TANAH' }}</h2>
+        <div class="subtitle">Dicetak pada {{ date('d-m-Y H:i') }}</div>
+    </div>
+
+    <table class="meta-grid">
         <tr>
-            <td style="width: 10%; text-align: center;">
-                <img src="https://upload.wikimedia.org/wikipedia/commons/ thumb/8/87/Lambang_Kabupaten_Donggala.png/120px-Lambang_Kabupaten_Donggala.png" style="max-height: 70px;" alt="Logo" onerror="this.style.display='none'">
+            <td width="33.33%">
+                <div class="meta-box">
+                    <div class="meta-label">Total Data</div>
+                    <div class="meta-value">{{ number_format((int) ($summary['total_data'] ?? 0), 0, ',', '.') }}</div>
+                </div>
             </td>
-            <td style="width: 90%;">
-                <div class="kop-title-instansi">{{ $kop['kop_nama_instansi'] }}</div>
-                <div class="kop-title-unit">{{ $kop['kop_nama_unit'] }}</div>
-                <div class="kop-subunit">{{ $kop['kop_subunit'] }}</div>
-                <div class="kop-alamat">{{ $kop['kop_alamat'] }} | {{ $kop['kop_kontak'] }}</div>
+            <td width="33.33%">
+                <div class="meta-box">
+                    <div class="meta-label">Total Nilai Perolehan</div>
+                    <div class="meta-value">{{ $summary['total_nilai'] ?? '-' }}</div>
+                </div>
+            </td>
+            <td width="33.33%">
+                <div class="meta-box">
+                    <div class="meta-label">Sudah Berstatus</div>
+                    <div class="meta-value">{{ number_format((int) ($summary['total_berstatus'] ?? 0), 0, ',', '.') }}</div>
+                </div>
             </td>
         </tr>
     </table>
 
-    <!-- JUDUL LAPORAN -->
-    <div class="report-title-box">
-        <div class="report-title-main">{{ $selectedTitle }}</div>
-        <div class="report-sub">Dicetak pada: {{ date('d-m-Y H:i') }} WIB | Total Data: {{ count($rows) }} Bidang Tanah</div>
+    <div class="filter-box">
+        <h4>Filter Aktif</h4>
+        @if (!empty($summary['activeFilters']))
+            @foreach ($summary['activeFilters'] as $filter)
+                <span class="filter-chip">{{ $filter['label'] }}: {{ $filter['value'] }}</span>
+            @endforeach
+        @else
+            <span class="filter-chip">Semua data aset tanah</span>
+        @endif
     </div>
 
-    <!-- TABEL DATA LAPORAN -->
-    <table class="data-table">
+    <table class="table-report">
         <thead>
             <tr>
-                <th style="width: 30px;">NO</th>
-                <th style="width: 160px;">KODE ASET (NIBAR)</th>
-                <th>NAMA ASET TANAH</th>
-                <th>PERUNTUKAN / PENGGUNAAN</th>
-                <th>OPD PENGELOLA</th>
-                <th style="width: 70px;">LUAS (M²)</th>
-                <th style="width: 110px;">HARGA PEROLEHAN</th>
-                <th style="width: 80px;">TGL PEROLEHAN</th>
-                <th style="width: 110px;">STATUS BPN</th>
-                <th>ALAMAT / LOKASI</th>
+                <th width="4%">No</th>
+                <th width="10%">Kode</th>
+                <th width="16%">Nama Aset</th>
+                <th width="12%">Peruntukan</th>
+                <th width="11%">OPD</th>
+                <th width="8%">Luas (m2)</th>
+                <th width="11%">Nilai Perolehan</th>
+                <th width="9%">Tanggal</th>
+                <th width="11%">Status</th>
+                <th width="6%">Durasi</th>
+                <th width="12%">Keterangan</th>
             </tr>
         </thead>
         <tbody>
-            @forelse($rows as $index => $item)
+            @forelse ($rows as $index => $row)
                 <tr>
                     <td class="text-center">{{ $index + 1 }}</td>
-                    <td class="font-mono text-center">{{ $item->kode_aset ?? '-' }}</td>
-                    <td style="font-weight: bold;">{{ $item->nama_aset }}</td>
-                    <td>{{ $item->peruntukan ?? '-' }}</td>
-                    <td>{{ $item->opd ?? 'BPKAD' }}</td>
-                    <td class="text-right font-mono">{{ number_format($item->luas ?? 0, 0, ',', '.') }}</td>
-                    <td class="text-right font-mono">{{ $item->harga_perolehan ? 'Rp ' . number_format($item->harga_perolehan, 2, ',', '.') : '-' }}</td>
-                    <td class="text-center">{{ $item->tanggal_perolehan ?? '-' }}</td>
-                    <td class="text-center">
-                        <strong>{{ $item->latestProses->statusProses->nama_status ?? 'Belum Diurus' }}</strong>
-                    </td>
-                    <td>{{ $item->alamat ?? 'Kabupaten Donggala' }}</td>
+                    <td>{{ $row->kode_aset ?? '-' }}</td>
+                    <td>{{ $row->nama_aset }}</td>
+                    <td>{{ $row->peruntukan ?? '-' }}</td>
+                    <td>{{ $row->opd ?? '-' }}</td>
+                    <td class="text-right">{{ number_format($row->luas ?? 0, 2, ',', '.') }}</td>
+                    <td class="text-right">{{ $row->harga_perolehan ? number_format($row->harga_perolehan, 2, ',', '.') : '-' }}</td>
+                    <td class="text-center">{{ $row->tanggal_perolehan ? date('d-m-Y', strtotime($row->tanggal_perolehan)) : '-' }}</td>
+                    <td>{{ $row->latestProses->statusProses->nama_status ?? 'Belum Diurus' }}</td>
+                    <td class="text-center">{{ $row->latestProses->durasi_hari ?? '-' }}</td>
+                    <td>{{ $row->keterangan ?? '-' }}</td>
                 </tr>
             @empty
                 <tr>
-                    <td colspan="10" class="text-center" style="padding: 20px;">Tidak ada data aset tanah yang memenuhi kriteria filter.</td>
+                    <td colspan="11" class="text-center">Tidak ada data untuk ditampilkan.</td>
                 </tr>
             @endforelse
         </tbody>
     </table>
 
-    <!-- TANDA TANGAN PEJABAT -->
-    <table class="signature-table">
-        <tr>
-            <td style="width: 60%;"></td>
-            <td style="width: 40%; text-align: center;">
-                <div>{{ $kop['kop_kota_ttd'] }}, {{ \Carbon\Carbon::now()->isoFormat('D MMMM Y') }}</div>
-                <div style="font-weight: bold; margin-bottom: 60px;">{{ $kop['kop_pejabat_jabatan'] }}</div>
-                <div style="font-weight: bold; text-decoration: underline;">{{ $kop['kop_pejabat_nama'] }}</div>
-                <div>{{ $kop['kop_pejabat_nip'] }}</div>
-            </td>
-        </tr>
-    </table>
+    <div class="signature-wrap">
+        <div class="signature-city">{{ $kop['kop_kota_ttd'] ?? '' }}, {{ date('d-m-Y H:i') }}</div>
+        <div class="signature-job">{{ $kop['kop_pejabat_jabatan'] ?? '' }}</div>
+        <div class="signature-space"></div>
+        <div class="signature-name">{{ $kop['kop_pejabat_nama'] ?? '' }}</div>
+        <div class="signature-nip">{{ $kop['kop_pejabat_nip'] ?? '' }}</div>
+    </div>
 
+    <div class="footer">
+        {{ $kop['kop_footer'] ?? '' }}
+    </div>
 </body>
 </html>

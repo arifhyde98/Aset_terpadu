@@ -30,5 +30,9 @@ class AppServiceProvider extends ServiceProvider
         \App\Models\Vehicle::observe(\App\Observers\VehicleObserver::class);
         \App\Models\Opd::observe(\App\Observers\OpdObserver::class);
         \App\Models\User::observe(\App\Observers\UserObserver::class);
+        
+        // SIPAT Observers (Global Cache Invalidation)
+        \App\Models\AsetTanah::observe(\App\Observers\AsetTanahObserver::class);
+        \App\Models\ProsesAset::observe(\App\Observers\ProsesAsetObserver::class);
     }
 }
