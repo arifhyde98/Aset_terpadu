@@ -1,27 +1,32 @@
+@php
+    $isSipatActive = request()->routeIs('sipat.*') || (request()->routeIs('master.*') && !request()->routeIs('master.opd-mapping.*')) || (request()->routeIs('activities.*') && request('module') === 'sipat');
+    $isErandisActive = request()->routeIs('erandis.*', 'vehicles.*', 'vehicle-types.*', 'opds.*', 'master.opd-mapping.*', 'maintenance.*', 'reports.*') || (request()->routeIs('activities.*') && request('module') !== 'sipat');
+    $isElabelActive = request()->routeIs('elabel.*');
+@endphp
 <!-- Bottom Navigation for Mobile -->
 <nav class="bottom-nav d-md-none" aria-label="Mobile Navigation">
     <div class="bottom-nav-container">
         <!-- 1. Home / Terpadu -->
-        <a href="{{ route('home') }}" class="bottom-nav-item {{ Request::is('home') ? 'active' : '' }}">
-            <i class="bi bi-grid-1x2{{ Request::is('home') ? '-fill' : '' }}"></i>
+        <a href="{{ route('home') }}" class="bottom-nav-item {{ request()->routeIs('home') ? 'active' : '' }}">
+            <i class="bi bi-grid-1x2{{ request()->routeIs('home') ? '-fill' : '' }}"></i>
             <span>Home</span>
         </a>
         
         <!-- 2. SIPAT (Aset Tanah & Penggunaan Kantor) -->
-        <a href="{{ route('sipat.aset.index') }}" class="bottom-nav-item nav-item-sipat {{ (Request::is('sipat*') || Request::is('master-data/status-proses*', 'master-data/wilayah*', 'master-data/kop-surat*', 'master-data/opd-sipat*', 'master-data/import*', 'master-data/log-aktivitas*') || (Request::is('activities*') && request('module') === 'sipat')) ? 'active' : '' }}">
-            <i class="bi bi-geo-alt{{ (Request::is('sipat*') || Request::is('master-data/status-proses*', 'master-data/wilayah*', 'master-data/kop-surat*', 'master-data/opd-sipat*', 'master-data/import*', 'master-data/log-aktivitas*') || (Request::is('activities*') && request('module') === 'sipat')) ? '-fill' : '' }}"></i>
+        <a href="{{ route('sipat.aset.index') }}" class="bottom-nav-item nav-item-sipat {{ $isSipatActive ? 'active' : '' }}">
+            <i class="bi bi-geo-alt{{ $isSipatActive ? '-fill' : '' }}"></i>
             <span>SIPAT</span>
         </a>
         
         <!-- 3. eRANDIS (Kendaraan Dinas) -->
-        <a href="{{ route('vehicles.index') }}" class="bottom-nav-item nav-item-erandis {{ ((Request::is('erandis*', 'vehicles*', 'maintenance*', 'reports*', 'opds*', 'vehicle-types*', 'activities*') && request('module') !== 'sipat' && !Request::is('sipat*') && !Request::is('elabel*'))) ? 'active' : '' }}">
-            <i class="bi bi-car-front{{ ((Request::is('erandis*', 'vehicles*', 'maintenance*', 'reports*', 'opds*', 'vehicle-types*', 'activities*') && request('module') !== 'sipat' && !Request::is('sipat*') && !Request::is('elabel*'))) ? '-fill' : '' }}"></i>
+        <a href="{{ route('vehicles.index') }}" class="bottom-nav-item nav-item-erandis {{ $isErandisActive ? 'active' : '' }}">
+            <i class="bi bi-car-front{{ $isErandisActive ? '-fill' : '' }}"></i>
             <span>eRANDIS</span>
         </a>
         
         <!-- 4. eLABEL (Digital Arsip & Box) -->
-        <a href="{{ route('elabel.dashboard') }}" class="bottom-nav-item nav-item-elabel {{ Request::is('elabel*') ? 'active' : '' }}">
-            <i class="bi bi-archive{{ Request::is('elabel*') ? '-fill' : '' }}"></i>
+        <a href="{{ route('elabel.dashboard') }}" class="bottom-nav-item nav-item-elabel {{ $isElabelActive ? 'active' : '' }}">
+            <i class="bi bi-archive{{ $isElabelActive ? '-fill' : '' }}"></i>
             <span>eLABEL</span>
         </a>
         
@@ -80,7 +85,7 @@
             </div>
             <div class="row g-2">
                 <div class="col-6">
-                    <a href="{{ route('home') }}" class="mobile-dash-btn p-2 rounded-3 text-decoration-none d-flex align-items-center gap-2 border {{ Request::is('home') ? 'active-terpadu' : '' }}">
+                    <a href="{{ route('home') }}" class="mobile-dash-btn p-2 rounded-3 text-decoration-none d-flex align-items-center gap-2 border {{ request()->routeIs('home') ? 'active-terpadu' : '' }}">
                         <div class="dash-icon-box bg-primary bg-opacity-10 text-primary rounded-2 d-flex align-items-center justify-content-center" style="width: 30px; height: 30px;">
                             <i class="bi bi-grid-1x2-fill"></i>
                         </div>
@@ -91,7 +96,7 @@
                     </a>
                 </div>
                 <div class="col-6">
-                    <a href="{{ route('sipat.dashboard') }}" class="mobile-dash-btn p-2 rounded-3 text-decoration-none d-flex align-items-center gap-2 border {{ Request::is('sipat/dashboard*') ? 'active-sipat' : '' }}">
+                    <a href="{{ route('sipat.dashboard') }}" class="mobile-dash-btn p-2 rounded-3 text-decoration-none d-flex align-items-center gap-2 border {{ request()->routeIs('sipat.dashboard') ? 'active-sipat' : '' }}">
                         <div class="dash-icon-box bg-info bg-opacity-10 text-info rounded-2 d-flex align-items-center justify-content-center" style="width: 30px; height: 30px;">
                             <i class="bi bi-geo-alt-fill"></i>
                         </div>
@@ -102,7 +107,7 @@
                     </a>
                 </div>
                 <div class="col-6">
-                    <a href="{{ route('erandis.dashboard') }}" class="mobile-dash-btn p-2 rounded-3 text-decoration-none d-flex align-items-center gap-2 border {{ Request::is('erandis/dashboard*') ? 'active-erandis' : '' }}">
+                    <a href="{{ route('erandis.dashboard') }}" class="mobile-dash-btn p-2 rounded-3 text-decoration-none d-flex align-items-center gap-2 border {{ request()->routeIs('erandis.dashboard') ? 'active-erandis' : '' }}">
                         <div class="dash-icon-box bg-warning bg-opacity-10 text-warning rounded-2 d-flex align-items-center justify-content-center" style="width: 30px; height: 30px;">
                             <i class="bi bi-car-front-fill"></i>
                         </div>
@@ -113,7 +118,7 @@
                     </a>
                 </div>
                 <div class="col-6">
-                    <a href="{{ route('elabel.dashboard') }}" class="mobile-dash-btn p-2 rounded-3 text-decoration-none d-flex align-items-center gap-2 border {{ Request::is('elabel/dashboard*') ? 'active-elabel' : '' }}">
+                    <a href="{{ route('elabel.dashboard') }}" class="mobile-dash-btn p-2 rounded-3 text-decoration-none d-flex align-items-center gap-2 border {{ request()->routeIs('elabel.dashboard') ? 'active-elabel' : '' }}">
                         <div class="dash-icon-box bg-success bg-opacity-10 text-success rounded-2 d-flex align-items-center justify-content-center" style="width: 30px; height: 30px;">
                             <i class="bi bi-box-seam-fill"></i>
                         </div>
@@ -130,7 +135,7 @@
             <!-- 2. MODUL SIPAT (Aset Tanah) -->
             <div class="accordion-item border rounded-3 mb-2 overflow-hidden module-item-sipat">
                 <h2 class="accordion-header" id="headingMobileSipat">
-                    <button class="accordion-button py-2.5 px-3 {{ (Request::is('sipat*') || Request::is('master-data/status-proses*', 'master-data/wilayah*', 'master-data/kop-surat*', 'master-data/opd-sipat*', 'master-data/import*', 'master-data/log-aktivitas*') || (Request::is('activities*') && request('module') === 'sipat')) ? '' : 'collapsed' }}" type="button" data-bs-toggle="collapse" data-bs-target="#collapseMobileSipat" aria-expanded="{{ (Request::is('sipat*') || Request::is('master-data/status-proses*', 'master-data/wilayah*', 'master-data/kop-surat*', 'master-data/opd-sipat*', 'master-data/import*', 'master-data/log-aktivitas*') || (Request::is('activities*') && request('module') === 'sipat')) ? 'true' : 'false' }}">
+                    <button class="accordion-button py-2.5 px-3 {{ $isSipatActive ? '' : 'collapsed' }}" type="button" data-bs-toggle="collapse" data-bs-target="#collapseMobileSipat" aria-expanded="{{ $isSipatActive ? 'true' : 'false' }}">
                         <div class="d-flex align-items-center gap-2">
                             <span class="badge bg-primary text-white rounded-pill p-1.5"><i class="bi bi-geo-alt-fill"></i></span>
                             <div class="lh-1">
@@ -140,7 +145,7 @@
                         </div>
                     </button>
                 </h2>
-                <div id="collapseMobileSipat" class="accordion-collapse collapse {{ (Request::is('sipat*') || Request::is('master-data/status-proses*', 'master-data/wilayah*', 'master-data/kop-surat*', 'master-data/opd-sipat*', 'master-data/import*', 'master-data/log-aktivitas*') || (Request::is('activities*') && request('module') === 'sipat')) ? 'show' : '' }}" data-bs-parent="#mobileModulesAccordion">
+                <div id="collapseMobileSipat" class="accordion-collapse collapse {{ $isSipatActive ? 'show' : '' }}" data-bs-parent="#mobileModulesAccordion">
                     <div class="accordion-body p-2 bg-light bg-opacity-50">
                         <div class="list-group list-group-flush rounded-2 overflow-hidden border-0">
                             <!-- Aset & Peta -->
@@ -194,7 +199,7 @@
             <!-- 3. MODUL ERANDIS (Kendaraan Dinas) -->
             <div class="accordion-item border rounded-3 mb-2 overflow-hidden module-item-erandis">
                 <h2 class="accordion-header" id="headingMobileErandis">
-                    <button class="accordion-button py-2.5 px-3 {{ ((Request::is('erandis*', 'vehicles*', 'maintenance*', 'reports*', 'opds*', 'vehicle-types*', 'activities*') && request('module') !== 'sipat' && !Request::is('sipat*') && !Request::is('elabel*'))) ? '' : 'collapsed' }}" type="button" data-bs-toggle="collapse" data-bs-target="#collapseMobileErandis" aria-expanded="{{ ((Request::is('erandis*', 'vehicles*', 'maintenance*', 'reports*', 'opds*', 'vehicle-types*', 'activities*') && request('module') !== 'sipat' && !Request::is('sipat*') && !Request::is('elabel*'))) ? 'true' : 'false' }}">
+                    <button class="accordion-button py-2.5 px-3 {{ $isErandisActive ? '' : 'collapsed' }}" type="button" data-bs-toggle="collapse" data-bs-target="#collapseMobileErandis" aria-expanded="{{ $isErandisActive ? 'true' : 'false' }}">
                         <div class="d-flex align-items-center gap-2">
                             <span class="badge bg-warning text-dark rounded-pill p-1.5"><i class="bi bi-car-front-fill"></i></span>
                             <div class="lh-1">
@@ -204,16 +209,16 @@
                         </div>
                     </button>
                 </h2>
-                <div id="collapseMobileErandis" class="accordion-collapse collapse {{ ((Request::is('erandis*', 'vehicles*', 'maintenance*', 'reports*', 'opds*', 'vehicle-types*', 'activities*') && request('module') !== 'sipat' && !Request::is('sipat*') && !Request::is('elabel*'))) ? 'show' : '' }}" data-bs-parent="#mobileModulesAccordion">
+                <div id="collapseMobileErandis" class="accordion-collapse collapse {{ $isErandisActive ? 'show' : '' }}" data-bs-parent="#mobileModulesAccordion">
                     <div class="accordion-body p-2 bg-light bg-opacity-50">
                         <div class="list-group list-group-flush rounded-2 overflow-hidden border-0">
-                            <a href="{{ route('vehicles.index') }}" class="list-group-item list-group-item-action border-0 py-2 rounded-2 {{ Request::is('vehicles*') ? 'active-sub-erandis' : '' }}">
+                            <a href="{{ route('vehicles.index') }}" class="list-group-item list-group-item-action border-0 py-2 rounded-2 {{ request()->routeIs('vehicles.*') ? 'active-sub-erandis' : '' }}">
                                 <i class="bi bi-truck me-2 text-warning"></i> Data Kendaraan Dinas
                             </a>
-                            <a href="{{ route('maintenance.index') }}" class="list-group-item list-group-item-action border-0 py-2 rounded-2 {{ Request::is('maintenance*') ? 'active-sub-erandis' : '' }}">
+                            <a href="{{ route('maintenance.index') }}" class="list-group-item list-group-item-action border-0 py-2 rounded-2 {{ request()->routeIs('maintenance.*') ? 'active-sub-erandis' : '' }}">
                                 <i class="bi bi-wrench-adjustable me-2 text-info"></i> Servis & Pemeliharaan
                             </a>
-                            <a href="{{ route('reports.index') }}" class="list-group-item list-group-item-action border-0 py-2 rounded-2 {{ Request::is('reports*') ? 'active-sub-erandis' : '' }}">
+                            <a href="{{ route('reports.index') }}" class="list-group-item list-group-item-action border-0 py-2 rounded-2 {{ request()->routeIs('reports.*') ? 'active-sub-erandis' : '' }}">
                                 <i class="bi bi-graph-up me-2 text-success"></i> Laporan Kendaraan
                             </a>
 
@@ -239,7 +244,7 @@
             <!-- 4. MODUL ELABEL (Digital Arsip & Box) -->
             <div class="accordion-item border rounded-3 mb-2 overflow-hidden module-item-elabel">
                 <h2 class="accordion-header" id="headingMobileElabel">
-                    <button class="accordion-button py-2.5 px-3 {{ Request::is('elabel*') ? '' : 'collapsed' }}" type="button" data-bs-toggle="collapse" data-bs-target="#collapseMobileElabel" aria-expanded="{{ Request::is('elabel*') ? 'true' : 'false' }}">
+                    <button class="accordion-button py-2.5 px-3 {{ $isElabelActive ? '' : 'collapsed' }}" type="button" data-bs-toggle="collapse" data-bs-target="#collapseMobileElabel" aria-expanded="{{ $isElabelActive ? 'true' : 'false' }}">
                         <div class="d-flex align-items-center gap-2">
                             <span class="badge bg-info text-white rounded-pill p-1.5"><i class="bi bi-archive-fill"></i></span>
                             <div class="lh-1">
@@ -249,7 +254,7 @@
                         </div>
                     </button>
                 </h2>
-                <div id="collapseMobileElabel" class="accordion-collapse collapse {{ Request::is('elabel*') ? 'show' : '' }}" data-bs-parent="#mobileModulesAccordion">
+                <div id="collapseMobileElabel" class="accordion-collapse collapse {{ $isElabelActive ? 'show' : '' }}" data-bs-parent="#mobileModulesAccordion">
                     <div class="accordion-body p-2 bg-light bg-opacity-50">
                         <div class="list-group list-group-flush rounded-2 overflow-hidden border-0">
                             <!-- BPKB -->
@@ -292,7 +297,10 @@
             <!-- 5. PENGATURAN SISTEM & GLOBAL -->
             <div class="accordion-item border rounded-3 mb-3 overflow-hidden">
                 <h2 class="accordion-header" id="headingMobileSystem">
-                    <button class="accordion-button py-2.5 px-3 {{ (Request::is('users*', 'settings*', 'activities*', 'master-data/opd-mapping*') && request('module') !== 'sipat') ? '' : 'collapsed' }}" type="button" data-bs-toggle="collapse" data-bs-target="#collapseMobileSystem" aria-expanded="{{ (Request::is('users*', 'settings*', 'activities*', 'master-data/opd-mapping*') && request('module') !== 'sipat') ? 'true' : 'false' }}">
+                    @php
+                        $isSystemActive = request()->routeIs('users.*', 'settings.*') || (request()->routeIs('activities.*') && request('module') !== 'sipat') || request()->routeIs('master.opd-mapping.*');
+                    @endphp
+                    <button class="accordion-button py-2.5 px-3 {{ $isSystemActive ? '' : 'collapsed' }}" type="button" data-bs-toggle="collapse" data-bs-target="#collapseMobileSystem" aria-expanded="{{ $isSystemActive ? 'true' : 'false' }}">
                         <div class="d-flex align-items-center gap-2">
                             <span class="badge bg-secondary text-white rounded-pill p-1.5"><i class="bi bi-gear-wide-connected"></i></span>
                             <div class="lh-1">
@@ -302,7 +310,7 @@
                         </div>
                     </button>
                 </h2>
-                <div id="collapseMobileSystem" class="accordion-collapse collapse {{ (Request::is('users*', 'settings*', 'activities*', 'master-data/opd-mapping*') && request('module') !== 'sipat') ? 'show' : '' }}" data-bs-parent="#mobileModulesAccordion">
+                <div id="collapseMobileSystem" class="accordion-collapse collapse {{ $isSystemActive ? 'show' : '' }}" data-bs-parent="#mobileModulesAccordion">
                     <div class="accordion-body p-2 bg-light bg-opacity-50">
                         <div class="list-group list-group-flush rounded-2 overflow-hidden border-0">
                             @if(auth()->user()?->role !== \App\Enums\UserRole::OPD)
