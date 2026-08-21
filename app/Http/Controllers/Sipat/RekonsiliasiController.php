@@ -57,32 +57,11 @@ class RekonsiliasiController extends Controller
 
     private function fetchElabelNibarList(): array
     {
-        // Mockup sementara agar tidak error saat koneksi ke eLabel ditutup sesuai arahan user.
-        return [];
-        
-        // Kode asli yang di-comment out:
-        /*
-        try {
-            $apiUrl = env('ELABEL_API_URL', 'http://elabel.test/api/v1/sertifikat/');
-            $baseUrl = str_replace('sertifikat/', '', $apiUrl);
-            $endpoint = rtrim($baseUrl, '/') . '/sertifikat-all-nibar';
-
-            $response = Http::withHeaders([
-                'X-API-KEY' => 'SIPAT-ELABEL-SECURE-KEY-2026',
-                'Accept'    => 'application/json'
-            ])->timeout(15)->get($endpoint);
-
-            if ($response->successful()) {
-                $body = $response->json();
-                if (isset($body['data']) && is_array($body['data'])) {
-                    return $body['data'];
-                }
-            }
-            return [];
-        } catch (\Exception $e) {
-            Log::error('Gagal fetch eLabel Nibar List: ' . $e->getMessage());
-            return [];
-        }
-        */
+        // Karena SIPAT dan eLabel sudah TERPADU dalam satu database,
+        // kita tidak perlu lagi memanggil API. Langsung query ke tabel eLabel!
+        return \App\Models\Elabel\ElabelSertifikat::whereNotNull('nibar')
+            ->where('nibar', '!=', '')
+            ->pluck('nibar')
+            ->toArray();
     }
 }

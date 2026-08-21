@@ -342,13 +342,13 @@ class LaporanService
 
         $spreadsheet->setActiveSheetIndex(0);
 
-        $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xls($spreadsheet);
-        $filename = 'Laporan_Aset_Tanah_' . date('Ymd_His') . '.xls';
+        $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
+        $filename = 'Laporan_Aset_Tanah_' . date('Ymd_His') . '.xlsx';
 
         return response()->streamDownload(function () use ($writer) {
             $writer->save('php://output');
         }, $filename, [
-            'Content-Type' => 'application/vnd.ms-excel',
+            'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
         ]);
     }
 }
