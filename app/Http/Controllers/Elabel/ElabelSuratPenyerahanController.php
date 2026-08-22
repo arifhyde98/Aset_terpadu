@@ -57,7 +57,9 @@ class ElabelSuratPenyerahanController extends Controller implements HasMiddlewar
 
     public function create(): View
     {
+        $opds = \App\Models\OpdSipat::where('aktif', 1)->orderBy('nama', 'asc')->get();
         return view('elabel.surat_penyerahan.create', [
+            'opds'       => $opds,
             'activeMenu' => 'surat_penyerahan',
         ]);
     }
@@ -85,8 +87,10 @@ class ElabelSuratPenyerahanController extends Controller implements HasMiddlewar
             return redirect()->route('elabel.surat-penyerahan.index')->with('error', 'Data surat penyerahan tidak ditemukan.');
         }
 
+        $opds = \App\Models\OpdSipat::where('aktif', 1)->orderBy('nama', 'asc')->get();
         return view('elabel.surat_penyerahan.edit', [
             'item'       => $item,
+            'opds'       => $opds,
             'activeMenu' => 'surat_penyerahan',
         ]);
     }

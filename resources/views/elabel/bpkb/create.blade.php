@@ -105,12 +105,22 @@
                         <input type="text" name="warna" value="{{ old('warna') }}" class="form-control" placeholder="Hitam / Putih">
                     </div>
 
-                    <div class="col-md-6">
-                        <label class="form-label fw-semibold small">Pengguna / Pemegang OPD</label>
-                        <input type="text" name="pengguna" value="{{ old('pengguna') }}" class="form-control" placeholder="Nama OPD atau Pemegang">
+                    <div class="col-md-4">
+                        <label class="form-label fw-semibold small">Pemegang Kendaraan (Personal)</label>
+                        <input type="text" name="pengguna" value="{{ old('pengguna') }}" class="form-control" placeholder="Nama Pemegang">
                     </div>
 
-                    <div class="col-md-6">
+                    <div class="col-md-4">
+                        <label class="form-label fw-semibold small">Dinas / OPD (SIPAT)</label>
+                        <select name="sipat_opd_id" class="form-select">
+                            <option value="">-- Pilih Dinas / OPD --</option>
+                            @foreach($opds as $opd)
+                                <option value="{{ $opd->id }}" {{ old('sipat_opd_id') == $opd->id ? 'selected' : '' }}>{{ $opd->nama }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div class="col-md-4">
                         <label class="form-label fw-semibold small">Upload Dokumen Scan BPKB (PDF Max 5MB)</label>
                         <input type="file" name="pdf" class="form-control" accept=".pdf">
                     </div>

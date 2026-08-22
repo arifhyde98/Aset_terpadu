@@ -58,7 +58,13 @@ class ElabelSertifikat extends Model
         'data_version',
         'box_id',
         'pdf_path',
+        'sipat_opd_id',
     ];
+
+    public function opdSipat(): BelongsTo
+    {
+        return $this->belongsTo(\App\Models\OpdSipat::class, 'sipat_opd_id');
+    }
 
     public function box(): BelongsTo
     {

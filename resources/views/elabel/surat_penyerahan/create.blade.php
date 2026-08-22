@@ -88,8 +88,13 @@
                     </div>
 
                     <div class="col-md-3">
-                        <label class="form-label fw-semibold small">Dinas / OPD</label>
-                        <input type="text" name="dinas" value="{{ old('dinas') }}" class="form-control" placeholder="BPKAD">
+                        <label class="form-label fw-semibold small">Dinas / OPD (SIPAT)</label>
+                        <select name="sipat_opd_id" class="form-select">
+                            <option value="">-- Pilih Dinas / OPD --</option>
+                            @foreach($opds as $opd)
+                                <option value="{{ $opd->id }}" {{ old('sipat_opd_id') == $opd->id ? 'selected' : '' }}>{{ $opd->nama }}</option>
+                            @endforeach
+                        </select>
                     </div>
 
                     <div class="col-md-6">

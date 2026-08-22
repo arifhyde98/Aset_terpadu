@@ -53,7 +53,13 @@ class ElabelLoan extends Model
         'approved_at',
         'status',
         'note',
+        'sipat_opd_id',
     ];
+
+    public function opdSipat(): BelongsTo
+    {
+        return $this->belongsTo(\App\Models\OpdSipat::class, 'sipat_opd_id');
+    }
 
     public function bpkb(): BelongsTo
     {

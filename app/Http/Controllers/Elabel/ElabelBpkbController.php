@@ -106,10 +106,12 @@ class ElabelBpkbController extends Controller implements HasMiddleware
         $vehicleLabel = $this->vehicleLabel($vehicleType);
         $boxes = ElabelBox::orderBy('box_code', 'asc')->get();
         $years = $this->availableYears($vehicleType);
+        $opds = \App\Models\OpdSipat::where('aktif', 1)->orderBy('nama', 'asc')->get();
 
         return view('elabel.bpkb.create', [
             'boxes'        => $boxes,
             'years'        => $years,
+            'opds'         => $opds,
             'vehicleType'  => $vehicleType,
             'vehicleLabel' => $vehicleLabel,
             'vehicleRoute' => $vehicleType ? $this->routeSegment($vehicleType) : null,
@@ -171,6 +173,7 @@ class ElabelBpkbController extends Controller implements HasMiddleware
             'status'       => 'Tersedia',
             'pdf_path'     => $pdfPath,
             'input_by'     => Auth::id() ?: 1,
+            'sipat_opd_id' => $request->get('sipat_opd_id'),
         ]);
 
         $this->logActivity('create', 'BPKB', 'Menambahkan BPKB ' . $identity['plate_number'] . ' tahun ' . $year . '.', 'bpkb', $bpkb->id);
@@ -187,10 +190,12 @@ class ElabelBpkbController extends Controller implements HasMiddleware
         }
 
         $vehicleType = $this->normalizeVehicleType($item->vehicle_type);
+        $opds = \App\Models\OpdSipat::where('aktif', 1)->orderBy('nama', 'asc')->get();
 
         return view('elabel.bpkb.edit', [
             'item'         => $item,
             'years'        => $this->availableYears(null),
+            'opds'         => $opds,
             'vehicleType'  => $vehicleType,
             'vehicleLabel' => $this->vehicleLabel($vehicleType),
             'vehicleRoute' => $vehicleType ? $this->routeSegment($vehicleType) : null,
@@ -273,6 +278,7 @@ class ElabelBpkbController extends Controller implements HasMiddleware
             'warna'        => $this->normalizeTextField((string) $request->get('warna')),
             'pengguna'     => $this->normalizeTextField((string) $request->get('pengguna')),
             'pdf_path'     => $pdfPath,
+            'sipat_opd_id' => $request->get('sipat_opd_id'),
         ]);
 
         $this->logActivity('update', 'BPKB', 'Mengubah BPKB ' . $identity['plate_number'] . ' tahun ' . $year . '.', 'bpkb', $id);

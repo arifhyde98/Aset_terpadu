@@ -82,8 +82,12 @@
                                 <td class="fw-medium text-dark">: {{ $item->warna ?: '-' }}</td>
                             </tr>
                             <tr>
-                                <td class="text-secondary small fw-semibold">Pengguna / OPD</td>
+                                <td class="text-secondary small fw-semibold">Pemegang Kendaraan (Personal)</td>
                                 <td class="fw-medium text-dark">: {{ $item->pengguna ?: '-' }}</td>
+                            </tr>
+                            <tr>
+                                <td class="text-secondary small fw-semibold">Dinas / OPD (SIPAT)</td>
+                                <td class="fw-medium text-dark">: {{ $item->opdSipat ? $item->opdSipat->nama : '-' }}</td>
                             </tr>
                         </tbody>
                     </table>

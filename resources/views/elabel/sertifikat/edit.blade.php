@@ -99,8 +99,16 @@
                     </div>
 
                     <div class="col-md-3">
-                        <label class="form-label fw-semibold small">Dinas / OPD Pengguna</label>
-                        <input type="text" name="dinas" value="{{ old('dinas', $item->dinas) }}" class="form-control">
+                        <label class="form-label fw-semibold small">Dinas / OPD (SIPAT)</label>
+                        <select name="sipat_opd_id" class="form-select">
+                            <option value="">-- Pilih Dinas / OPD --</option>
+                            @foreach($opds as $opd)
+                                <option value="{{ $opd->id }}" {{ old('sipat_opd_id', $item->sipat_opd_id) == $opd->id ? 'selected' : '' }}>{{ $opd->nama }}</option>
+                            @endforeach
+                        </select>
+                        @if(!$item->sipat_opd_id && $item->dinas)
+                            <div class="small text-warning mt-1"><i class="bi bi-exclamation-circle"></i> Teks Lama: "{{ $item->dinas }}"</div>
+                        @endif
                     </div>
 
                     <div class="col-md-12">

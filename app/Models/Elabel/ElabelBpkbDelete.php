@@ -71,7 +71,13 @@ class ElabelBpkbDelete extends Model
         'reason',
         'reason_detail',
         'support_doc_path',
+        'sipat_opd_id',
     ];
+
+    public function opdSipat(): BelongsTo
+    {
+        return $this->belongsTo(\App\Models\OpdSipat::class, 'sipat_opd_id');
+    }
 
     public function deleter(): BelongsTo
     {

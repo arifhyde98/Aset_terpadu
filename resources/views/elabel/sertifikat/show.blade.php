@@ -55,7 +55,7 @@
                             </tr>
                             <tr>
                                 <td class="text-secondary small fw-semibold">Dinas / OPD Pengguna</td>
-                                <td class="fw-medium text-dark">: {{ $item->dinas ?: '-' }}</td>
+                                <td class="fw-medium text-dark">: {{ $item->opdSipat ? $item->opdSipat->nama : ($item->dinas ?: '-') }}</td>
                             </tr>
                             <tr>
                                 <td class="text-secondary small fw-semibold">Status Penggunaan</td>

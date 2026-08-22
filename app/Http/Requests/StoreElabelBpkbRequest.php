@@ -24,9 +24,9 @@ class StoreElabelBpkbRequest extends FormRequest
             'merek'        => ['nullable', 'string', 'max:100'],
             'tipe'         => ['nullable', 'string', 'max:100'],
             'isi_silinder' => ['nullable', 'string', 'max:50'],
-            'warna'        => ['nullable', 'string', 'max:100'],
             'pengguna'     => ['nullable', 'string', 'max:100'],
             'pdf'          => ['nullable', 'file', 'mimes:pdf', 'max:5120'],
+            'sipat_opd_id' => ['nullable', 'integer', 'exists:opd,id'],
         ];
     }
 

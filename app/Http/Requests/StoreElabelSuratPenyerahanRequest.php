@@ -26,6 +26,7 @@ class StoreElabelSuratPenyerahanRequest extends FormRequest
             'dinas'             => ['nullable', 'string', 'max:150'],
             'pemberi_hibah'     => ['nullable', 'string', 'max:150'],
             'pdf'               => ['nullable', 'file', 'mimes:pdf', 'max:51200'],
+            'sipat_opd_id'      => ['nullable', 'integer', 'exists:opd,id'],
         ];
     }
 

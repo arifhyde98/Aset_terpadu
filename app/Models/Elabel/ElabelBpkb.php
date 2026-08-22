@@ -54,7 +54,13 @@ class ElabelBpkb extends Model
         'status',
         'pdf_path',
         'input_by',
+        'sipat_opd_id',
     ];
+
+    public function opdSipat(): BelongsTo
+    {
+        return $this->belongsTo(\App\Models\OpdSipat::class, 'sipat_opd_id');
+    }
 
     public function box(): BelongsTo
     {

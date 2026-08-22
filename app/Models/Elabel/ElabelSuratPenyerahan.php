@@ -51,7 +51,13 @@ class ElabelSuratPenyerahan extends Model
         'pemberi_hibah',
         'pdf_path',
         'box_id',
+        'sipat_opd_id',
     ];
+
+    public function opdSipat(): BelongsTo
+    {
+        return $this->belongsTo(\App\Models\OpdSipat::class, 'sipat_opd_id');
+    }
 
     public function box(): BelongsTo
     {

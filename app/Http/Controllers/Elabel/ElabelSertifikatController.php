@@ -71,8 +71,11 @@ class ElabelSertifikatController extends Controller implements HasMiddleware
             'status_penggunaan' => $request->get('peruntukan'),
         ];
 
+        $opds = \App\Models\OpdSipat::where('aktif', 1)->orderBy('nama', 'asc')->get();
+
         return view('elabel.sertifikat.create', [
             'item'       => $item,
+            'opds'       => $opds,
             'activeMenu' => 'sertifikat',
         ]);
     }
@@ -105,8 +108,11 @@ class ElabelSertifikatController extends Controller implements HasMiddleware
             return redirect()->route('elabel.sertifikat.index')->with('error', 'Data sertipikat tidak ditemukan.');
         }
 
+        $opds = \App\Models\OpdSipat::where('aktif', 1)->orderBy('nama', 'asc')->get();
+
         return view('elabel.sertifikat.edit', [
             'item'       => $item,
+            'opds'       => $opds,
             'activeMenu' => 'sertifikat',
         ]);
     }

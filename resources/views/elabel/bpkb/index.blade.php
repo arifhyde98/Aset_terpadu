@@ -91,7 +91,7 @@
                         <th class="py-3">No. Polisi / Tahun</th>
                         <th class="py-3">Identitas Dokumen (BPKB/NIBAR)</th>
                         <th class="py-3">Spesifikasi (Merk/Tipe/Warna)</th>
-                        <th class="py-3">Pengguna / OPD</th>
+                        <th class="py-3">Pemegang / Dinas</th>
                         <th class="py-3 text-center">Box Fisik</th>
                         <th class="py-3 text-center">Status</th>
                         <th class="py-3 px-4 text-center" style="width: 120px;">Aksi</th>
@@ -114,7 +114,8 @@
                                 <div class="small text-secondary">{{ $item->isi_silinder ?: '-' }} · {{ $item->warna ?: '-' }}</div>
                             </td>
                             <td>
-                                <div class="fw-medium text-dark"><i class="bi bi-person-fill text-secondary me-1"></i> {{ $item->pengguna ?: '-' }}</div>
+                                <div class="fw-semibold text-dark"><i class="bi bi-person-fill text-secondary me-1"></i> {{ $item->pengguna ?: '-' }}</div>
+                                <div class="small text-secondary"><i class="bi bi-building me-1"></i> {{ $item->opdSipat ? $item->opdSipat->nama : '-' }}</div>
                             </td>
                             <td class="text-center">
                                 <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 px-3 py-2 rounded-3 fw-bold">

@@ -59,7 +59,7 @@
                             <td class="px-4 text-center fw-medium text-secondary">{{ $loop->iteration }}</td>
                             <td>
                                 <div class="fw-bold text-navy">{{ $loan->requester_name ?: ($loan->requester->name ?? 'Pemohon External') }}</div>
-                                <div class="small text-secondary">{{ $loan->requester_org ?: '-' }} · {{ $loan->requester_phone ?: '-' }}</div>
+                                <div class="small text-secondary">{{ $loan->opdSipat ? $loan->opdSipat->nama : ($loan->requester_org ?: '-') }} · {{ $loan->requester_phone ?: '-' }}</div>
                             </td>
                             <td>
                                 @if($loan->bpkb)
@@ -180,8 +180,18 @@
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label fw-semibold small">Instansi / Organisasi</label>
-                        <input type="text" name="requester_org" class="form-control" placeholder="Inspektorat / BPK / Kejaksaan">
+                        <label class="form-label fw-semibold small">Dinas / OPD (Internal SIPAT)</label>
+                        <select name="sipat_opd_id" class="form-select">
+                            <option value="">-- Pilih Dinas / OPD (Jika Internal) --</option>
+                            @foreach($opds as $opd)
+                                <option value="{{ $opd->id }}">{{ $opd->nama }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold small">Instansi / Organisasi (Eksternal / Lainnya)</label>
+                        <input type="text" name="requester_org" class="form-control" placeholder="Inspektorat / BPK / Kejaksaan (diisi jika bukan OPD internal)">
                     </div>
 
                     <div class="mb-3">
