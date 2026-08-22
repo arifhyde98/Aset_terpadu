@@ -7,6 +7,11 @@ Route::prefix('elabel')->name('elabel.')->group(function () {
     // Dashboard
     Route::get('dashboard', [\App\Http\Controllers\Elabel\ElabelDashboardController::class, 'index'])->name('dashboard');
     Route::post('dashboard/cleanup-logs', [\App\Http\Controllers\Elabel\ElabelDashboardController::class, 'cleanupActivityLogs'])->name('dashboard.cleanup-logs');
+    
+    // Diagnosis & Resolusi Duplikasi eLABEL
+    Route::get('check-duplicates', [\App\Http\Controllers\Elabel\ElabelDashboardController::class, 'checkDuplicates'])->name('check-duplicates');
+    Route::post('resolve-duplicate-bpkb', [\App\Http\Controllers\Elabel\ElabelDashboardController::class, 'resolveDuplicateBpkb'])->name('resolve-duplicate-bpkb');
+    Route::post('resolve-duplicate-sertifikat', [\App\Http\Controllers\Elabel\ElabelDashboardController::class, 'resolveDuplicateSertifikat'])->name('resolve-duplicate-sertifikat');
 
     // BPKB Kendaraan (R4 / R2)
     Route::get('bpkb', [\App\Http\Controllers\Elabel\ElabelBpkbController::class, 'index'])->name('bpkb.index');

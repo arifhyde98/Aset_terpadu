@@ -18,28 +18,7 @@
         <button type="button" class="btn btn-primary rounded-pill px-4 shadow-sm d-flex align-items-center gap-2" onclick="openModalTambah()">
             <i class="bi bi-plus-lg"></i> Tambah OPD Baru
         </button>
-    </div>
-
-    <!-- Alert Success / Error -->
-    @if(session('success'))
-        <div class="alert alert-success alert-dismissible fade show rounded-3 mb-4 shadow-sm" role="alert">
-            <i class="bi bi-check-circle-fill me-2"></i> {{ session('success') }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-    @endif
-
-    @if($errors->any())
-        <div class="alert alert-danger alert-dismissible fade show rounded-3 mb-4 shadow-sm" role="alert">
-            <ul class="mb-0 ps-3">
-                @foreach($errors->all() as $err)
-                    <li>{{ $err }}</li>
-                @endforeach
-            </ul>
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-    @endif
-
-    <!-- Card Toolbar Filter -->
+    </div>    <!-- Card Toolbar Filter -->
     <div class="card border-0 shadow-sm rounded-4 mb-4">
         <div class="card-body p-3">
             <form method="GET" action="{{ route('opd-sipat.index') }}">
@@ -112,7 +91,7 @@
                                     <button type="button" class="btn btn-outline-primary rounded-start-pill px-3" onclick="editOpd({{ json_encode($item) }})" title="Edit OPD">
                                         <i class="bi bi-pencil-square"></i> Edit
                                     </button>
-                                    <form action="{{ route('opd-sipat.destroy', $item->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Apakah Anda yakin ingin menghapus OPD ini?');">
+                                    <form action="{{ route('opd-sipat.destroy', $item->id) }}" method="POST" class="d-inline delete-confirm">
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit" class="btn btn-outline-danger rounded-end-pill px-2.5" title="Hapus OPD">

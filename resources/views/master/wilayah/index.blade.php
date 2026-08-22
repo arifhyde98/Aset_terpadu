@@ -7,27 +7,7 @@
             <h4 class="fw-bold mb-1">Master Data Wilayah & Pejabat</h4>
             <p class="text-secondary mb-0">Pengaturan terpadu data Kecamatan, Desa, Camat, Kades, Pemohon SKPT, dan Judul Laporan.</p>
         </div>
-    </div>
-
-    @if(session('success'))
-        <div class="alert alert-success alert-dismissible fade show">
-            {{ session('success') }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-    @endif
-    
-    @if($errors->any())
-        <div class="alert alert-danger alert-dismissible fade show">
-            <ul class="mb-0">
-                @foreach($errors->all() as $err)
-                    <li>{{ $err }}</li>
-                @endforeach
-            </ul>
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-    @endif
-
-    @php
+    </div>    @php
         $activeTab = session('active_tab', 'kecamatan');
     @endphp
 

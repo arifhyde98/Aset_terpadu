@@ -319,4 +319,237 @@ class AsetTanahService
             $data['opd'] = $opd->nama;
         }
     }
+
+    /**
+     * Menganalisis dan mendeteksi daftar aset tanah ganda/identik di database.
+     *
+     * @return array
+     */
+    public function getDuplicateAsetList(): array
+    {
+        $asets = AsetTanah::all();
+        $duplicates = [];
+
+        foreach ($asets as $a) {
+            $kode = $a->kode_aset;
+            if (!$kode) continue;
+
+            // 1. Deteksi jika kode_aset berakhir dengan (2), (3), dst.
+            if (preg_match('/^(.+?)\s*\(\d+\)$/', $kode, $matches)) {
+                $originalKode = trim($matches[1]);
+                $originalAset = AsetTanah::where('kode_aset', $originalKode)
+                    ->where('id_aset', '!=', $a->id_aset)
+                    ->first();
+
+                if ($originalAset) {
+                    $duplicates[] = [
+                        'duplicate_aset' => $a,
+                        'original_aset'  => $originalAset,
+                        'reason'         => "NIB terindikasi ganda hasil impor: \"{$kode}\" vs \"{$originalKode}\""
+                    ];
+                }
+            }
+        }
+
+        // 2. Deteksi duplikasi berdasarkan kode_aset yang dibersihkan sama persis secara global
+        $cleanCodes = [];
+        foreach ($asets as $a) {
+            $kode = $a->kode_aset;
+            if (!$kode || preg_match('/\(\d+\)$/', $kode)) continue;
+            
+            $clean = preg_replace('/[^a-zA-Z0-9]/', '', $kode);
+            if ($clean === '') continue;
+            
+            $cleanCodes[$clean][] = $a;
+        }
+
+        foreach ($cleanCodes as $clean => $list) {
+            if (count($list) > 1) {
+                $original = $list[0];
+                for ($i = 1; $i < count($list); $i++) {
+                    $dup = $list[$i];
+                    
+                    $alreadyAdded = collect($duplicates)->contains(function($item) use ($dup) {
+                        return $item['duplicate_aset']->id_aset === $dup->id_aset;
+                    });
+
+                    if (!$alreadyAdded) {
+                        $duplicates[] = [
+                            'duplicate_aset' => $dup,
+                            'original_aset'  => $original,
+                            'reason'         => "NIB identik ganda setelah dibersihkan: \"{$dup->kode_aset}\""
+                        ];
+                    }
+                }
+            }
+        }
+
+        return $duplicates;
+    }
+
+    /**
+     * Menganalisis dan mendeteksi daftar OPD/Dinas SIPAT yang terindikasi ganda atau mirip.
+     *
+     * @return array
+     */
+    public function getDuplicateOpdSipatList(): array
+    {
+        $opds = OpdSipat::all();
+        $duplicates = [];
+        $checked = [];
+
+        foreach ($opds as $opdA) {
+            if (in_array($opdA->id, $checked)) continue;
+
+            foreach ($opds as $opdB) {
+                if ($opdA->id === $opdB->id) continue;
+                if (in_array($opdB->id, $checked)) continue;
+
+                $nameA = strtoupper(trim($opdA->nama));
+                $nameB = strtoupper(trim($opdB->nama));
+
+                $cleanA = trim(str_replace(['DINAS', 'KANTOR', 'BADAN', 'KABUPATEN', 'KOTA', 'KAB', 'UPTD'], '', $nameA));
+                $cleanB = trim(str_replace(['DINAS', 'KANTOR', 'BADAN', 'KABUPATEN', 'KOTA', 'KAB', 'UPTD'], '', $nameB));
+
+                $isDuplicate = false;
+                $reason = "";
+
+                if ($nameA === $nameB) {
+                    $isDuplicate = true;
+                    $reason = "Nama OPD sama persis: \"{$opdA->nama}\"";
+                } elseif (!empty($cleanA) && !empty($cleanB) && strlen($cleanA) > 3 && ($cleanA === $cleanB)) {
+                    $isDuplicate = true;
+                    $reason = "Indikasi kemiripan nama instansi: \"{$opdA->nama}\" vs \"{$opdB->nama}\"";
+                }
+
+                if ($isDuplicate) {
+                    $countA = AsetTanah::where('opd_id', $opdA->id)->count();
+                    $countB = AsetTanah::where('opd_id', $opdB->id)->count();
+
+                    $duplicates[] = [
+                        'opd_a'   => $opdA,
+                        'opd_b'   => $opdB,
+                        'count_a' => $countA,
+                        'count_b' => $countB,
+                        'reason'  => $reason
+                    ];
+
+                    $checked[] = $opdB->id;
+                }
+            }
+            $checked[] = $opdA->id;
+        }
+
+        return $duplicates;
+    }
+
+    /**
+     * Menggabungkan data dari aset ganda ke aset asli (mengisi kolom kosong) lalu menghapus yang ganda.
+     *
+     * @param int $originalId
+     * @param int $duplicateId
+     * @return bool
+     */
+    public function mergeAset(int $originalId, int $duplicateId): bool
+    {
+        return DB::transaction(function () use ($originalId, $duplicateId) {
+            $original = AsetTanah::find($originalId);
+            $duplicate = AsetTanah::find($duplicateId);
+
+            if (!$original || !$duplicate) return false;
+
+            // 1. Pindahkan riwayat proses sertifikasi
+            ProsesAset::where('id_aset', $duplicateId)->update(['id_aset' => $originalId]);
+
+            // 2. Pindahkan surat SKPT
+            DB::table('surat_skpt')->where('aset_tanah_id', $duplicateId)->update(['aset_tanah_id' => $originalId]);
+
+            // 3. Pindahkan dokumen lampiran
+            DB::table('dokumen_aset')->where('id_aset', $duplicateId)->update(['id_aset' => $originalId]);
+
+            // 4. Pindahkan pengamanan fisik
+            $originalPengamanan = DB::table('pengamanan_fisik')->where('id_aset', $originalId)->first();
+            $duplicatePengamanan = DB::table('pengamanan_fisik')->where('id_aset', $duplicateId)->first();
+            if (!$originalPengamanan && $duplicatePengamanan) {
+                DB::table('pengamanan_fisik')->where('id_aset', $duplicateId)->update(['id_aset' => $originalId]);
+            } else {
+                DB::table('pengamanan_fisik')->where('id_aset', $duplicateId)->delete();
+            }
+
+            // 5. Salin atribut kosong pada data asli dari data ganda
+            $fields = [
+                'kode_aset', 'nama_aset', 'peruntukan', 'luas', 'alamat', 'lat', 'lng', 
+                'opd_id', 'opd', 'dasar_perolehan', 'harga_perolehan', 'tanggal_perolehan', 'keterangan'
+            ];
+
+            $updated = false;
+            foreach ($fields as $field) {
+                if (empty($original->{$field}) && !empty($duplicate->{$field})) {
+                    $original->{$field} = $duplicate->{$field};
+                    $updated = true;
+                }
+            }
+
+            if ($updated) {
+                $original->save();
+            }
+
+            // 6. Hapus data ganda
+            $duplicate->delete();
+
+            $this->sipatService->invalidateDashboardCache();
+
+            return true;
+        });
+    }
+
+    /**
+     * Menggabungkan OPD duplikat SIPAT.
+     *
+     * @param int $targetId
+     * @param int $sourceId
+     * @return bool
+     */
+    public function mergeOpdSipat(int $targetId, int $sourceId): bool
+    {
+        return DB::transaction(function () use ($targetId, $sourceId) {
+            $target = OpdSipat::find($targetId);
+            $source = OpdSipat::find($sourceId);
+
+            if (!$target || !$source) return false;
+
+            // 1. Pindahkan seluruh aset tanah ke OPD target
+            AsetTanah::where('opd_id', $sourceId)->update([
+                'opd_id' => $targetId,
+                'opd'    => $target->nama
+            ]);
+
+            // 2. Perbarui mapping OPD
+            DB::table('opd_mappings')->where('sipat_opd_id', $sourceId)->update([
+                'sipat_opd_id' => $targetId
+            ]);
+
+            // 3. Pindahkan dokumen BPKB/Sertifikat di eLABEL
+            if (Schema::hasTable('elabel_bpkb')) {
+                DB::table('elabel_bpkb')->where('sipat_opd_id', $sourceId)->update(['sipat_opd_id' => $targetId]);
+            }
+            if (Schema::hasTable('elabel_sertifikat_tanah')) {
+                DB::table('elabel_sertifikat_tanah')->where('sipat_opd_id', $sourceId)->update(['sipat_opd_id' => $targetId]);
+            }
+            if (Schema::hasTable('elabel_surat_penyerahan')) {
+                DB::table('elabel_surat_penyerahan')->where('sipat_opd_id', $sourceId)->update(['sipat_opd_id' => $targetId]);
+            }
+            if (Schema::hasTable('elabel_loans')) {
+                DB::table('elabel_loans')->where('sipat_opd_id', $sourceId)->update(['sipat_opd_id' => $targetId]);
+            }
+
+            // 4. Hapus OPD sumber
+            $source->delete();
+
+            $this->sipatService->invalidateDashboardCache();
+
+            return true;
+        });
+    }
 }
+

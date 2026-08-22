@@ -12,24 +12,6 @@
         </button>
     </div>
 
-    @if(session('success'))
-        <div class="alert alert-success alert-dismissible fade show">
-            {{ session('success') }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-    @endif
-    
-    @if($errors->any())
-        <div class="alert alert-danger alert-dismissible fade show">
-            <ul class="mb-0">
-                @foreach($errors->all() as $err)
-                    <li>{{ $err }}</li>
-                @endforeach
-            </ul>
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-    @endif
-
     <div class="card border-0 shadow-sm clean-card">
         <div class="table-responsive">
             <table class="table table-hover align-middle mb-0">
@@ -47,7 +29,7 @@
                             <td class="fw-medium">{{ $row->nama }}</td>
                             <td class="text-end pe-4">
                                 <button class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#modalEdit{{ $row->id_kecamatan }}">Edit</button>
-                                <form action="{{ route('master.kecamatan.destroy', $row->id_kecamatan) }}" method="POST" class="d-inline" onsubmit="return confirm('Hapus kecamatan ini?')">
+                                <form action="{{ route('master.kecamatan.destroy', $row->id_kecamatan) }}" method="POST" class="d-inline delete-confirm">
                                     @csrf @method('DELETE')
                                     <button class="btn btn-sm btn-outline-danger">Hapus</button>
                                 </form>

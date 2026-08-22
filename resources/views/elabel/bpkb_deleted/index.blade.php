@@ -26,21 +26,6 @@
             </a>
         </div>
     </div>
-
-    @if(session('success'))
-        <div class="alert alert-success alert-dismissible fade show border-0 shadow-sm mb-4" role="alert">
-            <i class="bi bi-check-circle-fill me-2"></i> {{ session('success') }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-    @endif
-
-    @if(session('error'))
-        <div class="alert alert-danger alert-dismissible fade show border-0 shadow-sm mb-4" role="alert">
-            <i class="bi bi-exclamation-triangle-fill me-2"></i> {{ session('error') }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-    @endif
-
     <!-- TABLE CARD -->
     <div class="card border-0 shadow-sm rounded-4">
         <div class="card-header bg-white border-0 py-3 px-4">
@@ -124,7 +109,7 @@
                                         </button>
                                     </form>
 
-                                    <form action="{{ route('elabel.bpkb-deleted.destroy', $item->id) }}" method="POST" class="d-inline" onclick="return confirm('Hapus permanen riwayat BPKB keluar ini?')">
+                                    <form action="{{ route('elabel.bpkb-deleted.destroy', $item->id) }}" method="POST" class="d-inline delete-confirm">
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit" class="btn btn-sm btn-light border text-danger" title="Hapus Permanen">

@@ -11,6 +11,12 @@ Route::prefix('sipat')->name('sipat.')->group(function () {
         Route::get('/create', [\App\Http\Controllers\Sipat\AsetTanahController::class, 'create'])->name('create');
         Route::post('/', [\App\Http\Controllers\Sipat\AsetTanahController::class, 'store'])->name('store');
         Route::post('/bulk-proses', [\App\Http\Controllers\Sipat\AsetTanahController::class, 'bulkStoreProses'])->name('bulkProses');
+        
+        // Diagnosis & Resolusi Duplikasi SIPAT
+        Route::get('/check-duplicates', [\App\Http\Controllers\Sipat\AsetTanahController::class, 'checkDuplicates'])->name('check-duplicates');
+        Route::post('/resolve-duplicate-aset', [\App\Http\Controllers\Sipat\AsetTanahController::class, 'resolveDuplicateAset'])->name('resolve-duplicate-aset');
+        Route::post('/resolve-duplicate-opd', [\App\Http\Controllers\Sipat\AsetTanahController::class, 'resolveDuplicateOpdSipat'])->name('resolve-duplicate-opd');
+
         Route::get('/{aset}', [\App\Http\Controllers\Sipat\AsetTanahController::class, 'show'])->name('show');
         Route::get('/{aset}/modal', [\App\Http\Controllers\Sipat\AsetTanahController::class, 'modal'])->name('modal');
         Route::get('/{aset}/edit', [\App\Http\Controllers\Sipat\AsetTanahController::class, 'edit'])->name('edit');

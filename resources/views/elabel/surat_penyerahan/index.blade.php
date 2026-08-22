@@ -25,21 +25,6 @@
             </a>
         </div>
     </div>
-
-    @if(session('success'))
-        <div class="alert alert-success alert-dismissible fade show border-0 shadow-sm mb-4" role="alert">
-            <i class="bi bi-check-circle-fill me-2"></i> {{ session('success') }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-    @endif
-
-    @if(session('error'))
-        <div class="alert alert-danger alert-dismissible fade show border-0 shadow-sm mb-4" role="alert">
-            <i class="bi bi-exclamation-triangle-fill me-2"></i> {{ session('error') }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-    @endif
-
     <div class="card border-0 shadow-sm rounded-4">
         <div class="card-header bg-white border-0 py-3 px-4">
             <form action="{{ route('elabel.surat-penyerahan.index') }}" method="GET" class="row g-2 align-items-center">
@@ -108,7 +93,7 @@
                                     <a href="{{ route('elabel.surat-penyerahan.edit', $item->id) }}" class="btn btn-sm btn-light border text-primary" title="Edit">
                                         <i class="bi bi-pencil-square"></i>
                                     </a>
-                                    <form action="{{ route('elabel.surat-penyerahan.destroy', $item->id) }}" method="POST" class="d-inline" onclick="return confirm('Hapus surat penyerahan {{ $item->no_surat }}?')">
+                                    <form action="{{ route('elabel.surat-penyerahan.destroy', $item->id) }}" method="POST" class="d-inline delete-confirm">
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit" class="btn btn-sm btn-light border text-danger" title="Hapus">

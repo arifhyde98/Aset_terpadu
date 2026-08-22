@@ -17,6 +17,11 @@
             <h4 class="fw-bold text-navy mb-0">Dashboard Manajemen Arsip (eLABEL)</h4>
         </div>
         <div class="action-toolbar d-flex flex-wrap gap-2">
+            @if(in_array(auth()->user()->role->value, ['superadmin', 'admin']))
+                <button type="button" class="btn btn-outline-warning shadow-sm fw-medium d-flex align-items-center gap-2" id="btnCheckDuplicates">
+                    <i class="bi bi-exclamation-triangle"></i> Diagnosis Duplikasi
+                </button>
+            @endif
             <a href="{{ route('elabel.bpkb.index') }}" class="btn btn-primary shadow-sm fw-medium d-flex align-items-center gap-2">
                 <i class="bi bi-card-heading"></i> Katalog BPKB
             </a>
@@ -28,21 +33,6 @@
             </a>
         </div>
     </div>
-
-    @if(session('success'))
-        <div class="alert alert-success alert-dismissible fade show border-0 shadow-sm mb-4" role="alert">
-            <i class="bi bi-check-circle-fill me-2"></i> {{ session('success') }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-    @endif
-
-    @if(session('error'))
-        <div class="alert alert-danger alert-dismissible fade show border-0 shadow-sm mb-4" role="alert">
-            <i class="bi bi-exclamation-triangle-fill me-2"></i> {{ session('error') }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-    @endif
-
     <!-- TOP STAT CARDS -->
     <div class="row g-3 mb-4">
         <div class="col-sm-6 col-xl-3">
@@ -236,4 +226,428 @@
     </div>
 
 </div>
+
+@if(in_array(auth()->user()->role->value, ['superadmin', 'admin']))
+@push('modals')
+<!-- DIAGNOSIS DUPLICATES MODAL (eLABEL) -->
+<x-modal id="diagnosisDuplicatesModal" title="Diagnosis & Bersihkan Arsip Ganda eLABEL" size="xl">
+    <div class="modal-body p-4 bg-light">
+        <!-- Tab Navigation -->
+        <ul class="nav nav-tabs nav-fill mb-4 border-bottom" id="duplicateTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active fw-bold text-navy py-3 d-flex align-items-center justify-content-center gap-2" id="bpkbs-tab" data-bs-toggle="tab" data-bs-target="#bpkbs-pane" type="button" role="tab" aria-controls="bpkbs-pane" aria-selected="true">
+                    <i class="bi bi-card-heading fs-5 text-warning"></i>
+                    <span>Arsip BPKB Ganda (<span id="bpkb-dup-count">0</span>)</span>
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link fw-bold text-navy py-3 d-flex align-items-center justify-content-center gap-2" id="sertifikats-tab" data-bs-toggle="tab" data-bs-target="#sertifikats-pane" type="button" role="tab" aria-controls="sertifikats-pane" aria-selected="false">
+                    <i class="bi bi-patch-check-fill fs-5 text-success"></i>
+                    <span>Arsip Sertifikat Ganda (<span id="sert-dup-count">0</span>)</span>
+                </button>
+            </li>
+        </ul>
+
+        <!-- Tab Content -->
+        <div class="tab-content" id="duplicateTabsContent">
+            
+            <!-- PANE 1: BPKB DUPLICATES -->
+            <div class="tab-pane fade show active" id="bpkbs-pane" role="tabpanel" aria-labelledby="bpkbs-tab" tabindex="0">
+                <div class="alert alert-warning border-0 bg-warning bg-opacity-10 text-navy d-flex align-items-center mb-4 rounded-3 shadow-none">
+                    <div class="fs-4 me-3 text-warning"><i class="bi bi-info-circle-fill"></i></div>
+                    <div>
+                        <h6 class="alert-heading fw-bold mb-1" style="font-size: 0.9rem;">Instruksi Pembersihan Arsip BPKB</h6>
+                        <p class="mb-0 small text-secondary">
+                            Berkas BPKB terdeteksi memiliki nomor BPKB ganda/identik.
+                            <br>1. <strong>Gabungkan Data</strong>: Lengkapi atribut kosong pada record utama, pindahkan riwayat request scan/peminjaman, lalu hapus berkas ganda.
+                            <br>2. <strong>Hapus Duplikat</strong>: Hapus record ganda langsung dari database.
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="table-responsive border rounded-3 bg-white shadow-sm" style="max-height: 400px; overflow-y: auto;">
+                    <table class="table table-hover table-striped mb-0 align-middle">
+                        <thead class="table-navy text-white text-uppercase" style="font-size: 0.75rem; letter-spacing: 0.5px; position: sticky; top: 0; z-index: 2;">
+                            <tr>
+                                <th class="px-3 py-3" style="width: 25%;">Data Ganda (Hasil Impor)</th>
+                                <th class="px-3 py-3" style="width: 25%;">Data Induk (Asli)</th>
+                                <th class="px-3 py-3" style="width: 30%;">Indikasi</th>
+                                <th class="px-3 py-3 text-center" style="width: 20%;">Aksi Resolusi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="bpkb-dup-list">
+                            <tr>
+                                <td colspan="4" class="text-center py-5 text-secondary">
+                                    <div class="spinner-border text-warning mb-2" role="status"></div>
+                                    <div class="small fw-medium">Sedang memindai duplikasi BPKB...</div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- PANE 2: SERTIFIKAT DUPLICATES -->
+            <div class="tab-pane fade" id="sertifikats-pane" role="tabpanel" aria-labelledby="sertifikats-tab" tabindex="0">
+                <div class="alert alert-success border-0 bg-success bg-opacity-10 text-navy d-flex align-items-center mb-4 rounded-3 shadow-none">
+                    <div class="fs-4 me-3 text-success"><i class="bi bi-info-circle-fill"></i></div>
+                    <div>
+                        <h6 class="alert-heading fw-bold mb-1" style="font-size: 0.9rem;">Instruksi Pembersihan Arsip Sertifikat</h6>
+                        <p class="mb-0 small text-secondary">
+                            Arsip sertifikat tanah terdeteksi memiliki nomor sertipikat yang sama persis.
+                            <br>Penggabungan akan menyalin data atribut yang kosong ke record induk dan menghapus record duplikat yang kosong secara aman.
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="table-responsive border rounded-3 bg-white shadow-sm" style="max-height: 400px; overflow-y: auto;">
+                    <table class="table table-hover table-striped mb-0 align-middle">
+                        <thead class="table-navy text-white text-uppercase" style="font-size: 0.75rem; letter-spacing: 0.5px; position: sticky; top: 0; z-index: 2;">
+                            <tr>
+                                <th class="px-3 py-3" style="width: 25%;">Data Ganda (Baru)</th>
+                                <th class="px-3 py-3" style="width: 25%;">Data Induk (Asli)</th>
+                                <th class="px-3 py-3" style="width: 30%;">Indikasi</th>
+                                <th class="px-3 py-3 text-center" style="width: 20%;">Aksi Resolusi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="sert-dup-list">
+                            <tr>
+                                <td colspan="4" class="text-center py-5 text-secondary">
+                                    <div class="spinner-border text-success mb-2" role="status"></div>
+                                    <div class="small fw-medium">Sedang memindai duplikasi Sertifikat...</div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+    </div>
+    <div class="modal-footer border-top bg-light px-4 py-3 rounded-bottom-4">
+        <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">Tutup</button>
+    </div>
+</x-modal>
+@endpush
+
+@push('scripts')
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const btnCheckDuplicates = document.getElementById('btnCheckDuplicates');
+        let diagnosisModal = null;
+
+        if (document.getElementById('diagnosisDuplicatesModal')) {
+            diagnosisModal = new bootstrap.Modal(document.getElementById('diagnosisDuplicatesModal'));
+        }
+
+        if (btnCheckDuplicates && diagnosisModal) {
+            btnCheckDuplicates.addEventListener('click', function() {
+                document.getElementById('bpkb-dup-list').innerHTML = `
+                    <tr>
+                        <td colspan="4" class="text-center py-5 text-secondary">
+                            <div class="spinner-border text-warning mb-2" role="status"></div>
+                            <div class="small fw-medium">Memindai duplikasi arsip BPKB...</div>
+                        </td>
+                    </tr>
+                `;
+                document.getElementById('sert-dup-list').innerHTML = `
+                    <tr>
+                        <td colspan="4" class="text-center py-5 text-secondary">
+                            <div class="spinner-border text-success mb-2" role="status"></div>
+                            <div class="small fw-medium">Memindai duplikasi arsip Sertifikat Tanah...</div>
+                        </td>
+                    </tr>
+                `;
+                document.getElementById('bpkb-dup-count').textContent = '0';
+                document.getElementById('sert-dup-count').textContent = '0';
+
+                diagnosisModal.show();
+
+                fetch("{{ route('elabel.check-duplicates') }}", {
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json'
+                    }
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        renderDuplicateBpkbs(data.bpkbs);
+                        renderDuplicateSertifikats(data.sertifikats);
+                    } else {
+                        Swal.fire('Error', data.message || 'Gagal memindai duplikasi.', 'error');
+                        diagnosisModal.hide();
+                    }
+                })
+                .catch(err => {
+                    console.error(err);
+                    Swal.fire('Error', 'Gagal terhubung ke database.', 'error');
+                    diagnosisModal.hide();
+                });
+            });
+        }
+
+        function renderDuplicateBpkbs(bpkbs) {
+            const container = document.getElementById('bpkb-dup-list');
+            document.getElementById('bpkb-dup-count').textContent = bpkbs.length;
+
+            if (bpkbs.length === 0) {
+                container.innerHTML = `
+                    <tr>
+                        <td colspan="4" class="text-center py-5 text-success">
+                            <i class="bi bi-patch-check-fill fs-1 text-success d-block mb-2"></i>
+                            <h6 class="fw-bold mb-1">Database Bersih!</h6>
+                            <p class="mb-0 small text-secondary">Tidak terdeteksi adanya nomor BPKB ganda di sistem.</p>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            let html = '';
+            bpkbs.forEach(item => {
+                let diffHtml = '';
+                item.differences.forEach(d => {
+                    const rowClass = d.is_different ? 'table-danger bg-danger bg-opacity-10' : '';
+                    diffHtml += `
+                        <tr class="${rowClass}">
+                            <td class="fw-bold py-2 px-3">${escapeHtml(d.label)}</td>
+                            <td class="text-secondary py-2 px-3">${escapeHtml(d.original_val)}</td>
+                            <td class="text-dark fw-bold py-2 px-3">${escapeHtml(d.duplicate_val)}</td>
+                        </tr>
+                    `;
+                });
+
+                html += `
+                    <tr class="align-middle" id="bpkb-dup-row-${item.duplicate_id}">
+                        <td colspan="4" class="p-0">
+                            <div class="d-flex align-items-center justify-content-between p-3 bg-white border-bottom gap-3">
+                                <div>
+                                    <div class="fw-bold text-navy">BPKB: ${escapeHtml(item.duplicate_code)}</div>
+                                    <span class="badge bg-secondary-subtle text-dark-emphasis small">Plat: ${escapeHtml(item.duplicate_nama)}</span>
+                                </div>
+                                <div class="text-secondary small">
+                                    <i class="bi bi-exclamation-triangle-fill text-warning me-1"></i> ${escapeHtml(item.reason)}
+                                </div>
+                                <div class="d-flex align-items-center gap-2">
+                                    <button type="button" class="btn btn-sm btn-outline-success fw-bold btn-resolve-bpkb" data-action="merge" data-original-id="${item.original_id}" data-duplicate-id="${item.duplicate_id}">
+                                        <i class="bi bi-intersect"></i> Gabungkan
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-danger fw-bold btn-resolve-bpkb" data-action="delete" data-original-id="${item.original_id}" data-duplicate-id="${item.duplicate_id}">
+                                        <i class="bi bi-trash3"></i> Hapus
+                                    </button>
+                                    <button class="btn btn-sm btn-light border" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-bpkb-diff-${item.duplicate_id}">
+                                        Bandingkan
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="collapse bg-light p-3 border-bottom" id="collapse-bpkb-diff-${item.duplicate_id}">
+                                <table class="table table-bordered table-sm mb-0 bg-white">
+                                    <thead>
+                                        <tr class="table-secondary">
+                                            <th>Atribut</th>
+                                            <th>Induk</th>
+                                            <th>Ganda</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        ${diffHtml}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
+            container.innerHTML = html;
+            attachBpkbEvents();
+        }
+
+        function renderDuplicateSertifikats(serts) {
+            const container = document.getElementById('sert-dup-list');
+            document.getElementById('sert-dup-count').textContent = serts.length;
+
+            if (serts.length === 0) {
+                container.innerHTML = `
+                    <tr>
+                        <td colspan="4" class="text-center py-5 text-success">
+                            <i class="bi bi-patch-check-fill fs-1 text-success d-block mb-2"></i>
+                            <h6 class="fw-bold mb-1">Database Bersih!</h6>
+                            <p class="mb-0 small text-secondary">Tidak terdeteksi adanya nomor sertifikat ganda.</p>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            let html = '';
+            serts.forEach(item => {
+                let diffHtml = '';
+                item.differences.forEach(d => {
+                    const rowClass = d.is_different ? 'table-danger bg-danger bg-opacity-10' : '';
+                    diffHtml += `
+                        <tr class="${rowClass}">
+                            <td class="fw-bold py-2 px-3">${escapeHtml(d.label)}</td>
+                            <td class="text-secondary py-2 px-3">${escapeHtml(d.original_val)}</td>
+                            <td class="text-dark fw-bold py-2 px-3">${escapeHtml(d.duplicate_val)}</td>
+                        </tr>
+                    `;
+                });
+
+                html += `
+                    <tr class="align-middle" id="sert-dup-row-${item.duplicate_id}">
+                        <td colspan="4" class="p-0">
+                            <div class="d-flex align-items-center justify-content-between p-3 bg-white border-bottom gap-3">
+                                <div>
+                                    <div class="fw-bold text-navy">Sertifikat: ${escapeHtml(item.duplicate_code)}</div>
+                                    <span class="badge bg-secondary-subtle text-dark-emphasis small">Pemilik: ${escapeHtml(item.duplicate_nama)}</span>
+                                </div>
+                                <div class="text-secondary small">
+                                    <i class="bi bi-exclamation-triangle-fill text-warning me-1"></i> ${escapeHtml(item.reason)}
+                                </div>
+                                <div class="d-flex align-items-center gap-2">
+                                    <button type="button" class="btn btn-sm btn-outline-success fw-bold btn-resolve-sert" data-action="merge" data-original-id="${item.original_id}" data-duplicate-id="${item.duplicate_id}">
+                                        <i class="bi bi-intersect"></i> Gabungkan
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-danger fw-bold btn-resolve-sert" data-action="delete" data-original-id="${item.original_id}" data-duplicate-id="${item.duplicate_id}">
+                                        <i class="bi bi-trash3"></i> Hapus
+                                    </button>
+                                    <button class="btn btn-sm btn-light border" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-sert-diff-${item.duplicate_id}">
+                                        Bandingkan
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="collapse bg-light p-3 border-bottom" id="collapse-sert-diff-${item.duplicate_id}">
+                                <table class="table table-bordered table-sm mb-0 bg-white">
+                                    <thead>
+                                        <tr class="table-secondary">
+                                            <th>Atribut</th>
+                                            <th>Induk</th>
+                                            <th>Ganda</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        ${diffHtml}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
+            container.innerHTML = html;
+            attachSertEvents();
+        }
+
+        function attachBpkbEvents() {
+            document.querySelectorAll('.btn-resolve-bpkb').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const action = this.getAttribute('data-action');
+                    const originalId = this.getAttribute('data-original-id');
+                    const duplicateId = this.getAttribute('data-duplicate-id');
+                    const btnEl = this;
+
+                    Swal.fire({
+                        title: action === 'merge' ? 'Gabungkan Berkas BPKB?' : 'Hapus Berkas Duplikat BPKB?',
+                        text: action === 'merge' ? 'Seluruh riwayat permohonan scan/loan akan dipindahkan ke berkas utama.' : 'Data duplikat akan dihapus selamanya dari database.',
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: action === 'merge' ? '#198754' : '#dc3545',
+                        confirmButtonText: 'Ya, Eksekusi!',
+                        cancelButtonText: 'Batal'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            fetch("{{ route('elabel.resolve-duplicate-bpkb') }}", {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                    'X-Requested-With': 'XMLHttpRequest'
+                                },
+                                body: JSON.stringify({ original_id: originalId, duplicate_id: duplicateId, action: action })
+                            })
+                            .then(res => res.json())
+                            .then(data => {
+                                if (data.success) {
+                                    Swal.fire('Sukses', data.message, 'success');
+                                    const row = document.getElementById(`bpkb-dup-row-${duplicateId}`);
+                                    if (row) row.remove();
+                                    
+                                    const countEl = document.getElementById('bpkb-dup-count');
+                                    const newCount = Math.max(0, parseInt(countEl.textContent) - 1);
+                                    countEl.textContent = newCount;
+                                    if (newCount === 0) renderDuplicateBpkbs([]);
+                                } else {
+                                    Swal.fire('Gagal', data.message, 'error');
+                                }
+                            });
+                        }
+                    });
+                });
+            });
+        }
+
+        function attachSertEvents() {
+            document.querySelectorAll('.btn-resolve-sert').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const action = this.getAttribute('data-action');
+                    const originalId = this.getAttribute('data-original-id');
+                    const duplicateId = this.getAttribute('data-duplicate-id');
+                    const btnEl = this;
+
+                    Swal.fire({
+                        title: action === 'merge' ? 'Gabungkan Berkas Sertifikat?' : 'Hapus Berkas Duplikat Sertifikat?',
+                        text: action === 'merge' ? 'Atribut kosong pada record utama akan dilengkapi.' : 'Data duplikat akan dihapus selamanya dari database.',
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: action === 'merge' ? '#198754' : '#dc3545',
+                        confirmButtonText: 'Ya, Eksekusi!',
+                        cancelButtonText: 'Batal'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            fetch("{{ route('elabel.resolve-duplicate-sertifikat') }}", {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                    'X-Requested-With': 'XMLHttpRequest'
+                                },
+                                body: JSON.stringify({ original_id: originalId, duplicate_id: duplicateId, action: action })
+                            })
+                            .then(res => res.json())
+                            .then(data => {
+                                if (data.success) {
+                                    Swal.fire('Sukses', data.message, 'success');
+                                    const row = document.getElementById(`sert-dup-row-${duplicateId}`);
+                                    if (row) row.remove();
+                                    
+                                    const countEl = document.getElementById('sert-dup-count');
+                                    const newCount = Math.max(0, parseInt(countEl.textContent) - 1);
+                                    countEl.textContent = newCount;
+                                    if (newCount === 0) renderDuplicateSertifikats([]);
+                                } else {
+                                    Swal.fire('Gagal', data.message, 'error');
+                                }
+                            });
+                        }
+                    });
+                });
+            });
+        }
+
+        function escapeHtml(text) {
+            if (text === null || text === undefined) return '';
+            const map = {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#039;'
+            };
+            return String(text).replace(/[&<>'"]/g, function(m) { return map[m]; });
+        }
+    });
+</script>
+@endpush
+@endif
 @endsection

@@ -6,33 +6,7 @@
         <h1 class="h4 fw-semibold mb-1">Generate Surat Tanah - SKPT</h1>
         <small class="text-secondary">Isi data pemohon dan detail tanah, lalu simpan untuk preview.</small>
     </div>
-</div>
-
-@if(session('success'))
-    <div class="alert alert-success alert-dismissible fade show rounded-3 mb-4" role="alert">
-        {{ session('success') }}
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>
-@endif
-
-@if(session('error'))
-    <div class="alert alert-danger alert-dismissible fade show rounded-3 mb-4" role="alert">
-        {{ session('error') }}
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>
-@endif
-
-@if($errors->any())
-    <div class="alert alert-danger rounded-3 mb-4" role="alert">
-        <ul class="mb-0">
-            @foreach($errors->all() as $error)
-                <li>{{ $error }}</li>
-            @endforeach
-        </ul>
-    </div>
-@endif
-
-<div class="row g-3">
+</div><div class="row g-3">
     <div class="col-lg-7">
         <div class="card clean-card border-0 mb-3">
             <div class="card-body">

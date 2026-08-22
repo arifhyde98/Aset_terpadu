@@ -47,14 +47,6 @@
 </style>
 
 <div class="container-fluid px-0">
-    <!-- Flash Messages -->
-    @if(session('success'))
-        <div class="alert alert-success alert-dismissible fade show rounded-3 mb-4" role="alert">
-            <i class="bi bi-check-circle-fill me-2"></i> {{ session('success') }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-    @endif
-
     <!-- Page Header Bar -->
     <div class="d-flex justify-content-between align-items-start flex-wrap gap-3 mb-4">
         <div>
@@ -80,6 +72,12 @@
                     <li><a class="dropdown-item py-2" href="{{ route('sipat.aset.index') }}?export=csv"><i class="bi bi-file-earmark-spreadsheet text-success me-2"></i> Download Data CSV</a></li>
                 </ul>
             </div>
+
+            @if(in_array(auth()->user()->role->value, ['superadmin', 'admin']))
+                <button type="button" class="btn btn-outline-warning d-flex align-items-center gap-2 rounded-3" id="btnCheckDuplicates">
+                    <i class="bi bi-exclamation-triangle"></i> Diagnosis Ganda
+                </button>
+            @endif
 
             <a href="{{ route('sipat.aset.create') }}" class="btn btn-primary d-flex align-items-center gap-2 rounded-3">
                 <i class="bi bi-plus-lg"></i> Tambah Aset Tanah
@@ -253,7 +251,7 @@
                                     <a href="{{ route('sipat.aset.edit', $item->id_aset) }}" class="btn btn-outline-secondary" data-bs-toggle="tooltip" title="Edit Aset">
                                         <i class="bi bi-pencil-square"></i>
                                     </a>
-                                    <form action="{{ route('sipat.aset.destroy', $item->id_aset) }}" method="POST" class="d-inline delete-confirm" onsubmit="return confirm('Apakah Anda yakin ingin menghapus aset ini?')">
+                                    <form action="{{ route('sipat.aset.destroy', $item->id_aset) }}" method="POST" class="d-inline delete-confirm">
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit" class="btn btn-outline-danger" data-bs-toggle="tooltip" title="Hapus Aset">
@@ -373,6 +371,108 @@
         </div>
     </div>
 </div>
+
+@if(in_array(auth()->user()->role->value, ['superadmin', 'admin']))
+<!-- DIAGNOSIS DUPLICATES MODAL -->
+<x-modal id="diagnosisDuplicatesModal" title="Diagnosis & Bersihkan Data Ganda SIPAT" size="xl">
+    <div class="modal-body p-4 bg-light">
+        <!-- Tab Navigation -->
+        <ul class="nav nav-tabs nav-fill mb-4 border-bottom" id="duplicateTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active fw-bold text-navy py-3 d-flex align-items-center justify-content-center gap-2" id="asets-tab" data-bs-toggle="tab" data-bs-target="#asets-pane" type="button" role="tab" aria-controls="asets-pane" aria-selected="true">
+                    <i class="bi bi-geo-alt-fill fs-5 text-warning"></i>
+                    <span>Aset Tanah Ganda / Identik (<span id="aset-dup-count">0</span>)</span>
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link fw-bold text-navy py-3 d-flex align-items-center justify-content-center gap-2" id="opds-tab" data-bs-toggle="tab" data-bs-target="#opds-pane" type="button" role="tab" aria-controls="opds-pane" aria-selected="false">
+                    <i class="bi bi-building-fill fs-5 text-info"></i>
+                    <span>OPD Pertanahan Ganda & Mirip (<span id="opd-dup-count">0</span>)</span>
+                </button>
+            </li>
+        </ul>
+
+        <!-- Tab Content -->
+        <div class="tab-content" id="duplicateTabsContent">
+            
+            <!-- PANE 1: ASET DUPLICATES -->
+            <div class="tab-pane fade show active" id="asets-pane" role="tabpanel" aria-labelledby="asets-tab" tabindex="0">
+                <div class="alert alert-warning border-0 bg-warning bg-opacity-10 text-navy d-flex align-items-center mb-4 rounded-3 shadow-none">
+                    <div class="fs-4 me-3 text-warning"><i class="bi bi-info-circle-fill"></i></div>
+                    <div>
+                        <h6 class="alert-heading fw-bold mb-1" style="font-size: 0.9rem;">Instruksi Pembersihan Aset Tanah</h6>
+                        <p class="mb-0 small text-secondary">
+                            Aset terdeteksi ganda berdasarkan NIB atau nama. Anda dapat:
+                            <br>1. <strong>Gabungkan Data</strong>: Menyalin kelengkapan data kosong dari baris ganda ke baris asli, memindahkan riwayat proses sertifikasi, surat SKPT, dokumen lampiran, dan pengamanan fisik, lalu menghapus baris ganda.
+                            <br>2. <strong>Hapus Duplikat</strong>: Menghapus baris ganda secara langsung.
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="table-responsive border rounded-3 bg-white shadow-sm" style="max-height: 400px; overflow-y: auto;">
+                    <table class="table table-hover table-striped mb-0 align-middle">
+                        <thead class="table-navy text-white text-uppercase" style="font-size: 0.75rem; letter-spacing: 0.5px; position: sticky; top: 0; z-index: 2;">
+                            <tr>
+                                <th class="px-3 py-3" style="width: 25%;">Data Ganda (Hasil Impor/Baru)</th>
+                                <th class="px-3 py-3" style="width: 25%;">Data Induk (Asli/Lama)</th>
+                                <th class="px-3 py-3" style="width: 30%;">Indikasi Duplikasi</th>
+                                <th class="px-3 py-3 text-center" style="width: 20%;">Aksi Resolusi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="aset-dup-list">
+                            <tr>
+                                <td colspan="4" class="text-center py-5 text-secondary">
+                                    <div class="spinner-border text-warning mb-2" role="status"></div>
+                                    <div class="small fw-medium">Sedang memindai duplikasi aset...</div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- PANE 2: OPD DUPLICATES -->
+            <div class="tab-pane fade" id="opds-pane" role="tabpanel" aria-labelledby="opds-tab" tabindex="0">
+                <div class="alert alert-info border-0 bg-info bg-opacity-10 text-navy d-flex align-items-center mb-4 rounded-3 shadow-none">
+                    <div class="fs-4 me-3 text-info"><i class="bi bi-info-circle-fill"></i></div>
+                    <div>
+                        <h6 class="alert-heading fw-bold mb-1" style="font-size: 0.9rem;">Instruksi Konsolidasi OPD Pertanahan</h6>
+                        <p class="mb-0 small text-secondary">
+                            OPD terdeteksi mirip berdasarkan analisis teks.
+                            <br>Menekan tombol <strong>Gabungkan Instansi</strong> akan **memindahkan seluruh data aset tanah** dari OPD duplikat (OPD B) ke OPD utama (OPD A), memperbarui pemetaan OPD, memindahkan berkas eLABEL terkait, lalu menghapus OPD duplikat kosong secara bersih.
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="table-responsive border rounded-3 bg-white shadow-sm" style="max-height: 400px; overflow-y: auto;">
+                    <table class="table table-hover table-striped mb-0 align-middle">
+                        <thead class="table-navy text-white text-uppercase" style="font-size: 0.75rem; letter-spacing: 0.5px; position: sticky; top: 0; z-index: 2;">
+                            <tr>
+                                <th class="px-3 py-3" style="width: 35%;">OPD Utama (Dipertahankan)</th>
+                                <th class="px-3 py-3" style="width: 35%;">OPD Duplikat (Akan Dihapus)</th>
+                                <th class="px-3 py-3" style="width: 15%;">Indikasi</th>
+                                <th class="px-3 py-3 text-center" style="width: 15%;">Aksi Konsolidasi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="opd-dup-list">
+                            <tr>
+                                <td colspan="4" class="text-center py-5 text-secondary">
+                                    <div class="spinner-border text-info mb-2" role="status"></div>
+                                    <div class="small fw-medium">Sedang memindai duplikasi OPD...</div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+    </div>
+    <div class="modal-footer border-top bg-light px-4 py-3 rounded-bottom-4">
+        <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">Tutup</button>
+    </div>
+</x-modal>
+@endif
 @endpush
 
 @push('scripts')
@@ -429,7 +529,406 @@
                 updateBulkBar();
             });
         }
+
+        // ==========================================
+        // MAGIC BUTTON: DIAGNOSIS DUPLIKASI DATA SIPAT
+        // ==========================================
+        const btnCheckDuplicates = document.getElementById('btnCheckDuplicates');
+        let diagnosisModal = null;
+        
+        if (document.getElementById('diagnosisDuplicatesModal')) {
+            diagnosisModal = new bootstrap.Modal(document.getElementById('diagnosisDuplicatesModal'));
+        }
+
+        if (btnCheckDuplicates && diagnosisModal) {
+            btnCheckDuplicates.addEventListener('click', function() {
+                document.getElementById('aset-dup-list').innerHTML = `
+                    <tr>
+                        <td colspan="4" class="text-center py-5 text-secondary">
+                            <div class="spinner-border text-warning mb-2" role="status"></div>
+                            <div class="small fw-medium">Sedang mendiagnosis database aset tanah ganda...</div>
+                        </td>
+                    </tr>
+                `;
+                document.getElementById('opd-dup-list').innerHTML = `
+                    <tr>
+                        <td colspan="4" class="text-center py-5 text-secondary">
+                            <div class="spinner-border text-info mb-2" role="status"></div>
+                            <div class="small fw-medium">Sedang memindai kemiripan instansi OPD SIPAT...</div>
+                        </td>
+                    </tr>
+                `;
+                document.getElementById('aset-dup-count').textContent = '0';
+                document.getElementById('opd-dup-count').textContent = '0';
+
+                diagnosisModal.show();
+
+                fetch("{{ route('sipat.aset.check-duplicates') }}", {
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        renderDuplicateAsets(data.asets);
+                        renderDuplicateOpds(data.opds);
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Diagnosis Gagal',
+                            text: data.message || 'Terjadi kesalahan saat memeriksa data.',
+                            confirmButtonColor: '#1e40af',
+                        });
+                        diagnosisModal.hide();
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error Koneksi',
+                        text: 'Gagal terhubung ke database untuk memindai duplikasi.',
+                        confirmButtonColor: '#1e40af',
+                    });
+                    diagnosisModal.hide();
+                });
+            });
+        }
     });
+
+    function renderDuplicateAsets(asets) {
+        const listContainer = document.getElementById('aset-dup-list');
+        document.getElementById('aset-dup-count').textContent = asets.length;
+
+        if (asets.length === 0) {
+            listContainer.innerHTML = `
+                <tr>
+                    <td colspan="4" class="text-center py-5 text-success">
+                        <i class="bi bi-patch-check-fill fs-1 text-success d-block mb-2"></i>
+                        <h6 class="fw-bold mb-1">Database Bersih!</h6>
+                        <p class="mb-0 small text-secondary">Tidak terdeteksi adanya NIB ganda di sistem.</p>
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+
+        let html = '';
+        asets.forEach((item) => {
+            let diffRowsHtml = '';
+            item.differences.forEach(diff => {
+                const rowClass = diff.is_different ? 'table-danger bg-danger bg-opacity-10' : '';
+                const badgeHtml = diff.is_different 
+                    ? '<span class="badge bg-danger text-white px-2 py-0.5" style="font-size: 0.65rem;">Berbeda</span>' 
+                    : '<span class="badge bg-light text-secondary border px-2 py-0.5" style="font-size: 0.65rem;">Identik</span>';
+
+                diffRowsHtml += `
+                    <tr class="${rowClass}">
+                        <td class="fw-bold text-navy py-2 px-3" style="width: 25%; font-size: 0.8rem;">${escapeHtml(diff.label)}</td>
+                        <td class="text-secondary py-2 px-3" style="width: 35%; font-size: 0.8rem;">${escapeHtml(diff.original_val)}</td>
+                        <td class="text-dark fw-bold py-2 px-3" style="width: 30%; font-size: 0.8rem;">${escapeHtml(diff.duplicate_val)}</td>
+                        <td class="text-center py-2 px-3" style="width: 10%;">${badgeHtml}</td>
+                    </tr>
+                `;
+            });
+
+            html += `
+                <tr class="align-middle border-bottom-0" id="aset-dup-row-${item.duplicate_id}">
+                    <td colspan="4" class="p-0">
+                        <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between p-3 bg-white border-bottom gap-3">
+                            <div class="d-flex flex-wrap align-items-center gap-3 flex-grow-1">
+                                <div class="text-center bg-light border rounded px-3 py-1.5" style="min-width: 105px;">
+                                    <div class="text-secondary small fw-semibold" style="font-size: 0.65rem; letter-spacing: 0.5px;">NIB GANDA</div>
+                                    <span class="badge bg-danger text-white fw-bold px-2 py-0.5" style="font-size: 0.8rem;">${escapeHtml(item.duplicate_code)}</span>
+                                </div>
+                                <div class="text-center bg-light border rounded px-3 py-1.5" style="min-width: 105px;">
+                                    <div class="text-secondary small fw-semibold" style="font-size: 0.65rem; letter-spacing: 0.5px;">NIB INDUK</div>
+                                    <span class="badge bg-success text-white fw-bold px-2 py-0.5" style="font-size: 0.8rem;">${escapeHtml(item.original_code || '-')}</span>
+                                </div>
+                                <div class="ms-2">
+                                    <div class="fw-bold text-navy mb-0" style="font-size: 0.9rem;">${escapeHtml(item.duplicate_nama)}</div>
+                                    <div class="text-secondary small" style="font-size: 0.75rem;"><i class="bi bi-building me-1"></i>${escapeHtml(item.duplicate_opd)}</div>
+                                </div>
+                                <div class="ms-md-auto d-flex align-items-center gap-2">
+                                    <span class="badge bg-warning text-dark px-2.5 py-1.5 d-inline-flex align-items-center gap-1" style="font-size: 0.75rem;">
+                                        <i class="bi bi-exclamation-triangle-fill"></i>
+                                        <span>${escapeHtml(item.reason)}</span>
+                                    </span>
+                                </div>
+                            </div>
+                            
+                            <div class="d-flex align-items-center gap-2">
+                                <button type="button" class="btn btn-sm btn-outline-success fw-bold d-inline-flex align-items-center gap-1 btn-resolve-aset" data-action="merge" data-original-id="${item.original_id}" data-duplicate-id="${item.duplicate_id}">
+                                    <i class="bi bi-intersect"></i> <span>Gabungkan</span>
+                                </button>
+                                <button type="button" class="btn btn-sm btn-outline-danger fw-bold d-inline-flex align-items-center gap-1 btn-resolve-aset" data-action="delete" data-original-id="${item.original_id}" data-duplicate-id="${item.duplicate_id}">
+                                    <i class="bi bi-trash3"></i> <span>Hapus</span>
+                                </button>
+                                <button class="btn btn-sm btn-light border shadow-sm ms-1 fw-medium" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-aset-diff-${item.duplicate_id}">
+                                    <i class="bi bi-eye me-1 text-info"></i> Bandingkan
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="collapse bg-light p-3 border-bottom" id="collapse-aset-diff-${item.duplicate_id}">
+                            <div class="card card-body border-0 shadow-none p-0 bg-transparent">
+                                <div class="table-responsive border rounded-3 bg-white">
+                                    <table class="table table-hover table-bordered table-sm mb-0 align-middle">
+                                        <thead class="table-secondary" style="font-size: 0.72rem; text-transform: uppercase;">
+                                            <tr>
+                                                <th class="py-2 px-3">Kolom / Atribut</th>
+                                                <th class="py-2 px-3">Data Induk (Asli)</th>
+                                                <th class="py-2 px-3">Data Ganda</th>
+                                                <th class="py-2 px-3 text-center">Status</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            ${diffRowsHtml}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        });
+
+        listContainer.innerHTML = html;
+        attachAsetResolveEvents();
+    }
+
+    function renderDuplicateOpds(opds) {
+        const listContainer = document.getElementById('opd-dup-list');
+        document.getElementById('opd-dup-count').textContent = opds.length;
+
+        if (opds.length === 0) {
+            listContainer.innerHTML = `
+                <tr>
+                    <td colspan="4" class="text-center py-5 text-success">
+                        <i class="bi bi-patch-check-fill fs-1 text-success d-block mb-2"></i>
+                        <h6 class="fw-bold mb-1">Database Bersih!</h6>
+                        <p class="mb-0 small text-secondary">Tidak ada nama OPD yang mirip di sistem.</p>
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+
+        let html = '';
+        opds.forEach(item => {
+            html += `
+                <tr class="align-middle" id="opd-dup-row-${item.opd_b_id}">
+                    <td class="px-3 py-3">
+                        <div class="fw-bold text-navy">${escapeHtml(item.opd_a_nama)}</div>
+                        <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-2 py-0.5 mt-1 small" style="font-size: 0.7rem;">
+                            Dipertahankan (${item.count_a} Aset)
+                        </span>
+                    </td>
+                    <td class="px-3 py-3">
+                        <div class="fw-bold text-danger">${escapeHtml(item.opd_b_nama)}</div>
+                        <span class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25 px-2 py-0.5 mt-1 small" style="font-size: 0.7rem;">
+                            Akan Dihapus (${item.count_b} Aset)
+                        </span>
+                    </td>
+                    <td class="px-3 py-3 text-secondary small">
+                        ${escapeHtml(item.reason)}
+                    </td>
+                    <td class="px-3 py-3 text-center">
+                        <button type="button" class="btn btn-primary btn-xs fw-semibold py-2 px-3 btn-resolve-opd-sipat" data-target-id="${item.opd_a_id}" data-source-id="${item.opd_b_id}">
+                            <i class="bi bi-signpost-split me-1"></i> Gabungkan Instansi
+                        </button>
+                    </td>
+                </tr>
+            `;
+        });
+
+        listContainer.innerHTML = html;
+        attachOpdResolveEvents();
+    }
+
+    function attachAsetResolveEvents() {
+        document.querySelectorAll('.btn-resolve-aset').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const action = this.getAttribute('data-action');
+                const originalId = this.getAttribute('data-original-id');
+                const duplicateId = this.getAttribute('data-duplicate-id');
+                const btnElement = this;
+                
+                const executeResolve = (direction = 'keep_original') => {
+                    const actionsCell = btnElement.closest('div');
+                    const originalHtml = actionsCell.innerHTML;
+                    actionsCell.innerHTML = '<span class="spinner-border spinner-border-sm text-primary" role="status"></span>';
+
+                    fetch("{{ route('sipat.aset.resolve-duplicate-aset') }}", {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                            'X-Requested-With': 'XMLHttpRequest'
+                        },
+                        body: JSON.stringify({
+                            original_id: originalId,
+                            duplicate_id: duplicateId,
+                            action: action,
+                            direction: direction
+                        })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Sukses',
+                                text: data.message,
+                                timer: 2000,
+                                showConfirmButton: false
+                            });
+                            const row = document.getElementById(`aset-dup-row-${duplicateId}`);
+                            if (row) row.remove();
+                            
+                            const countEl = document.getElementById('aset-dup-count');
+                            const currentCount = parseInt(countEl.textContent);
+                            countEl.textContent = Math.max(0, currentCount - 1);
+                            
+                            if (currentCount - 1 <= 0) {
+                                renderDuplicateAsets([]);
+                            }
+                        } else {
+                            actionsCell.innerHTML = originalHtml;
+                            attachAsetResolveEvents();
+                            Swal.fire('Gagal', data.message || 'Terjadi kesalahan.', 'error');
+                        }
+                    })
+                    .catch(error => {
+                        actionsCell.innerHTML = originalHtml;
+                        attachAsetResolveEvents();
+                        Swal.fire('Error', 'Gagal terhubung ke server.', 'error');
+                    });
+                };
+
+                if (action === 'merge') {
+                    Swal.fire({
+                        title: 'Pilih Data Utama',
+                        text: 'Pilih data mana yang akan menjadi data utama (dipertahankan). Data lainnya akan dihapus setelah riwayat/dokumen dipindahkan.',
+                        icon: 'question',
+                        showDenyButton: true,
+                        showCancelButton: true,
+                        confirmButtonText: 'Pertahankan Data Induk',
+                        denyButtonText: 'Pertahankan Data Ganda',
+                        cancelButtonText: 'Batal',
+                        confirmButtonColor: '#1e40af',
+                        denyButtonColor: '#0ea5e9'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            executeResolve('keep_original');
+                        } else if (result.isDenied) {
+                            executeResolve('keep_duplicate');
+                        }
+                    });
+                } else {
+                    Swal.fire({
+                        title: 'Konfirmasi Penghapusan',
+                        text: 'Apakah Anda yakin ingin menghapus data aset ganda ini dari database beserta riwayatnya?',
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#dc3545',
+                        cancelButtonColor: '#6c757d',
+                        confirmButtonText: 'Ya, Hapus!',
+                        cancelButtonText: 'Batal'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            executeResolve('keep_original');
+                        }
+                    });
+                }
+            });
+        });
+    }
+
+    function attachOpdResolveEvents() {
+        document.querySelectorAll('.btn-resolve-opd-sipat').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const targetId = this.getAttribute('data-target-id');
+                const sourceId = this.getAttribute('data-source-id');
+                const row = document.getElementById(`opd-dup-row-${sourceId}`);
+
+                Swal.fire({
+                    title: 'Gabungkan Instansi OPD SIPAT?',
+                    text: 'Semua data aset tanah pada OPD duplikat akan otomatis dipindahkan ke OPD utama. Semua berkas eLABEL terkait juga akan disesuaikan.',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#1e40af',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: 'Ya, Gabungkan OPD!',
+                    cancelButtonText: 'Batal'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        const actionCell = this.closest('td');
+                        const originalHtml = actionCell.innerHTML;
+                        actionCell.innerHTML = '<span class="spinner-border spinner-border-sm text-primary" role="status"></span>';
+
+                        fetch("{{ route('sipat.aset.resolve-duplicate-opd') }}", {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                'X-Requested-With': 'XMLHttpRequest'
+                            },
+                            body: JSON.stringify({
+                                target_opd_id: targetId,
+                                source_opd_id: sourceId
+                            })
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'Sukses Konsolidasi',
+                                    text: data.message,
+                                    timer: 2000,
+                                    showConfirmButton: false
+                                });
+                                row.style.transition = 'all 0.5s ease';
+                                row.style.opacity = '0';
+                                setTimeout(() => {
+                                    row.remove();
+                                    const countEl = document.getElementById('opd-dup-count');
+                                    const newCount = Math.max(0, parseInt(countEl.textContent) - 1);
+                                    countEl.textContent = newCount;
+                                    if (newCount === 0) {
+                                        renderDuplicateOpds([]);
+                                    }
+                                }, 500);
+                            } else {
+                                Swal.fire('Gagal', data.message, 'error');
+                                actionCell.innerHTML = originalHtml;
+                            }
+                        })
+                        .catch(error => {
+                            Swal.fire('Error', 'Gagal terhubung ke server.', 'error');
+                            actionCell.innerHTML = originalHtml;
+                        });
+                    }
+                });
+            });
+        });
+    }
+
+    function escapeHtml(text) {
+        if (text === null || text === undefined) return '';
+        const map = {
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#039;'
+        };
+        return String(text).replace(/[&<>'"]/g, function(m) { return map[m]; });
+    }
 
     function showDetail(id) {
         const modalEl = document.getElementById('modalDetailAset');

@@ -1,12 +1,12 @@
-# 📋 ATURAN PENAMBAHAN FITUR BARU - E-RANDIS
+# 📋 ATURAN PENAMBAHAN FITUR BARU - SIPAT TERPADU
 
-**Dokumen ini WAJIB dibaca dan diikuti sebelum menambahkan fitur baru ke sistem E-RANDIS.**
+**Dokumen ini WAJIB dibaca dan diikuti sebelum menambahkan fitur baru ke platform SIPAT Terpadu.**
 
 ---
 
 ## ⚠️ PERINGATAN PENTING
 
-**DILARANG KERAS** menambahkan fitur baru tanpa melalui checklist ini. Sistem E-RANDIS memiliki arsitektur kompleks dengan:
+**DILARANG KERAS** menambahkan fitur baru tanpa melalui checklist ini. Platform SIPAT Terpadu memiliki arsitektur kompleks dengan:
 - Multi-tenancy (isolasi data antar OPD)
 - Observer chain (reaksi berantai otomatis)
 - Cache strategy (pembersihan cache tertarget)
