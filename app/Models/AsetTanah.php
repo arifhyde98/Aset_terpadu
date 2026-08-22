@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class AsetTanah extends Model
 {
@@ -20,12 +21,18 @@ class AsetTanah extends Model
         'alamat',
         'lat',
         'lng',
+        'opd_id',
         'opd',
         'dasar_perolehan',
         'harga_perolehan',
         'tanggal_perolehan',
         'keterangan'
     ];
+
+    public function opdSipat(): BelongsTo
+    {
+        return $this->belongsTo(OpdSipat::class, 'opd_id');
+    }
 
     public function prosesAset()
     {

@@ -4,9 +4,18 @@ namespace App\Http\Controllers;
 
 use App\Models\StatusProses;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Controllers\HasMiddleware;
+use Illuminate\Routing\Controllers\Middleware;
 
-class StatusProsesController extends Controller
+class StatusProsesController extends Controller implements HasMiddleware
 {
+    public static function middleware(): array
+    {
+        return [
+            new Middleware('auth'),
+        ];
+    }
+
     public function index()
     {
         $statusProses = StatusProses::orderBy('urutan', 'asc')->get();

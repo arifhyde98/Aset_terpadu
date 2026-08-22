@@ -65,7 +65,7 @@
             <tr><td>Alamat</td><td>:</td><td>{{ $skpt['pemohon_alamat'] ?? '-' }}</td></tr>
         </table>
 
-        Benar mengusahakan / Menggarap / Menggunakan dan atau menguasai sebidang tanah {{ $jenisTanah }} dengan status tanah {{ $statusTanah }} seluas {{ $skpt['luas_tanah'] ?? '-' }} M2 yang terletak di {{ $lokasiText) . esc($desaLabel }} {{ $skpt['desa_nama'] ?? '-' }} Kecamatan {{ $skpt['kecamatan_nama'] ?? '-' }} dengan batas-batas sebagai berikut :
+        Benar mengusahakan / Menggarap / Menggunakan dan atau menguasai sebidang tanah {{ $jenisTanah }} dengan status tanah {{ $statusTanah }} seluas {{ $skpt['luas_tanah'] ?? '-' }} M2 yang terletak di {{ $lokasiText . $desaLabel }} {{ $skpt['desa_nama'] ?? '-' }} Kecamatan {{ $skpt['kecamatan_nama'] ?? '-' }} dengan batas-batas sebagai berikut :
         <table style="margin-top: 8px; margin-bottom: 12px;">
             <tr><td style="width: 150px;">Sebelah Utara</td><td style="width: 8px;">:</td><td>{{ $skpt['batas_utara'] ?? '-' }}</td></tr>
             <tr><td>Sebelah Timur</td><td>:</td><td>{{ $skpt['batas_timur'] ?? '-' }}</td></tr>
@@ -73,8 +73,8 @@
             <tr><td>Sebelah Barat</td><td>:</td><td>{{ $skpt['batas_barat'] ?? '-' }}</td></tr>
         </table>
 
-        <div>{!! nl2br(esc($asalTanah)) !!}</div>
-        <div style="margin-top: 8px;">{!! nl2br(esc($pernyataanTanah)) !!}</div>
+        <div>{!! nl2br(e($asalTanah)) !!}</div>
+        <div style="margin-top: 8px;">{!! nl2br(e($pernyataanTanah)) !!}</div>
         <div style="margin-top: 8px;">Demikian surat keterangan penguasaan tanah ini dibuat dengan sebenarnya untuk dipergunakan sebagaimana mestinya dan mengingat sumpah jabatan.</div>
         @if (!empty($skpt['keterangan']))
             <div style="margin-top: 8px;">Keterangan: {{ $skpt['keterangan'] }}</div>

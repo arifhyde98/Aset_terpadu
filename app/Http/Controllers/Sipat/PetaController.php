@@ -5,10 +5,19 @@ namespace App\Http\Controllers\Sipat;
 use App\Http\Controllers\Controller;
 use App\Models\AsetTanah;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Controllers\HasMiddleware;
+use Illuminate\Routing\Controllers\Middleware;
 use Illuminate\Support\Facades\DB;
 
-class PetaController extends Controller
+class PetaController extends Controller implements HasMiddleware
 {
+    public static function middleware(): array
+    {
+        return [
+            new Middleware('auth'),
+        ];
+    }
+
     public function index()
     {
         $asetSipat = AsetTanah::select('aset_tanah.id_aset as id', 'aset_tanah.kode_aset', 'aset_tanah.nama_aset', 'aset_tanah.lat', 'aset_tanah.lng', 'sp.nama_status', 'sp.warna')

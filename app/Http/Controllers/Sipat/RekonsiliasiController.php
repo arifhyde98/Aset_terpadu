@@ -5,12 +5,21 @@ namespace App\Http\Controllers\Sipat;
 use App\Http\Controllers\Controller;
 use App\Models\AsetTanah;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Controllers\HasMiddleware;
+use Illuminate\Routing\Controllers\Middleware;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Http;
 
-class RekonsiliasiController extends Controller
+class RekonsiliasiController extends Controller implements HasMiddleware
 {
+    public static function middleware(): array
+    {
+        return [
+            new Middleware('auth'),
+        ];
+    }
+
     public function index()
     {
         // 1. Ambil semua NIB dari eLabel melalui API (MOCKUP SEMENTARA)

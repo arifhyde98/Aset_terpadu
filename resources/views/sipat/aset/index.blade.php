@@ -95,11 +95,11 @@
                     <!-- 1. OPD Filter -->
                     <div class="col-12 col-sm-6 col-md-3 col-xl-3">
                         <label class="form-label small fw-semibold text-secondary mb-1">OPD Pengelola</label>
-                        <select name="opd" class="form-select" onchange="document.getElementById('filterForm').submit()">
+                        <select name="opd_id" class="form-select" onchange="document.getElementById('filterForm').submit()">
                             <option value="">-- Semua OPD --</option>
-                            <option value="KOSONG" {{ request('opd') === 'KOSONG' ? 'selected' : '' }}>[Tanpa OPD / Kosong]</option>
+                            <option value="KOSONG" {{ request('opd_id', request('opd')) === 'KOSONG' ? 'selected' : '' }}>[Tanpa OPD / Kosong]</option>
                             @foreach($opdList as $opd)
-                                <option value="{{ $opd->nama }}" {{ request('opd') == $opd->nama ? 'selected' : '' }}>{{ $opd->nama }}</option>
+                                <option value="{{ $opd->id }}" {{ (string) request('opd_id', request('opd')) === (string) $opd->id ? 'selected' : '' }}>{{ $opd->nama }}</option>
                             @endforeach
                         </select>
                     </div>
@@ -163,7 +163,7 @@
                             <span class="input-group-text bg-body border-0 text-secondary"><i class="bi bi-search"></i></span>
                             <input type="text" name="search" class="form-control" placeholder="Kode Aset, Nama Aset, Alamat..." value="{{ request('search') }}">
                             <button type="submit" class="btn btn-primary px-3">Cari</button>
-                            @if(request()->hasAny(['search', 'opd', 'status', 'tanggal_perolehan']))
+                            @if(request()->hasAny(['search', 'opd_id', 'opd', 'status', 'tanggal_perolehan']))
                                 <a href="{{ route('sipat.aset.index') }}" class="btn btn-outline-secondary px-3"><i class="bi bi-x-circle"></i> Reset</a>
                             @endif
                         </div>
@@ -215,7 +215,7 @@
                             </td>
                             <td>
                                 <span class="badge bg-secondary-subtle text-body-secondary fw-normal px-2.5 py-1 text-wrap" style="font-size: 0.78rem; max-width: 200px;">
-                                    {{ $item->opd ?? 'BPKAD' }}
+                                    {{ $item->opdSipat->nama ?? $item->opd ?? '-' }}
                                 </span>
                             </td>
                             <td style="max-width: 220px;">

@@ -4,10 +4,19 @@ namespace App\Http\Controllers;
 
 use App\Models\OpdSipat;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Controllers\HasMiddleware;
+use Illuminate\Routing\Controllers\Middleware;
 use Illuminate\Support\Facades\DB;
 
-class MasterSipatOpdController extends Controller
+class MasterSipatOpdController extends Controller implements HasMiddleware
 {
+    public static function middleware(): array
+    {
+        return [
+            new Middleware('auth'),
+        ];
+    }
+
     public function index(Request $request)
     {
         $query = OpdSipat::query();

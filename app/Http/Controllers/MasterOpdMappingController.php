@@ -6,9 +6,18 @@ use App\Models\OpdMapping;
 use App\Models\OpdSipat;
 use App\Models\Opd;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Controllers\HasMiddleware;
+use Illuminate\Routing\Controllers\Middleware;
 
-class MasterOpdMappingController extends Controller
+class MasterOpdMappingController extends Controller implements HasMiddleware
 {
+    public static function middleware(): array
+    {
+        return [
+            new Middleware('auth'),
+        ];
+    }
+
     public function index(Request $request)
     {
         $query = OpdMapping::with(['sipatOpd', 'erandisOpd']);

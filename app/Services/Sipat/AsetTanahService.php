@@ -29,7 +29,7 @@ class AsetTanahService
      */
     public function getPaginatedAset(array $filters): array
     {
-        $query = AsetTanah::with(['latestProses.statusProses']);
+        $query = AsetTanah::with(['latestProses.statusProses', 'opdSipat']);
 
         if (!empty($filters['search'])) {
             $search = $filters['search'];
@@ -37,6 +37,9 @@ class AsetTanahService
                 $q->where('kode_aset', 'LIKE', "%{$search}%")
                   ->orWhere('nama_aset', 'LIKE', "%{$search}%")
                   ->orWhere('opd', 'LIKE', "%{$search}%")
+                  ->orWhereHas('opdSipat', function ($opdQuery) use ($search) {
+                      $opdQuery->where('nama', 'LIKE', "%{$search}%");
+                  })
                   ->orWhere('peruntukan', 'LIKE', "%{$search}%")
                   ->orWhere('alamat', 'LIKE', "%{$search}%")
                   ->orWhereExists(function($sub) use ($search) {
@@ -51,13 +54,24 @@ class AsetTanahService
             });
         }
 
-        if (!empty($filters['opd'])) {
-            if ($filters['opd'] === 'KOSONG') {
+        $opdFilter = $filters['opd_id'] ?? ($filters['opd'] ?? '');
+        if ($opdFilter !== '') {
+            if ($opdFilter === 'KOSONG') {
+                // Tampilkan aset yang opd_id-nya NULL (belum terpetakan ke master OPD)
+                // Termasuk data lama yang nama OPD-nya tidak cocok saat migrasi
                 $query->where(function($q) {
-                    $q->whereNull('opd')->orWhere('opd', '');
+                    $q->whereNull('opd_id')
+                      ->orWhere(function ($q2) {
+                          // Juga tangkap data yang opd_id ada tapi kolom opd kosong
+                          $q2->whereNull('opd')->orWhere('opd', '');
+                      });
                 });
             } else {
-                $query->where('opd', $filters['opd']);
+                if (is_numeric($opdFilter)) {
+                    $query->where('opd_id', (int) $opdFilter);
+                } else {
+                    $query->where('opd', $opdFilter);
+                }
             }
         }
 
@@ -101,6 +115,7 @@ class AsetTanahService
      */
     public function storeAset(array $data, ?int $initialStatusId): AsetTanah
     {
+        $this->syncLegacyOpdLabel($data);
         $aset = AsetTanah::create($data);
 
         if ($initialStatusId) {
@@ -127,7 +142,7 @@ class AsetTanahService
      */
     public function getAsetDetailsForModal(int $id): array
     {
-        $aset = AsetTanah::with(['prosesAset.statusProses', 'latestProses.statusProses'])->findOrFail($id);
+        $aset = AsetTanah::with(['prosesAset.statusProses', 'latestProses.statusProses', 'opdSipat'])->findOrFail($id);
         
         $prosesList = ProsesAset::with('statusProses')
             ->where('id_aset', $id)
@@ -172,6 +187,7 @@ class AsetTanahService
      */
     public function updateAset(int $id, array $data): AsetTanah
     {
+        $this->syncLegacyOpdLabel($data);
         $aset = AsetTanah::findOrFail($id);
         $aset->update($data);
 
@@ -287,5 +303,20 @@ class AsetTanahService
         ]);
 
         Activity::logSipat("Mengunggah dokumen pendukung ({$data['jenis_dokumen']}) untuk aset tanah: {$aset->nama_aset}", 'success');
+    }
+
+    /**
+     * Menjaga kolom legacy `opd` tetap selaras dengan relasi `opd_id`.
+     */
+    private function syncLegacyOpdLabel(array &$data): void
+    {
+        if (empty($data['opd_id'])) {
+            return;
+        }
+
+        $opd = OpdSipat::find($data['opd_id']);
+        if ($opd) {
+            $data['opd'] = $opd->nama;
+        }
     }
 }

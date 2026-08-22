@@ -11,14 +11,14 @@ Route::prefix('sipat')->name('sipat.')->group(function () {
         Route::get('/create', [\App\Http\Controllers\Sipat\AsetTanahController::class, 'create'])->name('create');
         Route::post('/', [\App\Http\Controllers\Sipat\AsetTanahController::class, 'store'])->name('store');
         Route::post('/bulk-proses', [\App\Http\Controllers\Sipat\AsetTanahController::class, 'bulkStoreProses'])->name('bulkProses');
-        Route::get('/{id}', [\App\Http\Controllers\Sipat\AsetTanahController::class, 'show'])->name('show');
-        Route::get('/{id}/modal', [\App\Http\Controllers\Sipat\AsetTanahController::class, 'modal'])->name('modal');
-        Route::get('/{id}/edit', [\App\Http\Controllers\Sipat\AsetTanahController::class, 'edit'])->name('edit');
-        Route::put('/{id}', [\App\Http\Controllers\Sipat\AsetTanahController::class, 'update'])->name('update');
-        Route::delete('/{id}', [\App\Http\Controllers\Sipat\AsetTanahController::class, 'destroy'])->name('destroy');
-        Route::post('/{id}/proses', [\App\Http\Controllers\Sipat\AsetTanahController::class, 'storeProses'])->name('storeProses');
-        Route::post('/{id}/pengamanan', [\App\Http\Controllers\Sipat\AsetTanahController::class, 'storePengamanan'])->name('storePengamanan');
-        Route::post('/{id}/dokumen', [\App\Http\Controllers\Sipat\AsetTanahController::class, 'storeDokumen'])->name('storeDokumen');
+        Route::get('/{aset}', [\App\Http\Controllers\Sipat\AsetTanahController::class, 'show'])->name('show');
+        Route::get('/{aset}/modal', [\App\Http\Controllers\Sipat\AsetTanahController::class, 'modal'])->name('modal');
+        Route::get('/{aset}/edit', [\App\Http\Controllers\Sipat\AsetTanahController::class, 'edit'])->name('edit');
+        Route::put('/{aset}', [\App\Http\Controllers\Sipat\AsetTanahController::class, 'update'])->name('update');
+        Route::delete('/{aset}', [\App\Http\Controllers\Sipat\AsetTanahController::class, 'destroy'])->name('destroy');
+        Route::post('/{aset}/proses', [\App\Http\Controllers\Sipat\AsetTanahController::class, 'storeProses'])->name('storeProses');
+        Route::post('/{aset}/pengamanan', [\App\Http\Controllers\Sipat\AsetTanahController::class, 'storePengamanan'])->name('storePengamanan');
+        Route::post('/{aset}/dokumen', [\App\Http\Controllers\Sipat\AsetTanahController::class, 'storeDokumen'])->name('storeDokumen');
     });
 
     // Laporan
@@ -38,11 +38,11 @@ Route::prefix('sipat')->name('sipat.')->group(function () {
     Route::prefix('surat')->name('surat.')->group(function () {
         Route::get('/skpt', [\App\Http\Controllers\Sipat\SuratController::class, 'skpt'])->name('skpt');
         Route::post('/skpt', [\App\Http\Controllers\Sipat\SuratController::class, 'storeSkpt'])->name('storeSkpt');
-        Route::get('/skpt/{id}', [\App\Http\Controllers\Sipat\SuratController::class, 'showSkpt'])->name('showSkpt');
-        Route::delete('/skpt/{id}', [\App\Http\Controllers\Sipat\SuratController::class, 'deleteSkpt'])->name('deleteSkpt');
-        Route::get('/skpt/{id}/print', [\App\Http\Controllers\Sipat\SuratController::class, 'printSkpt'])->name('printSkpt');
-        Route::get('/skpt/{id}/pdf', [\App\Http\Controllers\Sipat\SuratController::class, 'pdfSkpt'])->name('pdfSkpt');
-        Route::get('/skpt/{id}/word', [\App\Http\Controllers\Sipat\SuratController::class, 'exportWordSkpt'])->name('exportWordSkpt');
+        Route::get('/skpt/{skpt}', [\App\Http\Controllers\Sipat\SuratController::class, 'showSkpt'])->name('showSkpt');
+        Route::delete('/skpt/{skpt}', [\App\Http\Controllers\Sipat\SuratController::class, 'deleteSkpt'])->name('deleteSkpt');
+        Route::get('/skpt/{skpt}/print', [\App\Http\Controllers\Sipat\SuratController::class, 'printSkpt'])->name('printSkpt');
+        Route::get('/skpt/{skpt}/pdf', [\App\Http\Controllers\Sipat\SuratController::class, 'pdfSkpt'])->name('pdfSkpt');
+        Route::get('/skpt/{skpt}/word', [\App\Http\Controllers\Sipat\SuratController::class, 'exportWordSkpt'])->name('exportWordSkpt');
         Route::get('/pernyataan-batas', [\App\Http\Controllers\Sipat\SuratController::class, 'pernyataanBatas'])->name('pernyataanBatas');
     });
 });

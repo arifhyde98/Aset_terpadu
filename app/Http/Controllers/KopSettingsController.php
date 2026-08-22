@@ -3,10 +3,12 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Routing\Controllers\HasMiddleware;
+use Illuminate\Routing\Controllers\Middleware;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
-class KopSettingsController extends Controller
+class KopSettingsController extends Controller implements HasMiddleware
 {
     private const TEXT_FIELDS = [
         'kop_nama_instansi',
@@ -36,6 +38,13 @@ class KopSettingsController extends Controller
         'kop_pejabat_nama' => 'H. MUHAMMAD NATSIR, S.E., M.Si.',
         'kop_pejabat_nip' => 'NIP. 19780512 200501 1 008',
     ];
+
+    public static function middleware(): array
+    {
+        return [
+            new Middleware('auth'),
+        ];
+    }
 
     public function index()
     {

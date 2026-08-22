@@ -10,10 +10,23 @@ use App\Models\KepalaDesa;
 use App\Models\Pemohon;
 use App\Models\SuratSkpt;
 use Illuminate\Http\Request;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Response;
+use Illuminate\Routing\Controllers\HasMiddleware;
+use Illuminate\Routing\Controllers\Middleware;
+use Illuminate\View\View;
+use App\Http\Requests\Sipat\StoreSuratSkptRequest;
 
-class SuratController extends Controller
+class SuratController extends Controller implements HasMiddleware
 {
-    public function skpt(Request $request)
+    public static function middleware(): array
+    {
+        return [
+            new Middleware('auth'),
+        ];
+    }
+
+    public function skpt(Request $request): View
     {
         $filterKecamatan = $request->get('kecamatan_id');
         
@@ -42,13 +55,9 @@ class SuratController extends Controller
         ]);
     }
 
-    public function showSkpt(Request $request, int $id)
+    public function showSkpt(Request $request, SuratSkpt $skpt): View
     {
-        $skpt = SuratSkpt::with(['desa.kecamatan', 'kepalaDesa', 'camat', 'pemohon'])->find($id);
-
-        if (!$skpt) {
-            return redirect()->route('sipat.surat.skpt')->with('error', 'Data SKPT tidak ditemukan.');
-        }
+        $skpt->load(['desa.kecamatan', 'kepalaDesa', 'camat', 'pemohon']);
 
         $filterKecamatan = $request->get('kecamatan_id');
         $recentQuery = SuratSkpt::with(['desa.kecamatan', 'pemohon'])
@@ -76,23 +85,15 @@ class SuratController extends Controller
         ]);
     }
 
-    public function deleteSkpt(int $id)
+    public function deleteSkpt(SuratSkpt $skpt): RedirectResponse
     {
-        $model = SuratSkpt::find($id);
-        if (!$model) {
-            return redirect()->route('sipat.surat.skpt')->with('error', 'Data SKPT tidak ditemukan.');
-        }
-
-        $model->delete();
+        $skpt->delete();
         return redirect()->route('sipat.surat.skpt')->with('success', 'Data SKPT berhasil dihapus.');
     }
 
-    public function printSkpt(int $id)
+    public function printSkpt(SuratSkpt $skpt): View|RedirectResponse
     {
-        $skpt = SuratSkpt::with(['desa.kecamatan', 'kepalaDesa', 'camat', 'pemohon'])->find($id);
-        if (!$skpt) {
-            return redirect()->route('sipat.surat.skpt')->with('error', 'Data SKPT tidak ditemukan.');
-        }
+        $skpt->load(['desa.kecamatan', 'kepalaDesa', 'camat', 'pemohon']);
 
         return view('sipat.surat.skpt_print', [
             'title' => 'Cetak SKPT',
@@ -100,15 +101,12 @@ class SuratController extends Controller
         ]);
     }
 
-    public function pdfSkpt(int $id)
+    public function pdfSkpt(SuratSkpt $skpt): Response|RedirectResponse
     {
-        $skpt = SuratSkpt::with(['desa.kecamatan', 'kepalaDesa', 'camat', 'pemohon'])->find($id);
-        if (!$skpt) {
-            return redirect()->route('sipat.surat.skpt')->with('error', 'Data SKPT tidak ditemukan.');
-        }
+        $skpt->load(['desa.kecamatan', 'kepalaDesa', 'camat', 'pemohon']);
 
         if (!class_exists(\Mpdf\Mpdf::class)) {
-            return redirect()->route('sipat.surat.showSkpt', $id)->with('error', 'PDF belum tersedia (library mPDF belum terpasang).');
+            return redirect()->route('sipat.surat.showSkpt', $skpt->id)->with('error', 'PDF belum tersedia (library mPDF belum terpasang).');
         }
 
         $html = view('sipat.surat.skpt_pdf', ['skpt' => $skpt])->render();
@@ -129,16 +127,13 @@ class SuratController extends Controller
             ->header('Content-Disposition', 'attachment; filename="' . $filename . '"');
     }
 
-    public function exportWordSkpt(int $id)
+    public function exportWordSkpt(SuratSkpt $skpt): Response|RedirectResponse
     {
-        $skpt = SuratSkpt::with(['desa.kecamatan', 'kepalaDesa', 'camat', 'pemohon'])->find($id);
-        if (!$skpt) {
-            return redirect()->route('sipat.surat.skpt')->with('error', 'Data SKPT tidak ditemukan.');
-        }
+        $skpt->load(['desa.kecamatan', 'kepalaDesa', 'camat', 'pemohon']);
 
         if (!class_exists(\PhpOffice\PhpWord\PhpWord::class)) {
             $html = view('sipat.surat.skpt_word', ['skpt' => $skpt])->render();
-            $filename = 'SKPT_' . preg_replace('/[^A-Za-z0-9_-]/', '_', $skpt->nomor_surat ?? $id) . '.doc';
+            $filename = 'SKPT_' . preg_replace('/[^A-Za-z0-9_-]/', '_', $skpt->nomor_surat ?? $skpt->id) . '.doc';
             return response($html)
                 ->header('Content-Type', 'application/msword')
                 ->header('Content-Disposition', 'attachment; filename="' . $filename . '"');
@@ -268,7 +263,7 @@ class SuratController extends Controller
         $table->addCell(4500)->addText(trim(($skpt->camat->nama ?? '-') . PHP_EOL . $camatNip));
         $table->addCell(4500)->addText(trim(($skpt->kepalaDesa->nama ?? '-') . PHP_EOL . $kepalaNip));
 
-        $filename = 'SKPT_' . preg_replace('/[^A-Za-z0-9_-]/', '_', $skpt->nomor_surat ?? $id) . '.docx';
+        $filename = 'SKPT_' . preg_replace('/[^A-Za-z0-9_-]/', '_', $skpt->nomor_surat ?? $skpt->id) . '.docx';
 
         $writer = \PhpOffice\PhpWord\IOFactory::createWriter($phpWord, 'Word2007');
         ob_start();
@@ -280,75 +275,24 @@ class SuratController extends Controller
             ->header('Content-Disposition', 'attachment; filename="' . $filename . '"');
     }
 
-    public function storeSkpt(Request $request)
+    public function storeSkpt(StoreSuratSkptRequest $request): RedirectResponse
     {
-        $post = $request->all();
+        $data = $request->validated();
+        unset($data['kecamatan_id']);
 
-        $nomor = trim($post['nomor_surat'] ?? '');
+        $nomor = trim((string) ($data['nomor_surat'] ?? ''));
         if ($nomor === '') {
             $nomor = 'SKPT-' . date('Ymd') . '-' . random_int(1000, 9999);
         }
 
-        $kecamatanId = $post['kecamatan_id'] ?? null;
-        $data = [
-            'nomor_surat' => $nomor,
-            'alamat_kantor' => $post['alamat_kantor'] ?? null,
-            'desa_id' => $post['desa_id'] ?? null,
-            'kepala_desa_id' => $post['kepala_desa_id'] ?? null,
-            'camat_id' => $post['camat_id'] ?? null,
-            'pemohon_id' => $post['pemohon_id'] ?? null,
-            'lokasi_tanah' => $post['lokasi_tanah'] ?? null,
-            'jenis_tanah' => $post['jenis_tanah'] ?? null,
-            'status_tanah' => $post['status_tanah'] ?? null,
-            'asal_tanah' => $post['asal_tanah'] ?? null,
-            'pernyataan_tanah' => $post['pernyataan_tanah'] ?? null,
-            'luas_tanah' => $post['luas_tanah'] ?? null,
-            'dasar_perolehan' => $post['dasar_perolehan'] ?? null,
-            'batas_utara' => $post['batas_utara'] ?? null,
-            'batas_timur' => $post['batas_timur'] ?? null,
-            'batas_selatan' => $post['batas_selatan'] ?? null,
-            'batas_barat' => $post['batas_barat'] ?? null,
-            'keterangan' => $post['keterangan'] ?? null,
-            'tanggal_surat' => $post['tanggal_surat'] ?? null,
-        ];
-
-        if (empty($data['pemohon_id'])) return redirect()->back()->withInput()->with('error', 'Pemohon wajib dipilih.');
-        if (empty($data['tanggal_surat'])) return redirect()->back()->withInput()->with('error', 'Tanggal surat wajib diisi.');
-        if (empty($kecamatanId)) return redirect()->back()->withInput()->with('error', 'Kecamatan wajib dipilih.');
-        if (empty($data['desa_id'])) return redirect()->back()->withInput()->with('error', 'Desa wajib dipilih.');
-        if (empty($data['kepala_desa_id'])) return redirect()->back()->withInput()->with('error', 'Kepala desa wajib dipilih.');
-        if (empty($data['camat_id'])) return redirect()->back()->withInput()->with('error', 'Camat wajib dipilih.');
-
-        if (!empty($data['kepala_desa_id']) && !empty($data['desa_id'])) {
-            $kepala = KepalaDesa::find($data['kepala_desa_id']);
-            if ($kepala && (int) $kepala->desa_id !== (int) $data['desa_id']) {
-                return redirect()->back()->withInput()->with('error', 'Kepala desa tidak sesuai dengan desa yang dipilih.');
-            }
-        }
-
-        $pemohon = Pemohon::find($data['pemohon_id']);
-        if (!$pemohon) return redirect()->back()->withInput()->with('error', 'Pemohon tidak ditemukan.');
-
-        $desa = Desa::find($data['desa_id']);
-        if (!$desa) return redirect()->back()->withInput()->with('error', 'Desa tidak ditemukan.');
-        if (!empty($kecamatanId) && (int) $desa->kecamatan_id !== (int) $kecamatanId) {
-            return redirect()->back()->withInput()->with('error', 'Desa tidak sesuai dengan kecamatan yang dipilih.');
-        }
-
-        if (!empty($data['camat_id'])) {
-            $camat = Camat::find($data['camat_id']);
-            if (!$camat) return redirect()->back()->withInput()->with('error', 'Camat tidak ditemukan.');
-            if (!empty($kecamatanId) && (int) $camat->kecamatan_id !== (int) $kecamatanId) {
-                return redirect()->back()->withInput()->with('error', 'Camat tidak sesuai dengan kecamatan yang dipilih.');
-            }
-        }
+        $data['nomor_surat'] = $nomor;
 
         $skpt = SuratSkpt::create($data);
 
         return redirect()->route('sipat.surat.showSkpt', $skpt->id)->with('success', 'Data SKPT tersimpan.');
     }
 
-    public function pernyataanBatas()
+    public function pernyataanBatas(): View
     {
         return view('sipat.surat.pernyataan_batas', [
             'title' => 'Generate Pernyataan Batas',

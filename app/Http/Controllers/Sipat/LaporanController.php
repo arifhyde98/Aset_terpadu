@@ -7,11 +7,20 @@ use App\Models\OpdSipat;
 use App\Models\StatusProses;
 use App\Services\LaporanService;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Controllers\HasMiddleware;
+use Illuminate\Routing\Controllers\Middleware;
 use Illuminate\Support\Facades\DB;
 
-class LaporanController extends Controller
+class LaporanController extends Controller implements HasMiddleware
 {
     protected $laporanService;
+
+    public static function middleware(): array
+    {
+        return [
+            new Middleware('auth'),
+        ];
+    }
 
     public function __construct(LaporanService $laporanService)
     {
@@ -83,7 +92,7 @@ class LaporanController extends Controller
                     $row->kode_aset ?? '-',
                     $row->nama_aset ?? '-',
                     $row->peruntukan ?? '-',
-                    $row->opd ?? 'BPKAD',
+                    $row->opdSipat->nama ?? $row->opd ?? '-',
                     $row->luas ?? 0,
                     $row->harga_perolehan ?? 0,
                     $row->tanggal_perolehan ?? '-',

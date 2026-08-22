@@ -119,11 +119,11 @@
                         <div class="row g-3">
                             <div class="col-md-6">
                                 <label class="form-label small fw-semibold text-secondary mb-1"><i class="bi bi-building me-1"></i> OPD Pengelola</label>
-                                <select name="opd" class="form-select">
+                                <select name="opd_id" class="form-select">
                                     <option value="">-- Semua OPD --</option>
-                                    <option value="KOSONG" {{ request('opd') === 'KOSONG' ? 'selected' : '' }}>[Tanpa OPD / Kosong]</option>
+                                    <option value="KOSONG" {{ request('opd_id', request('opd')) === 'KOSONG' ? 'selected' : '' }}>[Tanpa OPD / Kosong]</option>
                                     @foreach($opdList as $opd)
-                                        <option value="{{ $opd->nama }}" {{ request('opd') == $opd->nama ? 'selected' : '' }}>{{ $opd->nama }}</option>
+                                        <option value="{{ $opd->id }}" {{ (string) request('opd_id', request('opd')) === (string) $opd->id ? 'selected' : '' }}>{{ $opd->nama }}</option>
                                     @endforeach
                                 </select>
                             </div>

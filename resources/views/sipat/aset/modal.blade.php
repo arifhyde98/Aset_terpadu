@@ -70,7 +70,7 @@
                 {{ $aset->kode_aset ?? '-' }}
             </span>
             <span class="badge bg-secondary-subtle text-body-secondary fw-normal px-2.5 py-1" style="font-size: 0.78rem;">
-                {{ $aset->opd ?? 'BPKAD' }}
+                {{ $aset->opdSipat->nama ?? $aset->opd ?? '-' }}
             </span>
         </div>
         <h4 class="modal-title fw-bold mb-0 text-body">{{ $aset->nama_aset }}</h4>
@@ -118,7 +118,7 @@
                 <div class="row g-2">
                     <div class="col-md-6 col-lg-4">
                         <div class="detail-label">OPD PENGELOLA</div>
-                        <div class="detail-value text-body">{{ $aset->opd ?? '-' }}</div>
+                        <div class="detail-value text-body">{{ $aset->opdSipat->nama ?? $aset->opd ?? '-' }}</div>
                     </div>
                     <div class="col-md-6 col-lg-4">
                         <div class="detail-label">PENGGUNAAN / PERUNTUKAN</div>

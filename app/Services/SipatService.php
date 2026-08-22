@@ -129,7 +129,7 @@ class SipatService
             ];
         }
 
-        $asetRows = DB::table('aset_tanah')->select('id_aset', 'opd')->get();
+        $asetRows = AsetTanah::with('opdSipat')->select('id_aset', 'opd', 'opd_id')->get();
         $asetBersertifikat = 0;
         $asetKendala       = 0;
         $asetProses        = 0;
@@ -185,7 +185,8 @@ class SipatService
                 $asetProses++;
             }
 
-            $opdKey = !empty($aset->opd) ? $aset->opd : 'Tidak Diketahui';
+            $opdLabel = $aset->opdSipat->nama ?? trim((string) $aset->opd);
+            $opdKey = $opdLabel !== '' ? $opdLabel : 'Tidak Diketahui';
             $opdStats[$opdKey] = ($opdStats[$opdKey] ?? 0) + 1;
         }
 
@@ -277,9 +278,10 @@ class SipatService
                     'p.tgl_mulai as created_at',
                     's.nama_status',
                     'a.nama_aset',
-                    'a.opd',
+                    DB::raw("COALESCE(o.nama, NULLIF(TRIM(a.opd), ''), 'Tidak Diketahui') as opd"),
                     DB::raw("'Administrator' as user_name")
                 )
+                ->leftJoin('opd as o', 'o.id', '=', 'a.opd_id')
                 ->orderBy('p.id_proses', 'desc')
                 ->limit(5)
                 ->get();

@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\AsetTanah;
+use App\Models\OpdSipat;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
@@ -17,7 +18,7 @@ class LaporanService
         $statusIds = is_array($rawStatus) ? array_filter($rawStatus) : ($rawStatus ? [$rawStatus] : []);
 
         return [
-            'opd' => $input['opd'] ?? '',
+            'opd_id' => $input['opd_id'] ?? ($input['opd'] ?? ''),
             'status' => $statusIds,
             'tanggal_perolehan' => $input['tanggal_perolehan'] ?? '',
             'q' => $input['q'] ?? '',
@@ -32,15 +33,21 @@ class LaporanService
      */
     public function buildQuery(array $filters)
     {
-        $query = AsetTanah::with(['latestProses.statusProses']);
+        $query = AsetTanah::with(['latestProses.statusProses', 'opdSipat']);
 
-        if (!empty($filters['opd'])) {
-            if ($filters['opd'] === 'KOSONG') {
+        $opdFilter = $filters['opd_id'] ?? '';
+        if ($opdFilter !== '') {
+            if ($opdFilter === 'KOSONG') {
                 $query->where(function($q) {
-                    $q->whereNull('opd')->orWhere('opd', '');
+                    $q->whereNull('opd_id')
+                      ->where(function ($q2) {
+                          $q2->whereNull('opd')->orWhere('opd', '');
+                      });
                 });
+            } elseif (is_numeric($opdFilter)) {
+                $query->where('opd_id', (int) $opdFilter);
             } else {
-                $query->where('opd', $filters['opd']);
+                $query->where('opd', $opdFilter);
             }
         }
 
@@ -61,6 +68,9 @@ class LaporanService
                   ->orWhere('nama_aset', 'LIKE', $search)
                   ->orWhere('peruntukan', 'LIKE', $search)
                   ->orWhere('opd', 'LIKE', $search)
+                  ->orWhereHas('opdSipat', function ($opdQuery) use ($search) {
+                      $opdQuery->where('nama', 'LIKE', $search);
+                  })
                   ->orWhere('alamat', 'LIKE', $search);
             });
         }
@@ -86,8 +96,18 @@ class LaporanService
         }
 
         $activeFilters = [];
-        if (!empty($filters['opd'])) {
-            $activeFilters[] = ['label' => 'OPD', 'value' => $filters['opd']];
+        if (!empty($filters['opd_id'])) {
+            $opdLabel = 'OPD';
+            if ($filters['opd_id'] === 'KOSONG') {
+                $opdLabel = 'Tanpa OPD';
+                $opdValue = 'Kosong';
+            } elseif (is_numeric($filters['opd_id'])) {
+                $opd = OpdSipat::find((int) $filters['opd_id']);
+                $opdValue = $opd->nama ?? (string) $filters['opd_id'];
+            } else {
+                $opdValue = (string) $filters['opd_id'];
+            }
+            $activeFilters[] = ['label' => $opdLabel, 'value' => $opdValue];
         }
         if (!empty($filters['tanggal_perolehan'])) {
             $activeFilters[] = ['label' => 'Tanggal Perolehan', 'value' => $filters['tanggal_perolehan']];
@@ -205,7 +225,7 @@ class LaporanService
             $sheet->setCellValue('B' . $rowNumber, (string) ($row->kode_aset ?? ''));
             $sheet->setCellValue('C' . $rowNumber, (string) ($row->nama_aset ?? ''));
             $sheet->setCellValue('D' . $rowNumber, (string) ($row->peruntukan ?? '-'));
-            $sheet->setCellValue('E' . $rowNumber, (string) ($row->opd ?? '-'));
+            $sheet->setCellValue('E' . $rowNumber, (string) ($row->opdSipat->nama ?? $row->opd ?? '-'));
             $sheet->setCellValue('F' . $rowNumber, (float) ($row->luas ?? 0));
             $sheet->setCellValue('G' . $rowNumber, (float) ($row->harga_perolehan ?? 0));
             $sheet->setCellValue('H' . $rowNumber, $row->tanggal_perolehan ? date('d-m-Y', strtotime($row->tanggal_perolehan)) : '-');

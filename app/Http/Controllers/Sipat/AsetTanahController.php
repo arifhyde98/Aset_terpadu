@@ -18,12 +18,21 @@ use App\Models\Activity;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Routing\Controllers\HasMiddleware;
+use Illuminate\Routing\Controllers\Middleware;
 use Illuminate\View\View;
 
-class AsetTanahController extends Controller
+class AsetTanahController extends Controller implements HasMiddleware
 {
     protected $sipatService;
     protected $asetTanahService;
+
+    public static function middleware(): array
+    {
+        return [
+            new Middleware('auth'),
+        ];
+    }
 
     /**
      * Konstruktor Controller.
@@ -88,10 +97,9 @@ class AsetTanahController extends Controller
      * @param int $id
      * @return JsonResponse
      */
-    public function show($id): JsonResponse
+    public function show(AsetTanah $aset): JsonResponse
     {
-        $aset = AsetTanah::with(['prosesAset.statusProses', 'latestProses.statusProses'])->findOrFail($id);
-        return response()->json($aset);
+        return response()->json($aset->load(['prosesAset.statusProses', 'latestProses.statusProses']));
     }
 
     /**
@@ -100,9 +108,9 @@ class AsetTanahController extends Controller
      * @param int $id
      * @return View
      */
-    public function modal($id): View
+    public function modal(AsetTanah $aset): View
     {
-        $data = $this->asetTanahService->getAsetDetailsForModal($id);
+        $data = $this->asetTanahService->getAsetDetailsForModal($aset->id_aset);
 
         return view('sipat.aset.modal', [
             'aset'             => $data['aset'],
@@ -120,9 +128,8 @@ class AsetTanahController extends Controller
      * @param int $id
      * @return View
      */
-    public function edit($id): View
+    public function edit(AsetTanah $aset): View
     {
-        $aset = AsetTanah::findOrFail($id);
         $opdList = OpdSipat::where('aktif', 1)->orderBy('nama', 'asc')->get();
         $statusList = StatusProses::orderBy('urutan', 'asc')->get();
         return view('sipat.aset.edit', compact('aset', 'opdList', 'statusList'));
@@ -135,9 +142,9 @@ class AsetTanahController extends Controller
      * @param int $id
      * @return RedirectResponse
      */
-    public function update(UpdateAsetTanahRequest $request, $id): RedirectResponse
+    public function update(UpdateAsetTanahRequest $request, AsetTanah $aset): RedirectResponse
     {
-        $this->asetTanahService->updateAset($id, $request->validated());
+        $this->asetTanahService->updateAset($aset->id_aset, $request->validated());
 
         return redirect()->route('sipat.aset.index')->with('success', 'Data Aset Tanah berhasil diperbarui.');
     }
@@ -148,9 +155,9 @@ class AsetTanahController extends Controller
      * @param int $id
      * @return RedirectResponse
      */
-    public function destroy($id): RedirectResponse
+    public function destroy(AsetTanah $aset): RedirectResponse
     {
-        $this->asetTanahService->deleteAset($id);
+        $this->asetTanahService->deleteAset($aset->id_aset);
 
         return redirect()->route('sipat.aset.index')->with('success', 'Data Aset Tanah berhasil dihapus.');
     }
@@ -162,9 +169,9 @@ class AsetTanahController extends Controller
      * @param int $id
      * @return RedirectResponse
      */
-    public function storeProses(StoreProsesAsetRequest $request, $id): RedirectResponse
+    public function storeProses(StoreProsesAsetRequest $request, AsetTanah $aset): RedirectResponse
     {
-        $this->asetTanahService->addProsesBpn($id, $request->validated());
+        $this->asetTanahService->addProsesBpn($aset->id_aset, $request->validated());
 
         return redirect()->route('sipat.aset.index')->with('success', 'Riwayat Proses BPN berhasil ditambahkan.');
     }
@@ -205,9 +212,9 @@ class AsetTanahController extends Controller
      * @param int $id
      * @return RedirectResponse
      */
-    public function storePengamanan(StorePengamananFisikRequest $request, $id): RedirectResponse
+    public function storePengamanan(StorePengamananFisikRequest $request, AsetTanah $aset): RedirectResponse
     {
-        $this->asetTanahService->savePengamananFisik($id, $request->validated());
+        $this->asetTanahService->savePengamananFisik($aset->id_aset, $request->validated());
 
         return redirect()->route('sipat.aset.index')->with('success', 'Status pengamanan fisik aset berhasil diperbarui.');
     }
@@ -219,10 +226,10 @@ class AsetTanahController extends Controller
      * @param int $id
      * @return RedirectResponse
      */
-    public function storeDokumen(StoreDokumenAsetRequest $request, $id): RedirectResponse
+    public function storeDokumen(StoreDokumenAsetRequest $request, AsetTanah $aset): RedirectResponse
     {
         $this->asetTanahService->saveDokumenAset(
-            $id, 
+            $aset->id_aset, 
             $request->validated(), 
             $request->file('file')
         );

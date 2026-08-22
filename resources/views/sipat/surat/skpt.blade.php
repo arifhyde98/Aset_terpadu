@@ -8,6 +8,30 @@
     </div>
 </div>
 
+@if(session('success'))
+    <div class="alert alert-success alert-dismissible fade show rounded-3 mb-4" role="alert">
+        {{ session('success') }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+@endif
+
+@if(session('error'))
+    <div class="alert alert-danger alert-dismissible fade show rounded-3 mb-4" role="alert">
+        {{ session('error') }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+@endif
+
+@if($errors->any())
+    <div class="alert alert-danger rounded-3 mb-4" role="alert">
+        <ul class="mb-0">
+            @foreach($errors->all() as $error)
+                <li>{{ $error }}</li>
+            @endforeach
+        </ul>
+    </div>
+@endif
+
 <div class="row g-3">
     <div class="col-lg-7">
         <div class="card clean-card border-0 mb-3">
@@ -411,8 +435,8 @@
                                     <td>{{ $skpt['batas_barat'] ?? '-' }}</td>
                                 </tr>
                             </table>
-                            <div class="mt-2">{!! nl2br(esc($asalTanah)) !!}</div>
-                            <div class="mt-2">{!! nl2br(esc($pernyataanTanah)) !!}</div>
+                            <div class="mt-2">{!! nl2br(e($asalTanah)) !!}</div>
+                            <div class="mt-2">{!! nl2br(e($pernyataanTanah)) !!}</div>
                             <div class="mt-2">Demikian surat keterangan penguasaan tanah ini dibuat dengan sebenarnya untuk dipergunakan sebagaimana mestinya dan mengingat sumpah jabatan.</div>
                             @if (!empty($skpt['keterangan']))
                                 <div class="mt-2">Keterangan: {{ $skpt['keterangan'] }}</div>

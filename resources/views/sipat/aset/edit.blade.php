@@ -41,10 +41,10 @@
 
                     <div class="col-md-6">
                         <label class="form-label small fw-semibold">OPD Pengelola</label>
-                        <select name="opd" class="form-select">
+                        <select name="opd_id" class="form-select">
                             <option value="">-- Pilih OPD Pengelola --</option>
                             @foreach($opdList as $opd)
-                                <option value="{{ $opd->nama }}" {{ old('opd', $aset->opd) == $opd->nama ? 'selected' : '' }}>{{ $opd->nama }}</option>
+                                <option value="{{ $opd->id }}" {{ old('opd_id', $aset->opd_id) == $opd->id ? 'selected' : '' }}>{{ $opd->nama }}</option>
                             @endforeach
                         </select>
                     </div>

@@ -250,7 +250,7 @@
                     <td>{{ $row->kode_aset ?? '-' }}</td>
                     <td>{{ $row->nama_aset }}</td>
                     <td>{{ $row->peruntukan ?? '-' }}</td>
-                    <td>{{ $row->opd ?? '-' }}</td>
+                    <td>{{ $row->opdSipat->nama ?? $row->opd ?? '-' }}</td>
                     <td class="text-right">{{ number_format($row->luas ?? 0, 2, ',', '.') }}</td>
                     <td class="text-right">{{ $row->harga_perolehan ? number_format($row->harga_perolehan, 2, ',', '.') : '-' }}</td>
                     <td class="text-center">{{ $row->tanggal_perolehan ? date('d-m-Y', strtotime($row->tanggal_perolehan)) : '-' }}</td>

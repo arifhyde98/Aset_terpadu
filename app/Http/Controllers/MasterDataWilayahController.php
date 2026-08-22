@@ -8,10 +8,19 @@ use App\Models\Desa;
 use App\Models\Camat;
 use App\Models\KepalaDesa;
 use App\Models\Pemohon;
+use Illuminate\Routing\Controllers\HasMiddleware;
+use Illuminate\Routing\Controllers\Middleware;
 use Illuminate\Support\Facades\DB;
 
-class MasterDataWilayahController extends Controller
+class MasterDataWilayahController extends Controller implements HasMiddleware
 {
+    public static function middleware(): array
+    {
+        return [
+            new Middleware('auth'),
+        ];
+    }
+
     public function index()
     {
         $kecamatan = Kecamatan::orderBy('nama', 'asc')->get();
