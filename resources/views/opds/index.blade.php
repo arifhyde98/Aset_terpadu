@@ -22,7 +22,7 @@
                 @csrf
                 @method('DELETE')
                 <button type="submit" class="btn btn-light border shadow-sm fw-medium d-flex align-items-center gap-2">
-                    <i class="bi bi-trash3 text-danger"></i> Kosongkan Master OPD
+                    <i class="bi bi-trash3 text-danger"></i> Kosongkan OPD Kosong
                 </button>
             </form>
             <button type="button" class="btn btn-primary shadow-sm fw-medium d-flex align-items-center gap-2" data-bs-toggle="modal" data-bs-target="#addOpdModal">
@@ -235,8 +235,8 @@
             truncateForm.addEventListener('submit', function(e) {
                 e.preventDefault();
                 Swal.fire({
-                    title: 'Kosongkan Master OPD?',
-                    text: "Seluruh data instansi DAN AKUN ADMIN terkait akan dihapus permanen. Lanjutkan?",
+                    title: 'Kosongkan OPD Tanpa Kendaraan?',
+                    text: "Seluruh data instansi (dan akun adminnya) yang tidak memiliki kendaraan terdaftar akan dihapus permanen. Lanjutkan?",
                     icon: 'warning',
                     showCancelButton: true,
                     confirmButtonColor: '#dc3545',

@@ -50,8 +50,8 @@ class ActivityController extends Controller implements HasMiddleware
                 'description' => $activity->description,
                 'user' => $activity->user,
                 'created_at' => $activity->created_at,
-                'before_data' => null,
-                'after_data' => null,
+                'before_data' => json_decode($activity->old_data, true) ?: null,
+                'after_data' => json_decode($activity->new_data, true) ?: null,
             ];
         });
 
@@ -128,23 +128,44 @@ class ActivityController extends Controller implements HasMiddleware
     }
 
     /**
-     * Menghapus seluruh riwayat aktivitas dari database (Truncate).
+     * Menghapus riwayat aktivitas dari database berdasarkan modul yang dipilih.
      * 
+     * @param \Illuminate\Http\Request $request
      * @return \Illuminate\Http\RedirectResponse
      */
-    public function clear()
+    public function clear(Request $request)
     {
-        Activity::truncate();
+        $modules = $request->input('modules', []);
+        $cleared = [];
 
-        if (Schema::hasTable('elabel_activity_logs')) {
-            ElabelActivityLog::truncate();
+        // 1. E-RANDIS
+        if (isset($modules['erandis']) && $modules['erandis'] == '1') {
+            Activity::truncate();
+            $cleared[] = 'E-RANDIS';
         }
 
-        if (Schema::hasTable('audit_logs')) {
-            DB::table('audit_logs')->truncate();
+        // 2. eLABEL
+        if (isset($modules['elabel']) && $modules['elabel'] == '1') {
+            if (Schema::hasTable('elabel_activity_logs')) {
+                ElabelActivityLog::truncate();
+                $cleared[] = 'eLABEL';
+            }
         }
-        
-        return redirect()->back()->with('success', 'Seluruh riwayat aktivitas berhasil dibersihkan.');
+
+        // 3. SIPAT
+        if (isset($modules['sipat']) && $modules['sipat'] == '1') {
+            if (Schema::hasTable('audit_logs')) {
+                DB::table('audit_logs')->truncate();
+                $cleared[] = 'SIPAT';
+            }
+        }
+
+        if (empty($cleared)) {
+            return redirect()->back()->with('info', 'Tidak ada modul log aktivitas yang dipilih untuk dibersihkan.');
+        }
+
+        $modulesStr = implode(', ', $cleared);
+        return redirect()->back()->with('success', "Riwayat aktivitas untuk modul [{$modulesStr}] berhasil dibersihkan.");
     }
 
     private function moduleLabel(string $moduleKey): string

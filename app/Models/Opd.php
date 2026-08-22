@@ -34,6 +34,17 @@ class Opd extends Model
     }
 
     /**
+     * Mendapatkan daftar semua kendaraan EBMD yang dimiliki oleh OPD ini.
+     * 
+     * @return HasMany
+     */
+    public function ebmdVehicles(): HasMany
+    {
+        return $this->hasMany(\App\Models\EbmdVehicle::class, 'opd_id');
+    }
+
+
+    /**
      * Mendapatkan data akun admin yang mengelola OPD ini.
      * 
      * @return \Illuminate\Database\Eloquent\Relations\HasOne

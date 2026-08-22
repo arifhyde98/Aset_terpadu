@@ -10,7 +10,7 @@
             <p class="text-secondary mb-0 small">Memantau jejak aktivitas E-RANDIS, SIPAT, dan eLABEL dalam satu tempat.</p>
         </div>
         <div class="d-flex gap-2">
-            <form action="{{ route('activities.clear') }}" method="POST" class="delete-confirm">
+            <form action="{{ route('activities.clear') }}" method="POST" class="clear-logs-confirm">
                 @csrf
                 @method('DELETE')
                 <button type="submit" class="btn btn-outline-danger d-flex align-items-center gap-2 rounded-3 shadow-sm">
@@ -190,38 +190,114 @@
 }
 </style>
 
+@endsection
+
+@push('scripts')
 <script>
-document.addEventListener('click', function (event) {
-    const button = event.target.closest('.detail-activity-btn');
-    if (!button) return;
+document.addEventListener('DOMContentLoaded', function () {
+    document.addEventListener('click', function (event) {
+        const button = event.target.closest('.detail-activity-btn');
+        if (!button) return;
 
-    const parseJSON = (value) => {
-        if (!value || value === 'null' || value === 'undefined') return null;
-        try {
-            return JSON.parse(value);
-        } catch (e) {
-            return value;
-        }
-    };
+        const parseJSON = (value) => {
+            if (!value || value === 'null' || value === 'undefined') return null;
+            try {
+                return JSON.parse(value);
+            } catch (e) {
+                return value;
+            }
+        };
 
-    const formatValue = (value) => {
-        if (value === null || value === undefined || value === '') return '-';
-        if (typeof value === 'string') return value;
-        return JSON.stringify(value, null, 2);
-    };
+        const formatValue = (value) => {
+            if (value === null || value === undefined || value === '') return '-';
+            if (typeof value === 'string') return value;
+            return JSON.stringify(value, null, 2);
+        };
 
-    document.getElementById('activityDetailMeta').textContent =
-        `${button.dataset.source} • ${button.dataset.createdAt}`;
-    document.getElementById('activityDetailDescription').textContent = button.dataset.description || '-';
-    document.getElementById('activityDetailModule').textContent = button.dataset.module || '-';
-    document.getElementById('activityDetailUser').textContent = button.dataset.user || '-';
-    document.getElementById('activityDetailTime').textContent = button.dataset.createdAt || '-';
+        document.getElementById('activityDetailMeta').textContent =
+            `${button.dataset.source} • ${button.dataset.createdAt}`;
+        document.getElementById('activityDetailDescription').textContent = button.dataset.description || '-';
+        document.getElementById('activityDetailModule').textContent = button.dataset.module || '-';
+        document.getElementById('activityDetailUser').textContent = button.dataset.user || '-';
+        document.getElementById('activityDetailTime').textContent = button.dataset.createdAt || '-';
 
-    const before = parseJSON(button.dataset.before);
-    const after = parseJSON(button.dataset.after);
+        const before = parseJSON(button.dataset.before);
+        const after = parseJSON(button.dataset.after);
 
-    document.getElementById('activityDetailBefore').textContent = formatValue(before);
-    document.getElementById('activityDetailAfter').textContent = formatValue(after);
+        document.getElementById('activityDetailBefore').textContent = formatValue(before);
+        document.getElementById('activityDetailAfter').textContent = formatValue(after);
+    });
+
+    // Clear Logs Confirmation with Checklist Popup
+    const clearLogsForm = document.querySelector('.clear-logs-confirm');
+    if (clearLogsForm) {
+        clearLogsForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const root = document.getElementById('theme-root');
+            const theme = root ? root.getAttribute('data-theme') : 'light';
+            
+            Swal.fire({
+                title: 'Bersihkan Log Aktivitas',
+                html: `
+                    <p class="text-start mb-3 small text-secondary">Pilih modul log aktivitas yang ingin Anda bersihkan:</p>
+                    <div class="text-start px-3">
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" id="clear_erandis" checked>
+                            <label class="form-check-label fw-medium" for="clear_erandis">
+                                E-RANDIS (Log Sistem/Kendaraan)
+                            </label>
+                        </div>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" id="clear_sipat">
+                            <label class="form-check-label fw-medium" for="clear_sipat">
+                                SIPAT (Log Audit Tanah)
+                            </label>
+                        </div>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" id="clear_elabel">
+                            <label class="form-check-label fw-medium" for="clear_elabel">
+                                eLABEL (Log QR Code Aset)
+                            </label>
+                        </div>
+                    </div>
+                `,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc3545',
+                cancelButtonColor: '#64748b',
+                confirmButtonText: 'Ya, Bersihkan!',
+                cancelButtonText: 'Batal',
+                reverseButtons: true,
+                background: theme === 'dark' ? '#1e293b' : '#ffffff',
+                color: theme === 'dark' ? '#f1f5f9' : '#1e293b',
+                preConfirm: () => {
+                    const erandis = document.getElementById('clear_erandis').checked;
+                    const sipat = document.getElementById('clear_sipat').checked;
+                    const elabel = document.getElementById('clear_elabel').checked;
+
+                    if (!erandis && !sipat && !elabel) {
+                        Swal.showValidationMessage('Harap pilih minimal satu modul!');
+                        return false;
+                    }
+
+                    return { erandis, sipat, elabel };
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    const data = result.value;
+                    Object.keys(data).forEach(key => {
+                        const input = document.createElement('input');
+                        input.type = 'hidden';
+                        input.name = `modules[${key}]`;
+                        input.value = data[key] ? '1' : '0';
+                        clearLogsForm.appendChild(input);
+                    });
+
+                    clearLogsForm.submit();
+                }
+            });
+        });
+    }
 });
 </script>
-@endsection
+@endpush

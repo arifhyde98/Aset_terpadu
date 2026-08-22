@@ -10,7 +10,9 @@ class Activity extends \Illuminate\Database\Eloquent\Model
     public const MODULE_SIPAT = 2;
     public const MODULE_ELABEL = 3;
 
-    protected $fillable = ['user_id', 'module_id', 'module_key', 'description', 'type'];
+    protected $fillable = ['user_id', 'module_id', 'module_key', 'description', 'type', 'old_data', 'new_data'];
+
+    protected static $activitiesColumns = null;
 
     public function user()
     {
@@ -20,7 +22,7 @@ class Activity extends \Illuminate\Database\Eloquent\Model
     /**
      * Mencatat aktivitas ke database.
      */
-    public static function log(string $description, string $type = 'info', int $moduleId = self::MODULE_ERANDIS, string $moduleKey = 'erandis')
+    public static function log(string $description, string $type = 'info', int $moduleId = self::MODULE_ERANDIS, string $moduleKey = 'erandis', ?array $oldData = null, ?array $newData = null)
     {
         $payload = [
             'user_id' => auth()->id(),
@@ -28,12 +30,29 @@ class Activity extends \Illuminate\Database\Eloquent\Model
             'type' => $type,
         ];
 
-        if (\Illuminate\Support\Facades\Schema::hasColumn('activities', 'module_id')) {
+        if (is_null(self::$activitiesColumns)) {
+            self::$activitiesColumns = [
+                'module_id' => \Illuminate\Support\Facades\Schema::hasColumn('activities', 'module_id'),
+                'module_key' => \Illuminate\Support\Facades\Schema::hasColumn('activities', 'module_key'),
+                'old_data' => \Illuminate\Support\Facades\Schema::hasColumn('activities', 'old_data'),
+                'new_data' => \Illuminate\Support\Facades\Schema::hasColumn('activities', 'new_data'),
+            ];
+        }
+
+        if (self::$activitiesColumns['module_id']) {
             $payload['module_id'] = $moduleId;
         }
 
-        if (\Illuminate\Support\Facades\Schema::hasColumn('activities', 'module_key')) {
+        if (self::$activitiesColumns['module_key']) {
             $payload['module_key'] = $moduleKey;
+        }
+
+        if (self::$activitiesColumns['old_data'] && !is_null($oldData)) {
+            $payload['old_data'] = json_encode($oldData);
+        }
+
+        if (self::$activitiesColumns['new_data'] && !is_null($newData)) {
+            $payload['new_data'] = json_encode($newData);
         }
 
         return self::create($payload);

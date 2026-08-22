@@ -117,21 +117,64 @@ class OpdController extends Controller implements HasMiddleware
     }
 
     /**
-     * Mengosongkan seluruh data OPD (Master Data).
+     * Mengosongkan data OPD yang tidak memiliki kendaraan (Master Data).
      * 
      * @return \Illuminate\Http\RedirectResponse
      */
     public function truncate(): \Illuminate\Http\RedirectResponse
     {
-        // Gunakan get()->each->delete() agar event 'deleting' terpanggil 
-        // (untuk hapus avatar user via cascade dan observer)
-        \App\Models\Opd::all()->each(function($opd) {
-            $opd->delete();
+        // Hanya ambil OPD yang tidak memiliki kendaraan (Real/e-BMD) dan tidak terhubung ke pemetaan SIPAT
+        $opdsToDelete = \App\Models\Opd::whereDoesntHave('vehicles')
+            ->whereDoesntHave('ebmdVehicles')
+            ->whereDoesntHave('sipatOpds')
+            ->get();
+
+        $count = $opdsToDelete->count();
+
+        if ($count === 0) {
+            return redirect()->route('opds.index')
+                ->with('info', 'Tidak ada data Master OPD kosong (tanpa kendaraan) yang perlu dihapus.');
+        }
+
+        // Kumpulkan detail OPD sebelum dihapus
+        $deletedOpdsDetail = $opdsToDelete->map(fn($o) => [
+            'Nama OPD' => $o->nama,
+            'Singkatan' => $o->singkatan ?? '-',
+            'Alamat' => $o->alamat ?? '-',
+            'Email Admin' => $o->user->email ?? '-'
+        ])->toArray();
+
+        // Gunakan get()->each->delete() dalam block withoutEvents agar observer tidak memicu log individual
+        \App\Models\Opd::withoutEvents(function () use ($opdsToDelete) {
+            \App\Models\User::withoutEvents(function () use ($opdsToDelete) {
+                \Illuminate\Support\Facades\DB::transaction(function () use ($opdsToDelete) {
+                    $opdsToDelete->each(function($opd) {
+                        if ($opd->user) {
+                            // Hapus avatar user secara manual karena observer dimatikan
+                            if ($opd->user->avatar) {
+                                \Illuminate\Support\Facades\Storage::disk('public')->delete($opd->user->avatar);
+                            }
+                            $opd->user->delete();
+                        }
+                        $opd->delete();
+                    });
+                });
+            });
         });
+
+        // Catat 1 entri log aktivitas massal terpadu dengan detail
+        \App\Models\Activity::log(
+            "Melakukan penghapusan OPD secara massal", 
+            'danger', 
+            \App\Models\Activity::MODULE_ERANDIS, 
+            'erandis', 
+            $deletedOpdsDetail
+        );
 
         // Invalidation massal seluruh statistik dashboard
         $this->vehicleService->invalidateDashboardStats(invalidateAllOpd: true);
 
-        return redirect()->route('opds.index')->with('success', 'Seluruh data Master OPD berhasil dikosongkan.');
+        return redirect()->route('opds.index')
+            ->with('success', "Sebanyak {$count} data Master OPD yang tidak memiliki kendaraan berhasil dikosongkan.");
     }
 }

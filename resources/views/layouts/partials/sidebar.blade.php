@@ -246,7 +246,7 @@
                    data-bs-toggle-tooltip="tooltip" data-bs-placement="right" title="ERANDIS">
                     <div class="module-header-title">
                         <i class="bi bi-car-front-fill module-icon text-warning"></i>
-                        <span class="module-name">ERANDIS</span>
+                        <span class="module-name">KENDARAN DINAS</span>
                     </div>
                     <i class="bi bi-chevron-down chevron-icon"></i>
                 </a>
@@ -368,7 +368,7 @@
                    data-bs-toggle-tooltip="tooltip" data-bs-placement="right" title="ELABEL">
                     <div class="module-header-title">
                         <i class="bi bi-archive-fill module-icon text-info"></i>
-                        <span class="module-name">ELABEL</span>
+                        <span class="module-name">MANAJEMEN ARSIP</span>
                     </div>
                     <i class="bi bi-chevron-down chevron-icon"></i>
                 </a>
