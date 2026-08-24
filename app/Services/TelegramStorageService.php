@@ -41,7 +41,7 @@ class TelegramStorageService
             $url = "https://api.telegram.org/bot{$this->botToken}/sendDocument";
             $originalName = $file->getClientOriginalName();
 
-            $response = Http::timeout(120)
+            $response = Http::retry(3, 2000)->timeout(120)
                 ->attach('document', file_get_contents($file->getRealPath()), $originalName)
                 ->post($url, [
                     'chat_id' => $this->chatId,
@@ -64,10 +64,9 @@ class TelegramStorageService
                 }
             }
 
-            Log::error('TelegramStorageService upload failed: ' . $response->body());
             return null;
         } catch (\Throwable $e) {
-            Log::error('TelegramStorageService exception: ' . $e->getMessage());
+            // Silently handle network/timeout exceptions to allow CLI sync continuity
             return null;
         }
     }
@@ -104,6 +103,46 @@ class TelegramStorageService
     }
 
     /**
+     * Stream berkas langsung ke browser pengguna dengan fallback otomatis ke berkas cadangan lokal jika offline.
+     *
+     * @param string $fileId
+     * @param string|null $fallbackLocalPath
+     * @param string|null $downloadName
+     * @return StreamedResponse|\Symfony\Component\HttpFoundation\BinaryFileResponse
+     */
+    public function streamToBrowserWithFallback(string $fileId, ?string $fallbackLocalPath = null, ?string $downloadName = null)
+    {
+        $directUrl = $this->getDirectUrl($fileId);
+        
+        if ($directUrl) {
+            $remoteStream = @fopen($directUrl, 'rb');
+            if ($remoteStream) {
+                $headers = [
+                    'Content-Type' => 'application/pdf',
+                    'Content-Disposition' => 'inline; filename="' . ($downloadName ?: 'dokumen.pdf') . '"',
+                ];
+
+                return response()->stream(function () use ($remoteStream) {
+                    fpassthru($remoteStream);
+                    if (is_resource($remoteStream)) {
+                        fclose($remoteStream);
+                    }
+                }, 200, $headers);
+            }
+        }
+
+        // Automatic Fallback to local backup if offline / unreachable
+        if ($fallbackLocalPath && file_exists(storage_path('app/public/' . $fallbackLocalPath))) {
+            return response()->file(storage_path('app/public/' . $fallbackLocalPath), [
+                'Content-Type' => 'application/pdf',
+                'Content-Disposition' => 'inline; filename="' . ($downloadName ?: 'dokumen.pdf') . '"',
+            ]);
+        }
+
+        abort(404, 'Berkas PDF tidak ditemukan di Telegram Cloud maupun di cadangan lokal.');
+    }
+
+    /**
      * Stream berkas langsung ke browser pengguna.
      *
      * @param string $fileId
@@ -112,26 +151,6 @@ class TelegramStorageService
      */
     public function streamToBrowser(string $fileId, ?string $downloadName = null)
     {
-        $directUrl = $this->getDirectUrl($fileId);
-        if (!$directUrl) {
-            abort(404, 'Berkas di Telegram Cloud tidak ditemukan atau token tidak valid.');
-        }
-
-        $remoteStream = @fopen($directUrl, 'rb');
-        if (!$remoteStream) {
-            abort(404, 'Gagal terhubung ke Telegram Cloud Storage.');
-        }
-
-        $headers = [
-            'Content-Type' => 'application/pdf',
-            'Content-Disposition' => 'inline; filename="' . ($downloadName ?: 'dokumen.pdf') . '"',
-        ];
-
-        return response()->stream(function () use ($remoteStream) {
-            fpassthru($remoteStream);
-            if (is_resource($remoteStream)) {
-                fclose($remoteStream);
-            }
-        }, 200, $headers);
+        return $this->streamToBrowserWithFallback($fileId, null, $downloadName);
     }
 }
