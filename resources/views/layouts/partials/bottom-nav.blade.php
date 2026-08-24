@@ -139,7 +139,7 @@
                         <div class="d-flex align-items-center gap-2">
                             <span class="badge bg-primary text-white rounded-pill p-1.5"><i class="bi bi-geo-alt-fill"></i></span>
                             <div class="lh-1">
-                                <span class="fw-bold fs-6 text-dark d-block">MODUL SIPAT</span>
+                                <span class="fw-bold fs-6 text-dark d-block">MODUL PENSERTIFAKATAN TANAH</span>
                                 <small class="text-secondary" style="font-size: 0.68rem;">Aset Tanah & Penggunaan Kantor</small>
                             </div>
                         </div>

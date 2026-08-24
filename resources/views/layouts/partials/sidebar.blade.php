@@ -81,10 +81,10 @@
                    data-bs-toggle="collapse" 
                    data-bs-target="#moduleSipat" 
                    aria-expanded="{{ Request::is('sipat*') || Request::is('master-data/status-proses*', 'master-data/wilayah*', 'master-data/kop-surat*', 'master-data/opd-sipat*', 'master-data/import*', 'master-data/log-aktivitas*') || (Request::is('activities*') && request('module') === 'sipat') ? 'true' : 'false' }}"
-                   data-bs-toggle-tooltip="tooltip" data-bs-placement="right" title="SIPAT">
+                   data-bs-toggle-tooltip="tooltip" data-bs-placement="right" title="PENSERTIFAKATAN TANAH">
                     <div class="module-header-title">
                         <i class="bi bi-geo-alt-fill module-icon text-primary"></i>
-                        <span class="module-name">SIPAT</span>
+                        <span class="module-name">PENSERTIFAKATAN TANAH</span>
                     </div>
                     <i class="bi bi-chevron-down chevron-icon"></i>
                 </a>
@@ -118,34 +118,6 @@
                                     <a href="{{ Route::has('sipat.peta.index') ? route('sipat.peta.index') : '#' }}" data-bs-toggle="tooltip" data-bs-placement="right" title="Peta Geografis GIS">
                                         <i class="bi bi-map"></i>
                                         <span>Peta Geografis GIS</span>
-                                    </a>
-                                </li>
-                            </ul>
-                        </div>
-                    </div>
-
-                    <!-- Nested Submenu 2: Legalitas & Pengamanan -->
-                    <div class="nested-group">
-                        <a class="nested-header {{ Request::is('sipat/proses*', 'sipat/pengamanan*') ? '' : 'collapsed' }}"
-                           data-bs-toggle="collapse"
-                           href="#sipatSubLegalitas"
-                           role="button"
-                           aria-expanded="{{ Request::is('sipat/proses*', 'sipat/pengamanan*') ? 'true' : 'false' }}">
-                            <span><i class="bi bi-shield-lock me-1 text-warning"></i> LEGALITAS & PROSES</span>
-                            <i class="bi bi-chevron-down nested-chevron"></i>
-                        </a>
-                        <div id="sipatSubLegalitas" class="collapse {{ Request::is('sipat/proses*', 'sipat/pengamanan*') ? 'show' : '' }}">
-                            <ul class="submenu-list">
-                                <li class="{{ Request::is('sipat/proses*') ? 'active' : '' }}">
-                                    <a href="{{ Route::has('sipat.proses.index') ? route('sipat.proses.index') : '#' }}" data-bs-toggle="tooltip" data-bs-placement="right" title="Status & Proses BPN">
-                                        <i class="bi bi-hourglass-split"></i>
-                                        <span>Status & Proses BPN</span>
-                                    </a>
-                                </li>
-                                <li class="{{ Request::is('sipat/pengamanan*') ? 'active' : '' }}">
-                                    <a href="{{ Route::has('sipat.pengamanan.index') ? route('sipat.pengamanan.index') : '#' }}" data-bs-toggle="tooltip" data-bs-placement="right" title="Pengamanan Fisik">
-                                        <i class="bi bi-shield-check"></i>
-                                        <span>Pengamanan Fisik</span>
                                     </a>
                                 </li>
                             </ul>
@@ -287,26 +259,7 @@
                     </div>
 
                     <!-- Nested Submenu 2: Operasional & Pemeliharaan -->
-                    <div class="nested-group">
-                        <a class="nested-header {{ Request::is('maintenance*') ? '' : 'collapsed' }}"
-                           data-bs-toggle="collapse"
-                           href="#erandisSubPemeliharaan"
-                           role="button"
-                           aria-expanded="{{ Request::is('maintenance*') ? 'true' : 'false' }}">
-                            <span><i class="bi bi-tools me-1 text-info"></i> SERVIS & PEMELIHARAAN</span>
-                            <i class="bi bi-chevron-down nested-chevron"></i>
-                        </a>
-                        <div id="erandisSubPemeliharaan" class="collapse {{ Request::is('maintenance*') ? 'show' : '' }}">
-                            <ul class="submenu-list">
-                                <li class="{{ Request::is('maintenance*') ? 'active' : '' }}">
-                                    <a href="{{ route('maintenance.index') }}" data-bs-toggle="tooltip" data-bs-placement="right" title="Servis & Pemeliharaan">
-                                        <i class="bi bi-wrench-adjusts"></i>
-                                        <span>Riwayat & Jadwal Servis</span>
-                                    </a>
-                                </li>
-                            </ul>
-                        </div>
-                    </div>
+                  
 
                     <!-- Nested Submenu 3: Pelaporan -->
                     <div class="nested-group">
@@ -455,7 +408,7 @@
                            href="#elabelSubSurat"
                            role="button"
                            aria-expanded="{{ Request::is('elabel/surat-penyerahan*', 'elabel/peminjaman*') ? 'true' : 'false' }}">
-                            <span><i class="bi bi-folder-symlink me-1 text-warning"></i> SURAT & LAYANAN</span>
+                            <span><i class="bi bi-folder-symlink me-1 text-warning"></i> SURAT PENYERAHAN</span>
                             <i class="bi bi-chevron-down nested-chevron"></i>
                         </a>
                         <div id="elabelSubSurat" class="collapse {{ Request::is('elabel/surat-penyerahan*', 'elabel/peminjaman*') ? 'show' : '' }}">
