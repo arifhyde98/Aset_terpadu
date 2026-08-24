@@ -25,7 +25,7 @@ class StoreElabelBpkbRequest extends FormRequest
             'tipe'         => ['nullable', 'string', 'max:100'],
             'isi_silinder' => ['nullable', 'string', 'max:50'],
             'pengguna'     => ['nullable', 'string', 'max:100'],
-            'pdf'          => ['nullable', 'file', 'mimes:pdf', 'max:5120'],
+            'pdf'          => ['nullable', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:20480'],
             'sipat_opd_id' => ['nullable', 'integer', 'exists:opd,id'],
         ];
     }
@@ -36,8 +36,8 @@ class StoreElabelBpkbRequest extends FormRequest
             'year.required'         => 'Tahun dokumen wajib diisi.',
             'vehicle_type.required' => 'Jenis kendaraan wajib dipilih.',
             'plate_number.required' => 'Nomor Polisi wajib diisi.',
-            'pdf.mimes'             => 'File dokumen harus berformat PDF.',
-            'pdf.max'               => 'Ukuran file PDF maksimal 5MB.',
+            'pdf.mimes'             => 'File dokumen harus berformat PDF, JPG, JPEG, atau PNG.',
+            'pdf.max'               => 'Ukuran file dokumen maksimal 20MB.',
         ];
     }
 }

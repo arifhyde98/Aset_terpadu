@@ -121,8 +121,8 @@
                     </div>
 
                     <div class="col-md-4">
-                        <label class="form-label fw-semibold small">Upload Dokumen Scan BPKB (PDF Max 5MB)</label>
-                        <input type="file" name="pdf" class="form-control" accept=".pdf">
+                        <label class="form-label fw-semibold small">Upload Dokumen Scan BPKB (PDF, JPG, PNG Max 20MB)</label>
+                        <input type="file" name="pdf" class="form-control" accept=".pdf,.jpg,.jpeg,.png">
                     </div>
                 </div>
 

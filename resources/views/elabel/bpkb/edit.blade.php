@@ -121,8 +121,8 @@
                     </div>
 
                     <div class="col-md-4">
-                        <label class="form-label fw-semibold small">Ganti File Scan BPKB (PDF Max 5MB)</label>
-                        <input type="file" name="pdf" class="form-control" accept=".pdf">
+                        <label class="form-label fw-semibold small">Ganti File Scan BPKB (PDF, JPG, PNG Max 20MB)</label>
+                        <input type="file" name="pdf" class="form-control" accept=".pdf,.jpg,.jpeg,.png">
                         @if($item->pdf_path)
                             <div class="small text-success mt-1"><i class="bi bi-file-earmark-check"></i> File scan saat ini tersedia. Upload file baru untuk mengganti.</div>
                         @endif

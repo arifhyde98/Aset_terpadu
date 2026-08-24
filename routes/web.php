@@ -49,6 +49,14 @@ Route::get('master-data', [MasterDataController::class, 'index'])->name('master-
 // Pengaturan & Manajemen User
 Route::get('settings', [SettingController::class, 'index'])->name('settings.index');
 Route::post('settings', [SettingController::class, 'update'])->name('settings.update');
+
+// Manajemen Backup (Spatie Backup)
+Route::get('settings/backups', [\App\Http\Controllers\BackupController::class, 'index'])->name('settings.backups.index');
+Route::post('settings/backups', [\App\Http\Controllers\BackupController::class, 'create'])->name('settings.backups.create');
+Route::get('settings/backups/status', [\App\Http\Controllers\BackupController::class, 'status'])->name('settings.backups.status');
+Route::get('settings/backups/download/{fileName}', [\App\Http\Controllers\BackupController::class, 'download'])->name('settings.backups.download')->where('fileName', '.*');
+Route::delete('settings/backups/{fileName}', [\App\Http\Controllers\BackupController::class, 'destroy'])->name('settings.backups.destroy')->where('fileName', '.*');
+
 Route::post('users/generate-opd-accounts', [UserController::class, 'generateAllOpdAccounts'])->name('users.generate-opd-accounts');
 Route::post('users/{user}/reset-password', [UserController::class, 'resetPassword'])->name('users.reset-password');
 Route::resource('users', UserController::class)->except(['create', 'edit', 'show']);

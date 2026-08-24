@@ -480,7 +480,31 @@ class ElabelBpkbController extends Controller implements HasMiddleware
             ->orderBy('elabel_box_years.box_id', 'asc')
             ->get();
 
-        if ($boxYears->isEmpty()) return null;
+        if ($boxYears->isEmpty()) {
+            $typeLabel = $vehicleType ?: 'R4';
+            $newCode = "BOX-{$year}-{$typeLabel}";
+            
+            $counter = 1;
+            $checkCode = $newCode;
+            while (ElabelBox::where('box_code', $checkCode)->exists()) {
+                $checkCode = $newCode . '-' . $counter;
+                $counter++;
+            }
+
+            $newBox = ElabelBox::create([
+                'box_code'     => $checkCode,
+                'location'     => 'Lemari Arsip Utama',
+                'vehicle_type' => $typeLabel,
+                'created_by'   => Auth::id() ?: 1,
+            ]);
+
+            ElabelBoxYear::create([
+                'box_id' => $newBox->id,
+                'year'   => $year,
+            ]);
+
+            return (int) $newBox->id;
+        }
 
         foreach ($boxYears as $row) {
             $countQuery = ElabelBpkb::where('box_id', $row->box_id)->where('status', '!=', 'Dihapus');
@@ -602,27 +626,25 @@ class ElabelBpkbController extends Controller implements HasMiddleware
 
     private function availableYears(?string $vehicleType): array
     {
-        $query = ElabelBoxYear::select('elabel_box_years.year')
+        $existingYears = ElabelBoxYear::select('elabel_box_years.year')
             ->distinct()
-            ->join('elabel_boxes', 'elabel_boxes.id', '=', 'elabel_box_years.box_id');
+            ->join('elabel_boxes', 'elabel_boxes.id', '=', 'elabel_box_years.box_id')
+            ->when($vehicleType !== null, function ($q) use ($vehicleType) {
+                $q->where('elabel_boxes.vehicle_type', $vehicleType);
+            })
+            ->pluck('year')
+            ->toArray();
 
-        if ($vehicleType !== null) {
-            $query->where('elabel_boxes.vehicle_type', $vehicleType);
-        }
+        $defaultRange = range((int) date('Y') + 1, 1990);
+        $allYears = array_unique(array_merge($defaultRange, $existingYears));
+        rsort($allYears);
 
-        return $query->orderBy('elabel_box_years.year', 'desc')->pluck('year')->toArray();
+        return $allYears;
     }
 
     private function isYearAvailable(int $year, ?string $vehicleType): bool
     {
-        $query = ElabelBoxYear::join('elabel_boxes', 'elabel_boxes.id', '=', 'elabel_box_years.box_id')
-            ->where('elabel_box_years.year', $year);
-
-        if ($vehicleType !== null) {
-            $query->where('elabel_boxes.vehicle_type', $vehicleType);
-        }
-
-        return $query->count() > 0;
+        return $year >= 1900 && $year <= 2100;
     }
 
     private function normalizeBpkbIdentity(array $data): array

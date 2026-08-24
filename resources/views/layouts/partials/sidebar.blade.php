@@ -510,10 +510,16 @@
                                     <span>Manajemen Pengguna</span>
                                 </a>
                             </li>
-                            <li class="{{ request()->routeIs('settings.*') ? 'active' : '' }}">
+                            <li class="{{ Request::is('settings') ? 'active' : '' }}">
                                 <a href="{{ route('settings.index') }}" data-bs-toggle="tooltip" data-bs-placement="right" title="Pengaturan System">
                                     <i class="bi bi-gear"></i>
                                     <span>Pengaturan System</span>
+                                </a>
+                            </li>
+                            <li class="{{ Request::is('settings/backups*') ? 'active' : '' }}">
+                                <a href="{{ route('settings.backups.index') }}" data-bs-toggle="tooltip" data-bs-placement="right" title="Backup Sistem">
+                                    <i class="bi bi-cloud-arrow-down"></i>
+                                    <span>Backup Sistem</span>
                                 </a>
                             </li>
                             <li class="{{ Request::is('activities*') ? 'active' : '' }}">
