@@ -287,11 +287,16 @@ class ElabelBpkbController extends Controller implements HasMiddleware
         return redirect($redirectRoute)->with('success', 'Data BPKB berhasil diperbarui.');
     }
 
-    public function viewPdf(int $id): \Symfony\Component\HttpFoundation\BinaryFileResponse|RedirectResponse
+    public function viewPdf(int $id)
     {
         $item = ElabelBpkb::find($id);
         if (!$item || !$item->pdf_path) {
             return redirect()->back()->with('error', 'File PDF tidak ditemukan.');
+        }
+
+        if (str_starts_with($item->pdf_path, 'tg:')) {
+            $tgStorage = new \App\Services\TelegramStorageService();
+            return $tgStorage->streamToBrowser($item->pdf_path, 'bpkb-' . $id . '.pdf');
         }
 
         if (!Storage::disk('public')->exists($item->pdf_path)) {
@@ -580,6 +585,15 @@ class ElabelBpkbController extends Controller implements HasMiddleware
 
     private function storeBpkbPdf($file, string $plateNumber, int $year, string $boxCode): string
     {
+        $tgStorage = new \App\Services\TelegramStorageService();
+        if ($tgStorage->isConfigured()) {
+            $caption = "📄 *SCAN BPKB {$plateNumber}*\nTahun: {$year} | Box: {$boxCode}";
+            $uploaded = $tgStorage->uploadFile($file, $caption);
+            if ($uploaded && !empty($uploaded['tg_path'])) {
+                return $uploaded['tg_path'];
+            }
+        }
+
         $extension = strtolower($file->getClientOriginalExtension()) ?: 'pdf';
         $baseName = $this->filenameToken($plateNumber) . '_' . $year . '_' . strtoupper($this->filenameToken($boxCode));
         $newName = $baseName . '.' . $extension;

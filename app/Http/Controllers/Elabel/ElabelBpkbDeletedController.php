@@ -144,10 +144,19 @@ class ElabelBpkbDeletedController extends Controller implements HasMiddleware
         return redirect()->route('elabel.bpkb-deleted.index')->with('success', 'Data BPKB keluar berhasil dihapus permanen.');
     }
 
-    public function viewPdf(int $id): \Symfony\Component\HttpFoundation\BinaryFileResponse|RedirectResponse
+    public function viewPdf(int $id)
     {
         $item = ElabelBpkbDelete::find($id);
-        if (!$item || !$item->pdf_path || !Storage::disk('public')->exists($item->pdf_path)) {
+        if (!$item || !$item->pdf_path) {
+            return redirect()->back()->with('error', 'File PDF tidak ditemukan.');
+        }
+
+        if (str_starts_with($item->pdf_path, 'tg:')) {
+            $tgStorage = new \App\Services\TelegramStorageService();
+            return $tgStorage->streamToBrowser($item->pdf_path, 'bpkb-keluar-' . $id . '.pdf');
+        }
+
+        if (!Storage::disk('public')->exists($item->pdf_path)) {
             return redirect()->back()->with('error', 'File PDF tidak ditemukan.');
         }
 
@@ -157,10 +166,19 @@ class ElabelBpkbDeletedController extends Controller implements HasMiddleware
         ]);
     }
 
-    public function viewSupportDoc(int $id): \Symfony\Component\HttpFoundation\BinaryFileResponse|RedirectResponse
+    public function viewSupportDoc(int $id)
     {
         $item = ElabelBpkbDelete::find($id);
-        if (!$item || !$item->support_doc_path || !Storage::disk('public')->exists($item->support_doc_path)) {
+        if (!$item || !$item->support_doc_path) {
+            return redirect()->back()->with('error', 'Dokumen pendukung tidak ditemukan.');
+        }
+
+        if (str_starts_with($item->support_doc_path, 'tg:')) {
+            $tgStorage = new \App\Services\TelegramStorageService();
+            return $tgStorage->streamToBrowser($item->support_doc_path, 'dokumen-pendukung-' . $id . '.pdf');
+        }
+
+        if (!Storage::disk('public')->exists($item->support_doc_path)) {
             return redirect()->back()->with('error', 'Dokumen pendukung tidak ditemukan.');
         }
 

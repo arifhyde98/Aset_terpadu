@@ -159,29 +159,27 @@
                 
                 <div class="accordion accordion-flush" id="docAccordion">
                     
-                    <!-- GUIDE 1: PINDAH LAPTOP -->
+                    <!-- GUIDE 1: INTEGRASI TELEGRAM -->
                     <div class="accordion-item border-0 mb-3 bg-transparent">
                         <h2 class="accordion-header" id="headingOne">
                             <button class="accordion-button bg-transparent text-primary fw-bold px-0 shadow-none d-flex align-items-center gap-2" 
                                     type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="true">
-                                <i class="bi bi-laptop"></i> 1. Pindah Proyek ke Laptop Lain
+                                <i class="bi bi-telegram"></i> 1. Integrasi Telegram Cloud & Bot
                             </button>
                         </h2>
                         <div id="collapseOne" class="accordion-collapse collapse show" data-bs-parent="#docAccordion">
                             <div class="accordion-body px-0 pt-2 pb-0 small text-secondary" style="font-size: 0.82rem; line-height: 1.6;">
-                                Jika Anda ingin memasang proyek ini di laptop baru secara utuh:
-                                <ol class="ps-3 mt-2 mb-0">
-                                    <li class="mb-1.5">Copy seluruh direktori folder <code class="px-1.5 py-0.5 rounded bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 font-monospace">SIPAT_Terpadu</code> ke laptop baru.</li>
-                                    <li class="mb-1.5">Buat database baru bernama <code class="px-1.5 py-0.5 rounded bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 font-monospace">db_sipat_terpadu</code> di laptop baru Anda.</li>
-                                    <li class="mb-1.5">Ekstrak file backup <code class="px-1.5 py-0.5 rounded bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 font-monospace">.zip</code> ini, cari berkas <code class="px-1.5 py-0.5 rounded bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 font-monospace">.sql</code> di dalamnya, lalu impor ke database baru Anda.</li>
-                                    <li class="mb-1.5">Salin berkas-berkas foto/scan hasil ekstrak ke direktori <code class="px-1.5 py-0.5 rounded bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 font-monospace">storage/app/public/</code> laptop baru Anda.</li>
-                                    <li class="mb-0">Edit file <code class="px-1.5 py-0.5 rounded bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 font-monospace">.env</code> di laptop baru untuk mencocokkan kredensial database.</li>
-                                </ol>
+                                Fitur backup dan penyimpanan berkas terhubung langsung dengan Telegram Bot Anda:
+                                <ul class="ps-3 mt-2 mb-0">
+                                    <li class="mb-1.5"><strong>Pengiriman Berkas Backup:</strong> Setiap kali backup dibuat, file <code class="px-1.5 py-0.5 rounded bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 font-monospace">.zip</code> otomatis dikirim ke chat Telegram Anda.</li>
+                                    <li class="mb-1.5"><strong>Telegram Cloud Storage:</strong> Seluruh berkas scan BPKB, Sertifikat, dan Foto Aset disimpan di Telegram Cloud tanpa memakan disk lokal server.</li>
+                                    <li class="mb-0"><strong>Kredensial (.env):</strong> Terdaftar melalui variabel <code class="px-1.5 py-0.5 rounded bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 font-monospace">TELEGRAM_BOT_TOKEN</code> dan <code class="px-1.5 py-0.5 rounded bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 font-monospace">TELEGRAM_CHAT_ID</code>.</li>
+                                </ul>
                             </div>
                         </div>
                     </div>
 
-                    <!-- GUIDE 2: RESTORE MANUAL -->
+                    <!-- GUIDE 2: RESTORE DATABASE MANUAL -->
                     <div class="accordion-item border-0 mb-3 bg-transparent">
                         <h2 class="accordion-header" id="headingTwo">
                             <button class="accordion-button collapsed bg-transparent text-primary fw-bold px-0 shadow-none d-flex align-items-center gap-2" 
@@ -210,11 +208,32 @@
                         </h2>
                         <div id="collapseThree" class="accordion-collapse collapse" data-bs-parent="#docAccordion">
                             <div class="accordion-body px-0 pt-2 pb-0 small text-secondary" style="font-size: 0.82rem; line-height: 1.6;">
-                                Server ini dikonfigurasi untuk menjalankan tugas otomatis (cron job/scheduler) Laravel:
+                                Server dikonfigurasi untuk menjalankan tugas otomatis (crontab scheduler):
                                 <ul class="ps-3 mt-2 mb-0">
-                                    <li class="mb-1"><strong class="text-dark">backup:run</strong> berjalan setiap pukul <strong>00:00 WITA</strong> untuk membuat berkas backup baru.</li>
-                                    <li class="mb-0"><strong class="text-dark">backup:clean</strong> berjalan pukul <strong>01:00 WITA</strong> untuk membersihkan berkas backup yang berumur lebih dari 7 hari.</li>
+                                    <li class="mb-1"><strong class="text-dark">backup:run</strong> berjalan pukul <strong>00:00 WITA</strong> (membuat backup & mengirim ke Telegram).</li>
+                                    <li class="mb-0"><strong class="text-dark">backup:clean</strong> berjalan pukul <strong>01:00 WITA</strong> (membersihkan berkas backup lama > 7 hari di disk server).</li>
                                 </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- GUIDE 4: PINDAH LAPTOP -->
+                    <div class="accordion-item border-0 mb-3 bg-transparent">
+                        <h2 class="accordion-header" id="headingFour">
+                            <button class="accordion-button collapsed bg-transparent text-primary fw-bold px-0 shadow-none d-flex align-items-center gap-2" 
+                                    type="button" data-bs-toggle="collapse" data-bs-target="#collapseFour">
+                                <i class="bi bi-laptop"></i> 4. Pindah Proyek ke Laptop Lain
+                            </button>
+                        </h2>
+                        <div id="collapseFour" class="accordion-collapse collapse" data-bs-parent="#docAccordion">
+                            <div class="accordion-body px-0 pt-2 pb-0 small text-secondary" style="font-size: 0.82rem; line-height: 1.6;">
+                                Jika Anda ingin memasang proyek ini di laptop baru secara utuh:
+                                <ol class="ps-3 mt-2 mb-0">
+                                    <li class="mb-1.5">Copy direktori folder <code class="px-1.5 py-0.5 rounded bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 font-monospace">SIPAT_Terpadu</code> ke laptop baru.</li>
+                                    <li class="mb-1.5">Buat database baru bernama <code class="px-1.5 py-0.5 rounded bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 font-monospace">db_sipat_terpadu</code> di laptop baru Anda.</li>
+                                    <li class="mb-1.5">Impor berkas <code class="px-1.5 py-0.5 rounded bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 font-monospace">.sql</code> hasil backup ke database baru Anda.</li>
+                                    <li class="mb-0">Salin file <code class="px-1.5 py-0.5 rounded bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 font-monospace">.env</code> yang sudah berisi <code class="px-1.5 py-0.5 rounded bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 font-monospace">TELEGRAM_BOT_TOKEN</code>. Seluruh berkas scan fisik akan langsung bisa diakses tanpa mengcopy berkas foto fisik!</li>
+                                </ol>
                             </div>
                         </div>
                     </div>
