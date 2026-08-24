@@ -294,32 +294,7 @@ class ElabelBpkbController extends Controller implements HasMiddleware
             return redirect()->back()->with('error', 'File PDF tidak ditemukan.');
         }
 
-        if (str_starts_with($item->pdf_path, 'tg:')) {
-            $tgStorage = new \App\Services\TelegramStorageService();
-            
-            // Cari berkas cadangan lokal jika offline
-            $fallbackPath = null;
-            $plateToken = preg_replace('/[^a-z0-9]+/', '', strtolower($item->plate_number ?? ''));
-            if ($plateToken !== '') {
-                $localFiles = Storage::disk('public')->files('elabel/bpkb');
-                foreach ($localFiles as $file) {
-                    if (str_contains(strtolower($file), $plateToken)) {
-                        $fallbackPath = $file;
-                        break;
-                    }
-                }
-            }
 
-            if ($fallbackPath && Storage::disk('public')->exists($fallbackPath)) {
-                return response()->file(storage_path('app/public/' . $fallbackPath), [
-                    'Content-Type' => 'application/pdf',
-                    'Content-Disposition' => 'inline; filename="bpkb-' . $id . '.pdf"',
-                ]);
-            }
-
-            // UTAMA: Stream langsung dari Telegram Cloud secara INLINE di browser tab
-            return $tgStorage->streamToBrowserWithFallback($item->pdf_path, null, 'bpkb-' . $id . '.pdf');
-        }
 
         if (!Storage::disk('public')->exists($item->pdf_path)) {
             return redirect()->back()->with('error', 'File PDF tidak tersedia di storage.');
@@ -621,15 +596,7 @@ class ElabelBpkbController extends Controller implements HasMiddleware
 
         $file->storeAs('elabel/bpkb', basename($path), 'public');
 
-        // 2. Also upload copy to Telegram Cloud for dual redundancy
-        $tgStorage = new \App\Services\TelegramStorageService();
-        if ($tgStorage->isConfigured()) {
-            $caption = "📄 *SCAN BPKB {$plateNumber}*\nTahun: {$year} | Box: {$boxCode}";
-            $uploaded = $tgStorage->uploadFile($file, $caption);
-            if ($uploaded && !empty($uploaded['tg_path'])) {
-                return $uploaded['tg_path'];
-            }
-        }
+
 
         return $path;
     }

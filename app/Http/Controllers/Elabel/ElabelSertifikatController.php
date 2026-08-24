@@ -268,31 +268,7 @@ class ElabelSertifikatController extends Controller implements HasMiddleware
             return redirect()->back()->with('error', 'File PDF sertipikat tidak ditemukan.');
         }
 
-        if (str_starts_with($item->pdf_path, 'tg:')) {
-            $tgStorage = new \App\Services\TelegramStorageService();
-            
-            // Cari berkas cadangan lokal terlebih dahulu
-            $fallbackPath = null;
-            $sertToken = $this->filenameToken((string) ($item->no_sertipikat ?? ''));
-            if ($sertToken !== '') {
-                $localFiles = Storage::disk('public')->files('elabel/sertifikat');
-                foreach ($localFiles as $file) {
-                    if (str_contains(strtolower($file), strtolower($sertToken))) {
-                        $fallbackPath = $file;
-                        break;
-                    }
-                }
-            }
 
-            if ($fallbackPath && Storage::disk('public')->exists($fallbackPath)) {
-                return response()->file(storage_path('app/public/' . $fallbackPath), [
-                    'Content-Type' => 'application/pdf',
-                    'Content-Disposition' => 'inline; filename="sertipikat-' . $id . '.pdf"',
-                ]);
-            }
-
-            return $tgStorage->streamToBrowserWithFallback($item->pdf_path, null, 'sertipikat-' . $id . '.pdf');
-        }
 
         if (!Storage::disk('public')->exists($item->pdf_path)) {
             return redirect()->back()->with('error', 'File PDF sertipikat tidak ditemukan.');
@@ -467,16 +443,7 @@ class ElabelSertifikatController extends Controller implements HasMiddleware
 
         $file->storeAs('elabel/sertifikat', basename($path), 'public');
 
-        // 2. Also upload copy to Telegram Cloud for dual redundancy
-        $tgStorage = new \App\Services\TelegramStorageService();
-        if ($tgStorage->isConfigured()) {
-            $noSert = $data['no_sertipikat'] ?? 'Sertipikat Tanah';
-            $caption = "📜 *SERTIPIKAT TANAH: {$noSert}*";
-            $uploaded = $tgStorage->uploadFile($file, $caption);
-            if ($uploaded && !empty($uploaded['tg_path'])) {
-                return $uploaded['tg_path'];
-            }
-        }
+
 
         return $path;
     }

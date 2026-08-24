@@ -85,15 +85,9 @@
                             <td class="px-4 text-center">
                                 <div class="d-flex justify-content-center gap-1">
                                     @if($item->pdf_path)
-                                        @if(str_starts_with($item->pdf_path, 'tg:'))
-                                            <a href="{{ route('elabel.sertifikat.view-pdf', $item->id) }}" target="_blank" class="btn btn-sm btn-info text-white border-0 shadow-sm fw-medium d-inline-flex align-items-center gap-1" title="Disimpan & Dibuka dari Telegram Cloud Storage">
-                                                <i class="bi bi-telegram"></i> <span class="d-none d-md-inline" style="font-size: 11px;">Telegram</span>
-                                            </a>
-                                        @else
                                             <a href="{{ route('elabel.sertifikat.view-pdf', $item->id) }}" target="_blank" class="btn btn-sm btn-light border text-danger fw-medium d-inline-flex align-items-center gap-1" title="Disimpan & Dibuka dari Harddisk Lokal">
                                                 <i class="bi bi-hdd"></i> <span class="d-none d-md-inline" style="font-size: 11px;">Lokal</span>
                                             </a>
-                                        @endif
                                     @endif
                                     <a href="{{ route('elabel.sertifikat.show', $item->id) }}" class="btn btn-sm btn-light border text-navy" title="Detail">
                                         <i class="bi bi-eye"></i>

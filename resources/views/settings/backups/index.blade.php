@@ -158,33 +158,14 @@
                 <hr class="my-3">
                 
                 <div class="accordion accordion-flush" id="docAccordion">
-                    
-                    <!-- GUIDE 1: INTEGRASI TELEGRAM -->
-                    <div class="accordion-item border-0 mb-3 bg-transparent">
-                        <h2 class="accordion-header" id="headingOne">
-                            <button class="accordion-button bg-transparent text-primary fw-bold px-0 shadow-none d-flex align-items-center gap-2" 
-                                    type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="true">
-                                <i class="bi bi-telegram"></i> 1. Integrasi Telegram Cloud & Bot
-                            </button>
-                        </h2>
-                        <div id="collapseOne" class="accordion-collapse collapse show" data-bs-parent="#docAccordion">
-                            <div class="accordion-body px-0 pt-2 pb-0 small text-secondary" style="font-size: 0.82rem; line-height: 1.6;">
-                                Fitur backup dan penyimpanan berkas terhubung langsung dengan Telegram Bot Anda:
-                                <ul class="ps-3 mt-2 mb-0">
-                                    <li class="mb-1.5"><strong>Pengiriman Berkas Backup:</strong> Setiap kali backup dibuat, file <code class="px-1.5 py-0.5 rounded bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 font-monospace">.zip</code> otomatis dikirim ke chat Telegram Anda.</li>
-                                    <li class="mb-1.5"><strong>Telegram Cloud Storage:</strong> Seluruh berkas scan BPKB, Sertifikat, dan Foto Aset disimpan di Telegram Cloud tanpa memakan disk lokal server.</li>
-                                    <li class="mb-0"><strong>Kredensial (.env):</strong> Terdaftar melalui variabel <code class="px-1.5 py-0.5 rounded bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 font-monospace">TELEGRAM_BOT_TOKEN</code> dan <code class="px-1.5 py-0.5 rounded bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 font-monospace">TELEGRAM_CHAT_ID</code>.</li>
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
+
 
                     <!-- GUIDE 2: RESTORE DATABASE MANUAL -->
                     <div class="accordion-item border-0 mb-3 bg-transparent">
                         <h2 class="accordion-header" id="headingTwo">
                             <button class="accordion-button collapsed bg-transparent text-primary fw-bold px-0 shadow-none d-flex align-items-center gap-2" 
                                     type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo">
-                                <i class="bi bi-database-fill-down"></i> 2. Cara Restore Database
+                                <i class="bi bi-database-fill-down"></i> 1. Cara Restore Database
                             </button>
                         </h2>
                         <div id="collapseTwo" class="accordion-collapse collapse" data-bs-parent="#docAccordion">
@@ -203,14 +184,14 @@
                         <h2 class="accordion-header" id="headingThree">
                             <button class="accordion-button collapsed bg-transparent text-primary fw-bold px-0 shadow-none d-flex align-items-center gap-2" 
                                     type="button" data-bs-toggle="collapse" data-bs-target="#collapseThree">
-                                <i class="bi bi-clock-history"></i> 3. Jadwal Backup Otomatis
+                                <i class="bi bi-clock-history"></i> 2. Jadwal Backup Otomatis
                             </button>
                         </h2>
                         <div id="collapseThree" class="accordion-collapse collapse" data-bs-parent="#docAccordion">
                             <div class="accordion-body px-0 pt-2 pb-0 small text-secondary" style="font-size: 0.82rem; line-height: 1.6;">
                                 Server dikonfigurasi untuk menjalankan tugas otomatis (crontab scheduler):
                                 <ul class="ps-3 mt-2 mb-0">
-                                    <li class="mb-1"><strong class="text-dark">backup:run</strong> berjalan pukul <strong>00:00 WITA</strong> (membuat backup & mengirim ke Telegram).</li>
+                                    <li class="mb-1"><strong class="text-dark">backup:run</strong> berjalan pukul <strong>00:00 WITA</strong> (membuat backup database dan file unggahan).</li>
                                     <li class="mb-0"><strong class="text-dark">backup:clean</strong> berjalan pukul <strong>01:00 WITA</strong> (membersihkan berkas backup lama > 7 hari di disk server).</li>
                                 </ul>
                             </div>
@@ -222,7 +203,7 @@
                         <h2 class="accordion-header" id="headingFour">
                             <button class="accordion-button collapsed bg-transparent text-primary fw-bold px-0 shadow-none d-flex align-items-center gap-2" 
                                     type="button" data-bs-toggle="collapse" data-bs-target="#collapseFour">
-                                <i class="bi bi-laptop"></i> 4. Pindah Proyek ke Laptop Lain
+                                <i class="bi bi-laptop"></i> 3. Pindah Proyek ke Laptop Lain
                             </button>
                         </h2>
                         <div id="collapseFour" class="accordion-collapse collapse" data-bs-parent="#docAccordion">
@@ -231,8 +212,7 @@
                                 <ol class="ps-3 mt-2 mb-0">
                                     <li class="mb-1.5">Copy direktori folder <code class="px-1.5 py-0.5 rounded bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 font-monospace">SIPAT_Terpadu</code> ke laptop baru.</li>
                                     <li class="mb-1.5">Buat database baru bernama <code class="px-1.5 py-0.5 rounded bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 font-monospace">db_sipat_terpadu</code> di laptop baru Anda.</li>
-                                    <li class="mb-1.5">Impor berkas <code class="px-1.5 py-0.5 rounded bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 font-monospace">.sql</code> hasil backup ke database baru Anda.</li>
-                                    <li class="mb-0">Salin file <code class="px-1.5 py-0.5 rounded bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 font-monospace">.env</code> yang sudah berisi <code class="px-1.5 py-0.5 rounded bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 font-monospace">TELEGRAM_BOT_TOKEN</code>. Seluruh berkas scan fisik akan langsung bisa diakses tanpa mengcopy berkas foto fisik!</li>
+                                    <li class="mb-0">Impor berkas <code class="px-1.5 py-0.5 rounded bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 font-monospace">.sql</code> hasil backup ke database baru Anda.</li>
                                 </ol>
                             </div>
                         </div>

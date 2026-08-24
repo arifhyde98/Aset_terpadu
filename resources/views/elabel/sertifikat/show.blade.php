@@ -19,15 +19,9 @@
         </div>
         <div class="d-flex gap-2">
             @if($item->pdf_path)
-                @if(str_starts_with($item->pdf_path, 'tg:'))
-                    <span class="badge bg-info bg-opacity-10 text-info border border-info border-opacity-25 px-3 py-2 rounded-pill d-inline-flex align-items-center">
-                        <i class="bi bi-telegram me-1.5"></i> Telegram Cloud
-                    </span>
-                @else
                     <span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25 px-3 py-2 rounded-pill d-inline-flex align-items-center">
                         <i class="bi bi-hdd me-1.5"></i> Harddisk Lokal
                     </span>
-                @endif
                 <a href="{{ route('elabel.sertifikat.view-pdf', $item->id) }}" target="_blank" class="btn btn-outline-danger shadow-sm fw-medium">
                     <i class="bi bi-file-earmark-pdf me-1"></i> Lihat Scan PDF
                 </a>

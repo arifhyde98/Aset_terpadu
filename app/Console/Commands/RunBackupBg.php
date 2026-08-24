@@ -83,32 +83,7 @@ class RunBackupBg extends Command
         $process->wait();
 
         if ($process->isSuccessful()) {
-            $telegramService = new \App\Services\TelegramBackupService();
-            if ($telegramService->isConfigured()) {
-                try {
-                    $allFiles = Storage::disk('backups')->allFiles();
-                    $zipFiles = array_values(array_filter($allFiles, fn($f) => str_ends_with(strtolower($f), '.zip')));
 
-                    if (!empty($zipFiles)) {
-                        usort($zipFiles, fn($a, $b) => Storage::disk('backups')->lastModified($b) <=> Storage::disk('backups')->lastModified($a));
-                        $latestRelative = $zipFiles[0];
-                        $fullPath = storage_path('app/backups/' . $latestRelative);
-
-                        $tgResult = $telegramService->sendBackupFile($fullPath);
-                        if ($tgResult['success']) {
-                            $log .= "\n[TELEGRAM] Berkas backup (" . basename($latestRelative) . ") berhasil dikirim ke Telegram!";
-                        } else {
-                            $log .= "\n[TELEGRAM ERROR] Gagal mengirim ke Telegram: " . $tgResult['message'];
-                        }
-                    } else {
-                        $log .= "\n[TELEGRAM WARNING] Tidak ada berkas zip yang ditemukan di disk backups.";
-                    }
-                } catch (\Throwable $te) {
-                    $log .= "\n[TELEGRAM EXCEPTION] " . $te->getMessage();
-                }
-            } else {
-                $log .= "\n[TELEGRAM INFO] Telegram Token / Chat ID belum diatur di .env.";
-            }
 
             Cache::put('backup_progress', [
                 'status' => 'success',

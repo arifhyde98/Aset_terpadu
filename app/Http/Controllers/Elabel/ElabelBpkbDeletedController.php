@@ -151,10 +151,7 @@ class ElabelBpkbDeletedController extends Controller implements HasMiddleware
             return redirect()->back()->with('error', 'File PDF tidak ditemukan.');
         }
 
-        if (str_starts_with($item->pdf_path, 'tg:')) {
-            $tgStorage = new \App\Services\TelegramStorageService();
-            return $tgStorage->streamToBrowser($item->pdf_path, 'bpkb-keluar-' . $id . '.pdf');
-        }
+
 
         if (!Storage::disk('public')->exists($item->pdf_path)) {
             return redirect()->back()->with('error', 'File PDF tidak ditemukan.');
@@ -173,10 +170,7 @@ class ElabelBpkbDeletedController extends Controller implements HasMiddleware
             return redirect()->back()->with('error', 'Dokumen pendukung tidak ditemukan.');
         }
 
-        if (str_starts_with($item->support_doc_path, 'tg:')) {
-            $tgStorage = new \App\Services\TelegramStorageService();
-            return $tgStorage->streamToBrowser($item->support_doc_path, 'dokumen-pendukung-' . $id . '.pdf');
-        }
+
 
         if (!Storage::disk('public')->exists($item->support_doc_path)) {
             return redirect()->back()->with('error', 'Dokumen pendukung tidak ditemukan.');
