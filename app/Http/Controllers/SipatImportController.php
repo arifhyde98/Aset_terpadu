@@ -140,9 +140,9 @@ class SipatImportController extends Controller implements HasMiddleware
         $callback = function () {
             $file = fopen('php://output', 'w');
             fprintf($file, chr(0xEF).chr(0xBB).chr(0xBF)); // UTF-8 BOM
-            fputcsv($file, ['nibar', 'status_proses', 'tgl_mulai', 'tgl_selesai', 'keterangan']);
-            fputcsv($file, ['12.01.02.01.001', 'Sertifikat', date('Y-m-d'), '', 'Update status via Excel']);
-            fputcsv($file, ['12.01.02.01.002', 'Proses BPN', date('Y-m-d'), '', 'Update status via Excel']);
+            fputcsv($file, ['nibar', 'status_proses', 'tanggal_proses', 'keterangan']);
+            fputcsv($file, ['12.01.02.01.001', 'Sertifikat', date('Y-m-d'), 'Update status via Excel']);
+            fputcsv($file, ['12.01.02.01.002', 'Proses BPN', date('Y-m-d'), 'Update status via Excel']);
             fclose($file);
         };
 

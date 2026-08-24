@@ -54,13 +54,6 @@ Untuk memberikan transparansi lokasi penyimpanan berkas kepada pengguna, telah d
 
 ---
 
-## 4. Rencana Pengembangan Mendatang: Target Pensertifikatan SIPAT
-
-*(Dokumen Lengkap Perencanaan Tersimpan di `docs/rencana_pengembangan_target_pensertifikatan_sipat.md`)*
-
-- **Model Database**: Tabel khusus `sipat_target_sertifikat` (`tahun`, `aset_tanah_id`, `opd_id`, `target_jumlah`, `keterangan`).
-- **Integrasi**: Otomatis menghitung capaian target tahunan berdasarkan status legalitas / riwayat pengurusan BPN (`storeProses`) yang sudah berstatus *Selesai*.
-- **Pelaporan**: Cetak Laporan Capaian Target Tahunan Pemda (Excel & PDF) untuk bahan LAKIP, BPK, dan Korsupgah KPK.
 
 ---
 

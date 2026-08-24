@@ -60,17 +60,22 @@ class SipatUpdateImport
                 $statusIndex = array_search('status', $header, true);
             }
 
+            $tglProsesIndex = array_search('tanggal_proses', $header, true);
+            if ($tglProsesIndex === false) {
+                $tglProsesIndex = array_search('tanggal', $header, true);
+            }
             $tglMulaiIndex = array_search('tgl_mulai', $header, true);
             $tglSelesaiIndex = array_search('tgl_selesai', $header, true);
             $keteranganIndex = array_search('keterangan', $header, true);
             $sertifikatAdaIndex = array_search('sertifikat_ada', $header, true);
         } else {
-            // Tanpa header: Kolom A = NIBAR, Kolom B = Status Proses, C = Tgl Mulai, D = Tgl Selesai, E = Keterangan
+            // Tanpa header: Kolom A = NIBAR, Kolom B = Status Proses, C = Tanggal Proses, D = Keterangan
             $nibarIndex = 0;
             $statusIndex = 1;
+            $tglProsesIndex = 2;
             $tglMulaiIndex = 2;
-            $tglSelesaiIndex = 3;
-            $keteranganIndex = 4;
+            $tglSelesaiIndex = false;
+            $keteranganIndex = 3;
             $sertifikatAdaIndex = false;
         }
 
@@ -100,23 +105,22 @@ class SipatUpdateImport
             if ($statusVal !== '') {
                 $statusId = $this->resolveStatusId($statusVal);
                 if ($statusId) {
-                    $tglMulai = $tglMulaiIndex !== false && isset($row[$tglMulaiIndex]) ? $this->parseDate($row[$tglMulaiIndex]) : null;
+                    $tglProsesVal = $tglProsesIndex !== false && isset($row[$tglProsesIndex]) ? $this->parseDate($row[$tglProsesIndex]) : null;
+                    if (!$tglProsesVal && $tglMulaiIndex !== false && isset($row[$tglMulaiIndex])) {
+                        $tglProsesVal = $this->parseDate($row[$tglMulaiIndex]);
+                    }
+                    $tglEff = $tglProsesVal ?: date('Y-m-d');
                     $tglSelesai = $tglSelesaiIndex !== false && isset($row[$tglSelesaiIndex]) ? $this->parseDate($row[$tglSelesaiIndex]) : null;
                     $keterangan = $keteranganIndex !== false && isset($row[$keteranganIndex]) ? trim((string)$row[$keteranganIndex]) : 'Update status via Excel (SIPAT)';
 
-                    $durasi = null;
-                    if (!empty($tglMulai) && !empty($tglSelesai)) {
-                        $durasi = (int) floor((strtotime($tglSelesai) - strtotime($tglMulai)) / 86400);
-                        if ($durasi < 0) $durasi = null;
-                    }
-
                     ProsesAset::create([
-                        'id_aset'     => $aset->id_aset,
-                        'id_status'   => $statusId,
-                        'tgl_mulai'   => $tglMulai ?: date('Y-m-d'),
-                        'tgl_selesai' => $tglSelesai ?: null,
-                        'keterangan'  => $keterangan,
-                        'durasi_hari' => $durasi,
+                        'id_aset'        => $aset->id_aset,
+                        'id_status'      => $statusId,
+                        'tanggal_proses' => $tglEff,
+                        'tgl_mulai'      => $tglEff,
+                        'tgl_selesai'    => $tglSelesai ?: null,
+                        'keterangan'     => $keterangan,
+                        'durasi_hari'    => null,
                     ]);
                     $hasAction = true;
                 }

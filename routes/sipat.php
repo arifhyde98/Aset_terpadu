@@ -27,6 +27,15 @@ Route::prefix('sipat')->name('sipat.')->group(function () {
         Route::post('/{aset}/dokumen', [\App\Http\Controllers\Sipat\AsetTanahController::class, 'storeDokumen'])->name('storeDokumen');
     });
 
+    // Target Pensertifikatan Tanah Tahunan
+    Route::prefix('target-pensertifikatan')->name('target-pensertifikatan.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Sipat\TargetSertifikatController::class, 'index'])->name('index');
+        Route::post('/', [\App\Http\Controllers\Sipat\TargetSertifikatController::class, 'store'])->name('store');
+        Route::delete('/{target}', [\App\Http\Controllers\Sipat\TargetSertifikatController::class, 'destroy'])->name('destroy');
+        Route::get('/export-excel', [\App\Http\Controllers\Sipat\TargetSertifikatController::class, 'exportExcel'])->name('export-excel');
+        Route::get('/export-pdf', [\App\Http\Controllers\Sipat\TargetSertifikatController::class, 'exportPdf'])->name('export-pdf');
+    });
+
     // Laporan
     Route::prefix('laporan')->name('laporan.')->group(function () {
         Route::get('/', [\App\Http\Controllers\Sipat\LaporanController::class, 'index'])->name('index');

@@ -320,15 +320,9 @@
                             </select>
                         </div>
 
-                        <div class="row g-2 mb-2">
-                            <div class="col-6">
-                                <label class="form-label small fw-semibold text-secondary mb-1">Tanggal Mulai</label>
-                                <input type="date" name="tgl_mulai" class="form-control" value="{{ date('Y-m-d') }}">
-                            </div>
-                            <div class="col-6">
-                                <label class="form-label small fw-semibold text-secondary mb-1">Tanggal Selesai</label>
-                                <input type="date" name="tgl_selesai" class="form-control">
-                            </div>
+                        <div class="mb-2">
+                            <label class="form-label small fw-semibold text-secondary mb-1">Tanggal Proses <span class="text-danger">*</span></label>
+                            <input type="date" name="tanggal_proses" class="form-control" value="{{ date('Y-m-d') }}" required>
                         </div>
                     </div>
 

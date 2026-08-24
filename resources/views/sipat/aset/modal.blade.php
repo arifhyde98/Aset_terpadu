@@ -204,12 +204,8 @@
                                 <input type="text" name="keterangan" class="form-control form-control-sm" placeholder="Contoh: Pengukuran ulang oleh BPN">
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label small text-secondary mb-1">Tanggal Mulai</label>
-                                <input type="date" name="tgl_mulai" class="form-control form-control-sm">
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label small text-secondary mb-1">Tanggal Selesai (Opsional)</label>
-                                <input type="date" name="tgl_selesai" class="form-control form-control-sm">
+                                <label class="form-label small text-secondary mb-1">Tanggal Proses <span class="text-danger">*</span></label>
+                                <input type="date" name="tanggal_proses" class="form-control form-control-sm" value="{{ date('Y-m-d') }}" required>
                             </div>
                         </div>
                         <div class="text-end mt-3">
@@ -240,12 +236,7 @@
                                             <h6 class="fw-bold mb-1 text-body">{{ $proses->keterangan ?? 'Tanpa catatan' }}</h6>
                                             <div class="text-secondary small">
                                                 <i class="bi bi-calendar-event me-1"></i> 
-                                                {{ $proses->tgl_mulai ?? '-' }} 
-                                                <i class="bi bi-arrow-right mx-1"></i> 
-                                                {{ $proses->tgl_selesai ?? 'Sekarang' }}
-                                                @if(!empty($proses->durasi_hari))
-                                                    <span class="ms-2 badge bg-body text-body-secondary border">({{ $proses->durasi_hari }} hari)</span>
-                                                @endif
+                                                {{ $proses->tanggal_proses ?? $proses->tgl_mulai ?? '-' }}
                                             </div>
                                         </div>
                                     </div>

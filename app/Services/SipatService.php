@@ -33,9 +33,10 @@ class SipatService
         array $asetIds, 
         string $nibarListRaw, 
         int $idStatus, 
-        ?string $tglMulai, 
-        ?string $tglSelesai, 
-        ?string $keterangan
+        ?string $tanggalProses = null, 
+        ?string $tglMulai = null, 
+        ?string $tglSelesai = null, 
+        ?string $keterangan = null
     ): int {
         if (trim($nibarListRaw) !== '') {
             $nibarItems = array_values(array_filter(array_map('trim', preg_split('/[\r\n,]+/', $nibarListRaw))));
@@ -56,6 +57,7 @@ class SipatService
             return 0; // Tidak ada aset yang diproses
         }
 
+        $tglEff = $tanggalProses ?: ($tglMulai ?: date('Y-m-d'));
         $durasi = $this->calculateDuration($tglMulai, $tglSelesai);
         $insertedCount = 0;
 
@@ -64,12 +66,13 @@ class SipatService
             if ($idAset <= 0) continue;
 
             ProsesAset::create([
-                'id_aset'     => $idAset,
-                'id_status'   => $idStatus,
-                'tgl_mulai'   => $tglMulai ?: null,
-                'tgl_selesai' => $tglSelesai ?: null,
-                'keterangan'  => $keterangan ?: 'Update status massal',
-                'durasi_hari' => $durasi,
+                'id_aset'        => $idAset,
+                'id_status'      => $idStatus,
+                'tanggal_proses' => $tglEff,
+                'tgl_mulai'      => $tglEff,
+                'tgl_selesai'    => $tglSelesai ?: null,
+                'keterangan'     => $keterangan ?: 'Update status massal',
+                'durasi_hari'    => $durasi,
             ]);
             $insertedCount++;
         }
@@ -209,7 +212,10 @@ class SipatService
         $chartBelum   = array_fill(0, 12, 0);
 
         $allAsetsForChart = DB::table('aset_tanah')->select('id_aset', 'created_at')->get();
-        $allProses = DB::table('proses_aset')->select('id_aset', 'id_status', 'tgl_mulai', 'created_at')->orderBy('tgl_mulai', 'asc')->get();
+        $allProses = DB::table('proses_aset')
+            ->select('id_aset', 'id_status', DB::raw('COALESCE(tanggal_proses, tgl_mulai) as tgl_mulai'), 'created_at')
+            ->orderBy(DB::raw('COALESCE(tanggal_proses, tgl_mulai)'), 'asc')
+            ->get();
 
         $prosesByAset = [];
         foreach ($allProses as $p) {
@@ -275,7 +281,7 @@ class SipatService
                     'p.id_proses as id',
                     DB::raw("'update' as action"),
                     DB::raw("'proses_aset' as entity"),
-                    'p.tgl_mulai as created_at',
+                    DB::raw("COALESCE(p.tanggal_proses, p.tgl_mulai, p.created_at) as created_at"),
                     's.nama_status',
                     'a.nama_aset',
                     DB::raw("COALESCE(o.nama, NULLIF(TRIM(a.opd), ''), 'Tidak Diketahui') as opd"),

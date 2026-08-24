@@ -15,6 +15,7 @@ class ProsesAset extends Model
     protected $fillable = [
         'id_aset',
         'id_status',
+        'tanggal_proses',
         'tgl_mulai',
         'tgl_selesai',
         'keterangan',

@@ -193,6 +193,7 @@ class AsetTanahController extends Controller implements HasMiddleware
             $validated['aset_ids'] ?? [],
             $validated['nibar_list'] ?? '',
             $validated['id_status'],
+            $validated['tanggal_proses'] ?? ($validated['tgl_mulai'] ?? null),
             $validated['tgl_mulai'] ?? null,
             $validated['tgl_selesai'] ?? null,
             $validated['keterangan'] ?? null

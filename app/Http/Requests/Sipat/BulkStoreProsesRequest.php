@@ -16,11 +16,12 @@ class BulkStoreProsesRequest extends FormRequest
         return [
             'aset_ids' => 'nullable|array',
             'aset_ids.*' => 'integer|exists:aset_tanah,id_aset',
-            'id_status' => 'required|integer|exists:status_proses,id_status',
-            'nibar_list' => 'nullable|string',
-            'tgl_mulai' => 'nullable|date',
-            'tgl_selesai' => 'nullable|date',
-            'keterangan' => 'nullable|string',
+            'id_status'      => 'required|integer|exists:status_proses,id_status',
+            'nibar_list'     => 'nullable|string',
+            'tanggal_proses' => 'nullable|date',
+            'tgl_mulai'      => 'nullable|date',
+            'tgl_selesai'    => 'nullable|date',
+            'keterangan'     => 'nullable|string',
         ];
     }
 }

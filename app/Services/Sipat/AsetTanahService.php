@@ -122,6 +122,7 @@ class AsetTanahService
             ProsesAset::create([
                 'id_aset' => $aset->id_aset,
                 'id_status' => $initialStatusId,
+                'tanggal_proses' => $data['tanggal_perolehan'] ?? date('Y-m-d'),
                 'tgl_mulai' => $data['tanggal_perolehan'] ?? date('Y-m-d'),
                 'keterangan' => 'Status awal pensertifikatan saat pendaftaran aset'
             ]);
@@ -230,15 +231,16 @@ class AsetTanahService
     public function addProsesBpn(int $id, array $data): ProsesAset
     {
         $aset = AsetTanah::findOrFail($id);
-        $durasi = $this->sipatService->calculateDuration($data['tgl_mulai'] ?? null, $data['tgl_selesai'] ?? null);
+        $tglProses = $data['tanggal_proses'] ?? ($data['tgl_mulai'] ?? date('Y-m-d'));
 
         $proses = ProsesAset::create([
-            'id_aset'     => $aset->id_aset,
-            'id_status'   => $data['id_status'],
-            'tgl_mulai'   => $data['tgl_mulai'] ?? null,
-            'tgl_selesai' => $data['tgl_selesai'] ?? null,
-            'keterangan'  => $data['keterangan'] ?? null,
-            'durasi_hari' => $durasi,
+            'id_aset'        => $aset->id_aset,
+            'id_status'      => $data['id_status'],
+            'tanggal_proses' => $tglProses,
+            'tgl_mulai'      => $tglProses,
+            'tgl_selesai'    => $data['tgl_selesai'] ?? null,
+            'keterangan'     => $data['keterangan'] ?? null,
+            'durasi_hari'    => null,
         ]);
 
         $this->sipatService->invalidateDashboardCache();

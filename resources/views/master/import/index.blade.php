@@ -136,8 +136,7 @@
                                             <tr>
                                                 <th class="text-primary">nibar <span class="text-danger">*</span></th>
                                                 <th class="text-primary">status_proses <span class="text-danger">*</span></th>
-                                                <th class="text-secondary">tgl_mulai</th>
-                                                <th class="text-secondary">tgl_selesai</th>
+                                                <th class="text-secondary">tanggal_proses</th>
                                                 <th class="text-secondary">keterangan</th>
                                             </tr>
                                         </thead>

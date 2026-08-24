@@ -43,4 +43,9 @@ class AsetTanah extends Model
     {
         return $this->hasOne(ProsesAset::class, 'id_aset', 'id_aset')->latestOfMany('id_proses');
     }
+
+    public function targetSertifikat()
+    {
+        return $this->hasMany(SipatTargetSertifikat::class, 'aset_tanah_id', 'id_aset');
+    }
 }

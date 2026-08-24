@@ -14,10 +14,11 @@ class StoreProsesAsetRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'id_status' => 'required|integer|exists:status_proses,id_status',
-            'tgl_mulai' => 'nullable|date',
-            'tgl_selesai' => 'nullable|date',
-            'keterangan' => 'nullable|string',
+            'id_status'      => 'required|integer|exists:status_proses,id_status',
+            'tanggal_proses' => 'nullable|date',
+            'tgl_mulai'      => 'nullable|date',
+            'tgl_selesai'    => 'nullable|date',
+            'keterangan'     => 'nullable|string',
         ];
     }
 }

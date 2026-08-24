@@ -83,10 +83,11 @@ class SipatDataImport implements ToModel, WithHeadingRow, WithChunkReading
 
             if ($statusId) {
                 ProsesAset::create([
-                    'id_aset'    => $aset->id_aset,
-                    'id_status'  => $statusId,
-                    'tgl_mulai'  => $tglPerolehan ?? date('Y-m-d'),
-                    'keterangan' => 'Status awal dari impor data sertifikat'
+                    'id_aset'        => $aset->id_aset,
+                    'id_status'      => $statusId,
+                    'tanggal_proses' => $tglPerolehan ?? date('Y-m-d'),
+                    'tgl_mulai'      => $tglPerolehan ?? date('Y-m-d'),
+                    'keterangan'     => 'Status awal dari impor data sertifikat'
                 ]);
             }
         }
