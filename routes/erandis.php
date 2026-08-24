@@ -19,6 +19,7 @@ Route::prefix('vehicles')->name('vehicles.')->group(function () {
     Route::post('sanitize-identifiers', [VehicleController::class, 'sanitizeIdentifiers'])->name('sanitize-identifiers');
     Route::post('sanitize-swapped-identifiers', [VehicleController::class, 'sanitizeSwappedIdentifiers'])->name('sanitize-swapped-identifiers');
     Route::post('{vehicle}/sync-to-real', [VehicleController::class, 'syncToReal'])->name('sync-to-real');
+    Route::get('rekon-bpkb', [VehicleController::class, 'rekonBpkb'])->name('rekon-bpkb');
 });
 Route::resource('vehicles', VehicleController::class)->except(['create', 'edit', 'show']);
 

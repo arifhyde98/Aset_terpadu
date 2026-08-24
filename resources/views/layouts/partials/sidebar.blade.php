@@ -264,10 +264,16 @@
                         </a>
                         <div id="erandisSubKendaraan" class="collapse {{ Request::is('vehicles*') ? 'show' : '' }}">
                             <ul class="submenu-list">
-                                <li class="{{ Request::is('vehicles*') ? 'active' : '' }}">
+                                <li class="{{ Request::is('vehicles*') && !Request::is('vehicles/rekon-bpkb') ? 'active' : '' }}">
                                     <a href="{{ route('vehicles.index') }}" data-bs-toggle="tooltip" data-bs-placement="right" title="Data Kendaraan">
                                         <i class="bi bi-truck"></i>
                                         <span>Data Kendaraan Dinas</span>
+                                    </a>
+                                </li>
+                                <li class="{{ Request::is('vehicles/rekon-bpkb') ? 'active' : '' }}">
+                                    <a href="{{ route('vehicles.rekon-bpkb') }}" data-bs-toggle="tooltip" data-bs-placement="right" title="Rekonsiliasi BPKB">
+                                        <i class="bi bi-arrow-left-right"></i>
+                                        <span>Rekonsiliasi BPKB</span>
                                     </a>
                                 </li>
                             </ul>

@@ -849,6 +849,29 @@
                                     <label class="small text-secondary fw-bold text-uppercase" style="font-size: 0.65rem;">Pemegang</label>
                                     <div class="fw-semibold text-dark">${escapeHtml(vehicle.pemegang) || '-'}</div>
                                 </div>
+                                <div class="col-md-3">
+                                    <label class="small text-secondary fw-bold text-uppercase" style="font-size: 0.65rem;">Status STNK</label>
+                                    <div class="fw-semibold text-dark">${escapeHtml(vehicle.stnk_ada) || '-'}</div>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="small text-secondary fw-bold text-uppercase" style="font-size: 0.65rem;">Status BPKB</label>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <span class="fw-semibold text-dark">${escapeHtml(vehicle.bpkb_ada) || '-'}</span>
+                                        ${vehicle.bpkb_id ? `
+                                            <a href="/elabel/bpkb/${vehicle.bpkb_id}/view-pdf" target="_blank" class="btn btn-xs btn-outline-danger py-0.5 px-2 rounded-pill fw-semibold" style="font-size: 0.7rem;">
+                                                <i class="bi bi-file-earmark-pdf me-0.5"></i> Lihat BPKB
+                                            </a>
+                                        ` : ''}
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="small text-secondary fw-bold text-uppercase" style="font-size: 0.65rem;">Warna</label>
+                                    <div class="fw-semibold text-dark">${escapeHtml(vehicle.warna) || '-'}</div>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="small text-secondary fw-bold text-uppercase" style="font-size: 0.65rem;">Tahun Pembuatan</label>
+                                    <div class="fw-semibold text-dark">${escapeHtml(vehicle.tahun_pembuatan) || '-'}</div>
+                                </div>
                                 <div class="col-md-12 mt-2">
                                     <div class="p-3 border rounded-3 bg-white d-flex align-items-center">
                                         <div class="bg-success bg-opacity-10 text-success p-2 rounded-3 me-3">

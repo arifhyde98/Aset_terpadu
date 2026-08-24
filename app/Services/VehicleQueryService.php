@@ -67,7 +67,10 @@ class VehicleQueryService
         $statuses = $modelClass::getStatuses();
         $conditions = $modelClass::getConditions();
 
-        $vehicleDataMap = $vehicles->getCollection()->keyBy('id')->map(function($v) {
+        $bpkbs = \App\Models\Elabel\ElabelBpkb::where('status', '!=', 'Dihapus')->get();
+        $clean = fn($val) => preg_replace('/[^A-Z0-9]/', '', strtoupper(trim((string)$val)));
+
+        $vehicleDataMap = $vehicles->getCollection()->keyBy('id')->map(function($v) use ($bpkbs, $clean) {
             $data = $v->only([
                 'id', 'no_polisi', 'nomor_register', 'merk', 'tipe', 'jenis', 'opd_id', 'pemegang', 'status', 'kondisi',
                 'vehicle_type_id', 'tahun_pembuatan', 'warna', 'stnk_ada', 'bpkb_ada', 
@@ -77,6 +80,22 @@ class VehicleQueryService
             
             // Gunakan nama OPD terbaru dari relasi untuk konsistensi Modal
             $data['opd'] = $v->opdRelation?->nama ?? $v->opd;
+
+            // Cari BPKB yang cocok secara case-insensitive
+            $matchedBpkbId = null;
+            $vMesin = $clean($v->no_mesin);
+            $vRangka = $clean($v->no_rangka);
+
+            if (!empty($vMesin) && !empty($vRangka)) {
+                foreach ($bpkbs as $b) {
+                    if ($clean($b->no_mesin) === $vMesin && $clean($b->no_rangka) === $vRangka) {
+                        $matchedBpkbId = $b->id;
+                        break;
+                    }
+                }
+            }
+
+            $data['bpkb_id'] = $matchedBpkbId;
             
             return $data;
         });

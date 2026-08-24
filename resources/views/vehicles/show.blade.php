@@ -141,9 +141,16 @@
                     </div>
                     <div class="col-md-4">
                         <small class="text-secondary d-block mb-1">BPKB</small>
-                        <div class="d-flex align-items-center gap-2">
-                            <i class="bi {{ $vehicle->bpkb_ada == 'Ada' ? 'bi-check-circle-fill text-success' : 'bi-x-circle-fill text-danger' }}"></i>
-                            <span class="fw-bold">{{ $vehicle->bpkb_ada ?? 'Tidak Ada' }}</span>
+                        <div class="d-flex align-items-center flex-wrap gap-2">
+                            <div class="d-flex align-items-center gap-2">
+                                <i class="bi {{ $vehicle->bpkb_ada == 'Ada' ? 'bi-check-circle-fill text-success' : 'bi-x-circle-fill text-danger' }}"></i>
+                                <span class="fw-bold">{{ $vehicle->bpkb_ada ?? 'Tidak Ada' }}</span>
+                            </div>
+                            @if($bpkb)
+                                <a href="{{ route('elabel.bpkb.view-pdf', $bpkb->id) }}" target="_blank" class="btn btn-xs btn-outline-danger py-0.5 px-2 rounded-pill fw-semibold" style="font-size: 0.72rem;">
+                                    <i class="bi bi-file-earmark-pdf me-0.5"></i> Lihat BPKB
+                                </a>
+                            @endif
                         </div>
                     </div>
                     <div class="col-md-4">

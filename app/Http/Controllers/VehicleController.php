@@ -195,7 +195,32 @@ class VehicleController extends Controller implements HasMiddleware
     public function show(Vehicle $vehicle): View
     {
         $vehicle->load(['user', 'vehicleType']);
-        return view('vehicles.show', compact('vehicle'));
+        
+        $bpkb = null;
+        if ($vehicle->no_mesin && $vehicle->no_rangka) {
+            $clean = fn($val) => preg_replace('/[^A-Z0-9]/', '', strtoupper(trim((string)$val)));
+            $vMesin = $clean($vehicle->no_mesin);
+            $vRangka = $clean($vehicle->no_rangka);
+
+            if (!empty($vMesin) && !empty($vRangka)) {
+                $candidates = \App\Models\Elabel\ElabelBpkb::where('status', '!=', 'Dihapus')
+                    ->where(function($q) use ($vehicle) {
+                        $q->where('plate_number', $vehicle->no_polisi)
+                          ->orWhere('no_mesin', 'LIKE', '%' . substr($vehicle->no_mesin, -5) . '%')
+                          ->orWhere('no_rangka', 'LIKE', '%' . substr($vehicle->no_rangka, -5) . '%');
+                    })
+                    ->get();
+
+                foreach ($candidates as $c) {
+                    if ($clean($c->no_mesin) === $vMesin && $clean($c->no_rangka) === $vRangka) {
+                        $bpkb = $c;
+                        break;
+                    }
+                }
+            }
+        }
+
+        return view('vehicles.show', compact('vehicle', 'bpkb'));
     }
 
     /**
@@ -618,5 +643,58 @@ class VehicleController extends Controller implements HasMiddleware
             return redirect()->route('vehicles.index', ['tab' => 'ebmd'])
                 ->with('error', 'Gagal menyinkronkan data: ' . $e->getMessage());
         }
+    }
+
+    /**
+     * Rekonsiliasi arsip BPKB kendaraan (Motor & Mobil).
+     *
+     * @return \Illuminate\View\View
+     */
+    public function rekonBpkb(): View
+    {
+        $vehicles = Vehicle::with(['vehicleType', 'opdRelation'])->get();
+
+        $bpkbs = \App\Models\Elabel\ElabelBpkb::with('box')
+            ->where('status', '!=', 'Dihapus')
+            ->get();
+
+        $matchList = [];
+        $missList = [];
+
+        $clean = fn($val) => preg_replace('/[^A-Z0-9]/', '', strtoupper(trim((string)$val)));
+
+        foreach ($vehicles as $v) {
+            $vMesin = $clean($v->no_mesin);
+            $vRangka = $clean($v->no_rangka);
+
+            if (empty($vMesin) || empty($vRangka)) {
+                $v->reason = 'No. Mesin / Rangka Kosong';
+                $missList[] = $v;
+                continue;
+            }
+
+            $matchedBpkb = null;
+            foreach ($bpkbs as $b) {
+                $bMesin = $clean($b->no_mesin);
+                $bRangka = $clean($b->no_rangka);
+
+                if ($vMesin === $bMesin && $vRangka === $bRangka) {
+                    $matchedBpkb = $b;
+                    break;
+                }
+            }
+
+            if ($matchedBpkb) {
+                $v->bpkb_record = $matchedBpkb;
+                $matchList[] = $v;
+            } else {
+                $v->reason = 'Arsip BPKB belum diunggah';
+                $missList[] = $v;
+            }
+        }
+
+        $totalElabel = $bpkbs->count();
+
+        return view('vehicles.rekon_bpkb', compact('matchList', 'missList', 'totalElabel'));
     }
 }
