@@ -488,32 +488,64 @@
                         </div>
                     @endif
                 @else
-                    <div class="alert alert-warning border-0 bg-warning bg-opacity-10 text-dark rounded-3 mb-4">
-                        <div class="d-flex align-items-center">
-                            <i class="bi bi-exclamation-triangle-fill text-warning me-2 fs-5"></i>
-                            <div>
-                                <strong>Sertifikat Belum Terdaftar di Modul eLabel</strong>
-                                <div class="small text-secondary mt-1">Dokumen fisik sertifikat untuk aset ini belum tercatat dalam sistem penataan box gudang eLabel.</div>
+                    @php
+                        $isBersertifikat = false;
+                        if ($aset->latestProses && $aset->latestProses->statusProses) {
+                            $status = $aset->latestProses->statusProses;
+                            if ($status->kategori === 'bersertifikat' || 
+                                str_contains(strtolower($status->nama_status), 'sertifikat') || 
+                                str_contains(strtolower($status->nama_status), 'selesai')) {
+                                $isBersertifikat = true;
+                            }
+                        }
+                    @endphp
+
+                    @if($isBersertifikat)
+                        <div class="alert alert-warning border-0 bg-warning bg-opacity-10 text-dark rounded-3 mb-4">
+                            <div class="d-flex align-items-center">
+                                <i class="bi bi-exclamation-triangle-fill text-warning me-2 fs-5"></i>
+                                <div>
+                                    <strong>Sertifikat Belum Terdaftar di Modul eLabel</strong>
+                                    <div class="small text-secondary mt-1">Dokumen fisik sertifikat untuk aset ini belum tercatat dalam sistem penataan box gudang eLabel.</div>
+                                </div>
                             </div>
                         </div>
-                    </div>
 
-                    <div class="p-4 bg-body rounded-3 border text-center my-3">
-                        <i class="bi bi-folder-plus text-primary fs-1 d-block mb-2"></i>
-                        <h6 class="fw-bold text-dark mb-1">Daftarkan Sertifikat Fisik Sekarang</h6>
-                        <p class="text-secondary small mb-3">Klik tombol di bawah untuk mendaftarkan sertifikat tanah ini langsung ke Katalog eLabel dengan data terisi otomatis.</p>
-                        
-                        <a href="{{ route('elabel.sertifikat.create', [
-                            'no_sertipikat' => $aset->no_sertifikat ?? '',
-                            'nibar' => $aset->kode_aset ?? '',
-                            'nama_pemilik' => 'Pemerintah Kabupaten Donggala',
-                            'dinas' => $aset->opd ?? '',
-                            'luas' => $aset->luas ?? '',
-                            'alamat' => $aset->alamat ?? '',
-                        ]) }}" target="_blank" class="btn btn-primary fw-bold px-4 py-2 shadow-sm">
-                            <i class="bi bi-plus-lg me-1"></i> + Daftarkan ke Katalog eLabel
-                        </a>
-                    </div>
+                        <div class="p-4 bg-body rounded-3 border text-center my-3">
+                            <i class="bi bi-folder-plus text-primary fs-1 d-block mb-2"></i>
+                            <h6 class="fw-bold text-dark mb-1">Daftarkan Sertifikat Fisik Sekarang</h6>
+                            <p class="text-secondary small mb-3">Klik tombol di bawah untuk mendaftarkan sertifikat tanah ini langsung ke Katalog eLabel dengan data terisi otomatis.</p>
+                            
+                            <a href="{{ route('elabel.sertifikat.create', [
+                                'no_sertipikat' => $aset->no_sertifikat ?? '',
+                                'nibar' => $aset->kode_aset ?? '',
+                                'nama_pemilik' => 'Pemerintah Kabupaten Donggala',
+                                'dinas' => $aset->opd ?? '',
+                                'luas' => $aset->luas ?? '',
+                                'alamat' => $aset->alamat ?? '',
+                            ]) }}" target="_blank" class="btn btn-primary fw-bold px-4 py-2 shadow-sm">
+                                <i class="bi bi-plus-lg me-1"></i> + Daftarkan ke Katalog eLabel
+                            </a>
+                        </div>
+                    @else
+                        <div class="alert alert-danger border-0 bg-danger bg-opacity-10 text-danger rounded-3 mb-4">
+                            <div class="d-flex align-items-center">
+                                <i class="bi bi-x-circle-fill text-danger me-2 fs-5"></i>
+                                <div>
+                                    <strong>Pendaftaran Arsip Fisik Ditangguhkan</strong>
+                                    <div class="small text-secondary mt-1">
+                                        Status proses pengurusan aset tanah saat ini adalah: <strong>{{ $aset->latestProses->statusProses->nama_status ?? 'Belum Diurus' }}</strong>.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="p-4 bg-body rounded-3 border text-center my-3">
+                            <i class="bi bi-lock text-secondary fs-1 d-block mb-2 text-danger"></i>
+                            <h6 class="fw-bold text-secondary mb-1">Fitur Terkunci</h6>
+                            <p class="text-secondary small mb-0">Arsip fisik sertifikat di eLabel hanya dapat didaftarkan jika status proses pensertifikatan aset tanah ini sudah berstatus <strong>Bersertifikat / Selesai</strong>.</p>
+                        </div>
+                    @endif
                 @endif
             </div>
         </div>

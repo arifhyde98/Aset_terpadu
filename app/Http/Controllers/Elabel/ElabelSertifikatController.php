@@ -55,8 +55,61 @@ class ElabelSertifikatController extends Controller implements HasMiddleware
         ]);
     }
 
-    public function create(Request $request): View
+    public function create(Request $request): View|RedirectResponse
     {
+        $user = auth()->user();
+        $nibar = $request->get('nibar');
+
+        // Jika role pengguna adalah admin, wajib mendaftar lewat SIPAT
+        if ($user->role->value === 'admin') {
+            if (empty($nibar)) {
+                return redirect()->route('elabel.sertifikat.index')
+                    ->with('error', 'Role Admin wajib mendaftarkan sertifikat melalui modul SIPAT.');
+            }
+
+            $aset = \App\Models\AsetTanah::with('latestProses.statusProses')->where('kode_aset', $nibar)->first();
+            if (!$aset) {
+                return redirect()->route('elabel.sertifikat.index')
+                    ->with('error', 'Kode aset (NIBAR) ' . $nibar . ' tidak ditemukan di SIPAT. Admin wajib mendaftarkan lewat SIPAT.');
+            }
+
+            $isBersertifikat = false;
+            if ($aset->latestProses && $aset->latestProses->statusProses) {
+                $status = $aset->latestProses->statusProses;
+                if ($status->kategori === 'bersertifikat' || 
+                    str_contains(strtolower($status->nama_status), 'sertifikat') || 
+                    str_contains(strtolower($status->nama_status), 'selesai')) {
+                    $isBersertifikat = true;
+                }
+            }
+            
+            if (!$isBersertifikat) {
+                return redirect()->route('elabel.sertifikat.index')
+                    ->with('error', 'Aset tanah ' . $nibar . ' belum berstatus Bersertifikat / Selesai pada modul SIPAT.');
+            }
+        } else {
+            // Untuk superadmin (atau role lain jika ada), opsional melakukan pengecekan jika nibar disertakan
+            if ($nibar) {
+                $aset = \App\Models\AsetTanah::with('latestProses.statusProses')->where('kode_aset', $nibar)->first();
+                if ($aset) {
+                    $isBersertifikat = false;
+                    if ($aset->latestProses && $aset->latestProses->statusProses) {
+                        $status = $aset->latestProses->statusProses;
+                        if ($status->kategori === 'bersertifikat' || 
+                            str_contains(strtolower($status->nama_status), 'sertifikat') || 
+                            str_contains(strtolower($status->nama_status), 'selesai')) {
+                            $isBersertifikat = true;
+                        }
+                    }
+                    
+                    if (!$isBersertifikat) {
+                        return redirect()->route('elabel.sertifikat.index')
+                            ->with('error', 'Aset tanah ' . $nibar . ' belum berstatus Bersertifikat / Selesai pada modul SIPAT.');
+                    }
+                }
+            }
+        }
+
         $item = [
             'nibar'             => $request->get('nibar'),
             'spesifikasi'       => $request->get('nama'),
@@ -83,6 +136,55 @@ class ElabelSertifikatController extends Controller implements HasMiddleware
     public function store(StoreElabelSertifikatRequest $request): RedirectResponse
     {
         $payload = $request->validated();
+        $user = auth()->user();
+        $nibar = $payload['nibar'] ?? null;
+        
+        // Jika role pengguna adalah admin, wajib mendaftar lewat SIPAT
+        if ($user->role->value === 'admin') {
+            if (empty($nibar)) {
+                return redirect()->back()->withInput()->with('error', 'Role Admin wajib mendaftarkan sertifikat melalui modul SIPAT.');
+            }
+
+            $aset = \App\Models\AsetTanah::with('latestProses.statusProses')->where('kode_aset', $nibar)->first();
+            if (!$aset) {
+                return redirect()->back()->withInput()->with('error', 'Kode aset (NIBAR) ' . $nibar . ' tidak ditemukan di SIPAT. Admin wajib mendaftarkan lewat SIPAT.');
+            }
+
+            $isBersertifikat = false;
+            if ($aset->latestProses && $aset->latestProses->statusProses) {
+                $status = $aset->latestProses->statusProses;
+                if ($status->kategori === 'bersertifikat' || 
+                    str_contains(strtolower($status->nama_status), 'sertifikat') || 
+                    str_contains(strtolower($status->nama_status), 'selesai')) {
+                    $isBersertifikat = true;
+                }
+            }
+            
+            if (!$isBersertifikat) {
+                return redirect()->back()->withInput()->with('error', 'Aset tanah ' . $nibar . ' belum berstatus Bersertifikat / Selesai pada modul SIPAT.');
+            }
+        } else {
+            // Untuk superadmin (atau role lain jika ada), opsional melakukan pengecekan jika nibar disertakan
+            if ($nibar) {
+                $aset = \App\Models\AsetTanah::with('latestProses.statusProses')->where('kode_aset', $nibar)->first();
+                if ($aset) {
+                    $isBersertifikat = false;
+                    if ($aset->latestProses && $aset->latestProses->statusProses) {
+                        $status = $aset->latestProses->statusProses;
+                        if ($status->kategori === 'bersertifikat' || 
+                            str_contains(strtolower($status->nama_status), 'sertifikat') || 
+                            str_contains(strtolower($status->nama_status), 'selesai')) {
+                            $isBersertifikat = true;
+                        }
+                    }
+                    
+                    if (!$isBersertifikat) {
+                        return redirect()->back()->withInput()->with('error', 'Aset tanah ' . $nibar . ' belum berstatus Bersertifikat / Selesai pada modul SIPAT.');
+                    }
+                }
+            }
+        }
+
         $duplicate = $this->findDuplicateSertifikat($payload);
         if ($duplicate !== null) {
             return redirect()->back()->withInput()->with('error', $this->duplicateSertifikatMessage($duplicate));

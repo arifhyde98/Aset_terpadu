@@ -20,12 +20,14 @@
             <a href="{{ route('elabel.sertifikat.export') }}" class="btn btn-outline-success shadow-sm fw-medium d-flex align-items-center gap-2">
                 <i class="bi bi-file-earmark-excel"></i> Export Excel
             </a>
+            @if(auth()->user()->role->value === 'superadmin')
             <button type="button" class="btn btn-outline-primary shadow-sm fw-medium d-flex align-items-center gap-2" data-bs-toggle="modal" data-bs-target="#importModal">
                 <i class="bi bi-file-earmark-arrow-up"></i> Import Excel
             </button>
             <a href="{{ route('elabel.sertifikat.create') }}" class="btn btn-success shadow-sm fw-medium d-flex align-items-center gap-2">
                 <i class="bi bi-plus-lg"></i> Tambah Sertifikat
             </a>
+            @endif
         </div>
     </div>
     <div class="card border-0 shadow-sm rounded-4">
@@ -49,7 +51,7 @@
                 <thead class="table-light">
                     <tr>
                         <th class="py-3 px-4 text-center" style="width: 50px;">No.</th>
-                        <th class="py-3">No. Sertipikat / NIBAR</th>
+                        <th class="py-3">No. Sertipikat</th>
                         <th class="py-3">Pemilik / Pengguna</th>
                         <th class="py-3">Lokasi / Alamat</th>
                         <th class="py-3 text-end">Luas (m²)</th>
@@ -63,7 +65,6 @@
                             <td class="px-4 text-center fw-medium text-secondary">{{ $loop->iteration }}</td>
                             <td>
                                 <div class="fw-bold text-navy"><i class="bi bi-patch-check-fill text-success me-1"></i> {{ $item->no_sertipikat }}</div>
-                                <div class="small text-secondary">NIBAR: {{ $item->nibar ?: '-' }}</div>
                             </td>
                             <td>
                                 <div class="fw-medium text-dark">{{ $item->nama_pemilik ?: '-' }}</div>

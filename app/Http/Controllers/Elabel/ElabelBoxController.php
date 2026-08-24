@@ -39,6 +39,14 @@ class ElabelBoxController extends Controller implements HasMiddleware
             $query->where('vehicle_type', $vehicleType);
         }
 
+        if ($request->filled('q')) {
+            $q = $request->get('q');
+            $query->where(function ($sub) use ($q) {
+                $sub->where('box_code', 'LIKE', '%' . $q . '%')
+                    ->orWhere('location', 'LIKE', '%' . $q . '%');
+            });
+        }
+
         $boxes = $query->orderBy('id', 'desc')->get();
 
         return view('elabel.boxes.index', [

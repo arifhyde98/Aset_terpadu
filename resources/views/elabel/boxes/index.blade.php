@@ -14,17 +14,40 @@
                     <li class="breadcrumb-item active text-navy fw-medium" aria-current="page">Box BPKB</li>
                 </ol>
             </nav>
-            <h4 class="fw-bold text-navy mb-0">Manajemen Box & Lokasi Rak BPKB</h4>
+            <h4 class="fw-bold text-navy mb-0">Manajemen Box & Lokasi Rak BPKB ({{ $vehicleLabel }})</h4>
         </div>
         <div>
-            <a href="{{ route('elabel.boxes.create') }}" class="btn btn-primary shadow-sm fw-medium d-flex align-items-center gap-2">
+            <a href="{{ route('elabel.boxes.create', ['type' => request('type')]) }}" class="btn btn-primary shadow-sm fw-medium d-flex align-items-center gap-2">
                 <i class="bi bi-plus-lg"></i> Tambah Box BPKB
             </a>
         </div>
     </div>
+
+    <!-- CATEGORY FILTER TABS -->
+    <ul class="nav nav-tabs nav-fill mb-4 border-bottom" role="tablist">
+        <li class="nav-item">
+            <a href="{{ route('elabel.boxes.index') }}" class="nav-link fw-bold py-3 d-flex align-items-center justify-content-center gap-2 {{ !$vehicleType ? 'active text-navy border-bottom border-primary border-3' : 'text-secondary' }}">
+                <i class="bi bi-collection-fill"></i> Semua Box BPKB
+            </a>
+        </li>
+        <li class="nav-item">
+            <a href="{{ route('elabel.boxes.index', ['type' => 'r4']) }}" class="nav-link fw-bold py-3 d-flex align-items-center justify-content-center gap-2 {{ $vehicleType === 'R4' ? 'active text-navy border-bottom border-primary border-3' : 'text-secondary' }}">
+                <i class="bi bi-car-front-fill text-primary"></i> R4 (Mobil)
+            </a>
+        </li>
+        <li class="nav-item">
+            <a href="{{ route('elabel.boxes.index', ['type' => 'r2']) }}" class="nav-link fw-bold py-3 d-flex align-items-center justify-content-center gap-2 {{ $vehicleType === 'R2' ? 'active text-navy border-bottom border-primary border-3' : 'text-secondary' }}">
+                <i class="bi bi-bicycle text-success"></i> R2 (Motor)
+            </a>
+        </li>
+    </ul>
+
     <div class="card border-0 shadow-sm rounded-4">
         <div class="card-header bg-white border-0 py-3 px-4">
             <form action="{{ route('elabel.boxes.index') }}" method="GET" class="row g-2 align-items-center">
+                @if(request('type'))
+                    <input type="hidden" name="type" value="{{ request('type') }}">
+                @endif
                 <div class="col-md-8">
                     <div class="input-group">
                         <span class="input-group-text bg-white border-end-0"><i class="bi bi-search text-secondary"></i></span>
@@ -33,7 +56,7 @@
                 </div>
                 <div class="col-md-4 d-flex gap-2">
                     <button type="submit" class="btn btn-primary w-100 fw-medium">Cari</button>
-                    <a href="{{ route('elabel.boxes.index') }}" class="btn btn-light border bg-white"><i class="bi bi-arrow-clockwise"></i></a>
+                    <a href="{{ route('elabel.boxes.index', ['type' => request('type')]) }}" class="btn btn-light border bg-white" title="Reset"><i class="bi bi-arrow-clockwise"></i></a>
                 </div>
             </form>
         </div>

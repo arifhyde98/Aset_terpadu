@@ -181,7 +181,6 @@
                             <input type="checkbox" id="checkAll" class="form-check-input">
                         </th>
                         <th class="py-3" style="width: 50px;">NO</th>
-                        <th class="py-3">KODE ASET</th>
                         <th class="py-3">NAMA ASET / PERUNTUKAN</th>
                         <th class="py-3">LUAS (M²)</th>
                         <th class="py-3">OPD PENGELOLA</th>
@@ -198,11 +197,6 @@
                             </td>
                             <td class="fw-medium text-secondary" style="font-size: 0.8rem;">
                                 {{ $asetTanah->firstItem() + $index }}
-                            </td>
-                            <td>
-                                <span class="badge bg-primary-subtle text-primary font-monospace px-2.5 py-1" style="font-size: 0.8rem;">
-                                    {{ $item->kode_aset ?? '-' }}
-                                </span>
                             </td>
                             <td>
                                 <div class="fw-semibold text-body">{{ $item->nama_aset }}</div>
