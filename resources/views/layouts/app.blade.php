@@ -57,6 +57,7 @@
     </div>
 
     @include('layouts.partials.bottom-nav')
+    @include('layouts.partials.ai-floating-widget')
 
     @stack('modals')
     @stack('scripts')

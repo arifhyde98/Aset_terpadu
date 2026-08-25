@@ -85,3 +85,10 @@ Route::get('maintenance', function () {
 
 // Monitoring API (Spoke)
 Route::get('api/health-check', [HealthCheckController::class, 'check'])->name('api.health-check');
+
+// Asisten Pintar AI (Ollama Integration)
+Route::prefix('ai')->name('ai.')->group(function () {
+    Route::get('/status', [\App\Http\Controllers\AiAssistantController::class, 'status'])->name('status');
+    Route::post('/ask', [\App\Http\Controllers\AiAssistantController::class, 'ask'])->name('ask');
+    Route::post('/generate-summary', [\App\Http\Controllers\AiAssistantController::class, 'generateSummary'])->name('generate-summary');
+});
