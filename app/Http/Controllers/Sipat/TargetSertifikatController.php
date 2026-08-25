@@ -14,6 +14,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
 use Illuminate\View\View;
+use Illuminate\Validation\Rule;
 use Maatwebsite\Excel\Facades\Excel;
 
 class TargetSertifikatController extends Controller implements HasMiddleware
@@ -208,6 +209,46 @@ class TargetSertifikatController extends Controller implements HasMiddleware
 
         return redirect()->route('sipat.target-pensertifikatan.index', ['tahun' => $tahun])
             ->with('success', "Berhasil menambahkan {$insertedCount} bidang tanah ke dalam Target Pensertifikatan Tahun {$tahun}.");
+    }
+
+    /**
+     * Memperbarui tahun atau keterangan target pensertifikatan.
+     */
+    public function update(Request $request, SipatTargetSertifikat $target): RedirectResponse
+    {
+        $validated = $request->validate([
+            'tahun' => [
+                'required',
+                'integer',
+                'min:2000',
+                'max:2100',
+                Rule::unique('sipat_target_sertifikat', 'tahun')
+                    ->where('aset_tanah_id', $target->aset_tanah_id)
+                    ->ignore($target->id),
+            ],
+            'keterangan' => 'nullable|string|max:500',
+        ], [
+            'tahun.unique' => 'Aset tanah ini sudah terdaftar sebagai target pada tahun tersebut.',
+        ]);
+
+        $tahunLama = $target->tahun;
+        $tahunBaru = (int) $validated['tahun'];
+        $namaAset = $target->asetTanah?->nama_aset ?? 'Aset';
+
+        $target->update([
+            'tahun' => $tahunBaru,
+            'keterangan' => $validated['keterangan'] ?? null,
+        ]);
+
+        if (class_exists(Activity::class)) {
+            $pesanLog = $tahunLama !== $tahunBaru
+                ? "Memindahkan target pensertifikatan aset '{$namaAset}' dari tahun {$tahunLama} ke tahun {$tahunBaru}"
+                : "Memperbarui keterangan target pensertifikatan aset '{$namaAset}' tahun {$tahunBaru}";
+            Activity::logSipat($pesanLog, 'info');
+        }
+
+        return redirect()->route('sipat.target-pensertifikatan.index', ['tahun' => $tahunBaru])
+            ->with('success', "Target pensertifikatan untuk aset '{$namaAset}' berhasil diperbarui.");
     }
 
     /**

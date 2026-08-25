@@ -242,13 +242,27 @@
                                             <small class="text-secondary">{{ $item->keterangan ?? '-' }}</small>
                                         </td>
                                         <td class="text-end pe-4">
-                                            <form action="{{ route('sipat.target-pensertifikatan.destroy', $item->id) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin menghapus bidang tanah ini dari target tahun {{ $tahun }}?')">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="submit" class="btn btn-sm btn-outline-danger border-0 rounded-circle" data-bs-toggle="tooltip" title="Hapus dari Target">
-                                                    <i class="bi bi-trash"></i>
+                                            <div class="d-flex justify-content-end gap-1">
+                                                <button type="button" 
+                                                        class="btn btn-sm btn-outline-primary border-0 rounded-circle btn-edit-target"
+                                                        data-id="{{ $item->id }}"
+                                                        data-tahun="{{ $item->tahun }}"
+                                                        data-kode="{{ $item->asetTanah->kode_aset ?? '-' }}"
+                                                        data-nama="{{ $item->asetTanah->nama_aset ?? '-' }}"
+                                                        data-keterangan="{{ $item->keterangan ?? '' }}"
+                                                        data-url="{{ route('sipat.target-pensertifikatan.update', $item->id) }}"
+                                                        data-bs-toggle="tooltip" 
+                                                        title="Ubah Target">
+                                                    <i class="bi bi-pencil-square"></i>
                                                 </button>
-                                            </form>
+                                                <form action="{{ route('sipat.target-pensertifikatan.destroy', $item->id) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin menghapus bidang tanah ini dari target tahun {{ $tahun }}?')">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="submit" class="btn btn-sm btn-outline-danger border-0 rounded-circle" data-bs-toggle="tooltip" title="Hapus dari Target">
+                                                        <i class="bi bi-trash"></i>
+                                                    </button>
+                                                </form>
+                                            </div>
                                         </td>
                                     </tr>
                                 @empty
@@ -426,6 +440,53 @@
     </div>
 </div>
 
+<!-- Modal Ubah Target -->
+<div class="modal fade" id="modalEditTarget" tabindex="-1" aria-labelledby="modalEditTargetLabel" aria-hidden="true">
+    <div class="modal-dialog modal-md">
+        <div class="modal-content rounded-4 border-0 shadow">
+            <div class="modal-header bg-primary text-white p-3">
+                <h5 class="modal-title fw-bold" id="modalEditTargetLabel">
+                    <i class="bi bi-pencil-square me-1"></i> Ubah Data Target Pensertifikatan
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="formEditTarget" method="POST" action="">
+                @csrf
+                @method('PUT')
+                <div class="modal-body p-4">
+                    <!-- Info Aset -->
+                    <div class="mb-3 p-3 bg-light rounded-3 border">
+                        <div class="small text-secondary fw-bold">BIDANG TANAH</div>
+                        <div class="fw-bold text-dark font-monospace" id="editAsetKode">-</div>
+                        <div class="text-body fw-semibold" id="editAsetNama">-</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-body">Tahun Anggaran Target <span class="text-danger">*</span></label>
+                        <select name="tahun" id="editTargetTahun" class="form-select" required>
+                            @foreach($availableYears as $y)
+                                <option value="{{ $y }}">Tahun {{ $y }}</option>
+                            @endforeach
+                        </select>
+                        <div class="form-text small">Anda dapat memindahkan target aset ini ke tahun anggaran lain tanpa perlu menghapusnya.</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-body">Catatan / Keterangan Target</label>
+                        <textarea name="keterangan" id="editTargetKeterangan" class="form-control" rows="3" placeholder="Contoh: Target Prioritas Pemda / Penlok BPN 2026"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light p-3">
+                    <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-primary rounded-pill px-4 shadow-sm">
+                        <i class="bi bi-save me-1"></i> Simpan Perubahan
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 @push('scripts')
 <script>
     document.addEventListener('DOMContentLoaded', function () {
@@ -468,6 +529,35 @@
                     }
                 });
                 btnSelectAll.textContent = isAllSelected ? 'Batal Pilih' : 'Pilih Semua';
+            });
+        }
+
+        // Edit Target Modal Handler
+        const modalEditEl = document.getElementById('modalEditTarget');
+        if (modalEditEl) {
+            const modalEdit = new bootstrap.Modal(modalEditEl);
+            const formEdit = document.getElementById('formEditTarget');
+            const editAsetKode = document.getElementById('editAsetKode');
+            const editAsetNama = document.getElementById('editAsetNama');
+            const editTargetTahun = document.getElementById('editTargetTahun');
+            const editTargetKeterangan = document.getElementById('editTargetKeterangan');
+
+            document.querySelectorAll('.btn-edit-target').forEach(btn => {
+                btn.addEventListener('click', function () {
+                    const url = this.getAttribute('data-url');
+                    const tahun = this.getAttribute('data-tahun');
+                    const kode = this.getAttribute('data-kode');
+                    const nama = this.getAttribute('data-nama');
+                    const keterangan = this.getAttribute('data-keterangan');
+
+                    formEdit.action = url;
+                    editAsetKode.textContent = kode;
+                    editAsetNama.textContent = nama;
+                    editTargetTahun.value = tahun;
+                    editTargetKeterangan.value = keterangan;
+
+                    modalEdit.show();
+                });
             });
         }
     });
