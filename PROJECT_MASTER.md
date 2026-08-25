@@ -28,6 +28,7 @@ Dokumen ini adalah ringkasan master proyek untuk platform **SIPAT Terpadu**. Unt
 - **Package Penting**: 
   - `Maatwebsite/Excel` (Laravel Excel untuk Import/Export data massal)
   - `mPDF` (Render PDF formal server-side untuk dokumen resmi seperti SKPT dan laporan)
+  - `Leaflet.js` & `turf.min.js` / `shp.js` (Rendering peta GIS interaktif, GeoJSON, dan Shapefile spasial)
   - `SweetAlert2` (Notifikasi interaktif dan konfirmasi CRUD)
   - `Bootstrap Icons` (Ikonografi antarmuka)
 - **Deployment Target**: Server lokal (Laragon) atau Container (Docker ready via `Dockerfile` & `docker-compose.yml`).
@@ -82,6 +83,7 @@ resources/
 - **Skema Relasional Modul Terpadu**:
   - `opd_mappings` menghubungkan tabel `opd` (modul SIPAT) dengan `opds` (modul E-RANDIS).
   - `aset_tanah` terhubung ke `opd` (SIPAT) via `opd_id` (foreign key) untuk isolasi data instansi pertanahan.
+  - `sipat_target_sertifikat` mencatat penetapan kuota/target pensertifikatan tanah tahunan KIB A terelasi dengan `aset_tanah`.
   - `proses_aset` mencatat riwayat langkah pensertifikatan yang menunjuk ke `aset_tanah`.
   - `surat_skpt` mencatat surat keterangan pendaftaran tanah yang terelasi dengan data `aset_tanah`.
   - `elabel_bpkb` dan `elabel_sertifikat_tanah` menunjuk ke box arsipnya masing-masing (`elabel_boxes` / `elabel_sertifikat_boxes`) dan terelasi ke `opd` (`sipat_opd_id`) untuk isolasi kepemilikan dokumen.
@@ -118,6 +120,7 @@ Berikut adalah status fitur yang telah diimplementasikan penuh pada platform SIP
 | **E-RANDIS** | Diagnosis & Resolusi Duplikasi | DONE | Merge plat/OPD identik lintas instansi secara atomik. |
 | **E-RANDIS** | Modul Laporan Modular | DONE | Ekspor Excel streaming, cetak browser, dan PDF via mPDF. |
 | **SIPAT** | Master Aset Tanah (CRUD) | DONE | Pengelolaan aset tanah, koordinat GPS, dan detil perolehan. |
+| **SIPAT** | Target Pensertifikatan & GIS Map | DONE | Penetapan target pensertifikatan, modal edit, & peta GIS Leaflet. |
 | **SIPAT** | Progres Pensertifikatan | DONE | Rekam langkah pensertifikatan tanah dari awal hingga terbit. |
 | **SIPAT** | Modul Surat Tanah (SKPT) | DONE | Pembuatan SKPT, ekspor Word/PDF formal (mPDF), & cetak. |
 | **SIPAT** | Peta Interaktif & Wilayah | DONE | Visualisasi sebaran koordinat aset tanah & master wilayah. |
@@ -129,6 +132,7 @@ Berikut adalah status fitur yang telah diimplementasikan penuh pada platform SIP
 | **eLABEL** | Alur Peminjaman (Scan Request) | DONE | Pengajuan pinjam/scan BPKB/Sertifikat & approval admin. |
 | **Terpadu** | OPD Mapping (Hub) | DONE | Jembatan pemetaan instansi antara E-RANDIS dan SIPAT. |
 | **Terpadu** | Audit Trail / Log Aktivitas | DONE | Log aktivitas terintegrasi E-RANDIS, SIPAT, dan eLABEL. |
+| **System** | Sinkronisasi DB Staging | DONE | Utility sinkronisasi data dari db_sipat_terpadu ke db_sipat_staging. |
 
 ---
 

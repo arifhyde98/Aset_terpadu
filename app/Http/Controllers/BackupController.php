@@ -172,6 +172,31 @@ class BackupController extends Controller implements HasMiddleware
     }
 
     /**
+     * Sinkronisasi data dari db_sipat_terpadu ke db_sipat_staging (Khusus Lingkungan Staging/Lokal).
+     *
+     * @param Request $request
+     * @return RedirectResponse
+     */
+    public function syncDb(Request $request): RedirectResponse
+    {
+        try {
+            $command = "mysqldump -u bpkad.aset -padmin123 --no-tablespaces --no-create-info --complete-insert --insert-ignore db_sipat_terpadu | mysql --force -u bpkad.aset -padmin123 db_sipat_staging 2>&1";
+            exec($command, $output, $returnCode);
+
+            if (class_exists('\App\Models\Activity')) {
+                \App\Models\Activity::log("Menyinkronkan data dari db_sipat_terpadu ke db_sipat_staging", 'info');
+            }
+
+            return redirect()->route('settings.backups.index')
+                ->with('success', 'Berhasil menyinkronkan seluruh data dari database SIPAT Terpadu!');
+        } catch (\Exception $e) {
+            Log::error('Gagal sinkronisasi database staging: ' . $e->getMessage());
+            return redirect()->route('settings.backups.index')
+                ->with('error', 'Gagal menyinkronkan database: ' . $e->getMessage());
+        }
+    }
+
+    /**
      * Format bytes ke format yang mudah dibaca manusia.
      *
      * @param int $bytes

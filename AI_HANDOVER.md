@@ -11,12 +11,14 @@ Dokumen ini merupakan sumber kebenaran tunggal (*Single Source of Truth*) mengen
 ## 1. 🛠️ Environment & Technology Stack
 - **Framework Core:** Laravel 12 / PHP 8.2+
 - **Database:** MySQL / MariaDB (Teroptimasi dengan skema B-tree Indexing)
+- **Timezone:** Dikonfigurasi secara terpusat melalui variabel lingkungan `APP_TIMEZONE` di `.env` & `config/app.php`.
 - **Frontend / Assets:** 
   - **Bundler:** Vite
   - **UI Framework:** Bootstrap 5 (Customized via SCSS tersentralisasi di `app.scss`)
   - **Iconography:** Bootstrap Icons (Local via NPM/Vite)
   - **Notifications:** SweetAlert2 (Local via NPM/Vite) untuk peringatan, validasi *real-time*, & konfirmasi aksi
   - **Typography:** Plus Jakarta Sans (Local via @fontsource) & Monospace untuk plat nomor/kode box.
+  - **GIS & Pemetaan Spasial:** Leaflet.js, Turf.js (`turf.min.js`), Shp.js (`shp.js`), Leaflet.Draw (`leaflet.draw.js`/`css`), serta aset GeoJSON dan Shapefile (.shp/.dbf) untuk render peta interaktif sebaran aset tanah & target pensertifikatan.
 - **Data Engine:** Laravel Excel (Maatwebsite/Excel) sebagai mesin utama pengolahan Impor & Ekspor data massal, serta mPDF sebagai mesin render PDF formal server-side pada Modul Laporan, ekspor Surat SKPT, dan cetak dokumen.
 - **Infrastruktur / Deployment:** Mendukung eksekusi lokal berbasis **Laragon** serta telah disiapkan konfigurasi **Docker** (`Dockerfile` & `docker-compose.yml`) untuk kemudahan kontainerisasi.
 
@@ -75,6 +77,7 @@ Dokumen ini merupakan sumber kebenaran tunggal (*Single Source of Truth*) mengen
   - `opd_id` (FK ke `opd.id`)
   - `opd` (String fallback)
   - `dasar_perolehan`, `harga_perolehan`, `tanggal_perolehan`, `keterangan`
+*   **sipat_target_sertifikat**: Menyimpan penetapan kuota/target pensertifikatan tanah tahunan (`id`, `tahun`, `aset_tanah_id` [FK ke `sipat_aset_tanah.id`], `target_jumlah`, `keterangan`, `created_at`, `updated_at`). *(Relasi OPD diambil langsung dari `asetTanah->opdSipat` pasca-refaktorisasi).*
 *   **proses_aset**: Tahapan progres sertifikasi tanah (`id_proses`, `id_aset`, `status_proses_id`, `tanggal`, `keterangan`, `dokumen`).
 *   **surat_skpt**: Dokumen Surat Keterangan Pendaftaran Tanah (`id`, `aset_tanah_id`, `nomor_surat`, `tanggal_surat`, `pemohon_id`, `camat_id`, `kades_id`, `keterangan`).
 *   **opd_mappings**: Tabel jembatan pemetaan OPD (`id`, `sipat_opd_id`, `erandis_opd_id`, `status_verifikasi`).
@@ -98,6 +101,7 @@ Logika bisnis dan kalkulasi diletakkan di dalam kelas *Service*:
 - `VehicleService`: statistik dashboard, helper cache kendaraan, pencarian, dan utilitas bisnis kendaraan.
 - `ReportService`: ringkasan laporan, orkestrasi preview terpaginasi, dan integrasi strategi laporan modular.
 - `AsetTanahService`: ringkasan dan query pencarian aset tanah SIPAT.
+- `BackupController@syncDb`: utilitas sinkronisasi database staging dari `db_sipat_terpadu` ke `db_sipat_staging` via perintah shell `mysqldump` terisolasi khusus lingkungan lokal/staging.
 
 ### Arsitektur Modul Laporan E-RANDIS (*Reporting Architecture*)
 Modul Laporan dibangun secara modular menggunakan kombinasi **Service Layer**, **Registry Pattern**, dan **Strategy Pattern**:
@@ -158,6 +162,7 @@ Aplikasi **menggunakan sentuhan visual premium & animasi mikro kustom** secara b
 
 ### B. Modul SIPAT (Pertanahan)
 - **Katalog Aset Tanah**: Pencatatan data tanah daerah, luas, dasar perolehan, harga, dan koordinat peta.
+- **Target Pensertifikatan & Pemetaan GIS**: Pengelolaan KPI penetapan target pensertifikatan tanah tahunan (penetapan target, modal edit/update target, filter tahun/OPD), pelacakan progres real-time, ekspor rekapitulasi, dan visualisasi spasial interaktif menggunakan Leaflet GIS & Shapefile/GeoJSON.
 - **Progres Sertifikasi**: Melacak status sertifikat tanah dari proses pendaftaran, pengukuran, hingga penerbitan.
 - **Modul Surat Tanah (SKPT & Batas)**: Pembuatan dokumen SKPT formal dengan ekspor berkas PDF (mPDF), Word (.docx), dan cetak langsung. Sisa fungsi legacy `esc()` dan syntax error kurung pada template SKPT telah diganti standar Laravel `e()`.
 - **Peta Aset**: Visualisasi marker sebaran aset tanah pada peta interaktif.
@@ -181,6 +186,8 @@ Aplikasi **menggunakan sentuhan visual premium & animasi mikro kustom** secara b
 | **E-RANDIS** | GET | `/reports/pdf` | `ReportController@pdf` | Auth | Unduh PDF formal mPDF |
 | **E-RANDIS** | GET | `/reports/settings` | `ReportSettingController@index` | Superadmin | Pengaturan kop, TTD, & ekspor |
 | **SIPAT** | GET | `/sipat/aset` | `Sipat\AsetTanahController@index` | Auth | Daftar Aset Tanah |
+| **SIPAT** | GET | `/sipat/target-pensertifikatan` | `Sipat\TargetSertifikatController@index` | Auth | Target Pensertifikatan & GIS Map |
+| **SIPAT** | POST/PUT/DEL | `/sipat/target-pensertifikatan/*` | `Sipat\TargetSertifikatController` | Auth | CRUD Target Pensertifikatan |
 | **SIPAT** | GET | `/sipat/surat/skpt` | `Sipat\SuratController@skpt` | Auth | Modul Pembuatan SKPT |
 | **SIPAT** | GET | `/sipat/peta` | `Sipat\PetaController@index` | Auth | Peta Interaktif Aset |
 | **SIPAT** | GET | `/master-data/opd-sipat` | `MasterSipatOpdController` | Auth | CRUD OPD Modul SIPAT |
@@ -189,6 +196,7 @@ Aplikasi **menggunakan sentuhan visual premium & animasi mikro kustom** secara b
 | **eLABEL** | GET | `/elabel/boxes/{id}/label` | `Elabel\ElabelBoxController@label` | Auth | Cetak Barcode Label Box |
 | **eLABEL** | GET | `/elabel/sertifikat` | `Elabel\ElabelSertifikatController@index` | Auth | Katalog Sertifikat Tanah |
 | **eLABEL** | GET | `/elabel/peminjaman` | `Elabel\ElabelLoanController@index` | Auth | Request Peminjaman Dokumen |
+| **System** | POST | `/settings/backups/sync-db` | `BackupController@syncDb` | Auth | Sinkronisasi DB Staging |
 
 ---
 
@@ -198,3 +206,4 @@ Aplikasi **menggunakan sentuhan visual premium & animasi mikro kustom** secara b
 3. **Bahasa Indonesia Wajib:** Seluruh interaksi UI, notifikasi, dan anotasi kode wajib menggunakan Bahasa Indonesia yang profesional.
 4. **Keamanan HasMiddleware:** Controller baru wajib mengimplementasikan interface `HasMiddleware` standar Laravel 12.
 5. **No Destructive DB Ops:** Jangan menyarankan *Soft Deletes* jika tidak ada di skema awal. Hormati arsitektur `Set Null` pada tabel Audit.
+6. **Wajib Update Dokumentasi (.md):** Setiap kali ada perubahan rute, database/migration, controller/service, atau penambahan fitur baru, agen AI WAJIB langsung memperbarui `AI_HANDOVER.md`, `PROJECT_MASTER.md`, dan dokumen spesifikasi terkait (`docs/*.md`) sebelum mengakhiri sesi.
