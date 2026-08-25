@@ -27,15 +27,11 @@ class TargetSertifikatExport implements FromCollection, WithHeadings, WithMappin
         $query = SipatTargetSertifikat::with([
             'asetTanah.opdSipat',
             'asetTanah.latestProses.statusProses',
-            'opdSipat'
         ])->where('tahun', $this->tahun);
 
         if ($this->opdId) {
-            $query->where(function ($q) {
-                $q->where('opd_id', $this->opdId)
-                  ->orWhereHas('asetTanah', function ($q2) {
-                      $q2->where('opd_id', $this->opdId);
-                  });
+            $query->whereHas('asetTanah', function ($q) {
+                $q->where('opd_id', $this->opdId);
             });
         }
 
@@ -61,7 +57,7 @@ class TargetSertifikatExport implements FromCollection, WithHeadings, WithMappin
     {
         $this->rowNum++;
         $aset = $target->asetTanah;
-        $opdNama = $target->opdSipat?->nama ?? $aset?->opdSipat?->nama ?? $aset?->opd ?? '-';
+        $opdNama = $aset?->opdSipat?->nama ?? $aset?->opd ?? '-';
         
         $latestStatus = $aset?->latestProses?->statusProses;
         $statusName = $latestStatus?->nama_status ?? 'Belum Diurus';

@@ -47,15 +47,11 @@ class TargetSertifikatController extends Controller implements HasMiddleware
         $targetQuery = SipatTargetSertifikat::with([
             'asetTanah.opdSipat',
             'asetTanah.latestProses.statusProses',
-            'opdSipat'
         ])->where('tahun', $tahun);
 
         if ($opdId) {
-            $targetQuery->where(function ($q) use ($opdId) {
-                $q->where('opd_id', $opdId)
-                  ->orWhereHas('asetTanah', function ($q2) use ($opdId) {
-                      $q2->where('opd_id', $opdId);
-                  });
+            $targetQuery->whereHas('asetTanah', function ($q) use ($opdId) {
+                $q->where('opd_id', $opdId);
             });
         }
 
@@ -109,7 +105,7 @@ class TargetSertifikatController extends Controller implements HasMiddleware
         // Summary per OPD
         $opdSummaries = [];
         foreach ($targetItems as $t) {
-            $opdObj = $t->opdSipat ?? $t->asetTanah?->opdSipat;
+            $opdObj = $t->asetTanah?->opdSipat;
             $opdNama = $opdObj?->nama ?? $t->asetTanah?->opd ?? 'Lainnya / Belum Ditentukan';
             
             if (!isset($opdSummaries[$opdNama])) {
@@ -199,7 +195,6 @@ class TargetSertifikatController extends Controller implements HasMiddleware
                     'aset_tanah_id' => $idAset,
                 ],
                 [
-                    'opd_id' => $aset->opd_id,
                     'target_jumlah' => 1,
                     'keterangan' => $keterangan,
                 ]
@@ -260,15 +255,11 @@ class TargetSertifikatController extends Controller implements HasMiddleware
         $targetQuery = SipatTargetSertifikat::with([
             'asetTanah.opdSipat',
             'asetTanah.latestProses.statusProses',
-            'opdSipat'
         ])->where('tahun', $tahun);
 
         if ($opdId) {
-            $targetQuery->where(function ($q) use ($opdId) {
-                $q->where('opd_id', $opdId)
-                  ->orWhereHas('asetTanah', function ($q2) use ($opdId) {
-                      $q2->where('opd_id', $opdId);
-                  });
+            $targetQuery->whereHas('asetTanah', function ($q) use ($opdId) {
+                $q->where('opd_id', $opdId);
             });
         }
 

@@ -211,7 +211,7 @@
                                         </td>
                                         <td>
                                             <span class="badge bg-light text-dark border">
-                                                {{ $item->opdSipat->nama ?? $item->asetTanah->opdSipat->nama ?? $item->asetTanah->opd ?? '-' }}
+                                                {{ $item->asetTanah->opdSipat->nama ?? $item->asetTanah->opd ?? '-' }}
                                             </span>
                                         </td>
                                         <td>

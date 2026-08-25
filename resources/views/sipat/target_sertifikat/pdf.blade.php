@@ -175,7 +175,7 @@
             @forelse ($targetItems as $index => $t)
                 @php
                     $aset = $t->asetTanah;
-                    $opdNama = $t->opdSipat?->nama ?? $aset?->opdSipat?->nama ?? $aset?->opd ?? '-';
+                    $opdNama = $aset?->opdSipat?->nama ?? $aset?->opd ?? '-';
                 @endphp
                 <tr>
                     <td class="text-center">{{ $index + 1 }}</td>
