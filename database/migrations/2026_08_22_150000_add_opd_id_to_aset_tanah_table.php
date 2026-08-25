@@ -9,9 +9,11 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::table('aset_tanah', function (Blueprint $table) {
-            $table->foreignId('opd_id')->nullable()->after('opd');
-        });
+        if (!Schema::hasColumn('aset_tanah', 'opd_id')) {
+            Schema::table('aset_tanah', function (Blueprint $table) {
+                $table->foreignId('opd_id')->nullable()->after('opd');
+            });
+        }
 
         DB::statement('
             UPDATE aset_tanah a
@@ -19,12 +21,16 @@ return new class extends Migration
             SET a.opd_id = o.id
         ');
 
-        Schema::table('aset_tanah', function (Blueprint $table) {
-            $table->foreign('opd_id')
-                ->references('id')
-                ->on('opd')
-                ->nullOnDelete();
-        });
+        try {
+            Schema::table('aset_tanah', function (Blueprint $table) {
+                $table->foreign('opd_id')
+                    ->references('id')
+                    ->on('opd')
+                    ->nullOnDelete();
+            });
+        } catch (\Throwable $e) {
+            // Foreign key might already exist
+        }
     }
 
     public function down(): void
