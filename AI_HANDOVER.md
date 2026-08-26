@@ -69,6 +69,7 @@ Dokumen ini merupakan sumber kebenaran tunggal (*Single Source of Truth*) mengen
 *   **aset_tanah**: Menyimpan data aset tanah dengan kolom:
   - `id_aset` (PK, BigInt)
   - `kode_aset` (String)
+  - `status_pencatatan` (Enum: `TERCATAT_KIB_A`, `USULAN_BELUM_TERCATAT`) — Penanda status pendaftaran KIB A resmi vs usulan/draft.
   - `nama_aset` (String)
   - `peruntukan` (String)
   - `luas` (Double)
@@ -102,6 +103,7 @@ Logika bisnis dan kalkulasi diletakkan di dalam kelas *Service*:
 - `VehicleService`: statistik dashboard, helper cache kendaraan, pencarian, dan utilitas bisnis kendaraan.
 - `ReportService`: ringkasan laporan, orkestrasi preview terpaginasi, dan integrasi strategi laporan modular.
 - `AsetTanahService`: ringkasan dan query pencarian aset tanah SIPAT. Kueri Master Aset Tanah diurutkan menggunakan `CASE` SQL agar aset yang memiliki NIBAR resmi selalu berada di posisi paling atas, sedangkan tanah usulan / NIBAR sementara (`DRAFT-`, `BELUM-`, null, `-`) berada di posisi paling bawah.
+- `BackupController@restoreSql`: utilitas upload dan restore database secara menyeluruh dari berkas `.sql`, `.gz`, atau `.zip` dump database MySQL.
 - `BackupController@syncDb`: utilitas sinkronisasi database staging dari `db_sipat_terpadu` ke `db_sipat_staging` via perintah shell `mysqldump` terisolasi khusus lingkungan lokal/staging.
 
 ### Arsitektur Modul Laporan E-RANDIS (*Reporting Architecture*)

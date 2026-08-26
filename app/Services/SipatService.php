@@ -104,12 +104,7 @@ class SipatService
         $totalLuas = AsetTanah::sum('luas');
         $statusMaster = StatusProses::orderBy('urutan', 'asc')->get();
 
-        $totalTanahTakTercatat = AsetTanah::where('kode_aset', 'LIKE', 'DRAFT-%')
-            ->orWhere('kode_aset', 'LIKE', 'BELUM-%')
-            ->orWhereNull('kode_aset')
-            ->orWhere('kode_aset', '')
-            ->orWhere('kode_aset', '-')
-            ->count();
+        $totalTanahTakTercatat = AsetTanah::where('status_pencatatan', 'USULAN_BELUM_TERCATAT')->count();
 
         $statusMap = [];
         $statusCategoryMap = [];

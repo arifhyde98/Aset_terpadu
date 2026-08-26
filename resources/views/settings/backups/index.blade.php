@@ -17,7 +17,10 @@
             <h3 class="fw-bold text-navy mb-0">Manajemen Backup Sistem</h3>
             <p class="text-secondary small mb-0">Kelola berkas cadangan database dan file unggahan sistem secara manual atau otomatis</p>
         </div>
-        <div class="d-flex gap-2">
+        <div class="d-flex gap-2 flex-wrap">
+            <button type="button" class="btn btn-warning text-dark shadow-sm fw-semibold d-flex align-items-center gap-2" data-bs-toggle="modal" data-bs-target="#modalRestoreDb">
+                <i class="bi bi-file-earmark-arrow-up-fill"></i> Import / Restore SQL Dump
+            </button>
             <form action="{{ route('settings.backups.create') }}" method="POST" class="d-inline" id="backupForm">
                 @csrf
                 <input type="hidden" name="option" value="all">
@@ -258,7 +261,40 @@
                 <button type="button" class="btn btn-success fw-semibold px-4 rounded-pill shadow-sm" onclick="window.location.reload()">
                     <i class="bi bi-check-circle me-1"></i> Selesai & Refresh Halaman
                 </button>
+<!-- MODAL RESTORE / UPLOAD DUMP SQL DATABASE -->
+<div class="modal fade" id="modalRestoreDb" tabindex="-1" aria-labelledby="modalRestoreDbLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content rounded-4 border-0 shadow">
+            <div class="modal-header bg-warning text-dark p-3">
+                <h5 class="modal-title fw-bold" id="modalRestoreDbLabel">
+                    <i class="bi bi-database-fill-up me-1.5"></i> Restore / Import Database Menyeluruh
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
+            <form action="{{ route('settings.backups.restore-sql') }}" method="POST" enctype="multipart/form-data" onsubmit="return confirm('PERINGATAN: Mengunggah dan merestore berkas .sql akan memperbarui seluruh tabel dan struktur database secara menyeluruh. Lanjutkan?')">
+                @csrf
+                <div class="modal-body p-4">
+                    <div class="alert alert-warning py-2.5 px-3 small border-0 rounded-3 mb-3 d-flex align-items-center gap-2">
+                        <i class="bi bi-exclamation-triangle-fill fs-4 flex-shrink-0 text-dark"></i>
+                        <div>
+                            <strong>Perhatian:</strong> Berkas <code>.sql</code>, <code>.gz</code>, atau <code>.zip</code> yang diunggah akan memperbarui seluruh tabel dan struktur database <strong>db_sipat_terpadu</strong> secara otomatis.
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-body">Pilih Berkas Dump Database (.sql / .zip) <span class="text-danger">*</span></label>
+                        <input type="file" name="sql_file" class="form-control" accept=".sql,.gz,.zip" required>
+                        <div class="form-text small">Maksimal ukuran berkas 100 MB. Berkas zip harus berisi dump database SQL.</div>
+                    </div>
+                </div>
+
+                <div class="modal-footer bg-light p-3">
+                    <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-warning text-dark rounded-pill px-4 fw-bold shadow-sm">
+                        <i class="bi bi-upload me-1"></i> Upload & Restore Database
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 </div>

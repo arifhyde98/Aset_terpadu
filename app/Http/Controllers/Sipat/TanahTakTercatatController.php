@@ -36,13 +36,7 @@ class TanahTakTercatatController extends Controller implements HasMiddleware
         $statusList = StatusProses::orderBy('urutan', 'asc')->get();
 
         $query = AsetTanah::with(['opdSipat', 'latestProses.statusProses'])
-            ->where(function ($q) {
-                $q->where('kode_aset', 'LIKE', 'DRAFT-%')
-                  ->orWhere('kode_aset', 'LIKE', 'BELUM-%')
-                  ->orWhereNull('kode_aset')
-                  ->orWhere('kode_aset', '')
-                  ->orWhere('kode_aset', '-');
-            });
+            ->where('status_pencatatan', 'USULAN_BELUM_TERCATAT');
 
         if ($opdId) {
             $query->where('opd_id', $opdId);
@@ -61,14 +55,9 @@ class TanahTakTercatatController extends Controller implements HasMiddleware
         $tanahItems = $query->orderBy('created_at', 'desc')->paginate(15)->withQueryString();
 
         // Statistical summaries
-        $totalUnrecorded = AsetTanah::where(function ($q) {
-            $q->where('kode_aset', 'LIKE', 'DRAFT-%')
-              ->orWhere('kode_aset', 'LIKE', 'BELUM-%')
-              ->orWhereNull('kode_aset')
-              ->orWhere('kode_aset', '');
-        })->count();
+        $totalUnrecorded = AsetTanah::where('status_pencatatan', 'USULAN_BELUM_TERCATAT')->count();
 
-        $totalDraftNibar = AsetTanah::where('kode_aset', 'LIKE', 'DRAFT-%')->count();
+        $totalDraftNibar = AsetTanah::where('status_pencatatan', 'USULAN_BELUM_TERCATAT')->where('kode_aset', 'LIKE', 'DRAFT-%')->count();
         $totalOpdCount = OpdSipat::where('aktif', 1)->count();
 
         return view('sipat.tanah_tak_tercatat.index', compact(
@@ -121,6 +110,7 @@ class TanahTakTercatatController extends Controller implements HasMiddleware
 
         $aset = AsetTanah::create([
             'kode_aset' => $kodeAset,
+            'status_pencatatan' => 'USULAN_BELUM_TERCATAT',
             'nama_aset' => $validated['nama_aset'],
             'opd_id' => $validated['opd_id'] ?? null,
             'opd' => $opdObj?->nama ?? null,
@@ -175,6 +165,7 @@ class TanahTakTercatatController extends Controller implements HasMiddleware
 
         $aset->update([
             'kode_aset' => $newCode,
+            'status_pencatatan' => 'TERCATAT_KIB_A',
             'keterangan' => $validated['keterangan'] ?? $aset->keterangan,
         ]);
 

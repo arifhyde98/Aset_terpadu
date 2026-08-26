@@ -197,6 +197,93 @@ class BackupController extends Controller implements HasMiddleware
     }
 
     /**
+     * Memulihkan / merestore database secara menyeluruh dari berkas SQL/ZIP yang diunggah.
+     *
+     * @param Request $request
+     * @return RedirectResponse
+     */
+    public function restoreSql(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'sql_file' => 'required|file|max:102400',
+        ], [
+            'sql_file.required' => 'Silakan pilih berkas .sql atau .zip dump database yang ingin diunggah.',
+            'sql_file.max'      => 'Ukuran berkas maksimal adalah 100 MB.',
+        ]);
+
+        try {
+            $file = $request->file('sql_file');
+            $ext = strtolower($file->getClientOriginalExtension());
+            $origName = $file->getClientOriginalName();
+
+            if (!in_array($ext, ['sql', 'gz', 'zip'])) {
+                return redirect()->route('settings.backups.index')
+                    ->with('error', 'Format berkas tidak didukung. Harap unggah berkas bertipe .sql, .gz, atau .zip');
+            }
+
+            $tempPath = $file->storeAs('temp_restore', time() . '_' . $origName, 'local');
+            $fullPath = storage_path('app/' . $tempPath);
+            $sqlPath = $fullPath;
+
+            if ($ext === 'zip') {
+                $zip = new \ZipArchive();
+                if ($zip->open($fullPath) === true) {
+                    $extractDir = storage_path('app/temp_restore/' . time() . '_extracted');
+                    $zip->extractTo($extractDir);
+                    $zip->close();
+
+                    $sqlFiles = glob($extractDir . '/*.sql');
+                    if (empty($sqlFiles)) {
+                        $sqlFiles = glob($extractDir . '/*/*.sql');
+                    }
+
+                    if (!empty($sqlFiles)) {
+                        $sqlPath = $sqlFiles[0];
+                    } else {
+                        return redirect()->route('settings.backups.index')
+                            ->with('error', 'Tidak ditemukan berkas .sql di dalam arsip ZIP.');
+                    }
+                } else {
+                    return redirect()->route('settings.backups.index')
+                        ->with('error', 'Gagal membuka berkas ZIP cadangan.');
+                }
+            }
+
+            $dbHost = config('database.connections.mysql.host', '127.0.0.1');
+            $dbPort = config('database.connections.mysql.port', '3306');
+            $dbName = config('database.connections.mysql.database');
+            $dbUser = config('database.connections.mysql.username');
+            $dbPass = config('database.connections.mysql.password');
+
+            $passFlag = !empty($dbPass) ? "-p" . escapeshellarg($dbPass) : "";
+
+            if ($ext === 'gz') {
+                $cmd = "gunzip -c " . escapeshellarg($sqlPath) . " | mysql -h " . escapeshellarg($dbHost) . " -P " . escapeshellarg($dbPort) . " -u " . escapeshellarg($dbUser) . " {$passFlag} " . escapeshellarg($dbName) . " 2>&1";
+            } else {
+                $cmd = "mysql -h " . escapeshellarg($dbHost) . " -P " . escapeshellarg($dbPort) . " -u " . escapeshellarg($dbUser) . " {$passFlag} " . escapeshellarg($dbName) . " < " . escapeshellarg($sqlPath) . " 2>&1";
+            }
+
+            exec($cmd, $output, $returnCode);
+
+            // Invalidate cache dashboard
+            if (class_exists('\App\Services\SipatService')) {
+                app(\App\Services\SipatService::class)->invalidateDashboardCache();
+            }
+
+            if (class_exists('\App\Models\Activity')) {
+                \App\Models\Activity::log("Memulihkan / merestore database secara menyeluruh dari berkas unggahan '{$origName}'", 'warning');
+            }
+
+            return redirect()->route('settings.backups.index')
+                ->with('success', "Berhasil merestore dan memperbarui database secara menyeluruh dari berkas: {$origName}!");
+        } catch (\Exception $e) {
+            Log::error('Gagal restore database: ' . $e->getMessage());
+            return redirect()->route('settings.backups.index')
+                ->with('error', 'Gagal memulihkan database: ' . $e->getMessage());
+        }
+    }
+
+    /**
      * Format bytes ke format yang mudah dibaca manusia.
      *
      * @param int $bytes

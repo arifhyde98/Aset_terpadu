@@ -67,6 +67,7 @@ class UnrecordedLandSeeder extends Seeder
 
             $aset = AsetTanah::create([
                 'kode_aset' => $candidateCode,
+                'status_pencatatan' => 'USULAN_BELUM_TERCATAT',
                 'nama_aset' => $item['nama'],
                 'peruntukan' => 'Gedung Sekolah / Bangunan Pendidikan',
                 'opd_id' => $opdId,

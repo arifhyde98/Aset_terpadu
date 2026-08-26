@@ -15,6 +15,7 @@ class AsetTanah extends Model
 
     protected $fillable = [
         'kode_aset',
+        'status_pencatatan',
         'nama_aset',
         'peruntukan',
         'luas',

@@ -91,7 +91,7 @@ class AsetTanahService
 
         $orderQuery = $query->orderByRaw("
             CASE 
-                WHEN kode_aset IS NULL OR kode_aset = '' OR kode_aset = '-' OR kode_aset LIKE 'DRAFT-%' OR kode_aset LIKE 'BELUM-%' THEN 1 
+                WHEN status_pencatatan = 'USULAN_BELUM_TERCATAT' THEN 1 
                 ELSE 0 
             END ASC
         ")->orderBy('id_aset', 'desc');
