@@ -175,6 +175,7 @@ Aplikasi **menggunakan sentuhan visual premium & animasi mikro kustom** secara b
 
 ### C. Modul eLABEL (Pengarsipan & Labelisasi)
 - **Katalog & Box BPKB**: Pengarsipan BPKB ke dalam box fisik, pencetakan stiker label barcode box, dan penggabungan/merge box BPKB.
+- **Smart BPKB PDF Folder Scanner**: Pemindaian folder lokal server/PC dengan dry-run audit, penautan otomatis PDF ke record BPKB DB (`elabel/bpkb/`), timer elapsed pemindaian (S1), checkbox selektif (S2), pratinjau PDF di tab baru (S3), export hasil audit CSV (S4), dukungan nopol multi-prefix Sulawesi (S5), serta reset hasil audit (S6).
 - **Sertifikat Tanah & Box**: Pengarsipan fisik sertifikat tanah dengan operasi split (pecah) and merge (gabung) box.
 - **Peminjaman Dokumen (Scan Request)**: Alur permohonan peminjaman berkas fisik atau file scan dokumen oleh operator OPD dengan validasi status persetujuan dari admin global.
 
@@ -200,6 +201,8 @@ Aplikasi **menggunakan sentuhan visual premium & animasi mikro kustom** secara b
 | **SIPAT** | GET | `/master-data/opd-sipat` | `MasterSipatOpdController` | Auth | CRUD OPD Modul SIPAT |
 | **eLABEL** | GET | `/elabel/dashboard` | `Elabel\ElabelDashboardController@index` | Auth | Dashboard eLABEL |
 | **eLABEL** | GET | `/elabel/bpkb` | `Elabel\ElabelBpkbController@index` | Auth | Katalog BPKB eLABEL |
+| **eLABEL** | GET | `/elabel/bpkb-smart-extractor` | `Elabel\ElabelSmartBpkbExtractorController@index` | Auth | Halaman Smart BPKB Extractor |
+| **eLABEL** | GET | `/elabel/bpkb-smart-extractor/preview` | `Elabel\ElabelSmartBpkbExtractorController@previewPdf` | Auth | Pratinjau PDF lokal di tab baru |
 | **eLABEL** | GET | `/elabel/boxes/{id}/label` | `Elabel\ElabelBoxController@label` | Auth | Cetak Barcode Label Box |
 | **eLABEL** | GET | `/elabel/sertifikat` | `Elabel\ElabelSertifikatController@index` | Auth | Katalog Sertifikat Tanah |
 | **eLABEL** | GET | `/elabel/peminjaman` | `Elabel\ElabelLoanController@index` | Auth | Request Peminjaman Dokumen |

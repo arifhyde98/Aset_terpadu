@@ -375,6 +375,12 @@
                                         <span>Box BPKB</span>
                                     </a>
                                 </li>
+                                <li class="{{ Request::is('elabel/bpkb-smart-extractor*') ? 'active' : '' }}">
+                                    <a href="{{ route('elabel.bpkb.smart-extractor.index') }}" data-bs-toggle="tooltip" data-bs-placement="right" title="Smart BPKB PDF Folder Scanner">
+                                        <i class="bi bi-folder-symlink-fill text-info"></i>
+                                        <span>Smart Folder Scanner</span>
+                                    </a>
+                                </li>
                             </ul>
                         </div>
                     </div>
