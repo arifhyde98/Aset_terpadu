@@ -82,7 +82,7 @@ resources/
 ## 5. Database Architecture
 - **Skema Relasional Modul Terpadu**:
   - `opd_mappings` menghubungkan tabel `opd` (modul SIPAT) dengan `opds` (modul E-RANDIS).
-  - `aset_tanah` terhubung ke `opd` (SIPAT) via `opd_id` (foreign key) untuk isolasi data instansi pertanahan.
+  - `aset_tanah` terhubung ke `opd` (SIPAT) via `opd_id` (foreign key) untuk isolasi data instansi pertanahan, serta dilengkapi kolom `geojson` untuk batas poligon peta GIS.
   - `sipat_target_sertifikat` mencatat penetapan kuota/target pensertifikatan tanah tahunan KIB A terelasi dengan `aset_tanah`.
   - `proses_aset` mencatat riwayat langkah pensertifikatan yang menunjuk ke `aset_tanah`.
   - `surat_skpt` mencatat surat keterangan pendaftaran tanah yang terelasi dengan data `aset_tanah`.

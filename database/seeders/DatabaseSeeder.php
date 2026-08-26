@@ -19,14 +19,17 @@ class DatabaseSeeder extends Seeder
             OpdSeeder::class,
             VehicleTypeSeeder::class,
             ReportSettingSeeder::class,
+            SamplePolygonSeeder::class,
         ]);
 
         // 2. Buat Akun Superadmin Utama agar Terhindar dari Lock Mode
-        User::factory()->create([
-            'name' => 'Admin',
-            'email' => 'admin@example.com',
-            'role' => 'superadmin',
-            'password' => Hash::make('admin123'),
-        ]);
+        User::firstOrCreate(
+            ['email' => 'admin@example.com'],
+            [
+                'name' => 'Admin',
+                'role' => 'superadmin',
+                'password' => Hash::make('admin123'),
+            ]
+        );
     }
 }

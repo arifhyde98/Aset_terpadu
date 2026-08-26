@@ -74,6 +74,7 @@ Dokumen ini merupakan sumber kebenaran tunggal (*Single Source of Truth*) mengen
   - `luas` (Double)
   - `alamat` (Text)
   - `lat`, `lng` (Double) — Koordinat GPS
+  - `geojson` (Text / JSON) — Data batas poligon GIS bidang tanah (GeoJSON Polygon)
   - `opd_id` (FK ke `opd.id`)
   - `opd` (String fallback)
   - `dasar_perolehan`, `harga_perolehan`, `tanggal_perolehan`, `keterangan`
