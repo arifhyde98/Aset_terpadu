@@ -40,10 +40,7 @@ class TanahTakTercatatController extends Controller implements HasMiddleware
                 $q->where('kode_aset', 'LIKE', 'DRAFT-%')
                   ->orWhere('kode_aset', 'LIKE', 'BELUM-%')
                   ->orWhereNull('kode_aset')
-                  ->orWhere('kode_aset', '')
-                  ->orWhereHas('latestProses.statusProses', function ($q2) {
-                      $q2->where('nama_status', 'LIKE', '%Belum%');
-                  });
+                  ->orWhere('kode_aset', '');
             });
 
         if ($opdId) {
