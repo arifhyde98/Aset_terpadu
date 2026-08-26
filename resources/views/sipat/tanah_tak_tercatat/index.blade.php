@@ -31,6 +31,15 @@
         border: 1px solid rgba(245, 158, 11, 0.2);
         border-radius: 1rem;
     }
+    .badge-status {
+        display: inline-flex;
+        align-items: center;
+        padding: 4px 10px;
+        border-radius: 50rem;
+        font-size: 0.72rem;
+        font-weight: 600;
+        white-space: nowrap;
+    }
 </style>
 
 <div class="container-fluid px-0">
@@ -66,7 +75,7 @@
         <div>
             <h6 class="fw-bold text-dark mb-1">Manajemen Aset Tanah Usulan & Belum Memiliki NIBAR Resmi</h6>
             <p class="text-secondary small mb-0">
-                Halaman ini khusus memuat daftar aset tanah daerah yang belum tercatat di KIB A atau masih menggunakan <strong>Kode NIBAR Sementara (Draft)</strong>. Anda dapat mendaftarkan tanah baru tanpa perlu menunggu NIBAR resmi, dan memperbaruinya kapan saja dengan sekali klik saat NIBAR dari BPKAD telah diterbitkan.
+                Seluruh detail aset (seperti status proses pengurusan BPN, pengamanan fisik, dan dokumen lampiran) **tetap tersimpan utuh**. Halaman ini terintegrasi penuh dengan Master Aset Tanah untuk mempermudah pendaftaran NIBAR resmi BPKAD.
             </p>
         </div>
     </div>
@@ -109,8 +118,8 @@
         <div class="col-lg-4 col-sm-6">
             <div class="metric-box" style="border-left: 4px solid #f59e0b;">
                 <div class="text-warning-emphasis small fw-bold text-uppercase">Total Tanah Belum Tercatat</div>
-                <div class="fs-2 fw-extrabold text-dark font-monospace mt-1">{{ number_format($totalUnrecorded) }}</div>
-                <div class="text-secondary small">Belum Masuk Data Induk KIB A Resmi</div>
+                <div class="fs-2 fw-extrabold text-dark font-monospace mt-1">{{ number_format($tanahItems->total()) }}</div>
+                <div class="text-secondary small">Menunggu NIBAR Resmi BPKAD</div>
             </div>
         </div>
 
@@ -131,11 +140,11 @@
         </div>
     </div>
 
-    <!-- Tabel Main Data -->
+    <!-- Tabel Main Data (Struktur Identik dengan Master Aset Tanah) -->
     <div class="card target-card">
         <div class="target-card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
             <h5 class="fw-bold mb-0 text-body">
-                <i class="bi bi-card-checklist text-primary me-2"></i>Daftar Bidang Tanah Belum Tercatat di KIB A
+                <i class="bi bi-card-checklist text-primary me-2"></i>Daftar Bidang Tanah Belum Tercatat NIBAR
             </h5>
             <span class="badge bg-primary-subtle text-primary rounded-pill px-3 py-1.5 fw-semibold">
                 {{ $tanahItems->total() }} Bidang Ditampilkan
@@ -144,67 +153,94 @@
 
         <div class="card-body p-0">
             <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0">
-                    <thead class="table-light">
+                <table class="table table-hover align-middle mb-0 aset-table">
+                    <thead class="bg-body text-secondary" style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em;">
                         <tr>
-                            <th class="ps-4" style="width: 50px;">No</th>
-                            <th>NIBAR / Kode Aset</th>
-                            <th>Nama Aset Tanah & Peruntukan</th>
-                            <th>OPD Pengelola</th>
-                            <th>Luas & Lokasi</th>
-                            <th>Status Pengurusan BPN</th>
-                            <th>Catatan Target</th>
-                            <th class="text-end pe-4" style="width: 170px;">Aksi</th>
+                            <th class="ps-4 py-3" style="width: 50px;">NO</th>
+                            <th class="py-3">NAMA ASET / PERUNTUKAN & NIBAR</th>
+                            <th class="py-3">LUAS (M²)</th>
+                            <th class="py-3">OPD PENGELOLA</th>
+                            <th class="py-3">ALAMAT / LOKASI</th>
+                            <th class="py-3">STATUS PROSES BPN</th>
+                            <th class="text-center py-3 pe-4" style="width: 220px;">AKSI INTEGRASI</th>
                         </tr>
                     </thead>
                     <tbody>
                         @forelse($tanahItems as $index => $item)
                             <tr>
-                                <td class="ps-4 fw-semibold text-secondary">
+                                <td class="ps-4 fw-semibold text-secondary" style="font-size: 0.82rem;">
                                     {{ $tanahItems->firstItem() + $index }}
                                 </td>
                                 <td>
-                                    @if(str_starts_with($item->kode_aset ?? '', 'DRAFT-'))
-                                        <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle font-monospace px-2.5 py-1">
-                                            <i class="bi bi-tag-fill me-1"></i>{{ $item->kode_aset }}
-                                        </span>
-                                    @elseif(!empty($item->kode_aset))
-                                        <span class="badge bg-success-subtle text-success border border-success-subtle font-monospace px-2.5 py-1">
-                                            <i class="bi bi-patch-check-fill me-1"></i>{{ $item->kode_aset }}
-                                        </span>
-                                    @else
-                                        <span class="badge bg-secondary-subtle text-secondary px-2.5 py-1">Tanpa NIBAR</span>
-                                    @endif
+                                    <div class="d-flex align-items-center gap-2 mb-1">
+                                        @if(str_starts_with($item->kode_aset ?? '', 'DRAFT-'))
+                                            <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle font-monospace px-2 py-0.5" style="font-size: 0.72rem;">
+                                                <i class="bi bi-tag-fill me-1"></i>{{ $item->kode_aset }}
+                                            </span>
+                                        @elseif($item->kode_aset === '-')
+                                            <span class="badge bg-danger-subtle text-danger border border-danger-subtle font-monospace px-2 py-0.5" style="font-size: 0.72rem;">
+                                                <i class="bi bi-dash-circle me-1"></i>Tanpa NIBAR (-)
+                                            </span>
+                                        @elseif(!empty($item->kode_aset))
+                                            <span class="badge bg-success-subtle text-success border border-success-subtle font-monospace px-2 py-0.5" style="font-size: 0.72rem;">
+                                                <i class="bi bi-patch-check-fill me-1"></i>{{ $item->kode_aset }}
+                                            </span>
+                                        @else
+                                            <span class="badge bg-secondary-subtle text-secondary px-2 py-0.5" style="font-size: 0.72rem;">Kosong</span>
+                                        @endif
+                                    </div>
+                                    <div class="fw-bold text-body" style="font-size: 0.85rem;">{{ $item->nama_aset }}</div>
+                                    <small class="text-secondary" style="font-size: 0.78rem;">{{ $item->peruntukan ?? 'Peruntukan belum diisi' }}</small>
                                 </td>
                                 <td>
-                                    <div class="fw-bold text-body">{{ $item->nama_aset }}</div>
-                                    <small class="text-secondary">{{ $item->peruntukan ?? 'Peruntukan belum diisi' }}</small>
+                                    <span class="fw-bold text-body" style="font-size: 0.85rem;">{{ number_format($item->luas ?? 0, 0, ',', '.') }}</span> <small class="text-secondary">m²</small>
                                 </td>
                                 <td>
-                                    <span class="badge bg-light text-dark border">
+                                    <span class="badge bg-secondary-subtle text-body-secondary fw-normal px-2.5 py-1 text-wrap" style="font-size: 0.78rem; max-width: 200px;">
                                         {{ $item->opdSipat->nama ?? $item->opd ?? 'Belum Ditentukan' }}
                                     </span>
                                 </td>
-                                <td>
-                                    <div class="fw-semibold text-dark">{{ number_format($item->luas ?? 0, 0, ',', '.') }} m²</div>
-                                    <small class="text-secondary d-block" style="max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-                                        {{ $item->alamat ?? '-' }}
-                                    </small>
+                                <td style="max-width: 220px;">
+                                    <div class="text-truncate small text-secondary" title="{{ $item->alamat }}">
+                                        <i class="bi bi-geo-alt me-1 text-danger"></i> {{ $item->alamat ?? 'Kabupaten Donggala' }}
+                                    </div>
                                 </td>
                                 <td>
-                                    <span class="badge bg-info-subtle text-info-emphasis border border-info-subtle px-2.5 py-1">
-                                        {{ $item->latestProses->statusProses->nama_status ?? 'Belum Diurus' }}
+                                    @php
+                                        $stObj = $item->latestProses->statusProses ?? null;
+                                        $statusName = $stObj->nama_status ?? 'Belum Diurus';
+                                        $colorName = $stObj->warna ?? 'secondary';
+                                        
+                                        $badgeClass = 'bg-secondary';
+                                        if ($colorName === 'success' || str_contains(strtolower($statusName), 'sertifikat') || str_contains(strtolower($statusName), 'selesai')) {
+                                            $badgeClass = 'bg-success-subtle text-success border border-success-subtle';
+                                        } elseif ($colorName === 'warning' || str_contains(strtolower($statusName), 'proses') || str_contains(strtolower($statusName), 'ukur')) {
+                                            $badgeClass = 'bg-warning-subtle text-warning-emphasis border border-warning-subtle';
+                                        } elseif ($colorName === 'danger' || str_contains(strtolower($statusName), 'kendala') || str_contains(strtolower($statusName), 'masalah') || str_contains(strtolower($statusName), 'sengketa')) {
+                                            $badgeClass = 'bg-danger-subtle text-danger border border-danger-subtle';
+                                        } elseif ($colorName === 'info' || str_contains(strtolower($statusName), 'pertek')) {
+                                            $badgeClass = 'bg-info-subtle text-info border border-info-subtle';
+                                        }
+                                    @endphp
+                                    <span class="badge badge-status {{ $badgeClass }}">
+                                        <span class="d-inline-block rounded-circle me-1" style="width: 6px; height: 6px; background-color: currentColor;"></span>
+                                        {{ $statusName }}
                                     </span>
                                 </td>
-                                <td>
-                                    <small class="text-secondary d-block" style="max-width: 180px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-                                        {{ $item->keterangan ?? '-' }}
-                                    </small>
-                                </td>
                                 <td class="text-end pe-4">
-                                    <div class="d-flex justify-content-end gap-1">
+                                    <div class="d-flex justify-content-end align-items-center gap-1">
+                                        <!-- 1. Tombol Pratinjau Modal Detail (5 Tab) -->
                                         <button type="button" 
-                                                class="btn btn-sm btn-outline-success rounded-pill px-2.5 btn-update-nibar"
+                                                class="btn btn-sm btn-outline-primary rounded-3" 
+                                                onclick="showDetail({{ $item->id_aset }})" 
+                                                data-bs-toggle="tooltip" 
+                                                title="Lihat Detail Lengkap (5 Tab)">
+                                            <i class="bi bi-eye"></i>
+                                        </button>
+
+                                        <!-- 2. Tombol Update NIBAR Resmi -->
+                                        <button type="button" 
+                                                class="btn btn-sm btn-success rounded-pill px-2.5 btn-update-nibar shadow-sm"
                                                 data-id="{{ $item->id_aset }}"
                                                 data-nama="{{ $item->nama_aset }}"
                                                 data-kode="{{ $item->kode_aset }}"
@@ -214,17 +250,28 @@
                                                 title="Update menjadi NIBAR Resmi BPKAD">
                                             <i class="bi bi-pencil-square me-1"></i> Update NIBAR
                                         </button>
-                                        <a href="{{ route('sipat.aset.edit', $item->id_aset) }}" class="btn btn-sm btn-outline-secondary border-0 rounded-circle" data-bs-toggle="tooltip" title="Edit Aset Lengkap">
+
+                                        <!-- 3. Tombol Edit Aset Lengkap -->
+                                        <a href="{{ route('sipat.aset.edit', $item->id_aset) }}" class="btn btn-sm btn-outline-secondary rounded-3" data-bs-toggle="tooltip" title="Edit Aset Lengkap">
                                             <i class="bi bi-gear"></i>
                                         </a>
+
+                                        <!-- 4. Tombol Hapus Aset -->
+                                        <form action="{{ route('sipat.aset.destroy', $item->id_aset) }}" method="POST" class="d-inline delete-confirm" onsubmit="return confirm('Apakah Anda yakin ingin menghapus aset tanah ini?')">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="btn btn-sm btn-outline-danger rounded-3" data-bs-toggle="tooltip" title="Hapus Aset">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </form>
                                     </div>
                                 </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="8" class="text-center py-5 text-secondary">
+                                <td colspan="7" class="text-center py-5 text-secondary">
                                     <i class="bi bi-check-circle fs-1 d-block mb-2 text-success"></i>
-                                    Tidak ada bidang tanah yang belum tercatat atau bermasalah.
+                                    Tidak ada bidang tanah yang belum tercatat NIBAR.
                                     <div class="mt-2">
                                         <button type="button" class="btn btn-sm btn-primary rounded-pill px-3" data-bs-toggle="modal" data-bs-target="#modalCreateTanah">
                                             <i class="bi bi-plus-lg me-1"></i> Input Tanah Belum Tercatat Baru
@@ -390,8 +437,59 @@
     </div>
 </div>
 
+<!-- Modal Detail Remote Container (Terintegrasi penuh dengan Master Aset) -->
+<div class="modal fade" id="modalDetailAset" tabindex="-1" aria-hidden="true" style="z-index: 1060;">
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content rounded-4 border-0 shadow" id="modalDetailContent">
+            <div class="p-5 text-center text-secondary">
+                <div class="spinner-border text-primary me-2" role="status"></div> Memuat data detail aset...
+            </div>
+        </div>
+    </div>
+</div>
+
 @push('scripts')
 <script>
+    let detailModalInstance = null;
+
+    function showDetail(id) {
+        const modalEl = document.getElementById('modalDetailAset');
+        const modalContent = document.getElementById('modalDetailContent');
+        
+        if (modalEl && modalEl.parentNode !== document.body) {
+            document.body.appendChild(modalEl);
+        }
+
+        modalContent.innerHTML = `
+            <div class="p-5 text-center text-secondary">
+                <div class="spinner-border text-primary me-2" role="status"></div> Memuat data detail aset...
+            </div>
+        `;
+        
+        if (!detailModalInstance) {
+            detailModalInstance = new bootstrap.Modal(modalEl, {
+                backdrop: true,
+                keyboard: true
+            });
+        }
+        
+        detailModalInstance.show();
+
+        fetch(`{{ url('sipat/aset') }}/${id}/modal`)
+            .then(res => res.text())
+            .then(html => {
+                modalContent.innerHTML = html;
+            })
+            .catch(err => {
+                modalContent.innerHTML = `
+                    <div class="p-4 text-center text-danger">
+                        <i class="bi bi-exclamation-triangle fs-2 d-block mb-2"></i>
+                        Gagal memuat data detail aset. Silakan coba lagi.
+                    </div>
+                `;
+            });
+    }
+
     document.addEventListener('DOMContentLoaded', function () {
         const modalUpdateEl = document.getElementById('modalUpdateNibar');
         if (modalUpdateEl) {
@@ -412,7 +510,7 @@
                     formUpdate.action = url;
                     updateTargetKode.textContent = kode || 'Tanpa NIBAR';
                     updateTargetNama.textContent = nama;
-                    inputKodeResmi.value = (kode && !kode.startsWith('DRAFT-')) ? kode : '';
+                    inputKodeResmi.value = (kode && !kode.startsWith('DRAFT-') && kode !== '-') ? kode : '';
                     inputKeteranganUpdate.value = keterangan || '';
 
                     modalUpdate.show();
