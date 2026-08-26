@@ -20,6 +20,7 @@ class DatabaseSeeder extends Seeder
             VehicleTypeSeeder::class,
             ReportSettingSeeder::class,
             SamplePolygonSeeder::class,
+            UnrecordedLandSeeder::class,
         ]);
 
         // 2. Buat Akun Superadmin Utama agar Terhindar dari Lock Mode
