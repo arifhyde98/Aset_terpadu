@@ -63,6 +63,7 @@ class AsetTanahController extends Controller implements HasMiddleware
             ->orWhere('kode_aset', 'LIKE', 'BELUM-%')
             ->orWhereNull('kode_aset')
             ->orWhere('kode_aset', '')
+            ->orWhere('kode_aset', '-')
             ->count();
 
         return view('sipat.aset.index', [
