@@ -200,7 +200,7 @@
                             </thead>
                             <tbody>
                                 @forelse($targetItems as $index => $item)
-                                    <tr>
+                                    <tr data-search="{{ strtolower(($item->asetTanah->kode_aset ?? '') . ' ' . ($item->asetTanah->nama_aset ?? '') . ' ' . ($item->asetTanah->peruntukan ?? '') . ' ' . ($item->opdSipat->nama ?? $item->asetTanah->opdSipat->nama ?? $item->asetTanah->opd ?? '')) }}">
                                         <td class="ps-4 fw-semibold text-secondary">{{ $index + 1 }}</td>
                                         <td>
                                             <span class="font-monospace fw-bold text-primary">{{ $item->asetTanah->kode_aset ?? '-' }}</span>
@@ -362,7 +362,7 @@
                             Pilih Bidang Tanah KIB A (Master Aset) <span class="text-danger">*</span>
                         </label>
                         <div class="d-flex align-items-center gap-2">
-                            <input type="text" id="filterCandidateInput" class="form-control form-control-sm" placeholder="Cari bidang tanah..." style="width: 220px;">
+                            <input type="text" id="filterCandidateInput" class="form-control form-control-sm" placeholder="Cari NIBAR / nama aset..." style="width: 240px;">
                             <button type="button" class="btn btn-sm btn-outline-primary" id="btnSelectAllCandidate">Pilih Semua</button>
                         </div>
                     </div>
@@ -380,19 +380,19 @@
                             </thead>
                             <tbody>
                                 @forelse($candidateAsets as $cand)
-                                    <tr class="candidate-row">
+                                    <tr class="candidate-row" data-search="{{ strtolower(($cand->kode_aset ?? '') . ' ' . $cand->nama_aset . ' ' . ($cand->peruntukan ?? '') . ' ' . ($cand->opdSipat->nama ?? $cand->opd ?? '')) }}">
                                         <td class="text-center">
                                             <input class="form-check-input candidate-checkbox" type="checkbox" name="aset_ids[]" value="{{ $cand->id_aset }}" id="cand_{{ $cand->id_aset }}">
                                         </td>
                                         <td>
-                                            <label for="cand_{{ $cand->id_aset }}" class="form-check-label font-monospace fw-bold text-primary mb-0 style="cursor: pointer;">
+                                            <label for="cand_{{ $cand->id_aset }}" class="form-check-label font-monospace fw-bold text-primary mb-0" style="cursor: pointer;">
                                                 {{ $cand->kode_aset ?? '-' }}
                                             </label>
                                         </td>
                                         <td>
                                             <label for="cand_{{ $cand->id_aset }}" class="form-check-label mb-0" style="cursor: pointer;">
                                                 <div class="fw-semibold text-body">{{ $cand->nama_aset }}</div>
-                                                <small class="text-secondary">{{ number_format($cand->luas ?? 0, 0, ',', '.') }} m²</small>
+                                                <small class="text-secondary">{{ $cand->peruntukan ?? '-' }} &bull; {{ number_format($cand->luas ?? 0, 0, ',', '.') }} m²</small>
                                             </label>
                                         </td>
                                         <td>
@@ -429,29 +429,38 @@
 @push('scripts')
 <script>
     document.addEventListener('DOMContentLoaded', function () {
-        // Table search for target list
+        // High performance search filter for main target table
         const searchInput = document.getElementById('searchTargetTable');
         if (searchInput) {
+            let debounceTimer;
             searchInput.addEventListener('input', function () {
-                const filter = this.value.toLowerCase();
-                const rows = document.querySelectorAll('#targetTable tbody tr');
-                rows.forEach(row => {
-                    const text = row.innerText.toLowerCase();
-                    row.style.display = text.includes(filter) ? '' : 'none';
-                });
+                clearTimeout(debounceTimer);
+                const filter = this.value.toLowerCase().trim();
+                debounceTimer = setTimeout(() => {
+                    const rows = document.querySelectorAll('#targetTable tbody tr');
+                    rows.forEach(row => {
+                        if (row.children.length === 1) return;
+                        const searchData = row.getAttribute('data-search') || row.innerText.toLowerCase();
+                        row.style.display = (filter === '' || searchData.includes(filter)) ? '' : 'none';
+                    });
+                }, 100);
             });
         }
 
-        // Candidate filter inside modal
+        // Ultra-fast search filter for candidate modal (No Layout Thrashing!)
         const filterCandInput = document.getElementById('filterCandidateInput');
         if (filterCandInput) {
+            let debounceTimer;
             filterCandInput.addEventListener('input', function () {
-                const filter = this.value.toLowerCase();
-                const rows = document.querySelectorAll('#candidateTable tbody tr.candidate-row');
-                rows.forEach(row => {
-                    const text = row.innerText.toLowerCase();
-                    row.style.display = text.includes(filter) ? '' : 'none';
-                });
+                clearTimeout(debounceTimer);
+                const filter = this.value.toLowerCase().trim();
+                debounceTimer = setTimeout(() => {
+                    const rows = document.querySelectorAll('#candidateTable tbody tr.candidate-row');
+                    rows.forEach(row => {
+                        const searchData = row.getAttribute('data-search') || '';
+                        row.style.display = (filter === '' || searchData.includes(filter)) ? '' : 'none';
+                    });
+                }, 100);
             });
         }
 
@@ -463,7 +472,8 @@
                 const checkboxes = document.querySelectorAll('.candidate-checkbox');
                 isAllSelected = !isAllSelected;
                 checkboxes.forEach(cb => {
-                    if (cb.closest('tr').style.display !== 'none') {
+                    const row = cb.closest('tr');
+                    if (row && row.style.display !== 'none') {
                         cb.checked = isAllSelected;
                     }
                 });
