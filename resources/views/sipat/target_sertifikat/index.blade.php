@@ -53,22 +53,22 @@
                 <i class="bi bi-plus-lg me-1"></i> Penetapan Target Baru
             </button>
 
-            <a href="{{ route('sipat.target-pensertifikatan.export-excel', ['tahun' => $tahun, 'opd_id' => $opdId]) }}" class="btn btn-outline-success rounded-pill px-3">
+            <a href="{{ route('sipat.target-pensertifikatan.export-excel', ['tahun' => $tahun, 'opd_id' => $opdId, 'status_capaian' => $statusCapaian, 'search' => $search]) }}" class="btn btn-outline-success rounded-pill px-3">
                 <i class="bi bi-file-earmark-excel me-1"></i> Excel (.xlsx)
             </a>
 
-            <a href="{{ route('sipat.target-pensertifikatan.export-pdf', ['tahun' => $tahun, 'opd_id' => $opdId]) }}" target="_blank" class="btn btn-outline-danger rounded-pill px-3">
+            <a href="{{ route('sipat.target-pensertifikatan.export-pdf', ['tahun' => $tahun, 'opd_id' => $opdId, 'status_capaian' => $statusCapaian, 'search' => $search]) }}" target="_blank" class="btn btn-outline-danger rounded-pill px-3">
                 <i class="bi bi-file-earmark-pdf me-1"></i> Cetak PDF
             </a>
         </div>
     </div>
 
-    <!-- Filter Header -->
+    <!-- Enhanced Filter Header -->
     <div class="card target-card mb-4">
         <div class="card-body p-3">
             <form method="GET" action="{{ route('sipat.target-pensertifikatan.index') }}" class="row g-2 align-items-center">
-                <div class="col-md-3 col-sm-6">
-                    <label class="form-label small fw-bold text-secondary mb-1"><i class="bi bi-calendar-event me-1"></i> Tahun Anggaran</label>
+                <div class="col-md-2 col-sm-6">
+                    <label class="form-label small fw-bold text-secondary mb-1"><i class="bi bi-calendar-event me-1"></i> Tahun</label>
                     <select name="tahun" class="form-select form-select-sm" onchange="this.form.submit()">
                         @foreach($availableYears as $y)
                             <option value="{{ $y }}" {{ $tahun == $y ? 'selected' : '' }}>Tahun {{ $y }}</option>
@@ -76,23 +76,38 @@
                     </select>
                 </div>
 
-                <div class="col-md-4 col-sm-6">
-                    <label class="form-label small fw-bold text-secondary mb-1"><i class="bi bi-building me-1"></i> Filter OPD Pengelola</label>
+                <div class="col-md-3 col-sm-6">
+                    <label class="form-label small fw-bold text-secondary mb-1"><i class="bi bi-building me-1"></i> OPD Pengelola</label>
                     <select name="opd_id" class="form-select form-select-sm" onchange="this.form.submit()">
-                        <option value="">-- Semua OPD --</option>
+                        <option value="">-- Semua OPD Pengelola --</option>
                         @foreach($opdList as $opd)
                             <option value="{{ $opd->id }}" {{ (string)$opdId === (string)$opd->id ? 'selected' : '' }}>{{ $opd->nama }}</option>
                         @endforeach
                     </select>
                 </div>
 
-                <div class="col-md-3 col-sm-6 align-self-end">
-                    <button type="submit" class="btn btn-sm btn-secondary rounded-pill px-3 me-1">
-                        <i class="bi bi-funnel me-1"></i> Terapkan
+                <div class="col-md-3 col-sm-6">
+                    <label class="form-label small fw-bold text-secondary mb-1"><i class="bi bi-check2-circle me-1"></i> Status Capaian</label>
+                    <select name="status_capaian" class="form-select form-select-sm" onchange="this.form.submit()">
+                        <option value="">-- Semua Status Capaian --</option>
+                        <option value="tercapai" {{ $statusCapaian === 'tercapai' ? 'selected' : '' }}>Sertifikat Terbit (Tercapai)</option>
+                        <option value="proses" {{ $statusCapaian === 'proses' ? 'selected' : '' }}>Dalam Proses Pengurusan</option>
+                        <option value="belum_diurus" {{ $statusCapaian === 'belum_diurus' ? 'selected' : '' }}>Belum Diurus</option>
+                    </select>
+                </div>
+
+                <div class="col-md-2 col-sm-6">
+                    <label class="form-label small fw-bold text-secondary mb-1"><i class="bi bi-search me-1"></i> Kata Kunci</label>
+                    <input type="text" name="search" class="form-control form-control-sm" placeholder="NIBAR / Nama Aset..." value="{{ $search }}">
+                </div>
+
+                <div class="col-md-2 col-sm-12 align-self-end d-flex gap-1">
+                    <button type="submit" class="btn btn-sm btn-primary rounded-pill px-3 flex-grow-1">
+                        <i class="bi bi-funnel me-1"></i> Filter
                     </button>
-                    @if($opdId)
-                        <a href="{{ route('sipat.target-pensertifikatan.index', ['tahun' => $tahun]) }}" class="btn btn-sm btn-outline-secondary rounded-pill">
-                            Reset OPD
+                    @if($opdId || $statusCapaian || $search)
+                        <a href="{{ route('sipat.target-pensertifikatan.index', ['tahun' => $tahun]) }}" class="btn btn-sm btn-outline-secondary rounded-pill px-2.5" data-bs-toggle="tooltip" title="Reset Semua Filter">
+                            <i class="bi bi-arrow-counterclockwise"></i> Reset
                         </a>
                     @endif
                 </div>

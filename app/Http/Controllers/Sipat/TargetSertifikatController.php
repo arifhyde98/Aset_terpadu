@@ -39,6 +39,8 @@ class TargetSertifikatController extends Controller implements HasMiddleware
     {
         $tahun = (int) $request->input('tahun', date('Y'));
         $opdId = $request->filled('opd_id') ? (int) $request->input('opd_id') : null;
+        $statusCapaian = $request->input('status_capaian', '');
+        $search = trim((string) $request->input('search', ''));
 
         $availableYears = range(date('Y') - 2, date('Y') + 4);
         $opdList = OpdSipat::where('aktif', 1)->orderBy('nama', 'asc')->get();
@@ -59,14 +61,26 @@ class TargetSertifikatController extends Controller implements HasMiddleware
             });
         }
 
+        if (!empty($search)) {
+            $targetQuery->where(function ($q) use ($search) {
+                $q->where('keterangan', 'LIKE', "%{$search}%")
+                  ->orWhereHas('asetTanah', function ($q2) use ($search) {
+                      $q2->where('kode_aset', 'LIKE', "%{$search}%")
+                        ->orWhere('nama_aset', 'LIKE', "%{$search}%")
+                        ->orWhere('peruntukan', 'LIKE', "%{$search}%")
+                        ->orWhere('alamat', 'LIKE', "%{$search}%");
+                  });
+            });
+        }
+
         $targets = $targetQuery->get();
 
-        // Hitung Kinerja
+        // Hitung Kinerja Keseluruhan (sebelum filter status_capaian)
         $totalTarget = $targets->count();
         $totalRealisasi = 0;
         $totalProses = 0;
 
-        $targetItems = $targets->map(function ($t) use (&$totalRealisasi, &$totalProses) {
+        $mappedItems = $targets->map(function ($t) use (&$totalRealisasi, &$totalProses) {
             $aset = $t->asetTanah;
             $latestStatus = $aset?->latestProses?->statusProses;
             $statusName = $latestStatus?->nama_status ?? 'Belum Diurus';
@@ -93,6 +107,17 @@ class TargetSertifikatController extends Controller implements HasMiddleware
             return $t;
         });
 
+        // Filter berdasarkan status capaian jika dipilih
+        if ($statusCapaian === 'tercapai') {
+            $targetItems = $mappedItems->filter(fn($t) => $t->is_achieved)->values();
+        } elseif ($statusCapaian === 'proses') {
+            $targetItems = $mappedItems->filter(fn($t) => !$t->is_achieved)->values();
+        } elseif ($statusCapaian === 'belum_diurus') {
+            $targetItems = $mappedItems->filter(fn($t) => $t->computed_status_name === 'Belum Diurus')->values();
+        } else {
+            $targetItems = $mappedItems;
+        }
+
         $persentaseCapaian = $totalTarget > 0 ? round(($totalRealisasi / $totalTarget) * 100, 1) : 0;
 
         if ($persentaseCapaian >= 80) {
@@ -108,7 +133,7 @@ class TargetSertifikatController extends Controller implements HasMiddleware
 
         // Summary per OPD
         $opdSummaries = [];
-        foreach ($targetItems as $t) {
+        foreach ($mappedItems as $t) {
             $opdObj = $t->opdSipat ?? $t->asetTanah?->opdSipat;
             $opdNama = $opdObj?->nama ?? $t->asetTanah?->opd ?? 'Lainnya / Belum Ditentukan';
             
@@ -158,6 +183,8 @@ class TargetSertifikatController extends Controller implements HasMiddleware
         return view('sipat.target_sertifikat.index', compact(
             'tahun',
             'opdId',
+            'statusCapaian',
+            'search',
             'availableYears',
             'opdList',
             'targetItems',
@@ -239,9 +266,11 @@ class TargetSertifikatController extends Controller implements HasMiddleware
     {
         $tahun = (int) $request->input('tahun', date('Y'));
         $opdId = $request->filled('opd_id') ? (int) $request->input('opd_id') : null;
+        $statusCapaian = (string) $request->input('status_capaian', '');
+        $search = (string) $request->input('search', '');
 
         $fileName = 'Target_Pensertifikatan_SIPAT_' . $tahun . '_' . date('Ymd_His') . '.xlsx';
-        return Excel::download(new TargetSertifikatExport($tahun, $opdId), $fileName);
+        return Excel::download(new TargetSertifikatExport($tahun, $opdId, $statusCapaian, $search), $fileName);
     }
 
     /**
@@ -254,6 +283,8 @@ class TargetSertifikatController extends Controller implements HasMiddleware
 
         $tahun = (int) $request->input('tahun', date('Y'));
         $opdId = $request->filled('opd_id') ? (int) $request->input('opd_id') : null;
+        $statusCapaian = $request->input('status_capaian', '');
+        $search = trim((string) $request->input('search', ''));
 
         $kop = $this->laporanService->getKopSettings();
 
@@ -272,12 +303,24 @@ class TargetSertifikatController extends Controller implements HasMiddleware
             });
         }
 
+        if (!empty($search)) {
+            $targetQuery->where(function ($q) use ($search) {
+                $q->where('keterangan', 'LIKE', "%{$search}%")
+                  ->orWhereHas('asetTanah', function ($q2) use ($search) {
+                      $q2->where('kode_aset', 'LIKE', "%{$search}%")
+                        ->orWhere('nama_aset', 'LIKE', "%{$search}%")
+                        ->orWhere('peruntukan', 'LIKE', "%{$search}%")
+                        ->orWhere('alamat', 'LIKE', "%{$search}%");
+                  });
+            });
+        }
+
         $targets = $targetQuery->get();
         $totalTarget = $targets->count();
         $totalRealisasi = 0;
         $totalProses = 0;
 
-        $targetItems = $targets->map(function ($t) use (&$totalRealisasi, &$totalProses) {
+        $mappedItems = $targets->map(function ($t) use (&$totalRealisasi, &$totalProses) {
             $aset = $t->asetTanah;
             $latestStatus = $aset?->latestProses?->statusProses;
             $statusName = $latestStatus?->nama_status ?? 'Belum Diurus';
@@ -302,6 +345,16 @@ class TargetSertifikatController extends Controller implements HasMiddleware
 
             return $t;
         });
+
+        if ($statusCapaian === 'tercapai') {
+            $targetItems = $mappedItems->filter(fn($t) => $t->is_achieved)->values();
+        } elseif ($statusCapaian === 'proses') {
+            $targetItems = $mappedItems->filter(fn($t) => !$t->is_achieved)->values();
+        } elseif ($statusCapaian === 'belum_diurus') {
+            $targetItems = $mappedItems->filter(fn($t) => $t->computed_status_name === 'Belum Diurus')->values();
+        } else {
+            $targetItems = $mappedItems;
+        }
 
         $persentaseCapaian = $totalTarget > 0 ? round(($totalRealisasi / $totalTarget) * 100, 1) : 0;
 

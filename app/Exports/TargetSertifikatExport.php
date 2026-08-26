@@ -14,12 +14,16 @@ class TargetSertifikatExport implements FromCollection, WithHeadings, WithMappin
 {
     protected int $tahun;
     protected ?int $opdId;
+    protected string $statusCapaian;
+    protected string $search;
     private int $rowNum = 0;
 
-    public function __construct(int $tahun, ?int $opdId = null)
+    public function __construct(int $tahun, ?int $opdId = null, string $statusCapaian = '', string $search = '')
     {
         $this->tahun = $tahun;
         $this->opdId = $opdId;
+        $this->statusCapaian = $statusCapaian;
+        $this->search = trim($search);
     }
 
     public function collection()
@@ -39,7 +43,50 @@ class TargetSertifikatExport implements FromCollection, WithHeadings, WithMappin
             });
         }
 
-        return $query->get();
+        if (!empty($this->search)) {
+            $search = $this->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('keterangan', 'LIKE', "%{$search}%")
+                  ->orWhereHas('asetTanah', function ($q2) use ($search) {
+                      $q2->where('kode_aset', 'LIKE', "%{$search}%")
+                        ->orWhere('nama_aset', 'LIKE', "%{$search}%")
+                        ->orWhere('peruntukan', 'LIKE', "%{$search}%")
+                        ->orWhere('alamat', 'LIKE', "%{$search}%");
+                  });
+            });
+        }
+
+        $results = $query->get();
+
+        if (!empty($this->statusCapaian)) {
+            $results = $results->filter(function ($target) {
+                $aset = $target->asetTanah;
+                $latestStatus = $aset?->latestProses?->statusProses;
+                $statusName = $latestStatus?->nama_status ?? 'Belum Diurus';
+                $category = strtolower(trim($latestStatus?->kategori ?? ''));
+
+                if (empty($category)) {
+                    $norm = strtolower($statusName);
+                    if (str_contains($norm, 'terbit') || str_contains($norm, 'selesai') || ($statusName !== 'Belum Diurus' && str_contains($norm, 'sertifikat') && !str_contains($norm, 'proses'))) {
+                        $category = 'bersertifikat';
+                    }
+                }
+
+                $isAchieved = ($category === 'bersertifikat');
+
+                if ($this->statusCapaian === 'tercapai') {
+                    return $isAchieved;
+                } elseif ($this->statusCapaian === 'proses') {
+                    return !$isAchieved;
+                } elseif ($this->statusCapaian === 'belum_diurus') {
+                    return $statusName === 'Belum Diurus';
+                }
+
+                return true;
+            })->values();
+        }
+
+        return $results;
     }
 
     public function headings(): array
