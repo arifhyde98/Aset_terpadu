@@ -96,6 +96,13 @@
                         {{ \Carbon\Carbon::now()->isoFormat('dddd, D MMMM Y') }}
                     </span>
                 </div>
+                <a href="{{ route('sipat.tanah-tak-tercatat.index') }}" class="btn btn-outline-warning text-dark d-flex align-items-center gap-2 rounded-3 px-3 py-2">
+                    <i class="bi bi-geo-alt-fill text-warning"></i>
+                    <span class="fw-semibold">Tanah Belum Tercatat</span>
+                    @if(isset($totalTanahTakTercatat) && $totalTanahTakTercatat > 0)
+                        <span class="badge bg-danger rounded-pill px-2 py-0.5 font-monospace fw-bold" style="font-size: 0.75rem;">{{ $totalTanahTakTercatat }}</span>
+                    @endif
+                </a>
                 <a href="{{ route('sipat.aset.index') }}" class="btn btn-outline-primary d-flex align-items-center gap-2 rounded-3 px-3 py-2">
                     <i class="bi bi-table"></i> Data Aset
                 </a>
@@ -125,6 +132,12 @@
                 </div>
 
                 <div class="card-breakdown-box">
+                    <div class="d-flex justify-content-between align-items-center mb-1.5 pb-1.5 border-bottom">
+                        <a href="{{ route('sipat.tanah-tak-tercatat.index') }}" class="text-decoration-none text-warning-emphasis fw-bold small d-flex align-items-center gap-1">
+                            <i class="bi bi-exclamation-circle-fill text-warning"></i> Tanah Belum Tercatat
+                        </a>
+                        <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle rounded-pill px-2 py-0.5 font-monospace fw-bold">{{ number_format($totalTanahTakTercatat ?? 0, 0, ',', '.') }}</span>
+                    </div>
                     <div class="d-flex justify-content-between align-items-center mb-1">
                         <span class="text-secondary fw-semibold small">Belum Diurus BPN</span>
                         <span class="fw-bold text-body small font-monospace">{{ number_format($asetBelumDiurus, 0, ',', '.') }}</span>

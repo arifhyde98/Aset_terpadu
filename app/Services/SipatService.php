@@ -104,6 +104,13 @@ class SipatService
         $totalLuas = AsetTanah::sum('luas');
         $statusMaster = StatusProses::orderBy('urutan', 'asc')->get();
 
+        $totalTanahTakTercatat = AsetTanah::where('kode_aset', 'LIKE', 'DRAFT-%')
+            ->orWhere('kode_aset', 'LIKE', 'BELUM-%')
+            ->orWhereNull('kode_aset')
+            ->orWhere('kode_aset', '')
+            ->orWhere('kode_aset', '-')
+            ->count();
+
         $statusMap = [];
         $statusCategoryMap = [];
         foreach ($statusMaster as $sm) {
@@ -294,24 +301,25 @@ class SipatService
         }
 
         return [
-            'totalAset'         => $totalAset,
-            'totalLuas'         => $totalLuas,
-            'asetBersertifikat' => $asetBersertifikat,
-            'asetKendala'       => $asetKendala,
-            'asetProses'        => $asetProses,
-            'asetBelumDiurus'   => $asetBelumDiurus,
-            'pctBersertifikat'  => $pctBersertifikat,
-            'pctProses'         => $pctProses,
-            'pctKendala'        => $pctKendala,
-            'pctBelumDiurus'    => $pctBelumDiurus,
-            'opdStats'          => $topOpdStats,
-            'statusCounts'      => $statusCounts,
-            'statusBreakdowns'  => $statusBreakdowns,
-            'recentLogs'        => $recentLogs,
-            'chartSelesai'      => $chartSelesai,
-            'chartProses'       => $chartProses,
-            'chartBelum'        => $chartBelum,
-            'chartYear'         => $year,
+            'totalAset'             => $totalAset,
+            'totalLuas'             => $totalLuas,
+            'totalTanahTakTercatat' => $totalTanahTakTercatat,
+            'asetBersertifikat'     => $asetBersertifikat,
+            'asetKendala'           => $asetKendala,
+            'asetProses'            => $asetProses,
+            'asetBelumDiurus'       => $asetBelumDiurus,
+            'pctBersertifikat'      => $pctBersertifikat,
+            'pctProses'             => $pctProses,
+            'pctKendala'            => $pctKendala,
+            'pctBelumDiurus'        => $pctBelumDiurus,
+            'opdStats'              => $topOpdStats,
+            'statusCounts'          => $statusCounts,
+            'statusBreakdowns'      => $statusBreakdowns,
+            'recentLogs'            => $recentLogs,
+            'chartSelesai'          => $chartSelesai,
+            'chartProses'           => $chartProses,
+            'chartBelum'            => $chartBelum,
+            'chartYear'             => $year,
         ];
     }
 
