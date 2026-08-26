@@ -92,20 +92,26 @@
                     
                     <!-- Nested Submenu 1: Aset & Inventaris -->
                     <div class="nested-group">
-                        <a class="nested-header {{ Request::is('sipat/aset*', 'sipat/peta*', 'sipat/target-pensertifikatan*') ? '' : 'collapsed' }}"
+                        <a class="nested-header {{ Request::is('sipat/aset*', 'sipat/peta*', 'sipat/target-pensertifikatan*', 'sipat/tanah-tak-tercatat*') ? '' : 'collapsed' }}"
                            data-bs-toggle="collapse"
                            href="#sipatSubAset"
                            role="button"
-                           aria-expanded="{{ Request::is('sipat/aset*', 'sipat/peta*', 'sipat/target-pensertifikatan*') ? 'true' : 'false' }}">
+                           aria-expanded="{{ Request::is('sipat/aset*', 'sipat/peta*', 'sipat/target-pensertifikatan*', 'sipat/tanah-tak-tercatat*') ? 'true' : 'false' }}">
                             <span><i class="bi bi-journal-album me-1 text-primary"></i> ASET TANAH & PENGGUNAAN</span>
                             <i class="bi bi-chevron-down nested-chevron"></i>
                         </a>
-                        <div id="sipatSubAset" class="collapse {{ Request::is('sipat/aset*', 'sipat/peta*', 'sipat/target-pensertifikatan*') ? 'show' : '' }}">
+                        <div id="sipatSubAset" class="collapse {{ Request::is('sipat/aset*', 'sipat/peta*', 'sipat/target-pensertifikatan*', 'sipat/tanah-tak-tercatat*') ? 'show' : '' }}">
                             <ul class="submenu-list">
                                 <li class="{{ Request::is('sipat/aset*') ? 'active' : '' }}">
                                     <a href="{{ Route::has('sipat.aset.index') ? route('sipat.aset.index') : '#' }}" data-bs-toggle="tooltip" data-bs-placement="right" title="Data Aset Tanah">
                                         <i class="bi bi-journal-text"></i>
                                         <span>Data Aset Tanah</span>
+                                    </a>
+                                </li>
+                                <li class="{{ Request::is('sipat/tanah-tak-tercatat*') ? 'active' : '' }}">
+                                    <a href="{{ route('sipat.tanah-tak-tercatat.index') }}" data-bs-toggle="tooltip" data-bs-placement="right" title="Tanah Belum / Tak Tercatat">
+                                        <i class="bi bi-geo-alt"></i>
+                                        <span>Tanah Belum Tercatat</span>
                                     </a>
                                 </li>
                                 <li class="{{ Request::is('sipat/target-pensertifikatan*') ? 'active' : '' }}">

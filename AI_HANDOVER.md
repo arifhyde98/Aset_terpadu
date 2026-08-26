@@ -164,6 +164,7 @@ Aplikasi **menggunakan sentuhan visual premium & animasi mikro kustom** secara b
 ### B. Modul SIPAT (Pertanahan)
 - **Katalog Aset Tanah**: Pencatatan data tanah daerah, luas, dasar perolehan, harga, dan koordinat peta.
 - **Target Pensertifikatan & Pemetaan GIS**: Pengelolaan KPI penetapan target pensertifikatan tanah tahunan (penetapan target, modal edit/update target, filter tahun/OPD), pelacakan progres real-time, ekspor rekapitulasi, dan visualisasi spasial interaktif menggunakan Leaflet GIS & Shapefile/GeoJSON.
+- **Tanah Belum / Tak Tercatat**: Pengelolaan khusus bidang tanah yang belum masuk KIB A atau belum memiliki NIBAR resmi. Dilengkapi penomoran otomatis NIBAR Draft (`DRAFT-YYYYMMDD-XXXX`), modal pendaftaran cepat, dan fitur update sekali-klik ke NIBAR Resmi BPKAD.
 - **Progres Sertifikasi**: Melacak status sertifikat tanah dari proses pendaftaran, pengukuran, hingga penerbitan.
 - **Modul Surat Tanah (SKPT & Batas)**: Pembuatan dokumen SKPT formal dengan ekspor berkas PDF (mPDF), Word (.docx), dan cetak langsung. Sisa fungsi legacy `esc()` dan syntax error kurung pada template SKPT telah diganti standar Laravel `e()`.
 - **Peta Aset**: Visualisasi marker sebaran aset tanah pada peta interaktif.
@@ -188,6 +189,8 @@ Aplikasi **menggunakan sentuhan visual premium & animasi mikro kustom** secara b
 | **E-RANDIS** | GET | `/reports/pdf` | `ReportController@pdf` | Auth | Unduh PDF formal mPDF |
 | **E-RANDIS** | GET | `/reports/settings` | `ReportSettingController@index` | Superadmin | Pengaturan kop, TTD, & ekspor |
 | **SIPAT** | GET | `/sipat/aset` | `Sipat\AsetTanahController@index` | Auth | Daftar Aset Tanah |
+| **SIPAT** | GET | `/sipat/tanah-tak-tercatat` | `Sipat\TanahTakTercatatController@index` | Auth | Tanah Belum / Tak Tercatat |
+| **SIPAT** | POST/PUT | `/sipat/tanah-tak-tercatat/*` | `Sipat\TanahTakTercatatController` | Auth | CRUD Tanah Belum Tercatat & NIBAR Draft |
 | **SIPAT** | GET | `/sipat/target-pensertifikatan` | `Sipat\TargetSertifikatController@index` | Auth | Target Pensertifikatan & GIS Map |
 | **SIPAT** | POST/PUT/DEL | `/sipat/target-pensertifikatan/*` | `Sipat\TargetSertifikatController` | Auth | CRUD Target Pensertifikatan |
 | **SIPAT** | GET | `/sipat/surat/skpt` | `Sipat\SuratController@skpt` | Auth | Modul Pembuatan SKPT |

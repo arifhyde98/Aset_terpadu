@@ -120,6 +120,7 @@ Berikut adalah status fitur yang telah diimplementasikan penuh pada platform SIP
 | **E-RANDIS** | Diagnosis & Resolusi Duplikasi | DONE | Merge plat/OPD identik lintas instansi secara atomik. |
 | **E-RANDIS** | Modul Laporan Modular | DONE | Ekspor Excel streaming, cetak browser, dan PDF via mPDF. |
 | **SIPAT** | Master Aset Tanah (CRUD) | DONE | Pengelolaan aset tanah, koordinat GPS, dan detil perolehan. |
+| **SIPAT** | Tanah Belum/Tak Tercatat | DONE | Pengelolaan tanah usulan/baru, penomoran otomatis NIBAR draft, & update NIBAR resmi. |
 | **SIPAT** | Target Pensertifikatan & GIS Map | DONE | Penetapan target pensertifikatan, modal edit, & peta GIS Leaflet. |
 | **SIPAT** | Progres Pensertifikatan | DONE | Rekam langkah pensertifikatan tanah dari awal hingga terbit. |
 | **SIPAT** | Modul Surat Tanah (SKPT) | DONE | Pembuatan SKPT, ekspor Word/PDF formal (mPDF), & cetak. |

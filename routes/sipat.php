@@ -27,6 +27,13 @@ Route::prefix('sipat')->name('sipat.')->group(function () {
         Route::post('/{aset}/dokumen', [\App\Http\Controllers\Sipat\AsetTanahController::class, 'storeDokumen'])->name('storeDokumen');
     });
 
+    // Tanah Belum / Tak Tercatat
+    Route::prefix('tanah-tak-tercatat')->name('tanah-tak-tercatat.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Sipat\TanahTakTercatatController::class, 'index'])->name('index');
+        Route::post('/', [\App\Http\Controllers\Sipat\TanahTakTercatatController::class, 'store'])->name('store');
+        Route::put('/{aset}/update-nibar', [\App\Http\Controllers\Sipat\TanahTakTercatatController::class, 'updateNibar'])->name('update-nibar');
+    });
+
     // Target Pensertifikatan Tanah Tahunan
     Route::prefix('target-pensertifikatan')->name('target-pensertifikatan.')->group(function () {
         Route::get('/', [\App\Http\Controllers\Sipat\TargetSertifikatController::class, 'index'])->name('index');
