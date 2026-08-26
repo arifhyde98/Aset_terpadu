@@ -89,11 +89,18 @@ class AsetTanahService
             $query->whereDate('tanggal_perolehan', $filters['tanggal_perolehan']);
         }
 
+        $orderQuery = $query->orderByRaw("
+            CASE 
+                WHEN kode_aset IS NULL OR kode_aset = '' OR kode_aset = '-' OR kode_aset LIKE 'DRAFT-%' OR kode_aset LIKE 'BELUM-%' THEN 1 
+                ELSE 0 
+            END ASC
+        ")->orderBy('id_aset', 'desc');
+
         $perPage = $filters['per_page'] ?? 15;
         if ($perPage === 'all') {
-            $asetTanah = $query->orderBy('id_aset', 'desc')->paginate(1000)->withQueryString();
+            $asetTanah = $orderQuery->paginate(1000)->withQueryString();
         } else {
-            $asetTanah = $query->orderBy('id_aset', 'desc')->paginate((int)$perPage)->withQueryString();
+            $asetTanah = $orderQuery->paginate((int)$perPage)->withQueryString();
         }
 
         $opdList = OpdSipat::where('aktif', 1)->orderBy('nama', 'asc')->get();
