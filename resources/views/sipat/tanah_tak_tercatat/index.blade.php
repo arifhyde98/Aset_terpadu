@@ -20,10 +20,16 @@
         border: 1px solid var(--border-color, rgba(0, 0, 0, 0.08));
         background: var(--bs-tertiary-bg, #f8fafc);
         position: relative;
-        transition: transform 0.2s ease;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
     }
     .metric-box:hover {
-        transform: translateY(-2px);
+        transform: translateY(-3px);
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+    }
+    .info-banner {
+        background: linear-gradient(135deg, rgba(245, 158, 11, 0.08) 0%, rgba(59, 130, 246, 0.08) 100%);
+        border: 1px solid rgba(245, 158, 11, 0.2);
+        border-radius: 1rem;
     }
 </style>
 
@@ -43,12 +49,25 @@
         </div>
 
         <div class="d-flex align-items-center gap-2 flex-wrap">
-            <button type="button" class="btn btn-primary rounded-pill px-3.5 shadow-sm" data-bs-toggle="modal" data-bs-target="#modalCreateTanah">
+            <button type="button" class="btn btn-primary rounded-pill px-3.5 shadow-sm btn-premium-glow" data-bs-toggle="modal" data-bs-target="#modalCreateTanah">
                 <i class="bi bi-plus-lg me-1.5"></i> Input Tanah Belum Tercatat Baru
             </button>
             <a href="{{ route('sipat.aset.index') }}" class="btn btn-outline-secondary rounded-pill px-3">
                 <i class="bi bi-arrow-left me-1"></i> Kembali ke Master Aset
             </a>
+        </div>
+    </div>
+
+    <!-- Info Banner Callout -->
+    <div class="info-banner p-3.5 mb-4 d-flex align-items-start gap-3">
+        <div class="p-2.5 bg-warning text-dark rounded-circle d-flex align-items-center justify-content-center flex-shrink-0" style="width: 42px; height: 42px;">
+            <i class="bi bi-lightbulb-fill fs-5"></i>
+        </div>
+        <div>
+            <h6 class="fw-bold text-dark mb-1">Manajemen Aset Tanah Usulan & Belum Memiliki NIBAR Resmi</h6>
+            <p class="text-secondary small mb-0">
+                Halaman ini khusus memuat daftar aset tanah daerah yang belum tercatat di KIB A atau masih menggunakan <strong>Kode NIBAR Sementara (Draft)</strong>. Anda dapat mendaftarkan tanah baru tanpa perlu menunggu NIBAR resmi, dan memperbaruinya kapan saja dengan sekali klik saat NIBAR dari BPKAD telah diterbitkan.
+            </p>
         </div>
     </div>
 
@@ -67,7 +86,7 @@
                 </div>
 
                 <div class="col-md-5 col-sm-6">
-                    <label class="form-label small fw-bold text-secondary mb-1"><i class="bi bi-search me-1"></i> Kata Kunci</label>
+                    <label class="form-label small fw-bold text-secondary mb-1"><i class="bi bi-search me-1"></i> Kata Kunci Pencarian</label>
                     <input type="text" name="search" class="form-control form-control-sm" placeholder="NIBAR Draft / Nama Aset / Peruntukan / Lokasi..." value="{{ $search }}">
                 </div>
 
@@ -114,7 +133,7 @@
 
     <!-- Tabel Main Data -->
     <div class="card target-card">
-        <div class="target-card-header d-flex justify-content-between align-items-center">
+        <div class="target-card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
             <h5 class="fw-bold mb-0 text-body">
                 <i class="bi bi-card-checklist text-primary me-2"></i>Daftar Bidang Tanah Belum Tercatat di KIB A
             </h5>
@@ -130,12 +149,12 @@
                         <tr>
                             <th class="ps-4" style="width: 50px;">No</th>
                             <th>NIBAR / Kode Aset</th>
-                            <th>Nama Aset Tanah / Peruntukan</th>
+                            <th>Nama Aset Tanah & Peruntukan</th>
                             <th>OPD Pengelola</th>
-                            <th>Luas (m²) & Lokasi</th>
+                            <th>Luas & Lokasi</th>
                             <th>Status Pengurusan BPN</th>
-                            <th>Catatan</th>
-                            <th class="text-end pe-4" style="width: 150px;">Aksi</th>
+                            <th>Catatan Target</th>
+                            <th class="text-end pe-4" style="width: 170px;">Aksi</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -168,7 +187,9 @@
                                 </td>
                                 <td>
                                     <div class="fw-semibold text-dark">{{ number_format($item->luas ?? 0, 0, ',', '.') }} m²</div>
-                                    <small class="text-secondary">{{ \Illuminate\Support\Str::limit($item->alamat ?? '-', 35) }}</small>
+                                    <small class="text-secondary d-block" style="max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                        {{ $item->alamat ?? '-' }}
+                                    </small>
                                 </td>
                                 <td>
                                     <span class="badge bg-info-subtle text-info-emphasis border border-info-subtle px-2.5 py-1">
@@ -176,7 +197,9 @@
                                     </span>
                                 </td>
                                 <td>
-                                    <small class="text-secondary">{{ \Illuminate\Support\Str::limit($item->keterangan ?? '-', 30) }}</small>
+                                    <small class="text-secondary d-block" style="max-width: 180px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                        {{ $item->keterangan ?? '-' }}
+                                    </small>
                                 </td>
                                 <td class="text-end pe-4">
                                     <div class="d-flex justify-content-end gap-1">
@@ -188,7 +211,7 @@
                                                 data-keterangan="{{ $item->keterangan }}"
                                                 data-url="{{ route('sipat.tanah-tak-tercatat.update-nibar', $item->id_aset) }}"
                                                 data-bs-toggle="tooltip" 
-                                                title="Update menjadi NIBAR Resmi">
+                                                title="Update menjadi NIBAR Resmi BPKAD">
                                             <i class="bi bi-pencil-square me-1"></i> Update NIBAR
                                         </button>
                                         <a href="{{ route('sipat.aset.edit', $item->id_aset) }}" class="btn btn-sm btn-outline-secondary border-0 rounded-circle" data-bs-toggle="tooltip" title="Edit Aset Lengkap">
@@ -215,7 +238,7 @@
             </div>
 
             @if($tanahItems->hasPages())
-                <div class="p-3 border-top d-flex justify-content-between align-items-center">
+                <div class="p-3 border-top d-flex justify-content-between align-items-center flex-wrap gap-2">
                     <div class="small text-secondary">
                         Menampilkan {{ $tanahItems->firstItem() }} - {{ $tanahItems->lastItem() }} dari {{ $tanahItems->total() }} data
                     </div>
@@ -398,5 +421,5 @@
         }
     });
 </script>
-@push('scripts')
+@endpush
 @endsection
