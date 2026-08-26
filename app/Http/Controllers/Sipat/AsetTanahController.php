@@ -59,10 +59,17 @@ class AsetTanahController extends Controller implements HasMiddleware
     {
         $data = $this->asetTanahService->getPaginatedAset($request->all());
 
+        $unrecordedCount = AsetTanah::where('kode_aset', 'LIKE', 'DRAFT-%')
+            ->orWhere('kode_aset', 'LIKE', 'BELUM-%')
+            ->orWhereNull('kode_aset')
+            ->orWhere('kode_aset', '')
+            ->count();
+
         return view('sipat.aset.index', [
-            'asetTanah'  => $data['asetTanah'],
-            'opdList'    => $data['opdList'],
-            'statusList' => $data['statusList'],
+            'asetTanah'       => $data['asetTanah'],
+            'opdList'         => $data['opdList'],
+            'statusList'      => $data['statusList'],
+            'unrecordedCount' => $unrecordedCount,
         ]);
     }
 

@@ -62,6 +62,15 @@
         </div>
 
         <div class="d-flex flex-wrap align-items-center gap-2">
+            <!-- Tombol Cek & Tambah NIBAR Tanah Belum Tercatat -->
+            <a href="{{ route('sipat.tanah-tak-tercatat.index') }}" class="btn btn-outline-warning text-dark d-flex align-items-center gap-2 rounded-3" data-bs-toggle="tooltip" title="Cek & Kelola Tanah Belum Tercatat / Tambah NIBAR Resmi">
+                <i class="bi bi-geo-alt-fill text-warning"></i>
+                <span class="fw-semibold">Tanah Belum Tercatat</span>
+                @if(isset($unrecordedCount) && $unrecordedCount > 0)
+                    <span class="badge bg-danger rounded-pill px-2 py-0.5 font-monospace fw-bold" style="font-size: 0.75rem;">{{ $unrecordedCount }}</span>
+                @endif
+            </a>
+
             <!-- Dropdown Export -->
             <div class="dropdown">
                 <button type="button" class="btn btn-outline-secondary dropdown-toggle d-flex align-items-center gap-2 rounded-3" data-bs-toggle="dropdown" aria-expanded="false">
