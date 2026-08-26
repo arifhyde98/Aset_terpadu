@@ -24,6 +24,7 @@ class StoreAsetTanahRequest extends FormRequest
             'alamat' => 'nullable|string',
             'lat' => 'nullable|numeric',
             'lng' => 'nullable|numeric',
+            'geojson' => 'nullable|string',
             'dasar_perolehan' => 'nullable|string|max:150',
             'harga_perolehan' => 'nullable|numeric',
             'tanggal_perolehan' => 'nullable|date',

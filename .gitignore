@@ -23,3 +23,6 @@ yarn-error.log
 /.nova
 /.vscode
 /.zed
+# Ignore local staging sync button
+database/samples/*.zip
+resources/views/settings/backups/partials/staging_sync_button.blade.php

@@ -21,6 +21,7 @@ class AsetTanah extends Model
         'alamat',
         'lat',
         'lng',
+        'geojson',
         'opd_id',
         'opd',
         'dasar_perolehan',
@@ -28,6 +29,14 @@ class AsetTanah extends Model
         'tanggal_perolehan',
         'keterangan'
     ];
+
+    /**
+     * Memeriksa apakah aset memiliki data batas poligon spasial.
+     */
+    public function hasPolygon(): bool
+    {
+        return !empty($this->geojson);
+    }
 
     public function opdSipat(): BelongsTo
     {

@@ -32,6 +32,7 @@
                     <i class="bi bi-database"></i> Backup DB Saja
                 </button>
             </form>
+            @includeIf('settings.backups.partials.staging_sync_button')
         </div>
     </div>
 

@@ -3,7 +3,7 @@
 
 > **Dokumen Perencanaan Teknis & Arsitektur**  
 > *Tanggal Penyusunan:* 24 Agustus 2026  
-> *Status:* Draft Perencanaan (Siap Diimplementasikan Pasca-Sinkronisasi Telegram)
+> *Status:* ✅ **Selesai Diimplementasikan & Direfaktur (Branch feature/staging)**
 
 ---
 
@@ -28,11 +28,12 @@ Untuk menjaga kebersihan database dan menyimpan riwayat target multi-tahun, dibu
 | `id` | `bigint` (PK, Auto Increment) | Primary Key |
 | `tahun` | `integer` | Tahun Anggaran Target (contoh: `2026`) |
 | `aset_tanah_id` | `unsignedBigInteger` (FK) | Relasi ke `sipat_aset_tanah.id` |
-| `opd_id` | `unsignedBigInteger` (FK, Nullable) | Relasi ke `opd_sipat.id` |
 | `target_jumlah` | `integer` (Default `1`) | Kuota / Pembobotan |
 | `keterangan` | `text` (Nullable) | Catatan target (misal: *Target Prioritas Aksi KPK*) |
 | `created_at` | `timestamp` | Waktu Penetapan |
 | `updated_at` | `timestamp` | Waktu Perubahan |
+
+*(Catatan Refaktorisasi: Kolom `opd_id` telah dihapus dari tabel ini karena kepemilikan OPD diambil langsung melalui relasi `asetTanah->opdSipat` untuk menjamin konsistensi data).*
 
 ---
 
@@ -70,6 +71,8 @@ Lokasi: Navigasi Utama `Modul SIPAT` $\rightarrow$ `Master Aset Tanah` $\rightar
    - Kolom: Nama OPD, Total Target Bidang, Realisasi, Persentase Capaian, Status Kinerja.
 4. **Tabel Daftar Bidang Tanah Target**:
    - Kolom: Nama Aset/Lokasi Tanah KIB A, Nibar, OPD Pengguna, Status Proses BPN Terakhir, Indikator Capaian (Tercapai / Dalam Proses).
+5. **Modal Edit & Hapus Target**: Memungkinkan pembaruan data target dan keterangan secara interaktif.
+6. **Integrasi GIS Leaflet Map**: Visualisasi pemetaan interaktif lokasi aset tanah target menggunakan Leaflet JS, GeoJSON, dan Shapefile.
 
 ### C. Form Modal Penetapan Target (`Modal Form`)
 - Pilih Tahun Anggaran.
@@ -87,14 +90,15 @@ Lokasi: Navigasi Utama `Modul SIPAT` $\rightarrow$ `Master Aset Tanah` $\rightar
 
 ---
 
-## 6. Tahapan Eksekusi Pengkodean (Pasca-Sinkronisasi Telegram Selesai)
+## 6. Tahapan Eksekusi Pengkodean
 
-- [ ] **Langkah 1**: Membuat migration file `create_sipat_target_sertifikat_table`.
-- [ ] **Langkah 2**: Membuat Model `App\Models\Sipat\SipatTargetSertifikat` dan menentukan relasi dengan `AsetTanah`.
-- [ ] **Langkah 3**: Membuat Controller `App\Http\Controllers\Sipat\TargetSertifikatController`.
-- [ ] **Langkah 4**: Mengonfigurasi Route di `routes/sipat.php`.
-- [ ] **Langkah 5**: Membuat Tampilan Blade UI di `resources/views/sipat/target_sertifikat/index.blade.php`.
-- [ ] **Langkah 6**: Menambahkan tautan sub-menu di Sidebar Navigasi Utama.
+- [x] **Langkah 1**: Membuat migration file `create_sipat_target_sertifikat_table`.
+- [x] **Langkah 2**: Membuat Model `App\Models\Sipat\SipatTargetSertifikat` dan menentukan relasi dengan `AsetTanah`.
+- [x] **Langkah 3**: Membuat Controller `App\Http\Controllers\Sipat\TargetSertifikatController` (termasuk fitur CRUD edit/update target).
+- [x] **Langkah 4**: Mengonfigurasi Route di `routes/sipat.php`.
+- [x] **Langkah 5**: Membuat Tampilan Blade UI di `resources/views/sipat/target_sertifikat/index.blade.php`.
+- [x] **Langkah 6**: Menambahkan tautan sub-menu di Sidebar Navigasi Utama.
+- [x] **Langkah 7**: Refaktor database (penghapusan `opd_id`) dan penambahan integrasi pemetaan GIS (Leaflet, Turf.js, Shp.js).
 
 ---
 *Dokumen ini disimpan di: `docs/rencana_pengembangan_target_pensertifikatan_sipat.md`*

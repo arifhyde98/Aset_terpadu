@@ -63,6 +63,7 @@ CREATE TABLE `aset_tanah` (
   `harga_perolehan` decimal(18,2) DEFAULT NULL,
   `tanggal_perolehan` date DEFAULT NULL,
   `keterangan` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  `geojson` longtext COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `created_at` datetime DEFAULT NULL,
   `updated_at` datetime DEFAULT NULL,
   PRIMARY KEY (`id_aset`),
@@ -1012,6 +1013,29 @@ CREATE TABLE `settings` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `settings_key_unique` (`key`)
 ) ENGINE=InnoDB AUTO_INCREMENT=25 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `sipat_target_sertifikat`
+--
+
+DROP TABLE IF EXISTS `sipat_target_sertifikat`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `sipat_target_sertifikat` (
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `tahun` int NOT NULL,
+  `aset_tanah_id` int unsigned NOT NULL,
+  `target_jumlah` int NOT NULL DEFAULT '1',
+  `keterangan` text COLLATE utf8mb4_unicode_ci,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `unique_tahun_aset_target` (`tahun`,`aset_tanah_id`),
+  KEY `sipat_target_sertifikat_tahun_index` (`tahun`),
+  KEY `sipat_target_sertifikat_aset_tanah_id_foreign` (`aset_tanah_id`),
+  CONSTRAINT `sipat_target_sertifikat_aset_tanah_id_foreign` FOREIGN KEY (`aset_tanah_id`) REFERENCES `aset_tanah` (`id_aset`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --

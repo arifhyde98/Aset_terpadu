@@ -31,6 +31,7 @@ Route::prefix('sipat')->name('sipat.')->group(function () {
     Route::prefix('target-pensertifikatan')->name('target-pensertifikatan.')->group(function () {
         Route::get('/', [\App\Http\Controllers\Sipat\TargetSertifikatController::class, 'index'])->name('index');
         Route::post('/', [\App\Http\Controllers\Sipat\TargetSertifikatController::class, 'store'])->name('store');
+        Route::put('/{target}', [\App\Http\Controllers\Sipat\TargetSertifikatController::class, 'update'])->name('update');
         Route::delete('/{target}', [\App\Http\Controllers\Sipat\TargetSertifikatController::class, 'destroy'])->name('destroy');
         Route::get('/export-excel', [\App\Http\Controllers\Sipat\TargetSertifikatController::class, 'exportExcel'])->name('export-excel');
         Route::get('/export-pdf', [\App\Http\Controllers\Sipat\TargetSertifikatController::class, 'exportPdf'])->name('export-pdf');
@@ -47,7 +48,12 @@ Route::prefix('sipat')->name('sipat.')->group(function () {
 
     // Rekonsiliasi & Peta
     Route::get('/rekonsiliasi', [\App\Http\Controllers\Sipat\RekonsiliasiController::class, 'index'])->name('rekonsiliasi.index');
-    Route::get('/peta', [\App\Http\Controllers\Sipat\PetaController::class, 'index'])->name('peta.index');
+    Route::prefix('peta')->name('peta.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Sipat\PetaController::class, 'index'])->name('index');
+        Route::get('/data', [\App\Http\Controllers\Sipat\PetaController::class, 'data'])->name('data');
+        Route::post('/import-poligon', [\App\Http\Controllers\Sipat\PetaController::class, 'importPoligon'])->name('import-poligon');
+        Route::get('/export-geojson', [\App\Http\Controllers\Sipat\PetaController::class, 'exportGeojson'])->name('export-geojson');
+    });
 
     // Surat
     Route::prefix('surat')->name('surat.')->group(function () {

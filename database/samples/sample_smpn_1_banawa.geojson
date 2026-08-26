@@ -1,0 +1,35 @@
+{
+  "type": "FeatureCollection",
+  "name": "Sample_Poligon_SMPN_1_Banawa",
+  "crs": {
+    "type": "name",
+    "properties": { "name": "urn:ogc:def:crs:OGC:1.3:CRS84" }
+  },
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "NIBAR": "120172030100000001002719521310101040020000001",
+        "KODE_ASET": "120172030100000001002719521310101040020000001",
+        "NAMA_ASET": "SMPN 1 BANAWA",
+        "PERUNTUKAN": "Gedung / Kompleks Sekolah SMP Negeri 1 Banawa",
+        "KECAMATAN": "Banawa",
+        "KABUPATEN": "Donggala",
+        "LUAS_M2": 5420.0
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [119.743050, -0.676150],
+            [119.743880, -0.676210],
+            [119.743940, -0.677080],
+            [119.743110, -0.677020],
+            [119.743050, -0.676150]
+          ]
+        ]
+      }
+    }
+  ]
+}
+
