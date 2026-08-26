@@ -101,7 +101,7 @@ Dokumen ini merupakan sumber kebenaran tunggal (*Single Source of Truth*) mengen
 Logika bisnis dan kalkulasi diletakkan di dalam kelas *Service*:
 - `VehicleService`: statistik dashboard, helper cache kendaraan, pencarian, dan utilitas bisnis kendaraan.
 - `ReportService`: ringkasan laporan, orkestrasi preview terpaginasi, dan integrasi strategi laporan modular.
-- `AsetTanahService`: ringkasan dan query pencarian aset tanah SIPAT.
+- `AsetTanahService`: ringkasan dan query pencarian aset tanah SIPAT. Kueri Master Aset Tanah diurutkan menggunakan `CASE` SQL agar aset yang memiliki NIBAR resmi selalu berada di posisi paling atas, sedangkan tanah usulan / NIBAR sementara (`DRAFT-`, `BELUM-`, null, `-`) berada di posisi paling bawah.
 - `BackupController@syncDb`: utilitas sinkronisasi database staging dari `db_sipat_terpadu` ke `db_sipat_staging` via perintah shell `mysqldump` terisolasi khusus lingkungan lokal/staging.
 
 ### Arsitektur Modul Laporan E-RANDIS (*Reporting Architecture*)
