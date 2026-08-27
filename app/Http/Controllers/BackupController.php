@@ -172,34 +172,53 @@ class BackupController extends Controller implements HasMiddleware
     }
 
     /**
-     * Sinkronisasi data dari db_sipat_terpadu ke db_sipat_staging (Khusus Lingkungan Staging/Lokal).
+    /**
+     * Memeriksa status proses sinkronisasi database staging saat ini.
+     *
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function syncDbStatus(): \Illuminate\Http\JsonResponse
+    {
+        $progress = Cache::get('sync_db_progress');
+        return response()->json($progress ?: ['status' => 'idle']);
+    }
+
+    /**
+     * Sinkronisasi data dari db_sipat_terpadu ke db_sipat_staging di background.
      *
      * @param Request $request
-     * @return RedirectResponse
+     * @return \Illuminate\Http\JsonResponse|RedirectResponse
      */
-    public function syncDb(Request $request): RedirectResponse
+    public function syncDb(Request $request)
     {
         try {
-            $command = "mysqldump -u bpkad.aset -padmin123 --no-tablespaces --add-drop-table db_sipat_terpadu | mysql --force -u bpkad.aset -padmin123 db_sipat_staging 2>&1";
-            exec($command, $output, $returnCode);
-
-            if ($returnCode !== 0) {
-                $errorMsg = !empty($output) ? implode("\n", $output) : 'Unknown error (code: ' . $returnCode . ')';
-                Log::error('Gagal sinkronisasi database staging: ' . $errorMsg);
+            // Periksa jika proses sinkronisasi sedang berjalan
+            $progress = Cache::get('sync_db_progress');
+            if ($progress && ($progress['status'] ?? null) === 'running') {
+                if ($request->wantsJson() || $request->ajax()) {
+                    return response()->json(['status' => 'error', 'message' => 'Proses sinkronisasi database saat ini sedang berjalan di background.'], 400);
+                }
                 return redirect()->route('settings.backups.index')
-                    ->with('error', 'Gagal menyinkronkan database: ' . $errorMsg);
+                    ->with('error', 'Proses sinkronisasi database saat ini sedang berjalan di background.');
             }
 
-            if (class_exists('\App\Models\Activity')) {
-                \App\Models\Activity::log("Menyinkronkan data penuh (100% replace) dari db_sipat_terpadu ke db_sipat_staging", 'info');
+            // Jalankan Artisan command di background
+            $command = 'php ' . base_path('artisan') . ' app:sync-db-bg > /dev/null 2>&1 &';
+            exec($command);
+
+            if ($request->wantsJson() || $request->ajax()) {
+                return response()->json(['status' => 'success', 'message' => 'Proses sinkronisasi database berhasil dimulai di background.']);
             }
 
             return redirect()->route('settings.backups.index')
-                ->with('success', 'Berhasil menyinkronkan database secara penuh! Database Staging kini 100% identik dengan SIPAT Terpadu.');
+                ->with('success', 'Proses sinkronisasi database berhasil dimulai di background.');
         } catch (\Exception $e) {
-            Log::error('Gagal sinkronisasi database staging: ' . $e->getMessage());
+            Log::error('Gagal memicu sinkronisasi database: ' . $e->getMessage());
+            if ($request->wantsJson() || $request->ajax()) {
+                return response()->json(['status' => 'error', 'message' => $e->getMessage()], 500);
+            }
             return redirect()->route('settings.backups.index')
-                ->with('error', 'Gagal menyinkronkan database: ' . $e->getMessage());
+                ->with('error', 'Gagal memicu sinkronisasi database: ' . $e->getMessage());
         }
     }
 
