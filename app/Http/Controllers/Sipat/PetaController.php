@@ -116,19 +116,33 @@ class PetaController extends Controller implements HasMiddleware
             $statusLabel = $row->nama_status ?? 'Belum Diurus';
             $statusColor = $row->warna ?? 'secondary';
 
+            $kategoriRaw = strtolower(trim($row->kategori ?? ''));
+            $statusNamaRaw = strtolower(trim($row->nama_status ?? ''));
+            $sigeoStatus = 'belumbersertifikat';
+            if ($kategoriRaw === 'bersertifikat' || str_contains($statusNamaRaw, 'terbit') || str_contains($statusNamaRaw, 'selesai')) {
+                $sigeoStatus = 'bersertifikat';
+            } elseif (str_contains($statusNamaRaw, 'sengketa') || str_contains($statusNamaRaw, 'konflik') || str_contains($statusNamaRaw, 'bermasalah')) {
+                $sigeoStatus = 'sengketa';
+            } elseif (str_contains($statusNamaRaw, 'idle') || str_contains($statusNamaRaw, 'pasif')) {
+                $sigeoStatus = 'idle';
+            }
+
             $features[] = [
                 'id'            => $row->id,
                 'kode'          => $row->kode_aset ?? '-',
                 'nama'          => $row->nama_aset ?? 'Tanpa Nama',
+                'jenis_aset'    => $row->peruntukan ?? 'Tanah',
                 'peruntukan'    => $row->peruntukan ?? '-',
                 'luas'          => (float) ($row->luas ?? 0),
                 'alamat'        => $row->alamat ?? '-',
+                'kecamatan'     => null,
                 'opd_id'        => $row->opd_id,
                 'opd_nama'      => $opdLabel,
                 'status_id'     => $row->id_status,
                 'status_nama'   => $statusLabel,
                 'status_warna'  => $statusColor,
-                'kategori'      => strtolower(trim($row->kategori ?? '')),
+                'status_sigeo'  => $sigeoStatus,
+                'kategori'      => $kategoriRaw,
                 'lat'           => $row->lat !== null ? (float) $row->lat : null,
                 'lng'           => $row->lng !== null ? (float) $row->lng : null,
                 'has_polygon'   => $hasPolygon && !empty($parsedGeojson),

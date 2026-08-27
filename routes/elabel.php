@@ -26,6 +26,12 @@ Route::prefix('elabel')->name('elabel.')->group(function () {
     Route::post('bpkb/{id}/delete', [\App\Http\Controllers\Elabel\ElabelBpkbController::class, 'delete'])->name('bpkb.delete');
     Route::get('bpkb/{id}/view-pdf', [\App\Http\Controllers\Elabel\ElabelBpkbController::class, 'viewPdf'])->name('bpkb.view-pdf');
 
+    // Smart BPKB Extractor (Halaman Terpisah)
+    Route::get('bpkb-smart-extractor', [\App\Http\Controllers\Elabel\ElabelSmartBpkbExtractorController::class, 'index'])->name('bpkb.smart-extractor.index');
+    Route::post('bpkb-smart-extractor/scan', [\App\Http\Controllers\Elabel\ElabelSmartBpkbExtractorController::class, 'scan'])->name('bpkb.smart-extractor.scan');
+    Route::post('bpkb-smart-extractor/execute', [\App\Http\Controllers\Elabel\ElabelSmartBpkbExtractorController::class, 'execute'])->name('bpkb.smart-extractor.execute');
+    Route::get('bpkb-smart-extractor/preview', [\App\Http\Controllers\Elabel\ElabelSmartBpkbExtractorController::class, 'previewPdf'])->name('bpkb.smart-extractor.preview');
+
     // BPKB Keluar (Soft Delete)
     Route::get('bpkb-deleted', [\App\Http\Controllers\Elabel\ElabelBpkbDeletedController::class, 'index'])->name('bpkb-deleted.index');
     Route::get('bpkb-deleted/export', [\App\Http\Controllers\Elabel\ElabelBpkbDeletedController::class, 'export'])->name('bpkb-deleted.export');
