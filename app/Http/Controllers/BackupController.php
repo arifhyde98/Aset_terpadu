@@ -358,13 +358,13 @@ class BackupController extends Controller implements HasMiddleware
             }
 
             $tempPath = $file->storeAs('temp_restore', time() . '_' . $origName, 'local');
-            $fullPath = storage_path('app/' . $tempPath);
+            $fullPath = Storage::disk('local')->path($tempPath);
             $sqlPath = $fullPath;
 
             if ($ext === 'zip') {
                 $zip = new \ZipArchive();
                 if ($zip->open($fullPath) === true) {
-                    $extractDir = storage_path('app/temp_restore/' . time() . '_extracted');
+                    $extractDir = Storage::disk('local')->path('temp_restore/' . time() . '_extracted');
                     $zip->extractTo($extractDir);
                     $zip->close();
 
@@ -400,6 +400,23 @@ class BackupController extends Controller implements HasMiddleware
             }
 
             exec($cmd, $output, $returnCode);
+
+            // Bersihkan file sementara setelah dieksekusi
+            @unlink($fullPath);
+            if (isset($extractDir) && is_dir($extractDir)) {
+                $extractedFiles = glob($extractDir . '/*');
+                foreach ($extractedFiles as $f) {
+                    if (is_file($f)) @unlink($f);
+                }
+                @rmdir($extractDir);
+            }
+
+            if ($returnCode !== 0) {
+                $errorMsg = !empty($output) ? implode(' ', $output) : 'Kode status: ' . $returnCode;
+                Log::error('Gagal restore database MySQL: ' . $errorMsg);
+                return redirect()->route('settings.backups.index')
+                    ->with('error', 'Gagal memulihkan database ke MySQL: ' . $errorMsg);
+            }
 
             // Invalidate cache dashboard
             if (class_exists('\App\Services\SipatService')) {
