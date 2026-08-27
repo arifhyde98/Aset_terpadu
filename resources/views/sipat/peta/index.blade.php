@@ -3,7 +3,7 @@
 @section('content')
 <style>
     .gis-card {
-        border: 1px solid var(--border-color, rgba(0, 0, 0, 0.08));
+        border: 1px solid var(--bs-border-color, rgba(0, 0, 0, 0.08));
         border-radius: 1.25rem;
         background: var(--bs-card-bg, #ffffff);
         box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.05);
@@ -18,14 +18,15 @@
         z-index: 1;
     }
     .gis-legend {
-        background: rgba(255, 255, 255, 0.95);
+        background: var(--bs-body-bg, rgba(255, 255, 255, 0.95));
+        color: var(--bs-body-color, #212529);
         backdrop-filter: blur(10px);
         padding: 12px 16px;
         border-radius: 14px;
-        box-shadow: 0 8px 25px rgba(0,0,0,0.12);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.15);
         font-size: 12px;
         line-height: 1.6;
-        border: 1px solid rgba(0,0,0,0.08);
+        border: 1px solid var(--bs-border-color, rgba(0,0,0,0.1));
         max-width: 250px;
     }
     .legend-color-box {
@@ -44,19 +45,20 @@
         max-height: 280px;
         overflow-y: auto;
         z-index: 1050;
-        background: #ffffff;
+        background: var(--bs-body-bg, #ffffff);
+        color: var(--bs-body-color, #212529);
         border-radius: 0.75rem;
-        box-shadow: 0 10px 25px rgba(0,0,0,0.15);
-        border: 1px solid #e2e8f0;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        border: 1px solid var(--bs-border-color, #e2e8f0);
     }
     .search-result-item {
         padding: 9px 14px;
         cursor: pointer;
-        border-bottom: 1px solid #f1f5f9;
+        border-bottom: 1px solid var(--bs-border-color-translucent, #f1f5f9);
         transition: background 0.15s;
     }
     .search-result-item:hover {
-        background: #f8fafc;
+        background: var(--bs-tertiary-bg, #f8fafc);
     }
     
     /* Slide-over Asset Detail Drawer */
@@ -67,11 +69,12 @@
         bottom: 12px;
         width: 380px;
         max-width: calc(100% - 24px);
-        background: rgba(255, 255, 255, 0.97);
+        background: var(--bs-body-bg, rgba(255, 255, 255, 0.97));
+        color: var(--bs-body-color, #212529);
         backdrop-filter: blur(12px);
-        border: 1px solid rgba(0, 0, 0, 0.1);
+        border: 1px solid var(--bs-border-color, rgba(0, 0, 0, 0.1));
         border-radius: 18px;
-        box-shadow: -10px 15px 35px rgba(0, 0, 0, 0.15);
+        box-shadow: -10px 15px 35px rgba(0, 0, 0, 0.2);
         z-index: 1000;
         display: flex;
         flex-direction: column;
@@ -90,7 +93,7 @@
     }
     .gis-drawer-header {
         padding: 16px 20px;
-        border-bottom: 1px solid #f1f5f9;
+        border-bottom: 1px solid var(--bs-border-color, #f1f5f9);
         background: var(--bs-tertiary-bg, #f8fafc);
     }
     .gis-drawer-body {
@@ -100,8 +103,8 @@
     }
     .gis-drawer-footer {
         padding: 14px 20px;
-        border-top: 1px solid #f1f5f9;
-        background: #fafafa;
+        border-top: 1px solid var(--bs-border-color, #f1f5f9);
+        background: var(--bs-tertiary-bg, #fafafa);
     }
 
     /* Floating Stats Bar */
@@ -116,12 +119,13 @@
         pointer-events: none;
     }
     .floating-stat-pill {
-        background: rgba(255, 255, 255, 0.92);
+        background: var(--bs-body-bg, rgba(255, 255, 255, 0.92));
+        color: var(--bs-body-color, #212529);
         backdrop-filter: blur(8px);
-        border: 1px solid rgba(0, 0, 0, 0.08);
+        border: 1px solid var(--bs-border-color, rgba(0, 0, 0, 0.08));
         border-radius: 30px;
         padding: 6px 14px;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.12);
         font-size: 12px;
         display: flex;
         align-items: center;
@@ -140,14 +144,14 @@
         pointer-events: auto;
     }
     .btn-map-tool {
-        background: #ffffff;
-        border: 1px solid #cbd5e1;
+        background: var(--bs-body-bg, #ffffff);
+        border: 1px solid var(--bs-border-color, #cbd5e1);
         border-radius: 8px;
         padding: 6px 12px;
         font-size: 12px;
         font-weight: 600;
-        color: #334155;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        color: var(--bs-body-color, #334155);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.12);
         transition: all 0.2s ease;
     }
     .btn-map-tool:hover, .btn-map-tool.active {
@@ -167,7 +171,8 @@
         flex-direction: column;
         justify-content: center;
         align-items: center;
-        background: rgba(255, 255, 255, 0.85);
+        background: var(--bs-body-bg, rgba(255, 255, 255, 0.85));
+        color: var(--bs-body-color, #212529);
         z-index: 1050;
         border-radius: 1rem;
         transition: opacity 0.25s ease, visibility 0.25s ease;
@@ -177,6 +182,17 @@
         opacity: 0 !important;
         visibility: hidden !important;
         pointer-events: none !important;
+    }
+
+    /* Dark Mode Overrides untuk Leaflet Popups */
+    [data-bs-theme="dark"] .leaflet-popup-content-wrapper,
+    [data-bs-theme="dark"] .leaflet-popup-tip {
+        background: var(--bs-body-bg, #1e293b) !important;
+        color: var(--bs-body-color, #f8fafc) !important;
+        border: 1px solid var(--bs-border-color, #334155);
+    }
+    [data-bs-theme="dark"] .leaflet-container {
+        background-color: #0f172a !important;
     }
 
     @media (max-width: 767.98px) {
@@ -373,9 +389,12 @@
                     </div>
                 </div>
             </div>
-            <div class="gis-drawer-footer d-flex gap-2">
+            <div class="gis-drawer-footer d-flex gap-2 flex-wrap">
+                <button type="button" class="btn btn-sm btn-success rounded-pill flex-fill fw-bold shadow-sm" id="btnDrawerDirectRoute">
+                    <i class="bi bi-cursor-fill me-1"></i> Navigasi Rute
+                </button>
                 <a href="#" target="_blank" class="btn btn-sm btn-outline-secondary rounded-pill flex-fill" id="btnDrawerGoogleMaps">
-                    <i class="bi bi-compass me-1"></i> Rute Maps
+                    <i class="bi bi-compass me-1"></i> Google Maps
                 </a>
                 <a href="#" class="btn btn-sm btn-primary rounded-pill flex-fill" id="btnDrawerEditAset">
                     <i class="bi bi-pencil me-1"></i> Edit Aset
@@ -525,6 +544,40 @@ document.addEventListener('DOMContentLoaded', function () {
     const activeLayerGroup = L.featureGroup().addTo(map);
     const measurementLayerGroup = L.featureGroup().addTo(map);
 
+    // Helper Warna & Statistik Kecamatan (SIGEO Style)
+    function getColorKecamatan(nama) {
+        if (!nama) return "#6c757d";
+        const colors = [
+            "#e41a1c", "#377eb8", "#4daf4a",
+            "#984ea3", "#ff7f00", "#a65628",
+            "#f781bf", "#008080", "#2563eb"
+        ];
+        let hash = 0;
+        for (let i = 0; i < nama.length; i++) {
+            hash = nama.charCodeAt(i) + ((hash << 5) - hash);
+        }
+        return colors[Math.abs(hash) % colors.length];
+    }
+
+    function hitungAsetKecamatan(namaKecamatan) {
+        let total = 0, sertifikat = 0, belumsertifikat = 0, sengketa = 0, idle = 0;
+        const normKec = (namaKecamatan || '').toLowerCase().trim();
+
+        rawFeatures.forEach(a => {
+            const itemKec = (a.kecamatan || a.alamat || '').toLowerCase();
+            if (normKec && itemKec.includes(normKec)) {
+                total++;
+                const st = a.status_sigeo || 'belumbersertifikat';
+                if (st === 'bersertifikat') sertifikat++;
+                else if (st === 'sengketa') sengketa++;
+                else if (st === 'idle') idle++;
+                else belumsertifikat++;
+            }
+        });
+
+        return { total, sertifikat, belumsertifikat, sengketa, idle };
+    }
+
     // Muat Batas 16 Kecamatan Kabupaten Donggala
     let isKecamatanVisible = true;
     fetch("{{ asset('geojson/donggala_kecamatan.geojson') }}")
@@ -533,26 +586,65 @@ document.addEventListener('DOMContentLoaded', function () {
             L.geoJSON(kecData, {
                 pane: 'kecamatanPane',
                 style: function (feature) {
+                    const nama = feature.properties.nama || feature.properties.KECAMATAN || '';
                     return {
-                        color: feature.properties.warna || '#2563eb',
-                        weight: 2.5,
-                        fillColor: feature.properties.fill_warna || '#93c5fd',
-                        fillOpacity: 0.50
+                        color: getColorKecamatan(nama),
+                        weight: 2,
+                        fillColor: getColorKecamatan(nama),
+                        fillOpacity: 0.35
                     };
                 },
                 onEachFeature: function (feature, layer) {
                     const p = feature.properties;
-                    layer.bindTooltip(`<b>${p.nama}</b><br><small class="text-secondary">${p.kabupaten || 'Kab. Donggala'}</small>`, {
-                        sticky: true,
-                        direction: 'center',
-                        className: 'bg-white text-dark shadow-sm border px-2 py-1 rounded fw-semibold'
+                    const nama = p.nama || p.KECAMATAN || 'Kecamatan';
+                    const warna = getColorKecamatan(nama);
+
+                    layer.on('click', function () {
+                        const stat = hitungAsetKecamatan(nama);
+                        const pctSertif = stat.total ? Math.round((stat.sertifikat / stat.total) * 100) : 0;
+                        const pctBelum = stat.total ? Math.round((stat.belumsertifikat / stat.total) * 100) : 0;
+                        const pctSengketa = stat.total ? Math.round((stat.sengketa / stat.total) * 100) : 0;
+
+                        const popupHtml = `
+                            <div class="p-2" style="min-width: 220px; font-family: inherit;">
+                                <div class="d-flex align-items-center gap-2 mb-2">
+                                    <div style="width: 32px; height: 32px; background: ${warna}; border-radius: 8px; color: #fff; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 14px;">
+                                        🗺️
+                                    </div>
+                                    <div>
+                                        <div class="text-uppercase text-secondary fw-semibold" style="font-size: 10px;">KECAMATAN</div>
+                                        <div class="fw-bold text-dark fs-6" style="line-height: 1.1;">${sipatEscape(nama)}</div>
+                                    </div>
+                                </div>
+                                <div class="d-flex gap-1 mb-2 text-center">
+                                    <div class="flex-fill bg-light p-1.5 rounded border">
+                                        <div class="fw-bold text-dark fs-6">${stat.total}</div>
+                                        <div class="text-secondary" style="font-size: 10px;">Total</div>
+                                    </div>
+                                    <div class="flex-fill bg-success-subtle p-1.5 rounded border border-success-subtle">
+                                        <div class="fw-bold text-success fs-6">${stat.sertifikat}</div>
+                                        <div class="text-success" style="font-size: 10px;">Sertifikat</div>
+                                    </div>
+                                    <div class="flex-fill bg-warning-subtle p-1.5 rounded border border-warning-subtle">
+                                        <div class="fw-bold text-warning-emphasis fs-6">${stat.belumsertifikat}</div>
+                                        <div class="text-warning-emphasis" style="font-size: 10px;">Belum</div>
+                                    </div>
+                                </div>
+                                <div class="progress" style="height: 6px; border-radius: 4px;">
+                                    <div class="progress-bar bg-success" style="width: ${pctSertif}%" title="Sertifikat: ${pctSertif}%"></div>
+                                    <div class="progress-bar bg-warning" style="width: ${pctBelum}%" title="Belum: ${pctBelum}%"></div>
+                                    <div class="progress-bar bg-danger" style="width: ${pctSengketa}%" title="Sengketa: ${pctSengketa}%"></div>
+                                </div>
+                            </div>
+                        `;
+                        layer.bindPopup(popupHtml).openPopup();
                     });
 
                     layer.on('mouseover', function () {
-                        this.setStyle({ fillOpacity: 0.75, weight: 4 });
+                        this.setStyle({ fillOpacity: 0.6, weight: 3.5 });
                     });
                     layer.on('mouseout', function () {
-                        this.setStyle({ fillOpacity: 0.50, weight: 2.5 });
+                        this.setStyle({ fillOpacity: 0.35, weight: 2 });
                     });
                 }
             }).addTo(kecamatanLayerGroup);
@@ -617,6 +709,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const drawerKoordinat = document.getElementById('drawerKoordinat');
     const btnDrawerGoogleMaps = document.getElementById('btnDrawerGoogleMaps');
     const btnDrawerEditAset = document.getElementById('btnDrawerEditAset');
+    const btnDrawerDirectRoute = document.getElementById('btnDrawerDirectRoute');
     const btnCloseDrawer = document.getElementById('btnCloseDrawer');
 
     btnCloseDrawer.addEventListener('click', () => drawer.classList.remove('active'));
@@ -641,9 +734,17 @@ document.addEventListener('DOMContentLoaded', function () {
         if (item.lat && item.lng) {
             btnDrawerGoogleMaps.href = `https://www.google.com/maps/search/?api=1&query=${item.lat},${item.lng}`;
             btnDrawerGoogleMaps.classList.remove('disabled');
+            if (btnDrawerDirectRoute) {
+                btnDrawerDirectRoute.onclick = () => routeToAsset(item.lat, item.lng);
+                btnDrawerDirectRoute.disabled = false;
+            }
         } else {
             btnDrawerGoogleMaps.href = '#';
             btnDrawerGoogleMaps.classList.add('disabled');
+            if (btnDrawerDirectRoute) {
+                btnDrawerDirectRoute.onclick = null;
+                btnDrawerDirectRoute.disabled = true;
+            }
         }
 
         btnDrawerEditAset.href = `{!! url('sipat/aset') !!}/${item.id}/edit`;
@@ -654,102 +755,152 @@ document.addEventListener('DOMContentLoaded', function () {
     const layerById = new Map();
     let isLabelsPermanent = false;
 
-    // Render Data Aset Tanah ke Peta
-    function renderMapFeatures(filterOpd = '', filterStatus = '') {
-        activeLayerGroup.clearLayers();
-        layerById.clear();
+    // Variable Navigasi Rute & Marker Realtime (SIGEO Style)
+    let routePolyline = null;
+    let userLocationMarker = null;
+    let destinationMarker = null;
+    let currentUserLat = null;
+    let currentUserLng = null;
+    let targetLat = null;
+    let targetLng = null;
+    let lastRouteUpdate = 0;
 
-        let count = 0;
-        const bounds = [];
-
-        rawFeatures.forEach(item => {
-            if (filterOpd && String(item.opd_id) !== String(filterOpd)) return;
-            if (filterStatus && String(item.status_id) !== String(filterStatus)) return;
-
-            const colors = getStatusColor(item);
-
-            let spatialArea = null;
-            let spatialAreaStr = '-';
-            if (item.has_polygon && typeof turf !== 'undefined' && item.geojson_data) {
-                try {
-                    spatialArea = turf.area(item.geojson_data);
-                    spatialAreaStr = Number(spatialArea.toFixed(1)).toLocaleString('id-ID') + ' m²';
-                } catch (e) {}
-            }
-
-            if (item.has_polygon && item.geojson_data) {
-                // Render Poligon Aset Tanah
-                try {
-                    const polyLayer = L.geoJSON(item.geojson_data, {
-                        pane: 'assetPolygonPane',
-                        style: {
-                            color: colors.color,
-                            weight: 2.5,
-                            fillColor: colors.fill,
-                            fillOpacity: 0.6
-                        }
-                    });
-
-                    polyLayer.bindTooltip(`<b>${sipatEscape(item.kode)}</b> - ${sipatEscape(item.nama)}`, {
-                        sticky: true,
-                        permanent: isLabelsPermanent
-                    });
-
-                    polyLayer.on('mouseover', function () {
-                        this.setStyle({ weight: 4.5, fillOpacity: 0.85 });
-                    });
-                    polyLayer.on('mouseout', function () {
-                        this.setStyle({ weight: 2.5, fillOpacity: 0.6 });
-                    });
-
-                    polyLayer.on('click', function () {
-                        openAssetDrawer(item, spatialAreaStr);
-                    });
-
-                    activeLayerGroup.addLayer(polyLayer);
-                    layerById.set(item.id, polyLayer);
-                    bounds.push(polyLayer.getBounds());
-                    count++;
-                } catch (e) {
-                    console.warn('Gagal render poligon ID ' + item.id, e);
+    // Track GPS Lokasi Pengguna
+    if (navigator.geolocation) {
+        navigator.geolocation.watchPosition(
+            function (pos) {
+                currentUserLat = pos.coords.latitude;
+                currentUserLng = pos.coords.longitude;
+                if (targetLat && targetLng) {
+                    hitungRuteNavigasi();
                 }
-            } else if (item.lat !== null && item.lng !== null && !Number.isNaN(item.lat) && !Number.isNaN(item.lng)) {
-                // Render Marker Titik
-                const marker = L.circleMarker([item.lat, item.lng], {
-                    radius: 7.5,
-                    fillColor: colors.fill,
-                    color: '#ffffff',
-                    weight: 2.5,
-                    opacity: 1,
-                    fillOpacity: 0.95
-                });
+            },
+            function (err) {
+                console.warn('GPS Error / Izin Ditolak:', err);
+            },
+            { enableHighAccuracy: true, maximumAge: 5000, timeout: 10000 }
+        );
+    }
 
-                marker.bindTooltip(`<b>${sipatEscape(item.kode)}</b> - ${sipatEscape(item.nama)}`, {
-                    sticky: true,
-                    permanent: isLabelsPermanent
-                });
+    function routeToAsset(lat, lng) {
+        if (!lat || !lng || isNaN(lat) || isNaN(lng)) {
+            alert('Koordinat aset ini tidak valid.');
+            return;
+        }
+        if (!currentUserLat || !currentUserLng) {
+            alert('Lokasi GPS Anda belum terdeteksi. Pastikan izin lokasi/GPS di browser telah diaktifkan.');
+            return;
+        }
 
-                marker.on('click', function () {
-                    openAssetDrawer(item, '-');
-                });
+        targetLat = lat;
+        targetLng = lng;
 
-                activeLayerGroup.addLayer(marker);
-                layerById.set(item.id, marker);
-                bounds.push([item.lat, item.lng]);
-                count++;
+        if (userLocationMarker) map.removeLayer(userLocationMarker);
+        userLocationMarker = L.marker([currentUserLat, currentUserLng], {
+            icon: L.divIcon({
+                className: 'custom-user-marker',
+                html: '<div style="background:#2563eb; width:16px; height:16px; border-radius:50%; border:3px solid #fff; box-shadow:0 0 10px rgba(37,99,235,0.6);"></div>',
+                iconSize: [16, 16],
+                iconAnchor: [8, 8]
+            })
+        }).addTo(map).bindTooltip('Lokasi Saya', { permanent: false });
+
+        if (destinationMarker) map.removeLayer(destinationMarker);
+        destinationMarker = L.marker([lat, lng], {
+            icon: L.divIcon({
+                className: 'custom-dest-marker',
+                html: '<div style="background:#dc2626; width:20px; height:20px; border-radius:50%; border:3px solid #fff; box-shadow:0 0 10px rgba(220,38,38,0.6); text-align:center; color:#fff; font-size:10px; line-height:14px;">📍</div>',
+                iconSize: [20, 20],
+                iconAnchor: [10, 10]
+            })
+        }).addTo(map).bindTooltip('Tujuan Aset', { permanent: false });
+
+        hitungRuteNavigasi();
+    }
+
+    function stopNavigasiRute() {
+        if (routePolyline) { map.removeLayer(routePolyline); routePolyline = null; }
+        if (userLocationMarker) { map.removeLayer(userLocationMarker); userLocationMarker = null; }
+        if (destinationMarker) { map.removeLayer(destinationMarker); destinationMarker = null; }
+        targetLat = null; targetLng = null;
+        const panelInfo = document.getElementById('infoRutePanel');
+        if (panelInfo) panelInfo.style.display = 'none';
+    }
+
+    async function hitungRuteNavigasi() {
+        if (!currentUserLat || !currentUserLng || !targetLat || !targetLng) return;
+        if (Date.now() - lastRouteUpdate < 3000) return;
+        lastRouteUpdate = Date.now();
+
+        const mode = document.getElementById('modeTransportSelect')?.value || 'driving-car';
+        const apiKey = "eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6ImRmNmU1YWExNzBiMDQzNGQ4YWRhNGFlMmUzOTQ4N2QxIiwiaCI6Im11cm11cjY0In0=";
+        const url = `https://api.openrouteservice.org/v2/directions/${mode}?api_key=${apiKey}&start=${currentUserLng},${currentUserLat}&end=${targetLng},${targetLat}`;
+
+        try {
+            const resp = await fetch(url);
+            const data = await resp.json();
+            if (!data.features || data.features.length === 0) return;
+
+            if (routePolyline) map.removeLayer(routePolyline);
+            const coords = data.features[0].geometry.coordinates.map(c => [c[1], c[0]]);
+
+            routePolyline = L.polyline(coords, {
+                color: '#2563eb',
+                weight: 5,
+                opacity: 0.85,
+                dashArray: mode === 'foot-walking' ? '8, 8' : null
+            }).addTo(map);
+
+            map.fitBounds(routePolyline.getBounds(), { padding: [60, 60] });
+
+            const s = data.features[0].properties.summary;
+            const jarak = (s.distance / 1000).toFixed(2);
+            const waktu = Math.round(s.duration / 60);
+
+            let panelInfo = document.getElementById('infoRutePanel');
+            if (!panelInfo) {
+                panelInfo = document.createElement('div');
+                panelInfo.id = 'infoRutePanel';
+                panelInfo.style.cssText = 'position:absolute; bottom:20px; right:20px; z-index:1000; background:rgba(255,255,255,0.96); backdrop-filter:blur(10px); padding:14px 18px; border-radius:14px; box-shadow:0 10px 25px rgba(0,0,0,0.15); border:1px solid rgba(0,0,0,0.08); font-size:13px; font-weight:600; min-width:200px;';
+                document.getElementById('mapCardContainer').appendChild(panelInfo);
             }
-        });
 
-        document.getElementById('renderedCount').textContent = count;
-
-        if (bounds.length > 0) {
-            try {
-                map.fitBounds(bounds, { padding: [40, 40], maxZoom: 16 });
-            } catch (err) {}
-        } else {
-            map.setView(donggalaCenter, 11);
+            panelInfo.style.display = 'block';
+            panelInfo.innerHTML = `
+                <div class="d-flex justify-content-between align-items-center mb-1 text-primary">
+                    <span>🧭 Navigasi Rute Active</span>
+                    <button class="btn-close btn-close-xs" onclick="stopNavigasiRute()"></button>
+                </div>
+                <div class="text-dark">📏 Jarak: <strong class="font-monospace text-primary">${jarak} km</strong></div>
+                <div class="text-dark">⏱️ Estimasi: <strong class="font-monospace text-success">${waktu} menit</strong></div>
+                <div class="mt-2">
+                    <select id="modeTransportSelect" onchange="hitungRuteNavigasi()" class="form-select form-select-sm" style="font-size:11px;">
+                        <option value="driving-car" ${mode==='driving-car'?'selected':''}>🚗 Mobil / Motor</option>
+                        <option value="cycling-regular" ${mode==='cycling-regular'?'selected':''}>🚴 Sepeda</option>
+                        <option value="foot-walking" ${mode==='foot-walking'?'selected':''}>🚶 Jalan Kaki</option>
+                    </select>
+                </div>
+                <button onclick="stopNavigasiRute()" class="btn btn-sm btn-outline-danger w-100 mt-2 rounded-pill py-1" style="font-size:11px;">Hentikan Navigasi</button>
+            `;
+        } catch (e) {
+            console.warn('Gagal menghitung rute OpenRouteService:', e);
         }
     }
+
+    // Adaptive Zoom Switching (Circle Marker vs Poligon - SIGEO Pattern)
+    map.on('zoomend', function () {
+        const zoom = map.getZoom();
+        activeLayerGroup.eachLayer(layer => {
+            if (layer._isPolygonPoly) {
+                if (zoom < 15) map.removeLayer(layer);
+                else if (!map.hasLayer(layer)) map.addLayer(layer);
+            }
+            if (layer._isPolygonCentroidMarker) {
+                if (zoom >= 15) map.removeLayer(layer);
+                else if (!map.hasLayer(layer)) map.addLayer(layer);
+            }
+        });
+    });
 
     // Memuat data spasial secara asinkron dari endpoint /sipat/peta/data
     async function loadSpatialData() {
