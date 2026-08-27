@@ -58,6 +58,7 @@ Route::get('settings/backups/download/{fileName}', [\App\Http\Controllers\Backup
 Route::delete('settings/backups/{fileName}', [\App\Http\Controllers\BackupController::class, 'destroy'])->name('settings.backups.destroy')->where('fileName', '.*');
 Route::post('settings/backups/sync-db', [\App\Http\Controllers\BackupController::class, 'syncDb'])->name('settings.backups.sync-db');
 Route::get('settings/backups/sync-db-status', [\App\Http\Controllers\BackupController::class, 'syncDbStatus'])->name('settings.backups.sync-db-status');
+Route::get('settings/backups/sync-db-stream', [\App\Http\Controllers\BackupController::class, 'syncDbStream'])->name('settings.backups.sync-db-stream');
 Route::post('settings/backups/restore-sql', [\App\Http\Controllers\BackupController::class, 'restoreSql'])->name('settings.backups.restore-sql');
 
 Route::post('users/generate-opd-accounts', [UserController::class, 'generateAllOpdAccounts'])->name('users.generate-opd-accounts');
