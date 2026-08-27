@@ -20,7 +20,7 @@ Dokumen ini merupakan sumber kebenaran tunggal (*Single Source of Truth*) mengen
   - **Typography:** Plus Jakarta Sans (Local via @fontsource) & Monospace untuk plat nomor/kode box.
   - **GIS & Pemetaan Spasial:** Leaflet.js, Turf.js (`turf.min.js`), Shp.js (`shp.js`), Leaflet.Draw (`leaflet.draw.js`/`css`), serta aset GeoJSON dan Shapefile (.shp/.dbf) untuk render peta interaktif sebaran aset tanah & target pensertifikatan.
 - **Data Engine:** Laravel Excel (Maatwebsite/Excel) sebagai mesin utama pengolahan Impor & Ekspor data massal, serta mPDF sebagai mesin render PDF formal server-side pada Modul Laporan, ekspor Surat SKPT, dan cetak dokumen.
-- **Infrastruktur / Deployment:** Mendukung eksekusi lokal berbasis **Laragon** serta telah disiapkan konfigurasi **Docker** (`Dockerfile` & `docker-compose.yml`) untuk kemudahan kontainerisasi.
+- **Infrastruktur / Deployment:** Berjalan secara native di Linux / server lokal (Nginx + PHP-FPM 8.2+ & MySQL/MariaDB).
 
 ---
 
