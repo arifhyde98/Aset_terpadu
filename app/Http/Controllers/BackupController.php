@@ -180,15 +180,22 @@ class BackupController extends Controller implements HasMiddleware
     public function syncDb(Request $request): RedirectResponse
     {
         try {
-            $command = "mysqldump -u bpkad.aset -padmin123 --no-tablespaces --no-create-info --complete-insert --insert-ignore db_sipat_terpadu | mysql --force -u bpkad.aset -padmin123 db_sipat_staging 2>&1";
+            $command = "mysqldump -u bpkad.aset -padmin123 --no-tablespaces --add-drop-table db_sipat_terpadu | mysql --force -u bpkad.aset -padmin123 db_sipat_staging 2>&1";
             exec($command, $output, $returnCode);
 
+            if ($returnCode !== 0) {
+                $errorMsg = !empty($output) ? implode("\n", $output) : 'Unknown error (code: ' . $returnCode . ')';
+                Log::error('Gagal sinkronisasi database staging: ' . $errorMsg);
+                return redirect()->route('settings.backups.index')
+                    ->with('error', 'Gagal menyinkronkan database: ' . $errorMsg);
+            }
+
             if (class_exists('\App\Models\Activity')) {
-                \App\Models\Activity::log("Menyinkronkan data dari db_sipat_terpadu ke db_sipat_staging", 'info');
+                \App\Models\Activity::log("Menyinkronkan data penuh (100% replace) dari db_sipat_terpadu ke db_sipat_staging", 'info');
             }
 
             return redirect()->route('settings.backups.index')
-                ->with('success', 'Berhasil menyinkronkan seluruh data dari database SIPAT Terpadu!');
+                ->with('success', 'Berhasil menyinkronkan database secara penuh! Database Staging kini 100% identik dengan SIPAT Terpadu.');
         } catch (\Exception $e) {
             Log::error('Gagal sinkronisasi database staging: ' . $e->getMessage());
             return redirect()->route('settings.backups.index')
