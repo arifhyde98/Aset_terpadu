@@ -103,6 +103,7 @@ Logika bisnis dan kalkulasi diletakkan di dalam kelas *Service*:
 - `VehicleService`: statistik dashboard, helper cache kendaraan, pencarian, dan utilitas bisnis kendaraan.
 - `ReportService`: ringkasan laporan, orkestrasi preview terpaginasi, dan integrasi strategi laporan modular.
 - `AsetTanahService`: ringkasan dan query pencarian aset tanah SIPAT. Kueri Master Aset Tanah diurutkan menggunakan `CASE` SQL agar aset yang memiliki NIBAR resmi selalu berada di posisi paling atas, sedangkan tanah usulan / NIBAR sementara (`DRAFT-`, `BELUM-`, null, `-`) berada di posisi paling bawah.
+- `ElabelSmartBpkbExtractorController`: modul terisolasi pada rute `/elabel/bpkb-smart-extractor` untuk pembacaan isi dokumen PDF BPKB otomatis (*Smart PDF Extractor & OCR*) dengan verifikasi 4 aturan presisi (Pencocokan Nopol 100% Persis, Proteksi Berkas Ganda, dan Dry-Run Audit Preview).
 - `BackupController@restoreSql`: utilitas upload dan restore database secara menyeluruh dari berkas `.sql`, `.gz`, atau `.zip` dump database MySQL.
 - `BackupController@syncDb`: utilitas sinkronisasi database staging dari `db_sipat_terpadu` ke `db_sipat_staging` via perintah shell `mysqldump` terisolasi khusus lingkungan lokal/staging.
 
