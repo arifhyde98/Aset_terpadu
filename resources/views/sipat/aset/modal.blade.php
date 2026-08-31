@@ -508,12 +508,18 @@
                             <p class="text-secondary small mb-3">Klik tombol di bawah untuk mendaftarkan sertifikat tanah ini langsung ke Katalog eLabel dengan data terisi otomatis.</p>
                             
                             <a href="{{ route('elabel.sertifikat.create', [
-                                'no_sertipikat' => $aset->no_sertifikat ?? '',
                                 'nibar' => $aset->kode_aset ?? '',
+                                'no_sertipikat' => $aset->no_sertifikat ?? '',
+                                'spesifikasi' => $aset->nama_aset ?? '',
+                                'dinas' => $aset->opdSipat->nama ?? $aset->opd ?? '',
+                                'sipat_opd_id' => $aset->opd_id ?? '',
                                 'nama_pemilik' => 'Pemerintah Kabupaten Donggala',
-                                'dinas' => $aset->opd ?? '',
                                 'luas' => $aset->luas ?? '',
+                                'tanggal_perolehan' => $aset->tanggal_perolehan ?? '',
+                                'nilai_perolehan' => $aset->harga_perolehan ?? '',
+                                'cara_perolehan' => $aset->dasar_perolehan ?? '',
                                 'alamat' => $aset->alamat ?? '',
+                                'status_penggunaan' => $aset->peruntukan ?? '',
                             ]) }}" target="_blank" class="btn btn-primary fw-bold px-4 py-2 shadow-sm">
                                 <i class="bi bi-plus-lg me-1"></i> + Daftarkan ke Katalog eLabel
                             </a>

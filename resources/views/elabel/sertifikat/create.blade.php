@@ -44,7 +44,7 @@
                 <div class="row g-3 mb-4">
                     <div class="col-md-4">
                         <label class="form-label fw-semibold small">No. Sertipikat <span class="text-danger">*</span></label>
-                        <input type="text" name="no_sertipikat" value="{{ old('no_sertipikat') }}" class="form-control" placeholder="123/ABC/2024" required>
+                        <input type="text" name="no_sertipikat" value="{{ old('no_sertipikat', $item['no_sertipikat'] ?? '') }}" class="form-control" placeholder="123/ABC/2024" required>
                     </div>
 
                     <div class="col-md-4">
