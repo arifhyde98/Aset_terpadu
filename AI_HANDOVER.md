@@ -177,7 +177,7 @@ Aplikasi **menggunakan sentuhan visual premium & animasi mikro kustom** secara b
 ### C. Modul eLABEL (Pengarsipan & Labelisasi)
 - **Katalog & Box BPKB**: Pengarsipan BPKB ke dalam box fisik, pencetakan stiker label barcode box, dan penggabungan/merge box BPKB.
 - **Smart BPKB PDF Folder Scanner**: Pemindaian folder lokal server/PC dengan dry-run audit, penautan otomatis PDF ke record BPKB DB (`elabel/bpkb/`), timer elapsed pemindaian (S1), checkbox selektif (S2), pratinjau PDF di tab baru (S3), export hasil audit CSV (S4), dukungan nopol multi-prefix Sulawesi (S5), serta reset hasil audit (S6).
-- **Sertifikat Tanah & Box**: Pengarsipan fisik sertifikat tanah dengan operasi split (pecah) and merge (gabung) box.
+- **Sertifikat Tanah & Box**: Pengarsipan fisik sertifikat tanah dengan integrasi otomatis ke Master Aset Tanah (SIPAT), pemilihan lokasi/kecamatan terstandarisasi via dropdown Master Kecamatan SIPAT, dan operasi split (pecah) and merge (gabung) box.
 - **Peminjaman Dokumen (Scan Request)**: Alur permohonan peminjaman berkas fisik atau file scan dokumen oleh operator OPD dengan validasi status persetujuan dari admin global.
 
 ---
