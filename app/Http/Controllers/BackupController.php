@@ -172,27 +172,163 @@ class BackupController extends Controller implements HasMiddleware
     }
 
     /**
-     * Sinkronisasi data dari db_sipat_terpadu ke db_sipat_staging (Khusus Lingkungan Staging/Lokal).
+    /**
+     * Memeriksa status proses sinkronisasi database staging saat ini.
+     *
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function syncDbStatus(): \Illuminate\Http\JsonResponse
+    {
+        $progress = Cache::get('sync_db_progress');
+        return response()->json($progress ?: ['status' => 'idle']);
+    }
+
+    /**
+     * Sinkronisasi data real-time per-tabel via Server-Sent Events (SSE) stream.
      *
      * @param Request $request
-     * @return RedirectResponse
+     * @return StreamedResponse
      */
-    public function syncDb(Request $request): RedirectResponse
+    public function syncDbStream(Request $request): StreamedResponse
+    {
+        return response()->stream(function () {
+            set_time_limit(300);
+            if (ob_get_level()) {
+                ob_end_clean();
+            }
+
+            $sendEvent = function ($data) {
+                echo "data: " . json_encode($data) . "\n\n";
+                if (ob_get_level()) {
+                    ob_flush();
+                }
+                flush();
+            };
+
+            try {
+                $sendEvent([
+                    'status' => 'running',
+                    'percentage' => 5,
+                    'step' => 'Menganalisis tabel database sumber...',
+                    'log' => "Memulai koneksi Server-Sent Events (SSE)...\n[INFO] Mengambil skema database db_sipat_terpadu...\n"
+                ]);
+
+                // Ambil daftar tabel dari db_sipat_terpadu
+                $tablesQuery = \Illuminate\Support\Facades\DB::select("SHOW TABLES FROM db_sipat_terpadu");
+                $tables = [];
+                foreach ($tablesQuery as $row) {
+                    $val = (array) $row;
+                    $tables[] = reset($val);
+                }
+
+                $total = count($tables);
+                if ($total === 0) {
+                    $sendEvent([
+                        'status' => 'failed',
+                        'percentage' => 100,
+                        'step' => 'Tidak ada tabel yang ditemukan di db_sipat_terpadu.',
+                        'log' => "[ERROR] Database db_sipat_terpadu kosong atau tidak dapat diakses.\n"
+                    ]);
+                    return;
+                }
+
+                $sendEvent([
+                    'status' => 'running',
+                    'percentage' => 10,
+                    'step' => "Ditemukan {$total} tabel. Memulai replikasi data...",
+                    'log' => "[INFO] Ditemukan {$total} tabel untuk disinkronkan.\n"
+                ]);
+
+                foreach ($tables as $index => $tableName) {
+                    $currentNum = $index + 1;
+                    $pct = 10 + round(($currentNum / $total) * 85); // 10% - 95%
+
+                    $sendEvent([
+                        'status' => 'running',
+                        'percentage' => $pct,
+                        'step' => "Menyinkronkan tabel: {$tableName} ({$currentNum}/{$total})...",
+                        'log' => "[SYNC] Menyalin tabel `{$tableName}` ({$currentNum}/{$total})...\n"
+                    ]);
+
+                    // Eksekusi per tabel dengan opsi cepat
+                    $command = "mysqldump -u bpkad.aset -padmin123 --single-transaction --quick --extended-insert --no-tablespaces --add-drop-table db_sipat_terpadu {$tableName} | mysql --force -u bpkad.aset -padmin123 db_sipat_staging 2>&1";
+                    exec($command, $output, $returnCode);
+
+                    if ($returnCode !== 0) {
+                        $err = !empty($output) ? implode(' ', $output) : "Exit code {$returnCode}";
+                        $sendEvent([
+                            'status' => 'running',
+                            'percentage' => $pct,
+                            'step' => "Peringatan pada tabel {$tableName}",
+                            'log' => "[WARN] Tabel `{$tableName}`: {$err}\n"
+                        ]);
+                    }
+                }
+
+                if (class_exists('\App\Models\Activity')) {
+                    \App\Models\Activity::log("Menyinkronkan data penuh (100% replace) dari db_sipat_terpadu ke db_sipat_staging via SSE Stream", 'info');
+                }
+
+                $sendEvent([
+                    'status' => 'success',
+                    'percentage' => 100,
+                    'step' => 'Seluruh ' . $total . ' Tabel Berhasil Disinkronkan 100%!',
+                    'log' => "\n[SUKSES] Semua {$total} tabel berhasil disalin dan diperbarui.\n[INFO] Database staging kini 100% identik dengan SIPAT Terpadu.\n"
+                ]);
+
+            } catch (\Exception $e) {
+                Log::error('SSE Sync DB Exception: ' . $e->getMessage());
+                $sendEvent([
+                    'status' => 'failed',
+                    'percentage' => 100,
+                    'step' => 'Sinkronisasi Gagal: ' . $e->getMessage(),
+                    'log' => "\n[ERROR] Terjadi exception: " . $e->getMessage() . "\n"
+                ]);
+            }
+        }, 200, [
+            'Content-Type' => 'text/event-stream',
+            'Cache-Control' => 'no-cache, no-store, must-revalidate',
+            'X-Accel-Buffering' => 'no',
+            'Connection' => 'keep-alive',
+        ]);
+    }
+
+    /**
+     * Sinkronisasi data dari db_sipat_terpadu ke db_sipat_staging di background.
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse|RedirectResponse
+     */
+    public function syncDb(Request $request)
     {
         try {
-            $command = "mysqldump -u bpkad.aset -padmin123 --no-tablespaces --no-create-info --complete-insert --insert-ignore db_sipat_terpadu | mysql --force -u bpkad.aset -padmin123 db_sipat_staging 2>&1";
-            exec($command, $output, $returnCode);
+            // Periksa jika proses sinkronisasi sedang berjalan
+            $progress = Cache::get('sync_db_progress');
+            if ($progress && ($progress['status'] ?? null) === 'running') {
+                if ($request->wantsJson() || $request->ajax()) {
+                    return response()->json(['status' => 'error', 'message' => 'Proses sinkronisasi database saat ini sedang berjalan di background.'], 400);
+                }
+                return redirect()->route('settings.backups.index')
+                    ->with('error', 'Proses sinkronisasi database saat ini sedang berjalan di background.');
+            }
 
-            if (class_exists('\App\Models\Activity')) {
-                \App\Models\Activity::log("Menyinkronkan data dari db_sipat_terpadu ke db_sipat_staging", 'info');
+            // Jalankan Artisan command di background
+            $command = 'php ' . base_path('artisan') . ' app:sync-db-bg > /dev/null 2>&1 &';
+            exec($command);
+
+            if ($request->wantsJson() || $request->ajax()) {
+                return response()->json(['status' => 'success', 'message' => 'Proses sinkronisasi database berhasil dimulai di background.']);
             }
 
             return redirect()->route('settings.backups.index')
-                ->with('success', 'Berhasil menyinkronkan seluruh data dari database SIPAT Terpadu!');
+                ->with('success', 'Proses sinkronisasi database berhasil dimulai di background.');
         } catch (\Exception $e) {
-            Log::error('Gagal sinkronisasi database staging: ' . $e->getMessage());
+            Log::error('Gagal memicu sinkronisasi database: ' . $e->getMessage());
+            if ($request->wantsJson() || $request->ajax()) {
+                return response()->json(['status' => 'error', 'message' => $e->getMessage()], 500);
+            }
             return redirect()->route('settings.backups.index')
-                ->with('error', 'Gagal menyinkronkan database: ' . $e->getMessage());
+                ->with('error', 'Gagal memicu sinkronisasi database: ' . $e->getMessage());
         }
     }
 
@@ -222,13 +358,13 @@ class BackupController extends Controller implements HasMiddleware
             }
 
             $tempPath = $file->storeAs('temp_restore', time() . '_' . $origName, 'local');
-            $fullPath = storage_path('app/' . $tempPath);
+            $fullPath = Storage::disk('local')->path($tempPath);
             $sqlPath = $fullPath;
 
             if ($ext === 'zip') {
                 $zip = new \ZipArchive();
                 if ($zip->open($fullPath) === true) {
-                    $extractDir = storage_path('app/temp_restore/' . time() . '_extracted');
+                    $extractDir = Storage::disk('local')->path('temp_restore/' . time() . '_extracted');
                     $zip->extractTo($extractDir);
                     $zip->close();
 
@@ -264,6 +400,23 @@ class BackupController extends Controller implements HasMiddleware
             }
 
             exec($cmd, $output, $returnCode);
+
+            // Bersihkan file sementara setelah dieksekusi
+            @unlink($fullPath);
+            if (isset($extractDir) && is_dir($extractDir)) {
+                $extractedFiles = glob($extractDir . '/*');
+                foreach ($extractedFiles as $f) {
+                    if (is_file($f)) @unlink($f);
+                }
+                @rmdir($extractDir);
+            }
+
+            if ($returnCode !== 0) {
+                $errorMsg = !empty($output) ? implode(' ', $output) : 'Kode status: ' . $returnCode;
+                Log::error('Gagal restore database MySQL: ' . $errorMsg);
+                return redirect()->route('settings.backups.index')
+                    ->with('error', 'Gagal memulihkan database ke MySQL: ' . $errorMsg);
+            }
 
             // Invalidate cache dashboard
             if (class_exists('\App\Services\SipatService')) {

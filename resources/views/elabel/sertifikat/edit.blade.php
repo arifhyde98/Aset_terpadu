@@ -95,7 +95,17 @@
 
                     <div class="col-md-3">
                         <label class="form-label fw-semibold small">Lokasi / Kecamatan</label>
-                        <input type="text" name="lokasi" value="{{ old('lokasi', $item->lokasi) }}" class="form-control">
+                        <select name="lokasi" class="form-select">
+                            <option value="">-- Pilih Kecamatan --</option>
+                            @foreach($kecamatans as $kec)
+                                <option value="{{ $kec->nama }}" {{ old('lokasi', $item->lokasi) == $kec->nama ? 'selected' : '' }}>
+                                    {{ $kec->nama }}
+                                </option>
+                            @endforeach
+                            @if($item->lokasi && !$kecamatans->contains('nama', $item->lokasi))
+                                <option value="{{ $item->lokasi }}" selected>{{ $item->lokasi }}</option>
+                            @endif
+                        </select>
                     </div>
 
                     <div class="col-md-3">

@@ -52,7 +52,7 @@
                     <tr>
                         <th class="py-3 px-4 text-center" style="width: 50px;">No.</th>
                         <th class="py-3">No. Sertipikat</th>
-                        <th class="py-3">Pemilik / Pengguna</th>
+                        <th class="py-3">Status Penggunaan / Dinas</th>
                         <th class="py-3">Lokasi / Alamat</th>
                         <th class="py-3 text-end">Luas (m²)</th>
                         <th class="py-3 text-center">Box Fisik</th>
@@ -67,7 +67,7 @@
                                 <div class="fw-bold text-navy"><i class="bi bi-patch-check-fill text-success me-1"></i> {{ $item->no_sertipikat }}</div>
                             </td>
                             <td>
-                                <div class="fw-medium text-dark">{{ $item->nama_pemilik ?: '-' }}</div>
+                                <div class="fw-medium text-dark">{{ $item->status_penggunaan ?: '-' }}</div>
                                 <div class="small text-secondary">Dinas: {{ $item->opdSipat ? $item->opdSipat->nama : ($item->dinas ?: '-') }}</div>
                             </td>
                             <td>

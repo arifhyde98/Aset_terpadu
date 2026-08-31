@@ -20,7 +20,7 @@ Dokumen ini merupakan sumber kebenaran tunggal (*Single Source of Truth*) mengen
   - **Typography:** Plus Jakarta Sans (Local via @fontsource) & Monospace untuk plat nomor/kode box.
   - **GIS & Pemetaan Spasial:** Leaflet.js, Turf.js (`turf.min.js`), Shp.js (`shp.js`), Leaflet.Draw (`leaflet.draw.js`/`css`), serta aset GeoJSON dan Shapefile (.shp/.dbf) untuk render peta interaktif sebaran aset tanah & target pensertifikatan.
 - **Data Engine:** Laravel Excel (Maatwebsite/Excel) sebagai mesin utama pengolahan Impor & Ekspor data massal, serta mPDF sebagai mesin render PDF formal server-side pada Modul Laporan, ekspor Surat SKPT, dan cetak dokumen.
-- **Infrastruktur / Deployment:** Mendukung eksekusi lokal berbasis **Laragon** serta telah disiapkan konfigurasi **Docker** (`Dockerfile` & `docker-compose.yml`) untuk kemudahan kontainerisasi.
+- **Infrastruktur / Deployment:** Berjalan secara native di Linux / server lokal (Nginx + PHP-FPM 8.2+ & MySQL/MariaDB).
 
 ---
 
@@ -105,7 +105,7 @@ Logika bisnis dan kalkulasi diletakkan di dalam kelas *Service*:
 - `AsetTanahService`: ringkasan dan query pencarian aset tanah SIPAT. Kueri Master Aset Tanah diurutkan menggunakan `CASE` SQL agar aset yang memiliki NIBAR resmi selalu berada di posisi paling atas, sedangkan tanah usulan / NIBAR sementara (`DRAFT-`, `BELUM-`, null, `-`) berada di posisi paling bawah.
 - `ElabelSmartBpkbExtractorController`: modul terisolasi pada rute `/elabel/bpkb-smart-extractor` untuk pembacaan isi dokumen PDF BPKB otomatis (*Smart PDF Extractor & OCR*) dengan verifikasi 4 aturan presisi (Pencocokan Nopol 100% Persis, Proteksi Berkas Ganda, dan Dry-Run Audit Preview).
 - `BackupController@restoreSql`: utilitas upload dan restore database secara menyeluruh dari berkas `.sql`, `.gz`, atau `.zip` dump database MySQL.
-- `BackupController@syncDb`: utilitas sinkronisasi database staging dari `db_sipat_terpadu` ke `db_sipat_staging` via perintah shell `mysqldump` terisolasi khusus lingkungan lokal/staging.
+- `BackupController@syncDb`, `BackupController@syncDbStream` & `RunSyncDbBg`: utilitas replikasi/sinkronisasi penuh database staging dari `db_sipat_terpadu` ke `db_sipat_staging` menggunakan arsitektur **Server-Sent Events (SSE) streaming per-tabel** via `mysqldump --single-transaction --quick --extended-insert --add-drop-table` yang mengalirkan progress real-time per tabel ke antarmuka pengguna tanpa delay, bebas dari risiko HTTP 504 Gateway Timeout Cloudflare, dan menjadikan staging 100% identik dengan database sumber.
 
 ### Arsitektur Modul Laporan E-RANDIS (*Reporting Architecture*)
 Modul Laporan dibangun secara modular menggunakan kombinasi **Service Layer**, **Registry Pattern**, dan **Strategy Pattern**:
@@ -177,7 +177,7 @@ Aplikasi **menggunakan sentuhan visual premium & animasi mikro kustom** secara b
 ### C. Modul eLABEL (Pengarsipan & Labelisasi)
 - **Katalog & Box BPKB**: Pengarsipan BPKB ke dalam box fisik, pencetakan stiker label barcode box, dan penggabungan/merge box BPKB.
 - **Smart BPKB PDF Folder Scanner**: Pemindaian folder lokal server/PC dengan dry-run audit, penautan otomatis PDF ke record BPKB DB (`elabel/bpkb/`), timer elapsed pemindaian (S1), checkbox selektif (S2), pratinjau PDF di tab baru (S3), export hasil audit CSV (S4), dukungan nopol multi-prefix Sulawesi (S5), serta reset hasil audit (S6).
-- **Sertifikat Tanah & Box**: Pengarsipan fisik sertifikat tanah dengan operasi split (pecah) and merge (gabung) box.
+- **Sertifikat Tanah & Box**: Pengarsipan fisik sertifikat tanah dengan integrasi otomatis ke Master Aset Tanah (SIPAT), pemilihan lokasi/kecamatan terstandarisasi via dropdown Master Kecamatan SIPAT, dan operasi split (pecah) and merge (gabung) box.
 - **Peminjaman Dokumen (Scan Request)**: Alur permohonan peminjaman berkas fisik atau file scan dokumen oleh operator OPD dengan validasi status persetujuan dari admin global.
 
 ---
@@ -207,7 +207,9 @@ Aplikasi **menggunakan sentuhan visual premium & animasi mikro kustom** secara b
 | **eLABEL** | GET | `/elabel/boxes/{id}/label` | `Elabel\ElabelBoxController@label` | Auth | Cetak Barcode Label Box |
 | **eLABEL** | GET | `/elabel/sertifikat` | `Elabel\ElabelSertifikatController@index` | Auth | Katalog Sertifikat Tanah |
 | **eLABEL** | GET | `/elabel/peminjaman` | `Elabel\ElabelLoanController@index` | Auth | Request Peminjaman Dokumen |
-| **System** | POST | `/settings/backups/sync-db` | `BackupController@syncDb` | Auth | Sinkronisasi DB Staging |
+| **System** | POST | `/settings/backups/sync-db` | `BackupController@syncDb` | Auth | Trigger background sinkronisasi DB Staging |
+| **System** | GET | `/settings/backups/sync-db-status` | `BackupController@syncDbStatus` | Auth | Polling status sinkronisasi DB Staging |
+| **System** | GET | `/settings/backups/sync-db-stream` | `BackupController@syncDbStream` | Auth | Real-time SSE streaming sinkronisasi DB Staging |
 
 ---
 

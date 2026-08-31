@@ -44,7 +44,7 @@
                 <div class="row g-3 mb-4">
                     <div class="col-md-4">
                         <label class="form-label fw-semibold small">No. Sertipikat <span class="text-danger">*</span></label>
-                        <input type="text" name="no_sertipikat" value="{{ old('no_sertipikat') }}" class="form-control" placeholder="123/ABC/2024" required>
+                        <input type="text" name="no_sertipikat" value="{{ old('no_sertipikat', $item['no_sertipikat'] ?? '') }}" class="form-control" placeholder="123/ABC/2024" required>
                     </div>
 
                     <div class="col-md-4">
@@ -94,7 +94,17 @@
 
                     <div class="col-md-3">
                         <label class="form-label fw-semibold small">Lokasi / Kecamatan</label>
-                        <input type="text" name="lokasi" value="{{ old('lokasi', $item['lokasi'] ?? '') }}" class="form-control" placeholder="Banawa / Donggala">
+                        <select name="lokasi" class="form-select">
+                            <option value="">-- Pilih Kecamatan --</option>
+                            @foreach($kecamatans as $kec)
+                                <option value="{{ $kec->nama }}" {{ old('lokasi', $item['lokasi'] ?? '') == $kec->nama ? 'selected' : '' }}>
+                                    {{ $kec->nama }}
+                                </option>
+                            @endforeach
+                            @if(isset($item['lokasi']) && $item['lokasi'] !== '' && !$kecamatans->contains('nama', $item['lokasi']))
+                                <option value="{{ $item['lokasi'] }}" selected>{{ $item['lokasi'] }}</option>
+                            @endif
+                        </select>
                     </div>
 
                     <div class="col-md-3">

@@ -59,6 +59,11 @@ class ElabelSertifikatController extends Controller implements HasMiddleware
     {
         $user = auth()->user();
         $nibar = $request->get('nibar');
+        $aset = null;
+
+        if (!empty($nibar)) {
+            $aset = \App\Models\AsetTanah::with(['latestProses.statusProses', 'opdSipat'])->where('kode_aset', $nibar)->first();
+        }
 
         // Jika role pengguna adalah admin, wajib mendaftar lewat SIPAT
         if ($user->role->value === 'admin') {
@@ -67,7 +72,6 @@ class ElabelSertifikatController extends Controller implements HasMiddleware
                     ->with('error', 'Role Admin wajib mendaftarkan sertifikat melalui modul SIPAT.');
             }
 
-            $aset = \App\Models\AsetTanah::with('latestProses.statusProses')->where('kode_aset', $nibar)->first();
             if (!$aset) {
                 return redirect()->route('elabel.sertifikat.index')
                     ->with('error', 'Kode aset (NIBAR) ' . $nibar . ' tidak ditemukan di SIPAT. Admin wajib mendaftarkan lewat SIPAT.');
@@ -89,46 +93,47 @@ class ElabelSertifikatController extends Controller implements HasMiddleware
             }
         } else {
             // Untuk superadmin (atau role lain jika ada), opsional melakukan pengecekan jika nibar disertakan
-            if ($nibar) {
-                $aset = \App\Models\AsetTanah::with('latestProses.statusProses')->where('kode_aset', $nibar)->first();
-                if ($aset) {
-                    $isBersertifikat = false;
-                    if ($aset->latestProses && $aset->latestProses->statusProses) {
-                        $status = $aset->latestProses->statusProses;
-                        if ($status->kategori === 'bersertifikat' || 
-                            str_contains(strtolower($status->nama_status), 'sertifikat') || 
-                            str_contains(strtolower($status->nama_status), 'selesai')) {
-                            $isBersertifikat = true;
-                        }
+            if ($nibar && $aset) {
+                $isBersertifikat = false;
+                if ($aset->latestProses && $aset->latestProses->statusProses) {
+                    $status = $aset->latestProses->statusProses;
+                    if ($status->kategori === 'bersertifikat' || 
+                        str_contains(strtolower($status->nama_status), 'sertifikat') || 
+                        str_contains(strtolower($status->nama_status), 'selesai')) {
+                        $isBersertifikat = true;
                     }
-                    
-                    if (!$isBersertifikat) {
-                        return redirect()->route('elabel.sertifikat.index')
-                            ->with('error', 'Aset tanah ' . $nibar . ' belum berstatus Bersertifikat / Selesai pada modul SIPAT.');
-                    }
+                }
+                
+                if (!$isBersertifikat) {
+                    return redirect()->route('elabel.sertifikat.index')
+                        ->with('error', 'Aset tanah ' . $nibar . ' belum berstatus Bersertifikat / Selesai pada modul SIPAT.');
                 }
             }
         }
 
         $item = [
-            'nibar'             => $request->get('nibar'),
-            'spesifikasi'       => $request->get('nama'),
-            'dinas'             => $request->get('opd'),
-            'nama_pemilik'      => $request->get('opd'),
-            'luas'              => $request->get('luas'),
-            'tanggal_perolehan' => $request->get('tanggal_perolehan'),
-            'nilai_perolehan'   => $request->get('nilai_perolehan'),
-            'cara_perolehan'    => $request->get('cara_perolehan'),
-            'alamat'            => $request->get('alamat'),
-            'lokasi'            => $request->get('alamat'),
-            'status_penggunaan' => $request->get('peruntukan'),
+            'no_sertipikat'     => $request->get('no_sertipikat') ?: ($aset->no_sertifikat ?? null),
+            'nibar'             => $request->get('nibar') ?: ($aset ? $aset->kode_aset : null),
+            'spesifikasi'       => $request->get('spesifikasi') ?: ($request->get('nama') ?: ($aset ? $aset->nama_aset : null)),
+            'dinas'             => $request->get('dinas') ?: ($request->get('opd') ?: ($aset ? ($aset->opdSipat->nama ?? $aset->opd) : null)),
+            'sipat_opd_id'      => $request->get('sipat_opd_id') ?: ($aset ? $aset->opd_id : null),
+            'nama_pemilik'      => $request->get('nama_pemilik') ?: ($aset ? 'Pemerintah Kabupaten Donggala' : null),
+            'luas'              => $request->get('luas') ?: ($aset ? $aset->luas : null),
+            'tanggal_perolehan' => $request->get('tanggal_perolehan') ?: ($aset ? $aset->tanggal_perolehan : null),
+            'nilai_perolehan'   => $request->get('nilai_perolehan') ?: ($aset ? $aset->harga_perolehan : null),
+            'cara_perolehan'    => $request->get('cara_perolehan') ?: ($aset ? $aset->dasar_perolehan : null),
+            'alamat'            => $request->get('alamat') ?: ($aset ? $aset->alamat : null),
+            'lokasi'            => $request->get('lokasi') ?: ($request->get('alamat') ?: ($aset ? $aset->alamat : null)),
+            'status_penggunaan' => $request->get('status_penggunaan') ?: ($request->get('peruntukan') ?: ($aset ? $aset->peruntukan : null)),
         ];
 
         $opds = \App\Models\OpdSipat::where('aktif', 1)->orderBy('nama', 'asc')->get();
+        $kecamatans = \App\Models\Kecamatan::orderBy('nama', 'asc')->get();
 
         return view('elabel.sertifikat.create', [
             'item'       => $item,
             'opds'       => $opds,
+            'kecamatans' => $kecamatans,
             'activeMenu' => 'sertifikat',
         ]);
     }
@@ -190,6 +195,13 @@ class ElabelSertifikatController extends Controller implements HasMiddleware
             return redirect()->back()->withInput()->with('error', $this->duplicateSertifikatMessage($duplicate));
         }
 
+        if (!empty($payload['sipat_opd_id'])) {
+            $opd = \App\Models\OpdSipat::find($payload['sipat_opd_id']);
+            if ($opd) {
+                $payload['dinas'] = $opd->nama;
+            }
+        }
+
         $payload['box_id'] = $this->resolveSertifikatBoxId($payload['lokasi'] ?? null);
 
         if ($request->hasFile('pdf') && $request->file('pdf')->isValid()) {
@@ -211,10 +223,12 @@ class ElabelSertifikatController extends Controller implements HasMiddleware
         }
 
         $opds = \App\Models\OpdSipat::where('aktif', 1)->orderBy('nama', 'asc')->get();
+        $kecamatans = \App\Models\Kecamatan::orderBy('nama', 'asc')->get();
 
         return view('elabel.sertifikat.edit', [
             'item'       => $item,
             'opds'       => $opds,
+            'kecamatans' => $kecamatans,
             'activeMenu' => 'sertifikat',
         ]);
     }
@@ -243,6 +257,13 @@ class ElabelSertifikatController extends Controller implements HasMiddleware
         $duplicate = $this->findDuplicateSertifikat($payload, $id);
         if ($duplicate !== null) {
             return redirect()->back()->withInput()->with('error', $this->duplicateSertifikatMessage($duplicate));
+        }
+
+        if (!empty($payload['sipat_opd_id'])) {
+            $opd = \App\Models\OpdSipat::find($payload['sipat_opd_id']);
+            if ($opd) {
+                $payload['dinas'] = $opd->nama;
+            }
         }
 
         $payload['box_id'] = $this->resolveSertifikatBoxId($payload['lokasi'] ?? null, $id, $item->box_id);
@@ -373,10 +394,13 @@ class ElabelSertifikatController extends Controller implements HasMiddleware
         $lokasi = trim((string) $lokasi);
         if ($lokasi === '') return null;
 
-        $boxes = ElabelSertifikatBox::where('lokasi', 'LIKE', "%{$lokasi}%")->orderBy('id', 'asc')->get();
+        // 1. Cari dulu Box yang lokasinya MATCH PERSIS (Exact Match)
+        $exactBoxes = ElabelSertifikatBox::whereRaw('LOWER(TRIM(lokasi)) = ?', [mb_strtolower($lokasi)])
+            ->orderBy('id', 'asc')
+            ->get();
 
         if ($preferredBoxId !== null) {
-            $prefBox = $boxes->firstWhere('id', $preferredBoxId);
+            $prefBox = $exactBoxes->firstWhere('id', $preferredBoxId);
             if ($prefBox) {
                 $count = ElabelSertifikat::where('box_id', $preferredBoxId)
                     ->when($excludeSertifikatId !== null, fn($q) => $q->where('id', '!=', $excludeSertifikatId))
@@ -387,7 +411,7 @@ class ElabelSertifikatController extends Controller implements HasMiddleware
             }
         }
 
-        foreach ($boxes as $box) {
+        foreach ($exactBoxes as $box) {
             $count = ElabelSertifikat::where('box_id', $box->id)
                 ->when($excludeSertifikatId !== null, fn($q) => $q->where('id', '!=', $excludeSertifikatId))
                 ->count();
@@ -396,9 +420,36 @@ class ElabelSertifikatController extends Controller implements HasMiddleware
             }
         }
 
-        // Create new box
-        $baseCode = $boxes->isNotEmpty() ? $boxes->first()->box_code : 'BOX-SERT-01';
-        $newCode = $boxes->isNotEmpty() ? $this->nextBoxCodeSuffix($baseCode) : 'BOX-SERT-01';
+        // 2. Jika tidak ada Exact Match, cari Box dengan kriteria Standalone Word Match (misal "Labuan, Tanantovea")
+        $allBoxes = ElabelSertifikatBox::where('lokasi', 'LIKE', "%{$lokasi}%")->orderBy('id', 'asc')->get();
+
+        $wordMatchBoxes = $allBoxes->filter(function ($box) use ($lokasi) {
+            $parts = array_map('trim', explode(',', mb_strtolower($box->lokasi)));
+            return in_array(mb_strtolower($lokasi), $parts, true);
+        });
+
+        foreach ($wordMatchBoxes as $box) {
+            $count = ElabelSertifikat::where('box_id', $box->id)
+                ->when($excludeSertifikatId !== null, fn($q) => $q->where('id', '!=', $excludeSertifikatId))
+                ->count();
+            if ($count < self::MAX_SERTIFIKAT_PER_BOX) {
+                return $box->id;
+            }
+        }
+
+        // 3. Fallback jika tidak ada exact/word match
+        foreach ($allBoxes as $box) {
+            $count = ElabelSertifikat::where('box_id', $box->id)
+                ->when($excludeSertifikatId !== null, fn($q) => $q->where('id', '!=', $excludeSertifikatId))
+                ->count();
+            if ($count < self::MAX_SERTIFIKAT_PER_BOX) {
+                return $box->id;
+            }
+        }
+
+        // 4. Buat Box Baru
+        $baseCode = $exactBoxes->isNotEmpty() ? $exactBoxes->first()->box_code : ($allBoxes->isNotEmpty() ? $allBoxes->first()->box_code : 'ST-01');
+        $newCode = $this->nextBoxCodeSuffix($baseCode);
 
         $newBox = ElabelSertifikatBox::create([
             'box_code'   => $newCode,
