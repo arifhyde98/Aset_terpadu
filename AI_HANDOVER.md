@@ -207,7 +207,9 @@ Aplikasi **menggunakan sentuhan visual premium & animasi mikro kustom** secara b
 | **eLABEL** | GET | `/elabel/boxes/{id}/label` | `Elabel\ElabelBoxController@label` | Auth | Cetak Barcode Label Box |
 | **eLABEL** | GET | `/elabel/sertifikat` | `Elabel\ElabelSertifikatController@index` | Auth | Katalog Sertifikat Tanah |
 | **eLABEL** | GET | `/elabel/peminjaman` | `Elabel\ElabelLoanController@index` | Auth | Request Peminjaman Dokumen |
-| **System** | POST | `/settings/backups/sync-db` | `BackupController@syncDb` | Auth | Sinkronisasi DB Staging |
+| **System** | POST | `/settings/backups/sync-db` | `BackupController@syncDb` | Auth | Trigger background sinkronisasi DB Staging |
+| **System** | GET | `/settings/backups/sync-db-status` | `BackupController@syncDbStatus` | Auth | Polling status sinkronisasi DB Staging |
+| **System** | GET | `/settings/backups/sync-db-stream` | `BackupController@syncDbStream` | Auth | Real-time SSE streaming sinkronisasi DB Staging |
 
 ---
 
