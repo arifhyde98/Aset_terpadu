@@ -31,7 +31,7 @@ Dokumen ini adalah ringkasan master proyek untuk platform **SIPAT Terpadu**. Unt
   - `Leaflet.js` & `turf.min.js` / `shp.js` (Rendering peta GIS interaktif, GeoJSON, dan Shapefile spasial)
   - `SweetAlert2` (Notifikasi interaktif dan konfirmasi CRUD)
   - `Bootstrap Icons` (Ikonografi antarmuka)
-- **Deployment Target**: Server lokal (Laragon) atau Container (Docker ready via `Dockerfile` & `docker-compose.yml`).
+- **Deployment Target**: Server lokal / VPS Linux (Nginx + PHP-FPM 8.2+ & MySQL/MariaDB).
 
 ---
 
