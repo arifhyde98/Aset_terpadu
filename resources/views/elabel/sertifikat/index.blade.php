@@ -68,7 +68,7 @@
                             </td>
                             <td>
                                 <div class="fw-medium text-dark">{{ $item->status_penggunaan ?: '-' }}</div>
-                                <div class="small text-secondary">Dinas: {{ $item->opdSipat ? $item->opdSipat->nama : ($item->dinas ?: '-') }}</div>
+                                <div class="small text-secondary">{{ $item->opdSipat ? $item->opdSipat->nama : ($item->dinas ?: '-') }}</div>
                             </td>
                             <td>
                                 <div class="fw-medium text-dark"><i class="bi bi-geo-alt text-danger me-1"></i> {{ $item->lokasi ?: '-' }}</div>

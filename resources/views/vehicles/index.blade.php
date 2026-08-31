@@ -1228,8 +1228,10 @@
                 // Buka modal
                 diagnosisModal.show();
 
+                const currentTab = "{{ request('tab', 'real') }}";
+
                 // Panggil Ajax Diagnosis
-                fetch("{{ route('vehicles.check-duplicates') }}", {
+                fetch("{{ route('vehicles.check-duplicates') }}?target_table=" + encodeURIComponent(currentTab), {
                     headers: {
                         'X-Requested-With': 'XMLHttpRequest',
                         'Accept': 'application/json'
@@ -1452,7 +1454,8 @@
                                 original_id: originalId,
                                 duplicate_id: duplicateId,
                                 action: action,
-                                direction: direction
+                                direction: direction,
+                                target_table: currentTab
                             })
                         })
                         .then(response => response.json())
@@ -1569,7 +1572,8 @@
                                 },
                                 body: JSON.stringify({
                                     target_opd_id: targetId,
-                                    source_opd_id: sourceId
+                                    source_opd_id: sourceId,
+                                    target_table: currentTab
                                 })
                             })
                             .then(response => response.json())

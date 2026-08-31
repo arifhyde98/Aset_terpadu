@@ -434,11 +434,18 @@ class VehicleController extends Controller implements HasMiddleware
      *
      * @return JsonResponse
      */
-    public function checkDuplicates(): JsonResponse
+    /**
+     * Menganalisis database dan mengembalikan daftar duplikasi kendaraan & OPD untuk modal diagnosis.
+     *
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function checkDuplicates(Request $request): JsonResponse
     {
         try {
-            $duplicateVehicles = $this->vehicleService->getDuplicateVehiclesList();
-            $duplicateOpds = $this->vehicleService->getDuplicateOpdsList();
+            $targetTable = $request->input('target_table') ?? $request->input('tab', 'real');
+            $duplicateVehicles = $this->vehicleService->getDuplicateVehiclesList($targetTable);
+            $duplicateOpds = $this->vehicleService->getDuplicateOpdsList($targetTable);
 
             $columnsToCompare = [
                 'no_polisi'       => 'Nomor Polisi',
@@ -540,12 +547,13 @@ class VehicleController extends Controller implements HasMiddleware
             $duplicateId = (int)$request->input('duplicate_id');
             $action = $request->input('action');
             $direction = $request->input('direction', 'keep_original');
+            $targetTable = $request->input('target_table') ?? $request->input('tab', 'real');
 
             if ($action === 'merge') {
                 if ($direction === 'keep_duplicate') {
-                    $success = $this->vehicleService->mergeVehicles($duplicateId, $originalId);
+                    $success = $this->vehicleService->mergeVehicles($duplicateId, $originalId, $targetTable);
                 } else {
-                    $success = $this->vehicleService->mergeVehicles($originalId, $duplicateId);
+                    $success = $this->vehicleService->mergeVehicles($originalId, $duplicateId, $targetTable);
                 }
                 
                 if (!$success) {
@@ -556,8 +564,9 @@ class VehicleController extends Controller implements HasMiddleware
                 }
                 $message = 'Data kendaraan berhasil digabungkan (kolom kosong terisi) dan duplikat dibersihkan.';
             } else {
-                $success = \DB::transaction(function () use ($duplicateId) {
-                    $duplicate = Vehicle::withoutGlobalScopes()->find($duplicateId);
+                $modelClass = $targetTable === 'ebmd' ? \App\Models\EbmdVehicle::class : Vehicle::class;
+                $success = \DB::transaction(function () use ($duplicateId, $modelClass) {
+                    $duplicate = $modelClass::withoutGlobalScopes()->find($duplicateId);
                     if ($duplicate) {
                         $duplicate->delete();
                         return true;
@@ -575,7 +584,7 @@ class VehicleController extends Controller implements HasMiddleware
             }
 
             \App\Models\Activity::log(
-                "Pembersihan duplikasi kendaraan [Aksi: {$action}, ID Induk: {$originalId}, ID Duplikat: {$duplicateId}]", 
+                "Pembersihan duplikasi kendaraan [Aksi: {$action}, ID Induk: {$originalId}, ID Duplikat: {$duplicateId}, Tabel: {$targetTable}]", 
                 'success'
             );
             
@@ -598,8 +607,9 @@ class VehicleController extends Controller implements HasMiddleware
         try {
             $targetId = (int)$request->input('target_opd_id');
             $sourceId = (int)$request->input('source_opd_id');
+            $targetTable = $request->input('target_table') ?? $request->input('tab', 'real');
 
-            $success = $this->vehicleService->mergeOpds($targetId, $sourceId);
+            $success = $this->vehicleService->mergeOpds($targetId, $sourceId, $targetTable);
             if (!$success) {
                 return response()->json([
                     'success' => false,
@@ -608,7 +618,7 @@ class VehicleController extends Controller implements HasMiddleware
             }
             
             \App\Models\Activity::log(
-                "Pembersihan dan konsolidasi OPD duplikat [OPD Target ID: {$targetId}, OPD Sumber ID: {$sourceId}]", 
+                "Pembersihan dan konsolidasi OPD duplikat [OPD Target ID: {$targetId}, OPD Sumber ID: {$sourceId}, Tabel: {$targetTable}]", 
                 'success'
             );
             

@@ -292,11 +292,13 @@ class VehicleService
     /**
      * Menganalisis dan mendeteksi daftar kendaraan ganda/identik di database (AI/Sufiks ganda & no_mesin ganda).
      *
+     * @param string|null $targetTable
      * @return array
      */
-    public function getDuplicateVehiclesList(): array
+    public function getDuplicateVehiclesList(?string $targetTable = 'real'): array
     {
-        $vehicles = \App\Models\Vehicle::withoutGlobalScopes()->get();
+        $modelClass = $targetTable === 'ebmd' ? \App\Models\EbmdVehicle::class : Vehicle::class;
+        $vehicles = $modelClass::withoutGlobalScopes()->get();
         $duplicates = [];
 
         foreach ($vehicles as $v) {
@@ -306,7 +308,7 @@ class VehicleService
                 $originalPlate = trim($matches[1]);
                 
                 // Cari kendaraan asli dengan plat induk
-                $originalVehicle = \App\Models\Vehicle::withoutGlobalScopes()
+                $originalVehicle = $modelClass::withoutGlobalScopes()
                     ->where('no_polisi', $originalPlate)
                     ->where('id', '!=', $v->id)
                     ->first();
@@ -322,7 +324,7 @@ class VehicleService
         }
 
         // Deteksi duplikasi berdasarkan Nomor Mesin yang identik
-        $engineDuplicates = \App\Models\Vehicle::withoutGlobalScopes()
+        $engineDuplicates = $modelClass::withoutGlobalScopes()
             ->select('no_mesin', \DB::raw('count(*) as count'))
             ->whereNotNull('no_mesin')
             ->whereNotIn('no_mesin', ['', '-'])
@@ -332,7 +334,7 @@ class VehicleService
             ->toArray();
 
         foreach ($engineDuplicates as $noMesin) {
-            $vList = \App\Models\Vehicle::withoutGlobalScopes()
+            $vList = $modelClass::withoutGlobalScopes()
                 ->where('no_mesin', $noMesin)
                 ->get();
             
@@ -363,10 +365,12 @@ class VehicleService
     /**
      * Menganalisis dan mendeteksi daftar OPD/Dinas yang terindikasi ganda atau mirip.
      *
+     * @param string|null $targetTable
      * @return array
      */
-    public function getDuplicateOpdsList(): array
+    public function getDuplicateOpdsList(?string $targetTable = 'real'): array
     {
+        $modelClass = $targetTable === 'ebmd' ? \App\Models\EbmdVehicle::class : Vehicle::class;
         $opds = \App\Models\Opd::all();
         $duplicates = [];
         $checked = [];
@@ -397,8 +401,8 @@ class VehicleService
                 }
 
                 if ($isDuplicate) {
-                    $countA = \App\Models\Vehicle::withoutGlobalScopes()->where('opd_id', $opdA->id)->count();
-                    $countB = \App\Models\Vehicle::withoutGlobalScopes()->where('opd_id', $opdB->id)->count();
+                    $countA = $modelClass::withoutGlobalScopes()->where('opd_id', $opdA->id)->count();
+                    $countB = $modelClass::withoutGlobalScopes()->where('opd_id', $opdB->id)->count();
 
                     $duplicates[] = [
                         'opd_a'   => $opdA,
@@ -422,13 +426,15 @@ class VehicleService
      *
      * @param int $originalId
      * @param int $duplicateId
+     * @param string|null $targetTable
      * @return bool
      */
-    public function mergeVehicles(int $originalId, int $duplicateId): bool
+    public function mergeVehicles(int $originalId, int $duplicateId, ?string $targetTable = 'real'): bool
     {
-        return \DB::transaction(function () use ($originalId, $duplicateId) {
-            $original = \App\Models\Vehicle::withoutGlobalScopes()->find($originalId);
-            $duplicate = \App\Models\Vehicle::withoutGlobalScopes()->find($duplicateId);
+        $modelClass = $targetTable === 'ebmd' ? \App\Models\EbmdVehicle::class : Vehicle::class;
+        return \DB::transaction(function () use ($originalId, $duplicateId, $modelClass) {
+            $original = $modelClass::withoutGlobalScopes()->find($originalId);
+            $duplicate = $modelClass::withoutGlobalScopes()->find($duplicateId);
 
             if (!$original || !$duplicate) return false;
 
@@ -463,18 +469,20 @@ class VehicleService
      *
      * @param int $targetOpdId
      * @param int $sourceOpdId
+     * @param string|null $targetTable
      * @return bool
      */
-    public function mergeOpds(int $targetOpdId, int $sourceOpdId): bool
+    public function mergeOpds(int $targetOpdId, int $sourceOpdId, ?string $targetTable = 'real'): bool
     {
-        return \DB::transaction(function () use ($targetOpdId, $sourceOpdId) {
+        $modelClass = $targetTable === 'ebmd' ? \App\Models\EbmdVehicle::class : Vehicle::class;
+        return \DB::transaction(function () use ($targetOpdId, $sourceOpdId, $modelClass) {
             $target = \App\Models\Opd::find($targetOpdId);
             $source = \App\Models\Opd::find($sourceOpdId);
 
             if (!$target || !$source) return false;
 
             // Pindahkan seluruh kendaraan dari OPD sumber ke OPD target dan sinkronkan nama OPD-nya
-            \App\Models\Vehicle::withoutGlobalScopes()
+            $modelClass::withoutGlobalScopes()
                 ->where('opd_id', $sourceOpdId)
                 ->update([
                     'opd_id' => $targetOpdId,
