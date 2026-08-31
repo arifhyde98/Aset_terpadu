@@ -37,11 +37,15 @@ class ResolveDuplicateVehicleRequest extends FormRequest
      */
     public function rules(): array
     {
+        $targetTable = $this->input('target_table', 'real');
+        $tableName = $targetTable === 'ebmd' ? 'ebmd_vehicles' : 'vehicles';
+
         return [
-            'original_id'  => ['required', 'integer', 'exists:vehicles,id'],
-            'duplicate_id' => ['required', 'integer', 'exists:vehicles,id'],
+            'original_id'  => ['required', 'integer', 'exists:' . $tableName . ',id'],
+            'duplicate_id' => ['required', 'integer', 'exists:' . $tableName . ',id'],
             'action'       => ['required', 'string', 'in:merge,delete'],
             'direction'    => ['nullable', 'string', 'in:keep_original,keep_duplicate'],
+            'target_table' => ['nullable', 'string', 'in:real,ebmd'],
         ];
     }
 
@@ -59,9 +63,10 @@ class ResolveDuplicateVehicleRequest extends FormRequest
 
             $originalId = (int)$this->input('original_id');
             $duplicateId = (int)$this->input('duplicate_id');
+            $targetTable = $this->input('target_table', 'real');
 
             // Dapatkan daftar pasangan ganda sah menurut logika database service
-            $duplicates = $this->vehicleService->getDuplicateVehiclesList();
+            $duplicates = $this->vehicleService->getDuplicateVehiclesList($targetTable);
 
             $isValidPair = collect($duplicates)->contains(function ($item) use ($originalId, $duplicateId) {
                 return $item['original_vehicle']->id === $originalId && $item['duplicate_vehicle']->id === $duplicateId;

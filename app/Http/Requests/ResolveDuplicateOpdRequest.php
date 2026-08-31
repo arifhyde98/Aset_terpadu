@@ -40,6 +40,7 @@ class ResolveDuplicateOpdRequest extends FormRequest
         return [
             'target_opd_id' => ['required', 'integer', 'exists:opds,id'],
             'source_opd_id' => ['required', 'integer', 'exists:opds,id'],
+            'target_table'  => ['nullable', 'string', 'in:real,ebmd'],
         ];
     }
 
@@ -57,6 +58,7 @@ class ResolveDuplicateOpdRequest extends FormRequest
 
             $targetId = (int)$this->input('target_opd_id');
             $sourceId = (int)$this->input('source_opd_id');
+            $targetTable = $this->input('target_table', 'real');
 
             if ($targetId === $sourceId) {
                 $validator->errors()->add(
@@ -67,7 +69,7 @@ class ResolveDuplicateOpdRequest extends FormRequest
             }
 
             // Dapatkan daftar OPD ganda/mirip yang sah dari service
-            $duplicates = $this->vehicleService->getDuplicateOpdsList();
+            $duplicates = $this->vehicleService->getDuplicateOpdsList($targetTable);
 
             $isValidPair = collect($duplicates)->contains(function ($item) use ($targetId, $sourceId) {
                 return ($item['opd_a']->id === $targetId && $item['opd_b']->id === $sourceId) ||
