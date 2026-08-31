@@ -394,10 +394,13 @@ class ElabelSertifikatController extends Controller implements HasMiddleware
         $lokasi = trim((string) $lokasi);
         if ($lokasi === '') return null;
 
-        $boxes = ElabelSertifikatBox::where('lokasi', 'LIKE', "%{$lokasi}%")->orderBy('id', 'asc')->get();
+        // 1. Cari dulu Box yang lokasinya MATCH PERSIS (Exact Match)
+        $exactBoxes = ElabelSertifikatBox::whereRaw('LOWER(TRIM(lokasi)) = ?', [mb_strtolower($lokasi)])
+            ->orderBy('id', 'asc')
+            ->get();
 
         if ($preferredBoxId !== null) {
-            $prefBox = $boxes->firstWhere('id', $preferredBoxId);
+            $prefBox = $exactBoxes->firstWhere('id', $preferredBoxId);
             if ($prefBox) {
                 $count = ElabelSertifikat::where('box_id', $preferredBoxId)
                     ->when($excludeSertifikatId !== null, fn($q) => $q->where('id', '!=', $excludeSertifikatId))
@@ -408,7 +411,7 @@ class ElabelSertifikatController extends Controller implements HasMiddleware
             }
         }
 
-        foreach ($boxes as $box) {
+        foreach ($exactBoxes as $box) {
             $count = ElabelSertifikat::where('box_id', $box->id)
                 ->when($excludeSertifikatId !== null, fn($q) => $q->where('id', '!=', $excludeSertifikatId))
                 ->count();
@@ -417,9 +420,36 @@ class ElabelSertifikatController extends Controller implements HasMiddleware
             }
         }
 
-        // Create new box
-        $baseCode = $boxes->isNotEmpty() ? $boxes->first()->box_code : 'BOX-SERT-01';
-        $newCode = $boxes->isNotEmpty() ? $this->nextBoxCodeSuffix($baseCode) : 'BOX-SERT-01';
+        // 2. Jika tidak ada Exact Match, cari Box dengan kriteria Standalone Word Match (misal "Labuan, Tanantovea")
+        $allBoxes = ElabelSertifikatBox::where('lokasi', 'LIKE', "%{$lokasi}%")->orderBy('id', 'asc')->get();
+
+        $wordMatchBoxes = $allBoxes->filter(function ($box) use ($lokasi) {
+            $parts = array_map('trim', explode(',', mb_strtolower($box->lokasi)));
+            return in_array(mb_strtolower($lokasi), $parts, true);
+        });
+
+        foreach ($wordMatchBoxes as $box) {
+            $count = ElabelSertifikat::where('box_id', $box->id)
+                ->when($excludeSertifikatId !== null, fn($q) => $q->where('id', '!=', $excludeSertifikatId))
+                ->count();
+            if ($count < self::MAX_SERTIFIKAT_PER_BOX) {
+                return $box->id;
+            }
+        }
+
+        // 3. Fallback jika tidak ada exact/word match
+        foreach ($allBoxes as $box) {
+            $count = ElabelSertifikat::where('box_id', $box->id)
+                ->when($excludeSertifikatId !== null, fn($q) => $q->where('id', '!=', $excludeSertifikatId))
+                ->count();
+            if ($count < self::MAX_SERTIFIKAT_PER_BOX) {
+                return $box->id;
+            }
+        }
+
+        // 4. Buat Box Baru
+        $baseCode = $exactBoxes->isNotEmpty() ? $exactBoxes->first()->box_code : ($allBoxes->isNotEmpty() ? $allBoxes->first()->box_code : 'ST-01');
+        $newCode = $this->nextBoxCodeSuffix($baseCode);
 
         $newBox = ElabelSertifikatBox::create([
             'box_code'   => $newCode,
