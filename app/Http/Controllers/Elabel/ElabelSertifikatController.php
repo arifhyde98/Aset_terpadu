@@ -128,10 +128,12 @@ class ElabelSertifikatController extends Controller implements HasMiddleware
         ];
 
         $opds = \App\Models\OpdSipat::where('aktif', 1)->orderBy('nama', 'asc')->get();
+        $kecamatans = \App\Models\Kecamatan::orderBy('nama', 'asc')->get();
 
         return view('elabel.sertifikat.create', [
             'item'       => $item,
             'opds'       => $opds,
+            'kecamatans' => $kecamatans,
             'activeMenu' => 'sertifikat',
         ]);
     }
@@ -214,10 +216,12 @@ class ElabelSertifikatController extends Controller implements HasMiddleware
         }
 
         $opds = \App\Models\OpdSipat::where('aktif', 1)->orderBy('nama', 'asc')->get();
+        $kecamatans = \App\Models\Kecamatan::orderBy('nama', 'asc')->get();
 
         return view('elabel.sertifikat.edit', [
             'item'       => $item,
             'opds'       => $opds,
+            'kecamatans' => $kecamatans,
             'activeMenu' => 'sertifikat',
         ]);
     }
