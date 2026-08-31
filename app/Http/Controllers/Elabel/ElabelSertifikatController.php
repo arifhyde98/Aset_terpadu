@@ -195,6 +195,13 @@ class ElabelSertifikatController extends Controller implements HasMiddleware
             return redirect()->back()->withInput()->with('error', $this->duplicateSertifikatMessage($duplicate));
         }
 
+        if (!empty($payload['sipat_opd_id'])) {
+            $opd = \App\Models\OpdSipat::find($payload['sipat_opd_id']);
+            if ($opd) {
+                $payload['dinas'] = $opd->nama;
+            }
+        }
+
         $payload['box_id'] = $this->resolveSertifikatBoxId($payload['lokasi'] ?? null);
 
         if ($request->hasFile('pdf') && $request->file('pdf')->isValid()) {
@@ -250,6 +257,13 @@ class ElabelSertifikatController extends Controller implements HasMiddleware
         $duplicate = $this->findDuplicateSertifikat($payload, $id);
         if ($duplicate !== null) {
             return redirect()->back()->withInput()->with('error', $this->duplicateSertifikatMessage($duplicate));
+        }
+
+        if (!empty($payload['sipat_opd_id'])) {
+            $opd = \App\Models\OpdSipat::find($payload['sipat_opd_id']);
+            if ($opd) {
+                $payload['dinas'] = $opd->nama;
+            }
         }
 
         $payload['box_id'] = $this->resolveSertifikatBoxId($payload['lokasi'] ?? null, $id, $item->box_id);
