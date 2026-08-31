@@ -21,6 +21,7 @@ Dokumen ini merupakan sumber kebenaran tunggal (*Single Source of Truth*) mengen
   - **GIS & Pemetaan Spasial:** Leaflet.js, Turf.js (`turf.min.js`), Shp.js (`shp.js`), Leaflet.Draw (`leaflet.draw.js`/`css`), serta aset GeoJSON dan Shapefile (.shp/.dbf) untuk render peta interaktif sebaran aset tanah & target pensertifikatan.
 - **Data Engine:** Laravel Excel (Maatwebsite/Excel) sebagai mesin utama pengolahan Impor & Ekspor data massal, serta mPDF sebagai mesin render PDF formal server-side pada Modul Laporan, ekspor Surat SKPT, dan cetak dokumen.
 - **Infrastruktur / Deployment:** Berjalan secara native di Linux / server lokal (Nginx + PHP-FPM 8.2+ & MySQL/MariaDB).
+- **CI/CD Automation:** Menggunakan GitHub Actions (`.github/workflows/deploy.yml`) yang memicu eksekusi remote script `deploy.sh` (Git Pull, Composer Install, Artisan Migrate, NPM Build Vite, & Artisan Optimize) via SSH Key saat ada push ke branch `main`.
 
 ---
 
