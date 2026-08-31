@@ -6,7 +6,7 @@ Dokumen ini merupakan sumber kebenaran tunggal (*Single Source of Truth*) mengen
 
 **⚠️ PENTING: Untuk penambahan fitur baru, WAJIB membaca dan mengikuti `ATURAN_PENAMBAHAN_FITUR.md` terlebih dahulu.**
 
----
+----
 
 ## 1. 🛠️ Environment & Technology Stack
 - **Framework Core:** Laravel 12 / PHP 8.2+
