@@ -13,9 +13,11 @@ class SettingSeeder extends Seeder
     public function run(): void
     {
         $settings = [
-            // General / Brand
+            // General / Brand (Dua Logo: Kiri & Kanan)
             ['key' => 'site_logo', 'value' => null, 'type' => 'image', 'group' => 'general'],
+            ['key' => 'site_logo_right', 'value' => null, 'type' => 'image', 'group' => 'general'],
             ['key' => 'site_name', 'value' => 'SIPAT TERPADU', 'type' => 'text', 'group' => 'general'],
+            ['key' => 'site_subtitle', 'value' => 'Sistem Informasi Aset Pemerintah Daerah', 'type' => 'text', 'group' => 'general'],
 
             // Landing Page
             ['key' => 'hero_title', 'value' => 'SIPAT Terpadu', 'type' => 'text', 'group' => 'landing'],

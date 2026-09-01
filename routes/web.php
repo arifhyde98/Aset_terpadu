@@ -14,6 +14,8 @@ use App\Http\Controllers\ActivityController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\HealthCheckController;
 
+use App\Http\Controllers\LandingPageController;
+
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -25,9 +27,18 @@ use App\Http\Controllers\HealthCheckController;
 |
 */
 
-// Akses Publik (Landing Page)
-Route::get('/', [VehicleController::class, 'search'])->name('landing');
-Route::get('/vehicle-search', [VehicleController::class, 'searchLandingVehicle'])->name('landing.vehicle-search');
+// Akses Publik (Landing Page & Unified Asset Search)
+Route::get('/', [LandingPageController::class, 'index'])->name('landing');
+Route::get('/search/vehicles', [LandingPageController::class, 'searchVehicles'])->name('landing.search.vehicles');
+Route::get('/search/land', [LandingPageController::class, 'searchLand'])->name('landing.search.land');
+Route::get('/search/archives', [LandingPageController::class, 'searchArchives'])->name('landing.search.archives');
+Route::get('/api/public/stats', [LandingPageController::class, 'getStats'])->name('landing.api.stats');
+
+// Backward Compatibility Aliases
+Route::get('/vehicle-search', [LandingPageController::class, 'searchVehicles'])->name('landing.vehicle-search');
+Route::get('/api/public/search/vehicles', [LandingPageController::class, 'searchVehicles']);
+Route::get('/api/public/search/land', [LandingPageController::class, 'searchLand']);
+Route::get('/api/public/search/archives', [LandingPageController::class, 'searchArchives']);
 
 // Otentikasi (Bawaan Laravel UI/Fortify)
 Auth::routes();

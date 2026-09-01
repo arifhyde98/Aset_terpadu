@@ -1,62 +1,97 @@
-#hero-section {
-    background-color: #1e3a8a;
-    color: #ffffff;
+/*
+ * SIPAT TERPADU - LANDING PAGE STYLES
+ * Portal Publik Informasi & Pencarian Aset Terpadu
+ * Fully Responsive for Mobile, Tablet, Laptop, and Desktop
+ */
+
+:root {
+    --landing-navy: #0F172A;
+    --landing-navy-deep: #1E3A8A;
+    --landing-navy-light: #2563EB;
+    --landing-amber: #F59E0B;
+    --landing-emerald: #10B981;
+    --landing-bg-body: #F8FAFC;
+    --landing-card-bg: #FFFFFF;
+    --landing-text-muted: #64748B;
+}
+
+.landing-body {
+    background-color: var(--landing-bg-body);
+    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    color: #1E293B;
+    overflow-x: hidden;
+    width: 100%;
+}
+
+/* 1. NAVBAR */
+.landing-navbar {
+    background-color: rgba(15, 23, 42, 0.94);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    transition: all 0.3s ease;
+    padding-top: 0.85rem;
+    padding-bottom: 0.85rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    z-index: 1030;
+
+    &.scrolled {
+        background-color: rgba(15, 23, 42, 0.98);
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.2);
+        padding-top: 0.55rem;
+        padding-bottom: 0.55rem;
+    }
+
+    .navbar-brand-logo {
+        width: 36px;
+        height: 36px;
+        object-fit: contain;
+        flex-shrink: 0;
+    }
+
+    .nav-link {
+        font-size: 0.92rem;
+        transition: color 0.2s ease;
+        padding: 0.4rem 0.6rem;
+        &:hover {
+            color: #FFFFFF !important;
+        }
+    }
+}
+
+/* 2. HERO SECTION */
+.landing-hero {
+    background: linear-gradient(135deg, #0F172A 0%, #1E3A8A 50%, #1E40AF 100%);
     padding-top: 8rem;
-    padding-bottom: 10rem;
+    padding-bottom: 5.5rem;
     position: relative;
     overflow: hidden;
 
     &::before {
         content: "";
         position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background-image: url('../images/city-skyline.png');
-        background-size: cover;
-        background-position: center bottom;
-        opacity: 0.1;
-        mix-blend-mode: overlay;
-        pointer-events: none;
-    }
-}
-
-.hero-image-wrapper {
-    position: relative;
-    z-index: 2;
-    padding: 1rem;
-    background: rgba(255, 255, 255, 0.05);
-    backdrop-filter: blur(8px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 2rem;
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-    display: inline-block;
-    transition: transform 0.5s ease;
-
-    &:hover {
-        transform: translateY(-10px);
-        background: rgba(255, 255, 255, 0.08);
-    }
-
-    img {
-        border-radius: 1.5rem;
-        object-fit: cover;
-        width: 100%;
-        height: auto;
-    }
-
-    &::after {
-        content: "";
-        position: absolute;
         inset: 0;
-        border-radius: 2rem;
-        background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 100%);
+        background-image: radial-gradient(rgba(255, 255, 255, 0.15) 1px, transparent 1px);
+        background-size: 24px 24px;
+        opacity: 0.2;
         pointer-events: none;
+    }
+
+    .hero-headline {
+        font-size: clamp(1.85rem, 4vw, 3rem);
+        letter-spacing: -0.02em;
+        line-height: 1.2;
+        text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+    }
+
+    .hero-subheadline {
+        font-size: clamp(0.95rem, 1.4vw, 1.15rem);
+        max-width: 680px;
+        line-height: 1.6;
+        opacity: 0.95;
     }
 }
 
-.hero-curve {
+.hero-wave {
     position: absolute;
     bottom: -1px;
     left: 0;
@@ -65,49 +100,379 @@
     svg {
         display: block;
         width: 100%;
-        height: 80px;
+        height: 48px;
     }
 }
 
-.hero-title {
-    font-size: 2.85rem;
-    text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+.module-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.4rem 0.85rem;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 9999px;
+    color: #FFFFFF;
+    font-size: clamp(0.72rem, 1vw, 0.82rem);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    transition: all 0.2s ease;
+    white-space: nowrap;
+
+    &:hover {
+        background: rgba(255, 255, 255, 0.14);
+        transform: translateY(-2px);
+    }
 }
 
-.hero-subtitle {
-    max-width: 560px;
-    font-size: 1.15rem;
-    line-height: 1.6;
-    text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+/* 3. UNIFIED ASSET SEARCH CARD (Focal Point) */
+.landing-search-section {
+    margin-top: -3.5rem;
+    position: relative;
+    z-index: 10;
+    margin-bottom: 2.5rem;
 }
 
-/* Mobile Optimizations for Landing Page */
-@media (max-width: 767.98px) {
-    #hero-section {
-        padding-top: 6rem;
-        padding-bottom: 6rem;
+.unified-search-card {
+    border-radius: 1.25rem;
+    box-shadow: 0 20px 40px -15px rgba(15, 23, 42, 0.12), 0 0 1px 1px rgba(0, 0, 0, 0.04);
+    background: #FFFFFF;
+    transition: box-shadow 0.3s ease;
+
+    &:hover {
+        box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.18);
+    }
+}
+
+.unified-search-header {
+    background: linear-gradient(135deg, #0F172A 0%, #1E3A8A 100%);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+
+    .search-header-icon {
+        width: 42px;
+        height: 42px;
+        flex-shrink: 0;
+    }
+}
+
+.search-nav-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+
+    .nav-item {
+        flex: 1 1 auto;
+    }
+
+    .nav-link {
+        color: rgba(255, 255, 255, 0.75);
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 0.75rem;
+        padding: 0.65rem 1rem;
+        font-weight: 600;
+        font-size: 0.9rem;
+        transition: all 0.2s ease;
+        width: 100%;
         text-align: center;
-    }
+        justify-content: center;
 
-    .hero-title {
-        font-size: 2rem;
-    }
+        &:hover {
+            color: #FFFFFF;
+            background: rgba(255, 255, 255, 0.15);
+        }
 
-    .hero-subtitle {
-        font-size: 1rem;
-        margin-left: auto;
-        margin-right: auto;
+        &.active {
+            color: #0F172A !important;
+            background: #FFFFFF !important;
+            border-color: #FFFFFF;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
     }
+}
 
-    .hero-image-wrapper {
-        margin-top: 1rem;
-        
-        img {
-            max-height: 250px;
+.unified-search-form {
+    .form-control, .form-select {
+        border-color: #CBD5E1;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        min-height: 48px;
+
+        &:focus {
+            border-color: #2563EB;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.14);
         }
     }
 
-    .hero-curve svg {
-        height: 40px;
+    .form-control-sm, .form-select-sm {
+        min-height: 38px;
+    }
+}
+
+/* 4. SERVICE CARDS */
+.service-card {
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+    border: 1px solid #E2E8F0;
+
+    &:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 12px 30px -10px rgba(0, 0, 0, 0.1) !important;
+    }
+
+    .service-icon-wrapper {
+        width: 54px;
+        height: 54px;
+        flex-shrink: 0;
+    }
+}
+
+/* 5. STATS CARDS */
+.stat-card {
+    transition: transform 0.25s ease;
+    background: #FFFFFF;
+
+    &:hover {
+        transform: translateY(-3px);
+    }
+
+    .stat-number {
+        font-size: clamp(1.6rem, 2.5vw, 2.25rem);
+        line-height: 1.1;
+    }
+
+    .stat-icon-bg {
+        position: absolute;
+        right: -10px;
+        bottom: -10px;
+        font-size: 4rem;
+        opacity: 0.05;
+        pointer-events: none;
+    }
+}
+
+/* 6. UTILITY BADGES & HELPERS */
+.text-navy {
+    color: #0F172A !important;
+}
+
+.bg-navy {
+    background-color: #0F172A !important;
+}
+
+.text-amber {
+    color: #F59E0B !important;
+}
+
+.bg-amber {
+    background-color: #F59E0B !important;
+}
+
+.bg-amber-subtle {
+    background-color: #FEF3C7 !important;
+}
+
+.hover-elevate {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    &:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06);
+    }
+}
+
+.hover-navy {
+    transition: color 0.2s ease;
+    &:hover {
+        color: #1E3A8A !important;
+    }
+}
+
+.transition-transform {
+    transition: transform 0.2s ease;
+}
+
+[aria-expanded="true"] .transition-transform {
+    transform: rotate(180deg);
+}
+
+.transition-all {
+    transition: all 0.2s ease;
+}
+
+/* Skeleton Shimmer Loading */
+.skeleton-shimmer {
+    position: relative;
+    overflow: hidden;
+    background-color: #F1F5F9;
+
+    &::after {
+        content: "";
+        position: absolute;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        left: 0;
+        transform: translateX(-100%);
+        background-image: linear-gradient(
+            90deg,
+            rgba(255, 255, 255, 0) 0,
+            rgba(255, 255, 255, 0.5) 20%,
+            rgba(255, 255, 255, 0.8) 60%,
+            rgba(255, 255, 255, 0)
+        );
+        animation: shimmer 1.5s infinite;
+    }
+}
+
+.skeleton-block {
+    background-color: #E2E8F0;
+    border-radius: 0.375rem;
+    height: 20px;
+}
+
+@keyframes shimmer {
+    100% {
+        transform: translateX(100%);
+    }
+}
+
+/* ===================================================
+ * RESPONSIVE BREAKPOINTS (Mobile, Tablet, Desktop)
+ * =================================================== */
+
+/* Mobile Devices (< 768px) */
+@media (max-width: 767.98px) {
+    .landing-navbar {
+        padding-top: 0.6rem;
+        padding-bottom: 0.6rem;
+
+        .navbar-collapse {
+            background-color: rgba(15, 23, 42, 0.98);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 1rem;
+            padding: 1.25rem;
+            margin-top: 0.75rem;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .navbar-nav {
+            align-items: flex-start !important;
+            gap: 0.5rem !important;
+
+            .nav-link {
+                padding: 0.5rem 0.75rem;
+                width: 100%;
+                border-radius: 0.5rem;
+
+                &:hover {
+                    background: rgba(255, 255, 255, 0.08);
+                }
+            }
+
+            .btn {
+                width: 100%;
+                justify-content: center;
+                margin-top: 0.5rem;
+                padding-top: 0.5rem;
+                padding-bottom: 0.5rem;
+            }
+        }
+    }
+
+    .landing-hero {
+        padding-top: 6.5rem;
+        padding-bottom: 4.5rem;
+        text-align: center;
+    }
+
+    .landing-search-section {
+        margin-top: -2.5rem;
+        padding-left: 0.5rem;
+        padding-right: 0.5rem;
+    }
+
+    .search-nav-pills {
+        gap: 0.35rem;
+
+        .nav-item {
+            flex: 1 1 30%;
+        }
+
+        .nav-link {
+            padding: 0.5rem 0.4rem;
+            font-size: 0.78rem;
+            border-radius: 0.5rem;
+            flex-direction: column;
+            gap: 0.2rem !important;
+
+            i {
+                font-size: 1rem;
+            }
+        }
+    }
+
+    .hero-wave svg {
+        height: 32px;
+    }
+
+    .stat-card {
+        padding: 1rem !important;
+    }
+
+    .unified-search-card {
+        border-radius: 1rem;
+    }
+
+    /* Search Results Card on Mobile */
+    #unifiedSearchResultsContainer {
+        .card-header {
+            padding: 1rem !important;
+        }
+
+        .card-body {
+            padding: 1rem !important;
+        }
+    }
+}
+
+/* Extra Small Phones (< 480px) */
+@media (max-width: 479.98px) {
+    .navbar-brand span {
+        max-width: 180px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .search-nav-pills .nav-link {
+        font-size: 0.72rem;
+        padding: 0.45rem 0.25rem;
+    }
+}
+
+/* Tablet Devices (768px - 991.98px) */
+@media (min-width: 768px) and (max-width: 991.98px) {
+    .landing-hero {
+        padding-top: 7rem;
+        padding-bottom: 5rem;
+    }
+
+    .landing-search-section {
+        margin-top: -3rem;
+    }
+
+    .search-nav-pills .nav-link {
+        padding: 0.6rem 0.85rem;
+        font-size: 0.85rem;
+    }
+}
+
+/* Large Screens (1200px+) */
+@media (min-width: 1200px) {
+    .landing-hero {
+        padding-top: 8.5rem;
+        padding-bottom: 6rem;
+    }
+
+    .unified-search-card {
+        border-radius: 1.5rem;
     }
 }

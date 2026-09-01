@@ -132,6 +132,7 @@ Berikut adalah status fitur yang telah diimplementasikan penuh pada platform SIP
 | **eLABEL** | Sertifikat & Box Sertifikat | DONE | Penyimpanan sertifikat tanah fisik, split/merge box sertifikat. |
 | **eLABEL** | Surat Penyerahan & Box | DONE | Pencatatan dokumen penyerahan aset & manajemen box terkait. |
 | **eLABEL** | Alur Peminjaman (Scan Request) | DONE | Pengajuan pinjam/scan BPKB/Sertifikat & approval admin. |
+| **Terpadu** | Unified Asset Portal & Search | DONE | Mesin pencarian publik 3 modul (Kendaraan, Tanah, Arsip) + statistik live. |
 | **Terpadu** | OPD Mapping (Hub) | DONE | Jembatan pemetaan instansi antara E-RANDIS dan SIPAT. |
 | **Terpadu** | Audit Trail / Log Aktivitas | DONE | Log aktivitas terintegrasi E-RANDIS, SIPAT, dan eLABEL. |
 | **System** | Sinkronisasi DB Staging | DONE | Utility sinkronisasi data dari db_sipat_terpadu ke db_sipat_staging. |

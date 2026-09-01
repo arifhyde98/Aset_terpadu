@@ -49,7 +49,7 @@ Dokumen ini merupakan sumber kebenaran tunggal (*Single Source of Truth*) mengen
 *   **vehicles**: Penambahan kolom `opd_id` (foreignId) dan integrasi Global Scope.
 *   **opds**: Master data instansi yang terhubung 1-to-1 dengan user admin OPD.
 *   **activities**: Tabel log audit dengan relasi `user_id` (Set Null), menyimpan `description` dan `type` (untuk UI badging).
-*   **settings**: Konfigurasi CMS yang dapat diubah melalui antarmuka admin.
+*   **settings**: Konfigurasi CMS yang dapat diubah melalui antarmuka admin (termasuk dukungan dua logo: `site_logo` untuk Logo Kiri/Lambang Daerah dan `site_logo_right` untuk Logo Kanan/Instansi).
 
 ### Tabel `vehicles`
 - `id` (PK, BigInt)
@@ -101,6 +101,7 @@ Dokumen ini merupakan sumber kebenaran tunggal (*Single Source of Truth*) mengen
 
 ### Lapisan Layanan (*Service Layer*)
 Logika bisnis dan kalkulasi diletakkan di dalam kelas *Service*:
+- `UnifiedAssetSearchService`: layanan inti pencarian publik terpadu (*Unified Asset Search*) untuk Landing Page lintas 3 modul (Kendaraan Dinas, Sertifikat Tanah, dan Arsip Dokumen) dengan pengecekan keterkaitan multi-modul (*cross-module linkage*), penegakan privasi data publik (*Public Data Privacy*), serta kalkulasi statistik live (*caching-backed*).
 - `VehicleService`: statistik dashboard, helper cache kendaraan, pencarian, dan utilitas bisnis kendaraan.
 - `ReportService`: ringkasan laporan, orkestrasi preview terpaginasi, dan integrasi strategi laporan modular.
 - `AsetTanahService`: ringkasan dan query pencarian aset tanah SIPAT. Kueri Master Aset Tanah diurutkan menggunakan `CASE` SQL agar aset yang memiliki NIBAR resmi selalu berada di posisi paling atas, sedangkan tanah usulan / NIBAR sementara (`DRAFT-`, `BELUM-`, null, `-`) berada di posisi paling bawah.
@@ -187,7 +188,12 @@ Aplikasi **menggunakan sentuhan visual premium & animasi mikro kustom** secara b
 
 | Modul | Metode | URI | Controller@Method | Akses | Keterangan |
 |---|---|---|---|---|---|
-| **E-RANDIS** | GET | `/` | `VehicleController@search` | Publik | Landing page + pencarian |
+| **Terpadu** | GET | `/` | `LandingPageController@index` | Publik | Portal Terpadu Landing Page & Unified Asset Search |
+| **Terpadu** | GET | `/search/vehicles` | `LandingPageController@searchVehicles` | Publik | Endpoint AJAX Pencarian Publik Kendaraan |
+| **Terpadu** | GET | `/search/land` | `LandingPageController@searchLand` | Publik | Endpoint AJAX Pencarian Publik Sertifikat Tanah |
+| **Terpadu** | GET | `/search/archives` | `LandingPageController@searchArchives` | Publik | Endpoint AJAX Pencarian Publik Arsip Aset |
+| **Terpadu** | GET | `/api/public/stats` | `LandingPageController@getStats` | Publik | Endpoint JSON Statistik Ringkasan Portal |
+| **E-RANDIS** | GET | `/vehicle-search` | `LandingPageController@searchVehicles` | Publik | Alias kompatibilitas pencarian kendaraan |
 | **E-RANDIS** | Resource | `/vehicles` | `VehicleController` | Auth | CRUD Kendaraan Dinas |
 | **E-RANDIS** | POST | `/vehicles/import` | `VehicleController@import` | Auth | Eksekusi AI Smart Import |
 | **E-RANDIS** | GET | `/reports` | `ReportController@index` | Auth | Dashboard Modul Laporan |

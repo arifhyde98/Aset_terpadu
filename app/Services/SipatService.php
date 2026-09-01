@@ -337,7 +337,7 @@ class SipatService
         ];
     }
 
-    private function getStatusCategory(string $statusName, ?string $explicitCategory = null): string
+    public function getStatusCategory(string $statusName, ?string $explicitCategory = null): string
     {
         if (!empty($explicitCategory)) {
             $cat = strtolower(trim($explicitCategory));

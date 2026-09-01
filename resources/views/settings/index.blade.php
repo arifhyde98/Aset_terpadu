@@ -32,18 +32,33 @@
                         <h5 class="fw-bold text-navy mb-0">Branding Umum</h5>
                     </div>
                     
-                    <div class="row">
+                    <div class="row g-3">
+                        @php
+                            $labelMap = [
+                                'site_logo' => 'Logo Kiri (Lambang Daerah / Utama)',
+                                'site_logo_right' => 'Logo Kanan (Logo Instansi / SIPAT / BPKAD)',
+                                'site_name' => 'Nama Aplikasi / Portal',
+                                'site_subtitle' => 'Subtitle / Slogan Instansi',
+                            ];
+                        @endphp
                         @foreach($settings['general'] ?? [] as $setting)
                             <div class="col-md-6 mb-3">
-                                <label class="form-label fw-semibold text-dark small text-uppercase">{{ str_replace('_', ' ', $setting->key) }}</label>
+                                <label class="form-label fw-semibold text-dark small text-uppercase">
+                                    {{ $labelMap[$setting->key] ?? str_replace('_', ' ', $setting->key) }}
+                                </label>
                                 @if($setting->type === 'text')
                                     <input type="text" name="settings[{{ $setting->key }}]" class="form-control rounded-3" value="{{ $setting->value }}">
                                 @elseif($setting->type === 'image')
                                     <div class="d-flex align-items-center gap-3">
                                         @if($setting->value)
-                                            <img src="{{ \App\Models\Setting::imageUrl($setting->value) }}" class="rounded-3 border shadow-sm" style="height: 40px;">
+                                            <div class="bg-light p-1 rounded-3 border shadow-sm flex-shrink-0 d-flex align-items-center justify-content-center" style="width: 52px; height: 52px;">
+                                                <img src="{{ \App\Models\Setting::imageUrl($setting->value) }}" class="rounded-2" style="max-height: 44px; max-width: 44px; object-fit: contain;">
+                                            </div>
                                         @endif
-                                        <input type="file" name="settings[{{ $setting->key }}]" class="form-control rounded-3">
+                                        <div class="flex-grow-1">
+                                            <input type="file" name="settings[{{ $setting->key }}]" class="form-control rounded-3" accept="image/*">
+                                            <small class="text-muted" style="font-size: 0.75rem;">Format: PNG, JPG, JPEG, SVG. Biarkan kosong jika tidak diubah.</small>
+                                        </div>
                                     </div>
                                 @endif
                             </div>
