@@ -7,124 +7,77 @@
         body {
             font-family: sans-serif;
             color: #0f172a;
-            font-size: 10pt;
+            font-size: 9.5pt;
         }
         .header {
             border-bottom: 3px double #1e293b;
-            padding-bottom: 10px;
-            margin-bottom: 14px;
+            padding-bottom: 8px;
+            margin-bottom: 12px;
         }
         .header-table {
             width: 100%;
             border-collapse: collapse;
         }
-        .header-table td {
-            vertical-align: top;
-        }
-        .logo-wrap {
-            width: 90px;
-        }
-        .logo {
-            width: 74px;
-            height: 74px;
-            object-fit: contain;
-        }
         .header-main {
             text-align: center;
         }
         .instansi {
-            font-size: 13pt;
+            font-size: 12pt;
             font-weight: bold;
             letter-spacing: 1px;
         }
         .unit {
-            font-size: 15pt;
+            font-size: 14pt;
             font-weight: bold;
             color: #0b4f84;
-            margin-top: 3px;
+            margin-top: 2px;
         }
         .subunit,
         .meta-line {
-            font-size: 9pt;
+            font-size: 8.5pt;
             color: #334155;
         }
         .report-title {
-            margin: 16px 0 8px;
+            margin: 14px 0 16px;
             text-align: center;
         }
         .report-title h2 {
             margin: 0;
-            font-size: 15pt;
-            letter-spacing: .8px;
+            font-size: 13pt;
+            font-weight: bold;
+            letter-spacing: .5px;
+            text-transform: uppercase;
         }
         .report-title .subtitle {
             margin-top: 4px;
-            color: #475569;
-            font-size: 9pt;
-        }
-        .meta-grid {
-            width: 100%;
-            border-collapse: separate;
-            border-spacing: 10px 0;
-            margin: 8px 0 12px;
-        }
-        .meta-box {
-            background: #f8fafc;
-            border: 1px solid #dbe3ef;
-            border-radius: 10px;
-            padding: 10px 12px;
-        }
-        .meta-label {
-            color: #64748b;
-            font-size: 8.5pt;
-            text-transform: uppercase;
-        }
-        .meta-value {
-            font-size: 12pt;
+            font-size: 11pt;
             font-weight: bold;
-            margin-top: 2px;
-        }
-        .filter-box {
-            border: 1px solid #dbe3ef;
-            background: #ffffff;
-            border-radius: 10px;
-            padding: 10px 12px;
-            margin-bottom: 12px;
-        }
-        .filter-box h4 {
-            margin: 0 0 8px;
-            font-size: 10.5pt;
-            color: #0b4f84;
-        }
-        .filter-chip {
-            display: inline-block;
-            margin: 0 6px 6px 0;
-            padding: 5px 8px;
-            border-radius: 14px;
-            background: #eff6ff;
-            color: #1d4ed8;
-            font-size: 8.5pt;
+            text-transform: uppercase;
         }
         .table-report {
             width: 100%;
             border-collapse: collapse;
-            font-size: 8.8pt;
+            font-size: 9pt;
+            margin-bottom: 15px;
         }
         .table-report th,
         .table-report td {
-            border: 1px solid #cbd5e1;
-            padding: 7px 8px;
+            border: 1px solid #000000;
+            padding: 6px 8px;
         }
         .table-report thead th {
-            background: #0b4f84;
-            color: #fff;
-            text-transform: uppercase;
-            font-size: 8pt;
-            letter-spacing: .4px;
+            background: #d9d9d9;
+            color: #000000;
+            font-weight: bold;
             text-align: center;
+            vertical-align: middle;
         }
         .table-report tbody tr:nth-child(even) {
-            background: #f8fafc;
+            background: #fdfdfd;
+        }
+        .table-report tfoot tr {
+            background: #eaeaea;
+            font-weight: bold;
         }
         .text-right {
             text-align: right;
@@ -133,7 +86,7 @@
             text-align: center;
         }
         .signature-wrap {
-            margin-top: 20px;
+            margin-top: 25px;
             width: 320px;
             margin-left: auto;
             text-align: center;
@@ -163,24 +116,44 @@
             margin-top: 2px;
         }
         .footer {
-            margin-top: 12px;
-            font-size: 8.5pt;
+            margin-top: 15px;
+            font-size: 8pt;
             color: #64748b;
             text-align: right;
         }
     </style>
 </head>
 <body>
+    @php
+        $year = date('Y');
+        $kat = $filters['kategori_status'] ?? '';
+        $groupHeader = 'Aset Tanah';
+        if ($kat === 'sudah_bersertifikat') {
+            $groupHeader = 'Aset Sudah Sertifikat';
+        } elseif ($kat === 'belum_diproses') {
+            $groupHeader = 'Aset Belum Diproses';
+        } elseif ($kat === 'dalam_proses') {
+            $groupHeader = 'Aset Dalam Proses';
+        } elseif ($kat === 'bermasalah') {
+            $groupHeader = 'Aset Bermasalah / Sengketa';
+        } elseif ($kat === 'belum_bersertifikat') {
+            $groupHeader = 'Aset Belum Bersertifikat';
+        }
+
+        $fullTitle = strtoupper($selectedTitle ?? 'LAPORAN REKAPITULASI ASET TANAH');
+        if (!str_contains($fullTitle, $year)) {
+            $fullTitle .= ' ' . $year;
+        }
+    @endphp
+
+    <!-- KOP SURAT RESMI -->
     <div class="header">
         <table class="header-table">
             <tr>
-                <td class="logo-wrap">
-                    {{-- Logo dinonaktifkan sementara untuk menghindari isu cache mPDF --}}
-                </td>
                 <td class="header-main">
-                    <div class="instansi">{{ $kop['kop_nama_instansi'] ?? '' }}</div>
-                    <div class="unit">{{ $kop['kop_nama_unit'] ?? '' }}</div>
-                    <div class="subunit">{{ $kop['kop_subunit'] ?? '' }}</div>
+                    <div class="instansi">{{ $kop['kop_nama_instansi'] ?? 'PEMERINTAH KABUPATEN DONGGALA' }}</div>
+                    <div class="unit">{{ $kop['kop_nama_unit'] ?? 'BADAN PENGELOLAAN KEUANGAN DAN ASET DAERAH' }}</div>
+                    <div class="subunit">{{ $kop['kop_subunit'] ?? 'Bidang Pengelolaan Aset Daerah' }}</div>
                     <div class="meta-line">{{ $kop['kop_alamat'] ?? '' }}</div>
                     <div class="meta-line">{{ $kop['kop_kontak'] ?? '' }}</div>
                 </td>
@@ -188,90 +161,71 @@
         </table>
     </div>
 
+    <!-- JUDUL LAPORAN KATEGORI -->
     <div class="report-title">
-        <h2>{{ $selectedTitle ?? 'LAPORAN ASET TANAH' }}</h2>
-        <div class="subtitle">Dicetak pada {{ date('d-m-Y H:i') }}</div>
+        <h2>{{ $fullTitle }}</h2>
+        <div class="subtitle">{{ $kop['kop_nama_instansi'] ?? 'PEMERINTAH KABUPATEN DONGGALA' }}</div>
     </div>
 
-    <table class="meta-grid">
-        <tr>
-            <td width="33.33%">
-                <div class="meta-box">
-                    <div class="meta-label">Total Data</div>
-                    <div class="meta-value">{{ number_format((int) ($summary['total_data'] ?? 0), 0, ',', '.') }}</div>
-                </div>
-            </td>
-            <td width="33.33%">
-                <div class="meta-box">
-                    <div class="meta-label">Total Nilai Perolehan</div>
-                    <div class="meta-value">{{ $summary['total_nilai'] ?? '-' }}</div>
-                </div>
-            </td>
-            <td width="33.33%">
-                <div class="meta-box">
-                    <div class="meta-label">Sudah Berstatus</div>
-                    <div class="meta-value">{{ number_format((int) ($summary['total_berstatus'] ?? 0), 0, ',', '.') }}</div>
-                </div>
-            </td>
-        </tr>
-    </table>
-
-    <div class="filter-box">
-        <h4>Filter Aktif</h4>
-        @if (!empty($summary['activeFilters']))
-            @foreach ($summary['activeFilters'] as $filter)
-                <span class="filter-chip">{{ $filter['label'] }}: {{ $filter['value'] }}</span>
-            @endforeach
-        @else
-            <span class="filter-chip">Semua data aset tanah</span>
-        @endif
-    </div>
-
+    <!-- TABEL SIMPEL 5 KOLOM (NO., BIDANG, LUAS, NILAI, KETERANGAN) -->
     <table class="table-report">
         <thead>
             <tr>
-                <th width="4%">No</th>
-                <th width="10%">Kode</th>
-                <th width="16%">Nama Aset</th>
-                <th width="12%">Peruntukan</th>
-                <th width="11%">OPD</th>
-                <th width="8%">Luas (m2)</th>
-                <th width="11%">Nilai Perolehan</th>
-                <th width="9%">Tanggal</th>
-                <th width="11%">Status</th>
-                <th width="6%">Durasi</th>
-                <th width="12%">Keterangan</th>
+                <th rowspan="2" width="6%" style="vertical-align: middle; text-align: center;">NO.</th>
+                <th colspan="3" style="text-align: center;">{{ $groupHeader }}</th>
+                <th rowspan="2" width="28%" style="vertical-align: middle; text-align: center;">Keterangan</th>
+            </tr>
+            <tr>
+                <th width="36%">Bidang</th>
+                <th width="14%" style="text-align: right;">Luas(m2)</th>
+                <th width="16%" style="text-align: right;">Nilai(Rp)</th>
             </tr>
         </thead>
         <tbody>
+            @php 
+                $totalLuas = 0; 
+                $totalNilai = 0; 
+            @endphp
             @forelse ($rows as $index => $row)
+                @php
+                    $luasVal = (float) ($row->luas ?? 0);
+                    $nilaiVal = (float) ($row->harga_perolehan ?? 0);
+                    $totalLuas += $luasVal;
+                    $totalNilai += $nilaiVal;
+
+                    $bidangText = $row->peruntukan ?? $row->nama_aset ?? '-';
+                    $keteranganText = $row->keterangan ?? $row->opdSipat->nama ?? $row->opd ?? '-';
+                @endphp
                 <tr>
                     <td class="text-center">{{ $index + 1 }}</td>
-                    <td>{{ $row->kode_aset ?? '-' }}</td>
-                    <td>{{ $row->nama_aset }}</td>
-                    <td>{{ $row->peruntukan ?? '-' }}</td>
-                    <td>{{ $row->opdSipat->nama ?? $row->opd ?? '-' }}</td>
-                    <td class="text-right">{{ number_format($row->luas ?? 0, 2, ',', '.') }}</td>
-                    <td class="text-right">{{ $row->harga_perolehan ? number_format($row->harga_perolehan, 2, ',', '.') : '-' }}</td>
-                    <td class="text-center">{{ $row->tanggal_perolehan ? date('d-m-Y', strtotime($row->tanggal_perolehan)) : '-' }}</td>
-                    <td>{{ $row->latestProses->statusProses->nama_status ?? 'Belum Diurus' }}</td>
-                    <td class="text-center">{{ $row->latestProses->durasi_hari ?? '-' }}</td>
-                    <td>{{ $row->keterangan ?? '-' }}</td>
+                    <td>{{ $bidangText }}</td>
+                    <td class="text-right">{{ number_format($luasVal, 2, ',', '.') }}</td>
+                    <td class="text-right">{{ $nilaiVal > 0 ? number_format($nilaiVal, 2, ',', '.') : '-' }}</td>
+                    <td>{{ $keteranganText }}</td>
                 </tr>
             @empty
                 <tr>
-                    <td colspan="11" class="text-center">Tidak ada data untuk ditampilkan.</td>
+                    <td colspan="5" class="text-center">Tidak ada data aset tanah untuk ditampilkan.</td>
                 </tr>
             @endforelse
         </tbody>
+        <tfoot>
+            <tr>
+                <td colspan="2" class="text-center">JUMLAH / TOTAL</td>
+                <td class="text-right">{{ number_format($totalLuas, 2, ',', '.') }}</td>
+                <td class="text-right">{{ number_format($totalNilai, 2, ',', '.') }}</td>
+                <td></td>
+            </tr>
+        </tfoot>
     </table>
 
+    <!-- LEMBAR PENGESAHAN (TTD) -->
     <div class="signature-wrap">
-        <div class="signature-city">{{ $kop['kop_kota_ttd'] ?? '' }}, {{ date('d-m-Y H:i') }}</div>
-        <div class="signature-job">{{ $kop['kop_pejabat_jabatan'] ?? '' }}</div>
+        <div class="signature-city">{{ $kop['kop_kota_ttd'] ?? 'Banawa' }}, {{ date('d-m-Y') }}</div>
+        <div class="signature-job">{{ $kop['kop_pejabat_jabatan'] ?? 'Kepala Bidang Pengelolaan Aset Daerah' }}</div>
         <div class="signature-space"></div>
-        <div class="signature-name">{{ $kop['kop_pejabat_nama'] ?? '' }}</div>
-        <div class="signature-nip">{{ $kop['kop_pejabat_nip'] ?? '' }}</div>
+        <div class="signature-name">{{ $kop['kop_pejabat_nama'] ?? 'H. MUHAMMAD NATSIR, S.E., M.Si.' }}</div>
+        <div class="signature-nip">NIP. {{ $kop['kop_pejabat_nip'] ?? '19780512 200501 1 008' }}</div>
     </div>
 
     <div class="footer">

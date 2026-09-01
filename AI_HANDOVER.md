@@ -172,7 +172,7 @@ Aplikasi **menggunakan sentuhan visual premium & animasi mikro kustom** secara b
 - **Progres Sertifikasi**: Melacak status sertifikat tanah dari proses pendaftaran, pengukuran, hingga penerbitan.
 - **Modul Surat Tanah (SKPT & Batas)**: Pembuatan dokumen SKPT formal dengan ekspor berkas PDF (mPDF), Word (.docx), dan cetak langsung. Sisa fungsi legacy `esc()` dan syntax error kurung pada template SKPT telah diganti standar Laravel `e()`.
 - **Peta Aset**: Visualisasi marker sebaran aset tanah pada peta interaktif.
-- **Target Pensertifikatan Tanah Tahunan**: Fitur penetapan KPI target pensertifikatan tahunan per OPD, pemantauan realisasi sertifikat BPN, filter multi-kriteria (Tahun, OPD, Status Capaian, Kata Kunci NIBAR/Peruntukan), serta ekspor Excel (.xlsx) dan PDF (mPDF) presisi.
+- **Pusat Laporan Aset Tanah**: Filter laporan terstruktur berbasis 5 Kategori Status Sertifikasi dengan format **Tabel Simpel 5 Kolom (NO., Bidang, Luas(m2), Nilai(Rp), Keterangan)** yang **tetap mempertahankan KOP Resmi Pemda dan Lembar Pengesahan (TTD Pejabat)** pada ekspor Excel (.xlsx) resmi dan cetak PDF formal (mPDF). Ekspor CSV telah digantikan sepenuhnya dengan file Excel (.xlsx).
 - **Import Pertanahan**: Unggah massal progres sertifikat dan data aset tanah.
 
 ### C. Modul eLABEL (Pengarsipan & Labelisasi)

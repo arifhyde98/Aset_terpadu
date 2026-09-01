@@ -44,8 +44,11 @@ class LaporanController extends Controller implements HasMiddleware
         if ($reportTitles->isEmpty()) {
             $reportTitles = collect([
                 (object)['id' => 1, 'judul' => 'LAPORAN REKAPITULASI ASET TANAH KABUPATEN DONGGALA'],
-                (object)['id' => 2, 'judul' => 'LAPORAN DAFTAR KIB A TANAH PEMERINTAH KABUPATEN DONGGALA'],
-                (object)['id' => 3, 'judul' => 'LAPORAN PROGRES PENSERTIFIKATAN BPN ASET TANAH'],
+                (object)['id' => 2, 'judul' => 'LAPORAN ASET TANAH BELUM DIPROSES PENSERTIFIKATAN'],
+                (object)['id' => 3, 'judul' => 'LAPORAN ASET TANAH DALAM PROSES PENSERTIFIKATAN BPN'],
+                (object)['id' => 4, 'judul' => 'LAPORAN ASET TANAH SUDAH BERSERTIFIKAT'],
+                (object)['id' => 5, 'judul' => 'LAPORAN ASET TANAH BERMASALAH / SENGKETA'],
+                (object)['id' => 6, 'judul' => 'LAPORAN REKAPITULASI ASET TANAH BELUM BERSERTIFIKAT (GABUNGAN)'],
             ]);
         }
 
@@ -69,42 +72,7 @@ class LaporanController extends Controller implements HasMiddleware
 
     public function exportCsv(Request $request)
     {
-        $filters = $this->laporanService->getFilters($request->all());
-        $rows = $this->laporanService->buildQuery($filters)->get();
-
-        $filename = 'Laporan_Aset_Tanah_' . date('Ymd_His') . '.csv';
-        $headers = [
-            'Content-Type' => 'text/csv',
-            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
-        ];
-
-        $callback = function () use ($rows) {
-            $file = fopen('php://output', 'w');
-            fputcsv($file, [
-                'No', 'Kode Aset (NIBAR)', 'Nama Aset Tanah', 'Peruntukan / Penggunaan',
-                'OPD Pengelola', 'Luas (m²)', 'Harga Perolehan (Rp)', 'Tanggal Perolehan',
-                'Status BPN Terkini', 'Alamat / Lokasi', 'Keterangan'
-            ]);
-
-            foreach ($rows as $index => $row) {
-                fputcsv($file, [
-                    $index + 1,
-                    $row->kode_aset ?? '-',
-                    $row->nama_aset ?? '-',
-                    $row->peruntukan ?? '-',
-                    $row->opdSipat->nama ?? $row->opd ?? '-',
-                    $row->luas ?? 0,
-                    $row->harga_perolehan ?? 0,
-                    $row->tanggal_perolehan ?? '-',
-                    $row->latestProses->statusProses->nama_status ?? 'Belum Diurus',
-                    $row->alamat ?? '-',
-                    $row->keterangan ?? '-',
-                ]);
-            }
-            fclose($file);
-        };
-
-        return response()->stream($callback, 200, $headers);
+        return $this->exportXlsx($request);
     }
 
     public function exportXlsx(Request $request)
@@ -113,18 +81,7 @@ class LaporanController extends Controller implements HasMiddleware
         $rows = $this->laporanService->buildQuery($filters)->get();
         $summary = $this->laporanService->buildSummary($rows, $filters);
         $kop = $this->laporanService->getKopSettings();
-        
-        $selectedTitle = 'Laporan Aset Tanah';
-        if ($filters['title_mode'] === 'manual' && !empty($filters['manual_title'])) {
-            $selectedTitle = $filters['manual_title'];
-        } elseif (!empty($filters['report_title_id'])) {
-            $titleRow = \Illuminate\Support\Facades\DB::table('report_titles')->where('id', $filters['report_title_id'])->first();
-            if ($titleRow) {
-                $selectedTitle = $titleRow->judul;
-            }
-        } else {
-            $selectedTitle = $kop['kop_nama_laporan_aset'] ?? 'Laporan Aset Tanah';
-        }
+        $selectedTitle = $this->laporanService->resolveReportTitle($filters);
 
         return $this->laporanService->exportExcel($rows, $filters, $summary, $kop, $selectedTitle);
     }
@@ -148,16 +105,7 @@ class LaporanController extends Controller implements HasMiddleware
         $rows = $this->laporanService->buildQuery($filters)->get();
         $summary = $this->laporanService->buildSummary($rows, $filters);
         $kop = $this->laporanService->getKopSettings();
-
-        $selectedTitle = 'LAPORAN REKAPITULASI ASET TANAH';
-        if ($filters['title_mode'] === 'manual' && !empty($filters['manual_title'])) {
-            $selectedTitle = strtoupper($filters['manual_title']);
-        } elseif (!empty($filters['report_title_id'])) {
-            $titleRow = DB::table('report_titles')->where('id', $filters['report_title_id'])->first();
-            if ($titleRow) {
-                $selectedTitle = strtoupper($titleRow->judul);
-            }
-        }
+        $selectedTitle = $this->laporanService->resolveReportTitle($filters);
 
         $pdfView = view('sipat.laporan.print_pdf', compact('rows', 'filters', 'summary', 'kop', 'selectedTitle'))->render();
         

@@ -14,12 +14,27 @@ class LaporanService
      */
     public function getFilters(array $input): array
     {
-        $rawStatus = $input['status'] ?? null;
-        $statusIds = is_array($rawStatus) ? array_filter($rawStatus) : ($rawStatus ? [$rawStatus] : []);
+        $rawStatus = $input['kategori_status'] ?? ($input['status'] ?? null);
+        $kategoriStatus = '';
+        $statusIds = [];
+
+        if (is_array($rawStatus)) {
+            $rawFirst = reset($rawStatus);
+            if (is_numeric($rawFirst)) {
+                $statusIds = array_filter($rawStatus);
+            } else {
+                $kategoriStatus = (string) $rawFirst;
+            }
+        } elseif (is_numeric($rawStatus)) {
+            $statusIds = [(int) $rawStatus];
+        } elseif (is_string($rawStatus)) {
+            $kategoriStatus = $rawStatus;
+        }
 
         return [
             'opd_id' => $input['opd_id'] ?? ($input['opd'] ?? ''),
             'status' => $statusIds,
+            'kategori_status' => $kategoriStatus,
             'tanggal_perolehan' => $input['tanggal_perolehan'] ?? '',
             'q' => $input['q'] ?? '',
             'title_mode' => $input['title_mode'] ?? 'master',
@@ -51,7 +66,53 @@ class LaporanService
             }
         }
 
-        if (!empty($filters['status'])) {
+        // Filter Kategori Status (Belum Diproses, Dalam Proses, Sudah Bersertifikat, Bermasalah, Belum Bersertifikat)
+        $kat = $filters['kategori_status'] ?? '';
+        if ($kat !== '') {
+            if ($kat === 'sudah_bersertifikat') {
+                $query->whereHas('latestProses', function($q) {
+                    $q->whereIn('id_status', [1, 4, 10])
+                      ->orWhereHas('statusProses', function($sq) {
+                          $sq->where('kategori', 'bersertifikat');
+                      });
+                });
+            } elseif ($kat === 'dalam_proses') {
+                $query->whereHas('latestProses', function($q) {
+                    $q->whereIn('id_status', [5, 6, 7, 8, 9, 11])
+                      ->orWhereHas('statusProses', function($sq) {
+                          $sq->where('kategori', 'proses');
+                      });
+                });
+            } elseif ($kat === 'belum_diproses') {
+                $query->where(function($q) {
+                    $q->doesntHave('latestProses')
+                      ->orWhereHas('latestProses', function($lq) {
+                          $lq->where('id_status', 2)
+                            ->orWhereHas('statusProses', function($sq) {
+                                $sq->where('kategori', 'belum_diurus');
+                            });
+                      });
+                });
+            } elseif ($kat === 'bermasalah') {
+                $query->whereHas('latestProses', function($q) {
+                    $q->where('id_status', 3)
+                      ->orWhereHas('statusProses', function($sq) {
+                          $sq->where('kategori', 'kendala');
+                      });
+                });
+            } elseif ($kat === 'belum_bersertifikat') {
+                // Gabungan dari Belum Diproses + Dalam Proses + Kendala (Semua yang BUKAN bersertifikat)
+                $query->where(function($q) {
+                    $q->doesntHave('latestProses')
+                      ->orWhereHas('latestProses', function($lq) {
+                          $lq->whereNotIn('id_status', [1, 4, 10])
+                            ->whereHas('statusProses', function($sq) {
+                                $sq->where('kategori', '!=', 'bersertifikat');
+                            });
+                      });
+                });
+            }
+        } elseif (!empty($filters['status'])) {
             $query->whereHas('latestProses', function($q) use ($filters) {
                 $q->whereIn('id_status', $filters['status']);
             });
@@ -90,7 +151,10 @@ class LaporanService
         foreach ($rows as $row) {
             $totalNilai += (float) ($row->harga_perolehan ?? 0);
             $stName = $row->latestProses->statusProses->nama_status ?? '';
-            if (!empty($stName) && strtolower($stName) !== 'belum diurus') {
+            $stKat = $row->latestProses->statusProses->kategori ?? '';
+            $stId = $row->latestProses->id_status ?? 0;
+
+            if (in_array($stId, [1, 4, 10]) || $stKat === 'bersertifikat') {
                 $totalBerstatus++;
             }
         }
@@ -109,6 +173,19 @@ class LaporanService
             }
             $activeFilters[] = ['label' => $opdLabel, 'value' => $opdValue];
         }
+
+        if (!empty($filters['kategori_status'])) {
+            $katLabels = [
+                'belum_diproses' => 'Belum Diproses',
+                'dalam_proses' => 'Dalam Proses',
+                'sudah_bersertifikat' => 'Sudah Bersertifikat',
+                'bermasalah' => 'Bermasalah / Sengketa',
+                'belum_bersertifikat' => 'Belum Bersertifikat (Gabungan)',
+            ];
+            $katValue = $katLabels[$filters['kategori_status']] ?? $filters['kategori_status'];
+            $activeFilters[] = ['label' => 'Kategori Status', 'value' => $katValue];
+        }
+
         if (!empty($filters['tanggal_perolehan'])) {
             $activeFilters[] = ['label' => 'Tanggal Perolehan', 'value' => $filters['tanggal_perolehan']];
         }
@@ -122,6 +199,37 @@ class LaporanService
             'total_berstatus' => $totalBerstatus,
             'activeFilters' => $activeFilters,
         ];
+    }
+
+    /**
+     * Memecahkan judul laporan yang aktif sesuai filter dan kategori status.
+     */
+    public function resolveReportTitle(array $filters): string
+    {
+        if (($filters['title_mode'] ?? 'master') === 'manual' && !empty($filters['manual_title'])) {
+            return strtoupper($filters['manual_title']);
+        }
+
+        if (!empty($filters['report_title_id'])) {
+            if (Schema::hasTable('report_titles')) {
+                $titleRow = DB::table('report_titles')->where('id', $filters['report_title_id'])->first();
+                if ($titleRow) {
+                    return strtoupper($titleRow->judul);
+                }
+            }
+        }
+
+        // Auto-select matching title based on kategori_status
+        $kat = $filters['kategori_status'] ?? '';
+        if (!empty($kat) && Schema::hasTable('report_titles')) {
+            $titleRow = DB::table('report_titles')->where('kategori_status', $kat)->where('aktif', 1)->first();
+            if ($titleRow) {
+                return strtoupper($titleRow->judul);
+            }
+        }
+
+        $kop = $this->getKopSettings();
+        return strtoupper($kop['kop_nama_laporan_aset'] ?? 'LAPORAN REKAPITULASI ASET TANAH KABUPATEN DONGGALA');
     }
 
     /**
@@ -158,212 +266,192 @@ class LaporanService
     }
 
     /**
-     * Generate Excel file menggunakan native PhpSpreadsheet agar format 100% sama dengan SIPAT lama
+     * Generate Excel file dengan layout simpel 5 kolom (NO., Bidang, Luas(m2), Nilai(Rp), Keterangan)
+     */
+    /**
+     * Generate Excel file dengan layout simpel 5 kolom (NO., Bidang, Luas(m2), Nilai(Rp), Keterangan)
+     * serta mempertahankan KOP Resmi Pemda dan Lembar Pengesahan (TTD).
      */
     public function exportExcel($rows, array $filters, array $summary, array $kop, string $selectedTitle)
     {
         $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet();
         $sheet->setTitle('Laporan Aset');
-        $summarySheet = $spreadsheet->createSheet();
-        $summarySheet->setTitle('Ringkasan');
 
-        $startColumn = 'A';
-        $endColumn = 'K';
-        $titleStartColumn = 'B';
-        $sheet->mergeCells($titleStartColumn . '1:' . $endColumn . '1');
-        $sheet->mergeCells($titleStartColumn . '2:' . $endColumn . '2');
-        $sheet->mergeCells($titleStartColumn . '3:' . $endColumn . '3');
-        $sheet->mergeCells($titleStartColumn . '4:' . $endColumn . '4');
-        $sheet->mergeCells($startColumn . '5:' . $endColumn . '5');
-        $sheet->mergeCells($startColumn . '6:' . $endColumn . '6');
-
-        $sheet->setCellValue($titleStartColumn . '1', (string) ($kop['kop_nama_instansi'] ?? ''));
-        $sheet->setCellValue($titleStartColumn . '2', (string) ($kop['kop_nama_unit'] ?? ''));
-        $sheet->setCellValue($titleStartColumn . '3', (string) ($kop['kop_subunit'] ?? ''));
-        $sheet->setCellValue($titleStartColumn . '4', (string) ($selectedTitle));
-        $sheet->setCellValue('A5', trim((string) (($kop['kop_alamat'] ?? '') . ' | ' . ($kop['kop_kontak'] ?? '')), ' |'));
+        $year = date('Y');
         
-        $generatedAt = date('d-m-Y H:i');
-        $sheet->setCellValue('A6', 'Dicetak pada: ' . $generatedAt);
-
-        $filterText = 'Filter aktif: ';
-        if (!empty($summary['activeFilters'])) {
-            $filterText .= implode(' | ', array_map(
-                static fn ($item) => ($item['label'] ?? '') . ': ' . ($item['value'] ?? ''),
-                $summary['activeFilters']
-            ));
-        } else {
-            $filterText .= 'Semua data aset tanah';
-        }
-        $sheet->mergeCells('A8:K8');
-        $sheet->setCellValue('A8', $filterText);
-
-        $sheet->mergeCells('A10:B10');
-        $sheet->mergeCells('D10:E10');
-        $sheet->mergeCells('G10:H10');
-        $sheet->setCellValue('A10', 'Total Data');
-        $sheet->setCellValue('C10', (int) ($summary['total_data'] ?? 0));
-        $sheet->setCellValue('D10', 'Total Nilai');
-        // Parse the formatted money string back to float for Excel, or just pass it if it's already clean
-        $rawNilai = (float) str_replace(['Rp', '.', ',', ' '], ['', '', '.', ''], $summary['total_nilai'] ?? '0');
-        $sheet->setCellValue('F10', $rawNilai);
-        $sheet->setCellValue('G10', 'Sudah Berstatus');
-        $sheet->setCellValue('I10', (int) ($summary['total_berstatus'] ?? 0));
-
-        $headers = ['No', 'Kode Aset', 'Nama Aset', 'Peruntukan', 'OPD', 'Luas (m2)', 'Nilai Perolehan', 'Tanggal Perolehan', 'Status', 'Durasi', 'Keterangan'];
-        $headerRow = 12;
-        foreach ($headers as $index => $header) {
-            $column = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($index + 1);
-            $sheet->setCellValue($column . $headerRow, $header);
+        // Grouped header label
+        $kat = $filters['kategori_status'] ?? '';
+        $groupHeader = 'Aset Tanah';
+        if ($kat === 'sudah_bersertifikat') {
+            $groupHeader = 'Aset Sudah Sertifikat';
+        } elseif ($kat === 'belum_diproses') {
+            $groupHeader = 'Aset Belum Diproses';
+        } elseif ($kat === 'dalam_proses') {
+            $groupHeader = 'Aset Dalam Proses';
+        } elseif ($kat === 'bermasalah') {
+            $groupHeader = 'Aset Bermasalah / Sengketa';
+        } elseif ($kat === 'belum_bersertifikat') {
+            $groupHeader = 'Aset Belum Bersertifikat';
         }
 
-        $rowNumber = $headerRow + 1;
+        // --- 1. KOP SURAT RESMI ---
+        $sheet->mergeCells('A1:E1');
+        $sheet->mergeCells('A2:E2');
+        $sheet->mergeCells('A3:E3');
+        $sheet->setCellValue('A1', strtoupper($kop['kop_nama_instansi'] ?? 'PEMERINTAH KABUPATEN DONGGALA'));
+        $sheet->setCellValue('A2', strtoupper($kop['kop_nama_unit'] ?? 'BADAN PENGELOLAAN KEUANGAN DAN ASET DAERAH'));
+        $sheet->setCellValue('A3', strtoupper($kop['kop_subunit'] ?? 'Bidang Pengelolaan Aset Daerah'));
+
+        // --- 2. JUDUL LAPORAN KATEGORI ---
+        $sheet->mergeCells('A5:E5');
+        $sheet->mergeCells('A6:E6');
+        
+        $fullTitle = strtoupper($selectedTitle);
+        if (!str_contains($fullTitle, $year)) {
+            $fullTitle .= ' ' . $year;
+        }
+
+        $sheet->setCellValue('A5', $fullTitle);
+        $sheet->setCellValue('A6', strtoupper($kop['kop_nama_instansi'] ?? 'PEMERINTAH KABUPATEN DONGGALA'));
+
+        // --- 3. HEADER TABEL SIMPEL 5 KOLOM (ROW 8 & 9) ---
+        $sheet->mergeCells('A8:A9');
+        $sheet->mergeCells('B8:D8');
+        $sheet->mergeCells('E8:E9');
+
+        $sheet->setCellValue('A8', 'NO.');
+        $sheet->setCellValue('B8', $groupHeader);
+        $sheet->setCellValue('E8', 'Keterangan');
+
+        $sheet->setCellValue('B9', 'Bidang');
+        $sheet->setCellValue('C9', 'Luas(m2)');
+        $sheet->setCellValue('D9', 'Nilai(Rp)');
+
+        // --- 4. DATA ROWS (ROW 10 ONWARDS) ---
+        $rowNumber = 10;
         $no = 1;
+        $totalLuas = 0;
+        $totalNilai = 0;
+
         foreach ($rows as $row) {
+            $luasVal = (float) ($row->luas ?? 0);
+            $nilaiVal = (float) ($row->harga_perolehan ?? 0);
+
+            $totalLuas += $luasVal;
+            $totalNilai += $nilaiVal;
+
+            $bidangText = $row->peruntukan ?? $row->nama_aset ?? '-';
+            $keteranganText = $row->keterangan ?? $row->opdSipat->nama ?? $row->opd ?? '-';
+
             $sheet->setCellValue('A' . $rowNumber, $no++);
-            $sheet->setCellValue('B' . $rowNumber, (string) ($row->kode_aset ?? ''));
-            $sheet->setCellValue('C' . $rowNumber, (string) ($row->nama_aset ?? ''));
-            $sheet->setCellValue('D' . $rowNumber, (string) ($row->peruntukan ?? '-'));
-            $sheet->setCellValue('E' . $rowNumber, (string) ($row->opdSipat->nama ?? $row->opd ?? '-'));
-            $sheet->setCellValue('F' . $rowNumber, (float) ($row->luas ?? 0));
-            $sheet->setCellValue('G' . $rowNumber, (float) ($row->harga_perolehan ?? 0));
-            $sheet->setCellValue('H' . $rowNumber, $row->tanggal_perolehan ? date('d-m-Y', strtotime($row->tanggal_perolehan)) : '-');
-            $sheet->setCellValue('I' . $rowNumber, (string) ($row->latestProses->statusProses->nama_status ?? 'Belum Diurus'));
-            $sheet->setCellValue('J' . $rowNumber, (string) ($row->latestProses->durasi_hari ?? '-'));
-            $sheet->setCellValue('K' . $rowNumber, (string) ($row->keterangan ?? ''));
+            $sheet->setCellValue('B' . $rowNumber, $bidangText);
+            $sheet->setCellValue('C' . $rowNumber, $luasVal);
+            $sheet->setCellValue('D' . $rowNumber, $nilaiVal);
+            $sheet->setCellValue('E' . $rowNumber, $keteranganText);
+
             $rowNumber++;
         }
 
-        $lastDataRow = max($headerRow + 1, $rowNumber - 1);
+        // --- 5. TOTAL ROW ---
+        $totalRow = $rowNumber;
+        $sheet->mergeCells('A' . $totalRow . ':B' . $totalRow);
+        $sheet->setCellValue('A' . $totalRow, 'JUMLAH / TOTAL');
+        $sheet->setCellValue('C' . $totalRow, $totalLuas);
+        $sheet->setCellValue('D' . $totalRow, $totalNilai);
+        $sheet->setCellValue('E' . $totalRow, '');
 
-        $sheet->getStyle('B1:K1')->applyFromArray([
-            'font' => ['bold' => true, 'size' => 14],
+        // --- 6. LEMBAR PENGESAHAN (TTD RESMI) ---
+        $ttdStartRow = $totalRow + 3;
+        $sheet->mergeCells('D' . $ttdStartRow . ':E' . $ttdStartRow);
+        $sheet->mergeCells('D' . ($ttdStartRow + 1) . ':E' . ($ttdStartRow + 1));
+        $sheet->mergeCells('D' . ($ttdStartRow + 4) . ':E' . ($ttdStartRow + 4));
+        $sheet->mergeCells('D' . ($ttdStartRow + 5) . ':E' . ($ttdStartRow + 5));
+
+        $sheet->setCellValue('D' . $ttdStartRow, ($kop['kop_kota_ttd'] ?? 'Banawa') . ', ' . date('d-m-Y'));
+        $sheet->setCellValue('D' . ($ttdStartRow + 1), $kop['kop_pejabat_jabatan'] ?? 'Kepala Bidang Pengelolaan Aset Daerah');
+        $sheet->setCellValue('D' . ($ttdStartRow + 4), $kop['kop_pejabat_nama'] ?? 'H. MUHAMMAD NATSIR, S.E., M.Si.');
+        $sheet->setCellValue('D' . ($ttdStartRow + 5), 'NIP. ' . ($kop['kop_pejabat_nip'] ?? '19780512 200501 1 008'));
+
+        // --- 7. STYLING ---
+        // KOP Styling
+        $sheet->getStyle('A1:E3')->applyFromArray([
+            'font' => ['bold' => true, 'name' => 'Arial'],
             'alignment' => ['horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER],
         ]);
-        $sheet->getStyle('B2:K2')->applyFromArray([
-            'font' => ['bold' => true, 'size' => 16, 'color' => ['rgb' => '0B4F84']],
+        $sheet->getStyle('A1')->getFont()->setSize(11);
+        $sheet->getStyle('A2')->getFont()->setSize(13);
+        $sheet->getStyle('A3')->getFont()->setSize(10);
+
+        // Judul Styling
+        $sheet->getStyle('A5:E6')->applyFromArray([
+            'font' => ['bold' => true, 'size' => 12, 'name' => 'Arial'],
             'alignment' => ['horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER],
         ]);
-        $sheet->getStyle('B3:K3')->applyFromArray([
-            'font' => ['size' => 11],
-            'alignment' => ['horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER],
-        ]);
-        $sheet->getStyle('B4:K4')->applyFromArray([
-            'font' => ['bold' => true, 'size' => 15],
-            'alignment' => ['horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER],
-        ]);
-        $sheet->getStyle('A5:K8')->applyFromArray([
-            'font' => ['size' => 10, 'color' => ['rgb' => '334155']],
-        ]);
-        $sheet->getStyle('A10:I10')->applyFromArray([
-            'font' => ['bold' => true],
+
+        // Header Table Styling (Row 8 & 9) matching user screenshot
+        $sheet->getStyle('A8:E9')->applyFromArray([
+            'font' => ['bold' => true, 'size' => 10, 'name' => 'Arial'],
             'fill' => [
                 'fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
-                'color' => ['rgb' => 'E8EEF5'],
+                'color' => ['rgb' => 'D9D9D9'],
+            ],
+            'alignment' => [
+                'horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER,
+                'vertical' => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER,
             ],
             'borders' => [
                 'allBorders' => [
                     'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
-                    'color' => ['rgb' => '9FB3C8'],
+                    'color' => ['rgb' => '000000'],
                 ],
             ],
         ]);
-        $sheet->getStyle('A12:K12')->applyFromArray([
-            'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF']],
-            'fill' => [
-                'fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
-                'color' => ['rgb' => '163A63'],
-            ],
-            'alignment' => ['horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER],
-        ]);
-        $sheet->getStyle('A12:K' . $lastDataRow)->applyFromArray([
+
+        // Data Table Styling
+        $sheet->getStyle('A10:E' . $totalRow)->applyFromArray([
+            'font' => ['size' => 10, 'name' => 'Arial'],
             'borders' => [
                 'allBorders' => [
                     'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
-                    'color' => ['rgb' => 'AAB7C4'],
+                    'color' => ['rgb' => '000000'],
                 ],
             ],
         ]);
-        
-        for ($row = $headerRow + 1; $row <= $lastDataRow; $row++) {
-            if (($row - ($headerRow + 1)) % 2 === 0) {
-                $sheet->getStyle('A' . $row . ':K' . $row)->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID);
-                $sheet->getStyle('A' . $row . ':K' . $row)->getFill()->getStartColor()->setRGB('F8FAFC');
-            }
-        }
 
-        $sheet->getStyle('F13:G' . $lastDataRow)->getNumberFormat()->setFormatCode('#,##0.00');
-        $sheet->getStyle('F10')->getNumberFormat()->setFormatCode('#,##0.00');
-        $sheet->getStyle('A13:A' . $lastDataRow)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
-        $sheet->getStyle('F13:G' . $lastDataRow)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_RIGHT);
-        $sheet->getStyle('H13:H' . $lastDataRow)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
-        $sheet->getStyle('J13:J' . $lastDataRow)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
-        $sheet->getStyle('A1:K' . $lastDataRow)->getAlignment()->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER);
-
-        foreach (range('A', 'K') as $column) {
-            $sheet->getColumnDimension($column)->setAutoSize(true);
-        }
-
-        $sheet->getRowDimension(1)->setRowHeight(26);
-        $sheet->getRowDimension(2)->setRowHeight(28);
-        $sheet->getRowDimension(3)->setRowHeight(22);
-        $sheet->getRowDimension(4)->setRowHeight(24);
-        $sheet->freezePane('A13');
-
-        // ==== SUMMARY SHEET ====
-        $summarySheet->mergeCells('A1:F1');
-        $summarySheet->mergeCells('A2:F2');
-        $summarySheet->mergeCells('A3:F3');
-        $summarySheet->setCellValue('A1', (string) ($kop['kop_nama_instansi'] ?? ''));
-        $summarySheet->setCellValue('A2', (string) ($selectedTitle));
-        $summarySheet->setCellValue('A3', 'Ringkasan Export');
-        $summarySheet->setCellValue('A5', 'Dicetak pada');
-        $summarySheet->setCellValue('B5', $generatedAt);
-        $summarySheet->setCellValue('A7', 'Total Data');
-        $summarySheet->setCellValue('B7', (int) ($summary['total_data'] ?? 0));
-        $summarySheet->setCellValue('A8', 'Total Nilai');
-        $summarySheet->setCellValue('B8', $rawNilai);
-        $summarySheet->setCellValue('A9', 'Sudah Berstatus');
-        $summarySheet->setCellValue('B9', (int) ($summary['total_berstatus'] ?? 0));
-        $summarySheet->setCellValue('A11', 'Filter Aktif');
-
-        $row = 12;
-        if (!empty($summary['activeFilters'])) {
-            foreach ($summary['activeFilters'] as $filter) {
-                $summarySheet->setCellValue('A' . $row, (string) ($filter['label'] ?? ''));
-                $summarySheet->setCellValue('B' . $row, (string) ($filter['value'] ?? ''));
-                $row++;
-            }
-        } else {
-            $summarySheet->setCellValue('A' . $row, 'Semua data aset tanah');
-        }
-
-        $summarySheet->getStyle('A1:F3')->applyFromArray([
-            'font' => ['bold' => true],
-            'alignment' => ['horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER],
-        ]);
-        $summarySheet->getStyle('A7:B9')->applyFromArray([
-            'borders' => [
-                'allBorders' => [
-                    'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
-                    'color' => ['rgb' => 'AAB7C4'],
-                ],
-            ],
+        // Total Row Styling
+        $sheet->getStyle('A' . $totalRow . ':E' . $totalRow)->applyFromArray([
+            'font' => ['bold' => true, 'size' => 10, 'name' => 'Arial'],
             'fill' => [
                 'fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
-                'color' => ['rgb' => 'F8FAFC'],
+                'color' => ['rgb' => 'EAEAEA'],
             ],
         ]);
-        $summarySheet->getStyle('B8')->getNumberFormat()->setFormatCode('#,##0.00');
-        foreach (range('A', 'F') as $column) {
-            $summarySheet->getColumnDimension($column)->setAutoSize(true);
-        }
 
-        $spreadsheet->setActiveSheetIndex(0);
+        // Alignments & Number Formats
+        $sheet->getStyle('A10:A' . $totalRow)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle('C10:C' . $totalRow)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_RIGHT);
+        $sheet->getStyle('D10:D' . $totalRow)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_RIGHT);
+
+        $sheet->getStyle('C10:C' . $totalRow)->getNumberFormat()->setFormatCode('#,##0.00');
+        $sheet->getStyle('D10:D' . $totalRow)->getNumberFormat()->setFormatCode('#,##0.00');
+
+        // TTD Styling
+        $sheet->getStyle('D' . $ttdStartRow . ':E' . ($ttdStartRow + 5))->applyFromArray([
+            'font' => ['size' => 10, 'name' => 'Arial'],
+            'alignment' => ['horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER],
+        ]);
+        $sheet->getStyle('D' . ($ttdStartRow + 1))->getFont()->setBold(true);
+        $sheet->getStyle('D' . ($ttdStartRow + 4))->getFont()->setBold(true)->setUnderline(true);
+
+        $sheet->getColumnDimension('A')->setWidth(8);
+        $sheet->getColumnDimension('B')->setWidth(42);
+        $sheet->getColumnDimension('C')->setWidth(16);
+        $sheet->getColumnDimension('D')->setWidth(24);
+        $sheet->getColumnDimension('E')->setWidth(30);
 
         $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
-        $filename = 'Laporan_Aset_Tanah_' . date('Ymd_His') . '.xlsx';
+        $filename = 'Daftar_Aset_Tanah_' . date('Ymd_His') . '.xlsx';
 
         return response()->streamDownload(function () use ($writer) {
             $writer->save('php://output');

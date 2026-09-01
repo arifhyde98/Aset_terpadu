@@ -129,14 +129,17 @@
                             </div>
 
                             <div class="col-md-6">
-                                <label class="form-label small fw-semibold text-secondary mb-1"><i class="bi bi-tag me-1"></i> Status Sertifikasi BPN</label>
-                                <select name="status[]" class="form-select">
+                                <label class="form-label small fw-semibold text-secondary mb-1"><i class="bi bi-tag me-1"></i> Kategori Status Sertifikasi</label>
+                                @php
+                                    $currKat = request('kategori_status', (is_array(request('status')) ? reset(request('status')) : request('status')));
+                                @endphp
+                                <select name="kategori_status" class="form-select">
                                     <option value="">-- Semua Status --</option>
-                                    @foreach($statusList as $st)
-                                        <option value="{{ $st->id_status }}" {{ (is_array(request('status')) && in_array($st->id_status, request('status'))) || request('status') == $st->id_status ? 'selected' : '' }}>
-                                            {{ $st->nama_status }}
-                                        </option>
-                                    @endforeach
+                                    <option value="belum_diproses" {{ $currKat === 'belum_diproses' ? 'selected' : '' }}>1. Belum Diproses</option>
+                                    <option value="dalam_proses" {{ $currKat === 'dalam_proses' ? 'selected' : '' }}>2. Dalam Proses (Pengukuran / PERTEK / PKKPR)</option>
+                                    <option value="sudah_bersertifikat" {{ $currKat === 'sudah_bersertifikat' ? 'selected' : '' }}>3. Sudah Bersertifikat</option>
+                                    <option value="bermasalah" {{ $currKat === 'bermasalah' ? 'selected' : '' }}>4. Bermasalah / Sengketa</option>
+                                    <option value="belum_bersertifikat" {{ $currKat === 'belum_bersertifikat' ? 'selected' : '' }}>5. Belum Bersertifikat (Gabungan Belum Diproses, Dalam Proses & Bermasalah)</option>
                                 </select>
                             </div>
 
@@ -265,14 +268,14 @@
                         </div>
                     </a>
 
-                    <!-- 3. Export CSV -->
-                    <a href="{{ route('sipat.laporan.exportCsv') }}{{ $exportQueryString }}" class="action-item-card">
+                    <!-- 3. Export Excel (.xlsx) -->
+                    <a href="{{ route('sipat.laporan.exportXlsx') }}{{ $exportQueryString }}" class="action-item-card">
                         <div class="action-icon bg-success-subtle text-success">
                             <i class="bi bi-file-earmark-excel"></i>
                         </div>
                         <div>
-                            <div class="fw-bold text-body">Unduh Data CSV / Excel</div>
-                            <small class="text-secondary">Unduh format file CSV rapi untuk pengolahan spreadsheet data</small>
+                            <div class="fw-bold text-body">Unduh Laporan Excel (.xlsx)</div>
+                            <small class="text-secondary">Unduh file Excel resmi ber-KOP & TTD persis sesuai tampilan PDF</small>
                         </div>
                     </a>
                 </div>
