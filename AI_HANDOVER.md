@@ -166,7 +166,7 @@ Aplikasi **menggunakan sentuhan visual premium & animasi mikro kustom** secara b
 - **Diagnosis & Resolusi Duplikasi Data**: Modul pendeteksi dan penyelesai duplikasi aset tanah dengan algoritma presisi tinggi 4 tingkat (NIB identik, suffix `(2)` hasil impor, Nomor Sertifikat BPN sama, serta Peruntukan Spesifik + OPD + Luas identik). Dilengkapi fitur konsolidasi gabung (*merge*) aset & OPD ganda.
 
 ### B. Modul SIPAT (Pertanahan)
-- **Katalog Aset Tanah (`/sipat/aset`)**: Pencatatan data tanah daerah, luas, dasar perolehan, harga, dan koordinat peta. Dilengkapi tombol **Export Data** (Excel `.xlsx` & Pratinjau PDF) yang mendukung filter aktif, serta modal **Import Data** 2 Tab (Unggah Aset Baru & Pembaruan Status BPN Massal) lengkap dengan unduhan berkas template resmi.
+- **Katalog Aset Tanah (`/sipat/aset`)**: Pencatatan data tanah daerah, luas, dasar perolehan, harga, dan koordinat peta. Dilengkapi filter **Kategori Aset / Status** (Status Sertifikasi BPN & Pencatatan NIBAR), filter **Status BPN Multi-Select** (centang bebas tanpa refresh otomatis dengan tombol eksekusi 'Cek / Filter' & penghitung dinamis), **Session Filter Persistence** (mempertahankan semua filter aktif secara otomatis saat mengubah data, menambah riwayat proses BPN, mengedit spasial GIS, mengunggah dokumen, atau menghapus data), tombol **Export Data** (Excel `.xlsx` & Pratinjau PDF) yang mendukung filter aktif, serta modal **Import Data** 2 Tab (Unggah Aset Baru & Pembaruan Status BPN Massal) lengkap dengan unduhan berkas template resmi.
 - **Target Pensertifikatan & Pemetaan GIS**: Pengelolaan KPI penetapan target pensertifikatan tanah tahunan (penetapan target, modal edit/update target, filter tahun/OPD), pelacakan progres real-time, ekspor rekapitulasi, dan visualisasi spasial interaktif menggunakan Leaflet GIS & Shapefile/GeoJSON.
 - **Tanah Belum / Tak Tercatat**: Pengelolaan khusus bidang tanah yang belum masuk KIB A atau belum memiliki NIBAR resmi. Dilengkapi penomoran otomatis NIBAR Draft (`DRAFT-YYYYMMDD-XXXX`), modal pendaftaran cepat, dan fitur update sekali-klik ke NIBAR Resmi BPKAD.
 - **Progres Sertifikasi**: Melacak status sertifikat tanah dari proses pendaftaran, pengukuran, hingga penerbitan.
@@ -201,6 +201,7 @@ Aplikasi **menggunakan sentuhan visual premium & animasi mikro kustom** secara b
 | **SIPAT** | GET | `/sipat/surat/skpt` | `Sipat\SuratController@skpt` | Auth | Modul Pembuatan SKPT |
 | **SIPAT** | GET | `/sipat/peta` | `Sipat\PetaController@index` | Auth | Peta Interaktif Aset |
 | **SIPAT** | GET | `/master-data/opd-sipat` | `MasterSipatOpdController` | Auth | CRUD OPD Modul SIPAT |
+| **SIPAT** | Resource | `/master-data/status-proses` | `StatusProsesController` | Auth | CRUD Master Status & Kategori BPN |
 | **eLABEL** | GET | `/elabel/dashboard` | `Elabel\ElabelDashboardController@index` | Auth | Dashboard eLABEL |
 | **eLABEL** | GET | `/elabel/bpkb` | `Elabel\ElabelBpkbController@index` | Auth | Katalog BPKB eLABEL |
 | **eLABEL** | GET | `/elabel/bpkb-smart-extractor` | `Elabel\ElabelSmartBpkbExtractorController@index` | Auth | Halaman Smart BPKB Extractor |

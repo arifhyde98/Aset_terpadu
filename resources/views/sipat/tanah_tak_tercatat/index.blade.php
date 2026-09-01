@@ -157,7 +157,7 @@
                     <thead class="bg-body text-secondary" style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em;">
                         <tr>
                             <th class="ps-4 py-3" style="width: 50px;">NO</th>
-                            <th class="py-3">NAMA ASET / PERUNTUKAN & NIBAR</th>
+                            <th class="py-3">PERUNTUKAN / NAMA ASET & NIBAR</th>
                             <th class="py-3">LUAS (M²)</th>
                             <th class="py-3">OPD PENGELOLA</th>
                             <th class="py-3">ALAMAT / LOKASI</th>
@@ -189,8 +189,8 @@
                                             <span class="badge bg-secondary-subtle text-secondary px-2 py-0.5" style="font-size: 0.72rem;">Kosong</span>
                                         @endif
                                     </div>
-                                    <div class="fw-bold text-body" style="font-size: 0.85rem;">{{ $item->nama_aset }}</div>
-                                    <small class="text-secondary" style="font-size: 0.78rem;">{{ $item->peruntukan ?? 'Peruntukan belum diisi' }}</small>
+                                    <div class="fw-bold text-body" style="font-size: 0.88rem;">{{ $item->peruntukan ?? $item->nama_aset }}</div>
+                                    <small class="text-secondary" style="font-size: 0.78rem;">{{ $item->nama_aset }}</small>
                                 </td>
                                 <td>
                                     <span class="fw-bold text-body" style="font-size: 0.85rem;">{{ number_format($item->luas ?? 0, 0, ',', '.') }}</span> <small class="text-secondary">m²</small>

@@ -124,14 +124,42 @@
                         </select>
                     </div>
 
-                    <!-- 2. Multi-select Checkbox Status Filter Dropdown -->
+                    <!-- 2. Kategori Status Filter Dropdown -->
+                    <div class="col-12 col-sm-6 col-md-3 col-xl-3">
+                        <label class="form-label small fw-semibold text-secondary mb-1">Kategori Aset / Status</label>
+                        <select name="kategori_status" class="form-select" onchange="document.getElementById('filterForm').submit()">
+                            <option value="">-- Semua Kategori --</option>
+                            <optgroup label="Status Sertifikasi BPN">
+                                <option value="sudah_bersertifikat" {{ request('kategori_status') === 'sudah_bersertifikat' ? 'selected' : '' }}>Sudah Bersertifikat</option>
+                                <option value="dalam_proses" {{ request('kategori_status') === 'dalam_proses' ? 'selected' : '' }}>Dalam Proses BPN</option>
+                                <option value="belum_diproses" {{ request('kategori_status') === 'belum_diproses' ? 'selected' : '' }}>Belum Diproses BPN</option>
+                                <option value="bermasalah" {{ request('kategori_status') === 'bermasalah' ? 'selected' : '' }}>Bermasalah / Sengketa</option>
+                            </optgroup>
+                            <optgroup label="Status Pencatatan NIBAR">
+                                <option value="TERCATAT_KIB_A" {{ request('kategori_status') === 'TERCATAT_KIB_A' ? 'selected' : '' }}>KIB A (Tercatat Resmi)</option>
+                                <option value="USULAN_BELUM_TERCATAT" {{ request('kategori_status') === 'USULAN_BELUM_TERCATAT' ? 'selected' : '' }}>Tanpa NIBAR / Belum Tercatat</option>
+                            </optgroup>
+                            @php
+                                $customCategories = $statusList->pluck('kategori')->filter(fn($k) => !empty($k) && !in_array($k, ['bersertifikat', 'proses', 'belum_diurus', 'kendala']))->unique();
+                            @endphp
+                            @if($customCategories->count() > 0)
+                                <optgroup label="Kategori Lainnya">
+                                    @foreach($customCategories as $customKat)
+                                        <option value="{{ $customKat }}" {{ request('kategori_status') === $customKat ? 'selected' : '' }}>{{ ucwords(str_replace('_', ' ', $customKat)) }}</option>
+                                    @endforeach
+                                </optgroup>
+                            @endif
+                        </select>
+                    </div>
+
+                    <!-- 3. Multi-select Checkbox Status Filter Dropdown -->
                     <div class="col-12 col-sm-6 col-md-3 col-xl-2">
                         <label class="form-label small fw-semibold text-secondary mb-1">
                             Status BPN <span class="badge bg-warning-subtle text-body px-1.5 py-0.5 rounded-pill" style="font-size: 0.65rem;">Centang</span>
                         </label>
                         <div class="dropdown">
                             <button class="btn btn-outline-secondary bg-body border-0 text-start w-100 dropdown-toggle d-flex align-items-center justify-content-between py-2" type="button" id="dropdownStatusFilter" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">
-                                <span class="text-truncate small">
+                                <span class="text-truncate small" id="statusFilterBtnText">
                                     @php
                                         $selectedStatuses = (array) request('status');
                                         $selectedCount = count(array_filter($selectedStatuses));
@@ -143,26 +171,31 @@
                                     @endif
                                 </span>
                             </button>
-                            <div class="dropdown-menu p-3 shadow-lg border-0 rounded-4" style="min-width: 250px; max-height: 320px; overflow-y: auto;">
-                                <div class="fw-semibold small text-secondary mb-2 border-bottom pb-1">Centang Status BPN:</div>
-                                @foreach($statusList as $st)
-                                    <div class="form-check mb-1.5">
-                                        <input class="form-check-input status-checkbox" type="checkbox" name="status[]" value="{{ $st->id_status }}" id="status_chk_{{ $st->id_status }}"
-                                        {{ (is_array(request('status')) && in_array($st->id_status, request('status'))) || request('status') == $st->id_status ? 'checked' : '' }} onchange="document.getElementById('filterForm').submit()">
-                                        <label class="form-check-label small fw-medium text-body cursor-pointer" for="status_chk_{{ $st->id_status }}">
-                                            <span class="d-inline-block rounded-circle me-1" style="width: 8px; height: 8px; background-color: {{ $st->warna ?? '#3b82f6' }};"></span>
-                                            {{ $st->nama_status }}
-                                        </label>
-                                    </div>
-                                @endforeach
+                            <div class="dropdown-menu p-3 shadow-lg border-0 rounded-4" style="min-width: 260px; max-height: 380px; overflow-y: auto;">
+                                <div class="d-flex align-items-center justify-content-between mb-2 border-bottom pb-1">
+                                    <span class="fw-semibold small text-secondary">Centang Status BPN:</span>
+                                    <span class="badge bg-primary-subtle text-primary small" id="statusHeaderCount">{{ $selectedCount }} Terpilih</span>
+                                </div>
+                                <div class="mb-2">
+                                    @foreach($statusList as $st)
+                                        <div class="form-check mb-1.5">
+                                            <input class="form-check-input status-checkbox" type="checkbox" name="status[]" value="{{ $st->id_status }}" id="status_chk_{{ $st->id_status }}"
+                                            {{ (is_array(request('status')) && in_array($st->id_status, request('status'))) || request('status') == $st->id_status ? 'checked' : '' }}>
+                                            <label class="form-check-label small fw-medium text-body cursor-pointer" for="status_chk_{{ $st->id_status }}">
+                                                <span class="d-inline-block rounded-circle me-1" style="width: 8px; height: 8px; background-color: {{ $st->warna ?? '#3b82f6' }};"></span>
+                                                {{ $st->nama_status }}
+                                            </label>
+                                        </div>
+                                    @endforeach
+                                </div>
+                                <div class="pt-2 border-top d-flex gap-2 justify-content-between align-items-center">
+                                    <button type="button" class="btn btn-xs btn-link text-decoration-none text-muted p-0 small" id="btnClearStatusCheckboxes">Bersihkan</button>
+                                    <button type="submit" class="btn btn-sm btn-primary rounded-pill px-3 py-1 fw-semibold small d-inline-flex align-items-center gap-1">
+                                        <i class="bi bi-funnel-fill"></i> Cek / Filter
+                                    </button>
+                                </div>
                             </div>
                         </div>
-                    </div>
-
-                    <!-- 3. Tgl Perolehan -->
-                    <div class="col-12 col-sm-6 col-md-2 col-xl-2">
-                        <label class="form-label small fw-semibold text-secondary mb-1">Tgl Perolehan</label>
-                        <input type="date" name="tanggal_perolehan" class="form-control" value="{{ request('tanggal_perolehan') }}" onchange="document.getElementById('filterForm').submit()">
                     </div>
 
                     <!-- 4. Per Page Limit -->
@@ -177,14 +210,14 @@
                     </div>
 
                     <!-- 5. Search Bar -->
-                    <div class="col-12 col-sm-9 col-md-3 col-xl-4">
+                    <div class="col-12 col-sm-9 col-md-3 col-xl-3">
                         <label class="form-label small fw-semibold text-secondary mb-1">Pencarian Cepat</label>
                         <div class="input-group">
                             <span class="input-group-text bg-body border-0 text-secondary"><i class="bi bi-search"></i></span>
                             <input type="text" name="search" class="form-control" placeholder="Kode Aset, Nama Aset, Alamat..." value="{{ request('search') }}">
                             <button type="submit" class="btn btn-primary px-3">Cari</button>
-                            @if(request()->hasAny(['search', 'opd_id', 'opd', 'status', 'tanggal_perolehan']))
-                                <a href="{{ route('sipat.aset.index') }}" class="btn btn-outline-secondary px-3"><i class="bi bi-x-circle"></i> Reset</a>
+                            @if(request()->hasAny(['search', 'opd_id', 'opd', 'status', 'kategori_status']) || session()->has('sipat_aset_filters'))
+                                <a href="{{ route('sipat.aset.index') }}?reset=1" class="btn btn-outline-secondary px-3"><i class="bi bi-x-circle"></i> Reset</a>
                             @endif
                         </div>
                     </div>
@@ -203,7 +236,7 @@
                             <input type="checkbox" id="checkAll" class="form-check-input">
                         </th>
                         <th class="py-3" style="width: 50px;">NO</th>
-                        <th class="py-3">NAMA ASET / PERUNTUKAN</th>
+                        <th class="py-3">PERUNTUKAN / NAMA ASET</th>
                         <th class="py-3">LUAS (M²)</th>
                         <th class="py-3">OPD PENGELOLA</th>
                         <th class="py-3">ALAMAT / LOKASI</th>
@@ -221,8 +254,8 @@
                                 {{ $asetTanah->firstItem() + $index }}
                             </td>
                             <td>
-                                <div class="fw-semibold text-body">{{ $item->nama_aset }}</div>
-                                <small class="text-secondary">{{ $item->peruntukan ?? 'KIB A Tanah' }}</small>
+                                <div class="fw-bold text-body" style="font-size: 0.9rem;">{{ $item->peruntukan ?? $item->nama_aset }}</div>
+                                <small class="text-secondary" style="font-size: 0.78rem;">{{ $item->nama_aset }}</small>
                             </td>
                             <td>
                                 <span class="fw-bold text-body">{{ number_format($item->luas ?? 0, 0, ',', '.') }}</span> <small class="text-secondary">m²</small>
@@ -638,6 +671,37 @@
                 checkboxes.forEach(cb => cb.checked = false);
                 if (checkAll) checkAll.checked = false;
                 updateBulkBar();
+            });
+        }
+
+        // Status BPN checkbox counter & filter interactions
+        const statusCheckboxes = document.querySelectorAll('.status-checkbox');
+        const statusBtnText = document.getElementById('statusFilterBtnText');
+        const statusHeaderCount = document.getElementById('statusHeaderCount');
+        const btnClearStatus = document.getElementById('btnClearStatusCheckboxes');
+
+        function updateStatusFilterUI() {
+            const checkedCount = document.querySelectorAll('.status-checkbox:checked').length;
+            if (statusHeaderCount) {
+                statusHeaderCount.textContent = checkedCount + ' Terpilih';
+            }
+            if (statusBtnText) {
+                if (checkedCount > 0) {
+                    statusBtnText.innerHTML = `<span class="badge bg-primary me-1">${checkedCount}</span> Terpilih`;
+                } else {
+                    statusBtnText.innerHTML = `Pilih Status BPN...`;
+                }
+            }
+        }
+
+        statusCheckboxes.forEach(cb => {
+            cb.addEventListener('change', updateStatusFilterUI);
+        });
+
+        if (btnClearStatus) {
+            btnClearStatus.addEventListener('click', function() {
+                statusCheckboxes.forEach(cb => cb.checked = false);
+                updateStatusFilterUI();
             });
         }
 

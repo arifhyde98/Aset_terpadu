@@ -7,7 +7,7 @@
             <h2 class="fw-bold mb-1">Edit Data Aset Tanah</h2>
             <p class="text-secondary small mb-0">Perbarui rincian bidang tanah {{ $aset->kode_aset }}</p>
         </div>
-        <a href="{{ route('sipat.aset.index') }}" class="btn btn-outline-secondary rounded-pill px-4">
+        <a href="{{ route('sipat.aset.index', session('sipat_aset_filters', [])) }}" class="btn btn-outline-secondary rounded-pill px-4">
             <i class="bi bi-arrow-left me-1"></i> Kembali ke Daftar
         </a>
     </div>
@@ -131,7 +131,7 @@
                 </div>
 
                 <div class="d-flex justify-content-end gap-2 mt-4 pt-3 border-top">
-                    <a href="{{ route('sipat.aset.index') }}" class="btn btn-secondary rounded-pill px-4">Batal</a>
+                    <a href="{{ route('sipat.aset.index', session('sipat_aset_filters', [])) }}" class="btn btn-secondary rounded-pill px-4">Batal</a>
                     <button type="submit" class="btn btn-primary rounded-pill px-4"><i class="bi bi-save me-1"></i> Update Data Aset</button>
                 </div>
             </form>

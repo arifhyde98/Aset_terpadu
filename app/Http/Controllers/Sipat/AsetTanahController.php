@@ -57,6 +57,26 @@ class AsetTanahController extends Controller implements HasMiddleware
      */
     public function index(Request $request)
     {
+        if ($request->has('reset')) {
+            session()->forget('sipat_aset_filters');
+            return redirect()->route('sipat.aset.index');
+        }
+
+        $filterKeys = ['opd_id', 'opd', 'status', 'kategori_status', 'search', 'per_page', 'page'];
+        $queryFilters = array_filter($request->only($filterKeys), function($v) {
+            if (is_array($v)) return !empty(array_filter($v));
+            return !is_null($v) && $v !== '';
+        });
+
+        if (!empty($queryFilters)) {
+            session(['sipat_aset_filters' => $queryFilters]);
+        } elseif (session()->has('sipat_aset_filters') && !$request->has('export')) {
+            $savedFilters = session('sipat_aset_filters', []);
+            if (!empty($savedFilters)) {
+                return redirect()->route('sipat.aset.index', $savedFilters);
+            }
+        }
+
         if ($request->has('export')) {
             $exportType = strtolower($request->input('export'));
             $laporanService = app(\App\Services\LaporanService::class);
@@ -116,6 +136,15 @@ class AsetTanahController extends Controller implements HasMiddleware
     }
 
     /**
+     * Helper privat untuk melakukan redirect dengan mempertahankan filter aktif.
+     */
+    private function redirectWithFilters(string $message, string $type = 'success'): RedirectResponse
+    {
+        $params = session('sipat_aset_filters', []);
+        return redirect()->route('sipat.aset.index', $params)->with($type, $message);
+    }
+
+    /**
      * Menampilkan form pendaftaran aset baru.
      *
      * @return View
@@ -140,7 +169,7 @@ class AsetTanahController extends Controller implements HasMiddleware
             $request->input('initial_status_id')
         );
 
-        return redirect()->route('sipat.aset.index')->with('success', 'Data Aset Tanah berhasil ditambahkan.');
+        return $this->redirectWithFilters('Data Aset Tanah berhasil ditambahkan.');
     }
 
     /**
@@ -198,7 +227,7 @@ class AsetTanahController extends Controller implements HasMiddleware
     {
         $this->asetTanahService->updateAset($aset->id_aset, $request->validated());
 
-        return redirect()->route('sipat.aset.index')->with('success', 'Data Aset Tanah berhasil diperbarui.');
+        return $this->redirectWithFilters('Data Aset Tanah berhasil diperbarui.');
     }
 
     /**
@@ -211,7 +240,7 @@ class AsetTanahController extends Controller implements HasMiddleware
     {
         $this->asetTanahService->deleteAset($aset->id_aset);
 
-        return redirect()->route('sipat.aset.index')->with('success', 'Data Aset Tanah berhasil dihapus.');
+        return $this->redirectWithFilters('Data Aset Tanah berhasil dihapus.');
     }
 
     /**
@@ -225,7 +254,7 @@ class AsetTanahController extends Controller implements HasMiddleware
     {
         $this->asetTanahService->addProsesBpn($aset->id_aset, $request->validated());
 
-        return redirect()->route('sipat.aset.index')->with('success', 'Riwayat Proses BPN berhasil ditambahkan.');
+        return $this->redirectWithFilters('Riwayat Proses BPN berhasil ditambahkan.');
     }
 
     /**
@@ -255,7 +284,7 @@ class AsetTanahController extends Controller implements HasMiddleware
         $statusName = StatusProses::find($validated['id_status'])->nama_status ?? 'Unknown';
         Activity::logSipat("Memperbarui status pengurusan BPN secara massal menjadi '{$statusName}' untuk {$insertedCount} aset tanah", 'success');
 
-        return redirect()->route('sipat.aset.index')->with('success', "Berhasil memperbarui status untuk {$insertedCount} aset.");
+        return $this->redirectWithFilters("Berhasil memperbarui status untuk {$insertedCount} aset.");
     }
 
     /**
@@ -269,7 +298,7 @@ class AsetTanahController extends Controller implements HasMiddleware
     {
         $this->asetTanahService->savePengamananFisik($aset->id_aset, $request->validated());
 
-        return redirect()->route('sipat.aset.index')->with('success', 'Status pengamanan fisik aset berhasil diperbarui.');
+        return $this->redirectWithFilters('Status pengamanan fisik aset berhasil diperbarui.');
     }
 
     /**
@@ -287,7 +316,7 @@ class AsetTanahController extends Controller implements HasMiddleware
             $request->file('file')
         );
 
-        return redirect()->route('sipat.aset.index')->with('success', 'Dokumen lampiran aset berhasil diunggah.');
+        return $this->redirectWithFilters('Dokumen lampiran aset berhasil diunggah.');
     }
 
     /**
