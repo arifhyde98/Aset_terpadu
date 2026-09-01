@@ -330,63 +330,140 @@ class AsetTanahService
     }
 
     /**
-     * Menganalisis dan mendeteksi daftar aset tanah ganda/identik di database.
+     * Menganalisis dan mendeteksi daftar aset tanah ganda/identik di database secara presisi tinggi.
      *
      * @return array
      */
     public function getDuplicateAsetList(): array
     {
-        $asets = AsetTanah::all();
+        $asets = AsetTanah::with('opdSipat')->get();
         $duplicates = [];
+        $addedPairs = [];
 
+        $opdNames = OpdSipat::pluck('nama')->map(fn($n) => strtoupper(trim($n)))->toArray();
+        $genericPrefixes = [
+            'DINAS', 'BADAN', 'KANTOR', 'BAGIAN', 'SKPD', 'DPPKH', 'UPTD', 'PEMERINTAH',
+            'TANAH BANGUNAN', 'TANAH UNTUK', 'TANAH KOSONG', 'TANAH TAMBAK', 'TANAH JALAN', 'BANGUNAN'
+        ];
+
+        $cleanCode = function($str) {
+            if (!$str) return '';
+            return preg_replace('/[^A-Za-z0-9]/', '', preg_replace('/\(\d+\)$/', '', $str));
+        };
+
+        // 1. Deteksi NIB / Kode Aset Identik atau Berakhiran Suffix Ganda (misal (2), (3))
+        $codeGroups = [];
         foreach ($asets as $a) {
-            $kode = $a->kode_aset;
-            if (!$kode) continue;
+            $c = $cleanCode($a->kode_aset);
+            if (strlen($c) > 5) {
+                $codeGroups[$c][] = $a;
+            }
+        }
 
-            // 1. Deteksi jika kode_aset berakhir dengan (2), (3), dst.
-            if (preg_match('/^(.+?)\s*\(\d+\)$/', $kode, $matches)) {
-                $originalKode = trim($matches[1]);
-                $originalAset = AsetTanah::where('kode_aset', $originalKode)
-                    ->where('id_aset', '!=', $a->id_aset)
-                    ->first();
-
-                if ($originalAset) {
-                    $duplicates[] = [
-                        'duplicate_aset' => $a,
-                        'original_aset'  => $originalAset,
-                        'reason'         => "NIB terindikasi ganda hasil impor: \"{$kode}\" vs \"{$originalKode}\""
-                    ];
+        foreach ($codeGroups as $code => $list) {
+            if (count($list) > 1) {
+                $orig = $list[0];
+                for ($i = 1; $i < count($list); $i++) {
+                    $dup = $list[$i];
+                    $pair = min($orig->id_aset, $dup->id_aset) . '_' . max($orig->id_aset, $dup->id_aset);
+                    if (!isset($addedPairs[$pair])) {
+                        $addedPairs[$pair] = true;
+                        $duplicates[] = [
+                            'duplicate_aset' => $dup,
+                            'original_aset'  => $orig,
+                            'reason'         => "NIB / Kode Aset Identik Ganda: \"{$dup->kode_aset}\" vs \"{$orig->kode_aset}\""
+                        ];
+                    }
                 }
             }
         }
 
-        // 2. Deteksi duplikasi berdasarkan kode_aset yang dibersihkan sama persis secara global
-        $cleanCodes = [];
+        // 2. Deteksi Kode Aset dengan Suffix (2), (3)
         foreach ($asets as $a) {
-            $kode = $a->kode_aset;
-            if (!$kode || preg_match('/\(\d+\)$/', $kode)) continue;
-            
-            $clean = preg_replace('/[^a-zA-Z0-9]/', '', $kode);
-            if ($clean === '') continue;
-            
-            $cleanCodes[$clean][] = $a;
+            if (preg_match('/^(.+?)\s*\(\d+\)$/', $a->kode_aset ?? '', $m)) {
+                $parentCode = trim($m[1]);
+                $parent = AsetTanah::where('kode_aset', $parentCode)->where('id_aset', '!=', $a->id_aset)->first();
+                if ($parent) {
+                    $pair = min($parent->id_aset, $a->id_aset) . '_' . max($parent->id_aset, $a->id_aset);
+                    if (!isset($addedPairs[$pair])) {
+                        $addedPairs[$pair] = true;
+                        $duplicates[] = [
+                            'duplicate_aset' => $a,
+                            'original_aset'  => $parent,
+                            'reason'         => "NIB Terindikasi Ganda Hasil Impor: \"{$a->kode_aset}\" vs \"{$parentCode}\""
+                        ];
+                    }
+                }
+            }
         }
 
-        foreach ($cleanCodes as $clean => $list) {
+        // 3. Deteksi No Sertifikat BPN Sama Persis (Jika Terisi)
+        $certGroups = [];
+        foreach ($asets as $a) {
+            if (!empty($a->no_sertifikat)) {
+                $cleanCert = preg_replace('/[^A-Za-z0-9]/', '', $a->no_sertifikat);
+                if (strlen($cleanCert) > 4) {
+                    $certGroups[$cleanCert][] = $a;
+                }
+            }
+        }
+
+        foreach ($certGroups as $cert => $list) {
             if (count($list) > 1) {
-                $original = $list[0];
+                $orig = $list[0];
                 for ($i = 1; $i < count($list); $i++) {
                     $dup = $list[$i];
-                    
-                    $alreadyAdded = collect($duplicates)->contains(function($item) use ($dup) {
-                        return $item['duplicate_aset']->id_aset === $dup->id_aset;
-                    });
-
-                    if (!$alreadyAdded) {
+                    $pair = min($orig->id_aset, $dup->id_aset) . '_' . max($orig->id_aset, $dup->id_aset);
+                    if (!isset($addedPairs[$pair])) {
+                        $addedPairs[$pair] = true;
                         $duplicates[] = [
                             'duplicate_aset' => $dup,
-                            'original_aset'  => $original,
-                            'reason'         => "NIB identik ganda setelah dibersihkan: \"{$dup->kode_aset}\""
+                            'original_aset'  => $orig,
+                            'reason'         => "No Sertifikat BPN Sama Persis: \"{$dup->no_sertifikat}\""
+                        ];
+                    }
+                }
+            }
+        }
+
+        // 4. Deteksi Peruntukan SPESIFIK (Non-Generic & Non-OPD) + OPD + Luas Identik Ganda
+        $specGroups = [];
+        foreach ($asets as $a) {
+            $peruntukan = trim($a->peruntukan ?? '');
+            if ($peruntukan === '') continue;
+
+            $upperPer = strtoupper($peruntukan);
+            
+            if (in_array($upperPer, $opdNames)) continue;
+
+            $isGeneric = false;
+            foreach ($genericPrefixes as $gp) {
+                if (str_starts_with($upperPer, $gp)) {
+                    $isGeneric = true;
+                    break;
+                }
+            }
+
+            if (!$isGeneric && strlen($peruntukan) > 4 && $a->luas > 0) {
+                $opd = $a->opd_id ?: strtoupper(trim($a->opd ?? ''));
+                $luas = number_format((float)$a->luas, 2, '.', '');
+                $key = $upperPer . '_' . $opd . '_' . $luas;
+                $specGroups[$key][] = $a;
+            }
+        }
+
+        foreach ($specGroups as $key => $list) {
+            if (count($list) > 1) {
+                $orig = $list[0];
+                for ($i = 1; $i < count($list); $i++) {
+                    $dup = $list[$i];
+                    $pair = min($orig->id_aset, $dup->id_aset) . '_' . max($orig->id_aset, $dup->id_aset);
+                    if (!isset($addedPairs[$pair])) {
+                        $addedPairs[$pair] = true;
+                        $duplicates[] = [
+                            'duplicate_aset' => $dup,
+                            'original_aset'  => $orig,
+                            'reason'         => "Peruntukan Spesifik, OPD & Luas Identik Ganda: \"{$dup->peruntukan}\" (" . number_format($dup->luas, 2) . " m²)"
                         ];
                     }
                 }

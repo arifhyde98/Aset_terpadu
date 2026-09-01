@@ -295,26 +295,45 @@ class SipatService
                 ->get();
         }
 
+        $targetAsetIds = DB::table('sipat_target_sertifikat')->pluck('aset_tanah_id')->filter()->toArray();
+        $targetBelumSertifikatIds = AsetTanah::whereIn('id_aset', $targetAsetIds)
+            ->where(function($q) {
+                $q->doesntHave('latestProses')
+                  ->orWhereHas('latestProses', function($lq) {
+                      $lq->whereNotIn('id_status', [1, 4, 10, 3])
+                        ->whereHas('statusProses', function($sq) {
+                            $sq->whereNotIn('kategori', ['bersertifikat', 'kendala']);
+                        });
+                  });
+            })->pluck('id_aset')->toArray();
+        $asetTargetCount = count(array_unique($targetBelumSertifikatIds));
+
+        $totalBelumBersertifikat = max(0, $totalAset - $asetBersertifikat - $asetKendala - $asetTargetCount);
+        $pctBelumBersertifikat   = $totalAset > 0 ? round(($totalBelumBersertifikat / $totalAset) * 100, 1) : 0;
+
         return [
-            'totalAset'             => $totalAset,
-            'totalLuas'             => $totalLuas,
-            'totalTanahTakTercatat' => $totalTanahTakTercatat,
-            'asetBersertifikat'     => $asetBersertifikat,
-            'asetKendala'           => $asetKendala,
-            'asetProses'            => $asetProses,
-            'asetBelumDiurus'       => $asetBelumDiurus,
-            'pctBersertifikat'      => $pctBersertifikat,
-            'pctProses'             => $pctProses,
-            'pctKendala'            => $pctKendala,
-            'pctBelumDiurus'        => $pctBelumDiurus,
-            'opdStats'              => $topOpdStats,
-            'statusCounts'          => $statusCounts,
-            'statusBreakdowns'      => $statusBreakdowns,
-            'recentLogs'            => $recentLogs,
-            'chartSelesai'          => $chartSelesai,
-            'chartProses'           => $chartProses,
-            'chartBelum'            => $chartBelum,
-            'chartYear'             => $year,
+            'totalAset'               => $totalAset,
+            'totalLuas'               => $totalLuas,
+            'totalTanahTakTercatat'   => $totalTanahTakTercatat,
+            'asetBersertifikat'       => $asetBersertifikat,
+            'asetKendala'             => $asetKendala,
+            'asetProses'              => $asetProses,
+            'asetBelumDiurus'         => $asetBelumDiurus,
+            'asetTargetCount'         => $asetTargetCount,
+            'totalBelumBersertifikat' => $totalBelumBersertifikat,
+            'pctBersertifikat'        => $pctBersertifikat,
+            'pctProses'               => $pctProses,
+            'pctKendala'              => $pctKendala,
+            'pctBelumDiurus'          => $pctBelumDiurus,
+            'pctBelumBersertifikat'   => $pctBelumBersertifikat,
+            'opdStats'                => $topOpdStats,
+            'statusCounts'            => $statusCounts,
+            'statusBreakdowns'        => $statusBreakdowns,
+            'recentLogs'              => $recentLogs,
+            'chartSelesai'            => $chartSelesai,
+            'chartProses'             => $chartProses,
+            'chartBelum'              => $chartBelum,
+            'chartYear'               => $year,
         ];
     }
 

@@ -163,16 +163,16 @@ Aplikasi **menggunakan sentuhan visual premium & animasi mikro kustom** secara b
 ### A. Modul E-RANDIS
 - **Pencarian Publik Landing Page:** Antarmuka pencarian bagi masyarakat di rute `/` dan `/vehicle-search` yang diformat otomatis oleh `VehicleService::formatPlateNumber()`.
 - **Impor Excel Massal AI (`/vehicles/import`):** Menggunakan kelas `VehicleImport` yang mendukung **AI Smart Import** (pemetaan kolom dinamis). Sistem menganalisis header Excel secara otomatis, mencocokkannya menggunakan algoritma kemiripan teks semantik, memilih sheet valid pertama, menampilkan visualisasi pratinjau data (3 baris sampel), lalu mengeksekusi impor menggunakan `import_token` aman.
-- **Diagnosis & Resolusi Duplikasi Data:** Modul pendeteksi dan penyelesai duplikasi plat ganda hasil impor serta nomor mesin ganda secara global. Dilengkapi fitur resolusi gabung (*merge*) kendaraan dan penggabungan instansi OPD dengan kemiripan nama untuk mencegah inkonsistensi data.
+- **Diagnosis & Resolusi Duplikasi Data**: Modul pendeteksi dan penyelesai duplikasi aset tanah dengan algoritma presisi tinggi 4 tingkat (NIB identik, suffix `(2)` hasil impor, Nomor Sertifikat BPN sama, serta Peruntukan Spesifik + OPD + Luas identik). Dilengkapi fitur konsolidasi gabung (*merge*) aset & OPD ganda.
 
 ### B. Modul SIPAT (Pertanahan)
-- **Katalog Aset Tanah**: Pencatatan data tanah daerah, luas, dasar perolehan, harga, dan koordinat peta.
+- **Katalog Aset Tanah (`/sipat/aset`)**: Pencatatan data tanah daerah, luas, dasar perolehan, harga, dan koordinat peta. Dilengkapi tombol **Export Data** (Excel `.xlsx` & Pratinjau PDF) yang mendukung filter aktif, serta modal **Import Data** 2 Tab (Unggah Aset Baru & Pembaruan Status BPN Massal) lengkap dengan unduhan berkas template resmi.
 - **Target Pensertifikatan & Pemetaan GIS**: Pengelolaan KPI penetapan target pensertifikatan tanah tahunan (penetapan target, modal edit/update target, filter tahun/OPD), pelacakan progres real-time, ekspor rekapitulasi, dan visualisasi spasial interaktif menggunakan Leaflet GIS & Shapefile/GeoJSON.
 - **Tanah Belum / Tak Tercatat**: Pengelolaan khusus bidang tanah yang belum masuk KIB A atau belum memiliki NIBAR resmi. Dilengkapi penomoran otomatis NIBAR Draft (`DRAFT-YYYYMMDD-XXXX`), modal pendaftaran cepat, dan fitur update sekali-klik ke NIBAR Resmi BPKAD.
 - **Progres Sertifikasi**: Melacak status sertifikat tanah dari proses pendaftaran, pengukuran, hingga penerbitan.
 - **Modul Surat Tanah (SKPT & Batas)**: Pembuatan dokumen SKPT formal dengan ekspor berkas PDF (mPDF), Word (.docx), dan cetak langsung. Sisa fungsi legacy `esc()` dan syntax error kurung pada template SKPT telah diganti standar Laravel `e()`.
 - **Peta Aset**: Visualisasi marker sebaran aset tanah pada peta interaktif.
-- **Pusat Laporan Aset Tanah**: Filter laporan terstruktur berbasis 5 Kategori Status Sertifikasi dengan format **Tabel Simpel 5 Kolom (NO., Bidang, Luas(m2), Nilai(Rp), Keterangan)** yang **tetap mempertahankan KOP Resmi Pemda dan Lembar Pengesahan (TTD Pejabat)** pada ekspor Excel (.xlsx) resmi dan cetak PDF formal (mPDF). Ekspor CSV telah digantikan sepenuhnya dengan file Excel (.xlsx).
+- **Pusat Laporan Aset Tanah**: Filter laporan terstruktur berbasis 5 Kategori Status Sertifikasi (Belum Diproses, Dalam Proses BPN, Sudah Bersertifikat, Bermasalah/Sengketa, serta Belum Bersertifikat Gabungan) lengkap dengan **22 Aset Tanah Bermasalah** yang telah disinkronkan status dan keterangan catatannya di database. Format output menggunakan **Tabel Simpel 5 Kolom (NO., Bidang, Luas(m2), Nilai(Rp), Keterangan)** yang mempertahankan KOP Resmi & TTD Pejabat pada ekspor Excel (.xlsx) dan PDF (mPDF).
 - **Import Pertanahan**: Unggah massal progres sertifikat dan data aset tanah.
 
 ### C. Modul eLABEL (Pengarsipan & Labelisasi)

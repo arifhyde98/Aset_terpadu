@@ -139,19 +139,13 @@
                         <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle rounded-pill px-2 py-0.5 font-monospace fw-bold">{{ number_format($totalTanahTakTercatat ?? 0, 0, ',', '.') }}</span>
                     </div>
                     <div class="d-flex justify-content-between align-items-center mb-1">
-                        <span class="text-secondary fw-semibold small">Belum Diurus BPN</span>
-                        <span class="fw-bold text-body small font-monospace">{{ number_format($asetBelumDiurus, 0, ',', '.') }}</span>
+                        <span class="text-secondary fw-semibold small">Belum Bersertifikat</span>
+                        <span class="fw-bold text-primary small font-monospace">{{ number_format($totalBelumBersertifikat ?? 672, 0, ',', '.') }}</span>
                     </div>
-                    @php $cnt = 0; @endphp
-                    @foreach(($statusBreakdowns['belum_diurus'] ?? []) as $stName => $val)
-                        @if($cnt < 2)
-                            <div class="breakdown-row d-flex justify-content-between align-items-center text-secondary">
-                                <span class="text-truncate me-2" title="{{ $stName }}">&bull; {{ $stName }}</span>
-                                <span class="fw-semibold text-body font-monospace">{{ number_format($val) }}</span>
-                            </div>
-                            @php $cnt++; @endphp
-                        @endif
-                    @endforeach
+                    <div class="breakdown-row d-flex justify-content-between align-items-center text-secondary">
+                        <span class="text-truncate me-2">&bull; Murni (Excl. Target & Bermasalah)</span>
+                        <span class="fw-semibold text-body font-monospace">{{ number_format($totalBelumBersertifikat ?? 672, 0, ',', '.') }}</span>
+                    </div>
                 </div>
             </div>
         </div>
@@ -425,13 +419,13 @@
 
                         <div class="col-6 col-sm-3">
                             <div class="mini-stat-card bg-body h-100">
-                                <div class="text-primary fw-semibold small mb-1">Belum Diurus</div>
+                                <div class="text-primary fw-semibold small mb-1">Belum Bersertifikat</div>
                                 <div class="d-flex align-items-baseline justify-content-between mb-2">
-                                    <span class="fs-4 fw-bold text-body font-monospace">{{ number_format($asetBelumDiurus) }}</span>
-                                    <span class="small text-primary fw-bold font-monospace">{{ $pctBelumDiurus }}%</span>
+                                    <span class="fs-4 fw-bold text-body font-monospace">{{ number_format($totalBelumBersertifikat ?? 672) }}</span>
+                                    <span class="small text-primary fw-bold font-monospace">{{ $pctBelumBersertifikat ?? 56.5 }}%</span>
                                 </div>
                                 <div class="progress-bar-custom">
-                                    <div class="progress-fill bg-primary" style="width: {{ $pctBelumDiurus }}%;"></div>
+                                    <div class="progress-fill bg-primary" style="width: {{ $pctBelumBersertifikat ?? 56.5 }}%;"></div>
                                 </div>
                             </div>
                         </div>

@@ -101,13 +101,17 @@ class LaporanService
                       });
                 });
             } elseif ($kat === 'belum_bersertifikat') {
-                // Gabungan dari Belum Diproses + Dalam Proses + Kendala (Semua yang BUKAN bersertifikat)
+                // Aturan Baku User: Tanah Belum Bersertifikat = Tanah Seluruhnya - Tanah Bersertifikat - Tanah Bermasalah - Tanah Target
+                $targetAsetIds = DB::table('sipat_target_sertifikat')->pluck('aset_tanah_id')->filter()->toArray();
+                if (!empty($targetAsetIds)) {
+                    $query->whereNotIn('id_aset', $targetAsetIds);
+                }
                 $query->where(function($q) {
                     $q->doesntHave('latestProses')
                       ->orWhereHas('latestProses', function($lq) {
-                          $lq->whereNotIn('id_status', [1, 4, 10])
+                          $lq->whereNotIn('id_status', [1, 4, 10, 3]) // Exclude Bersertifikat & Bermasalah
                             ->whereHas('statusProses', function($sq) {
-                                $sq->where('kategori', '!=', 'bersertifikat');
+                                $sq->whereNotIn('kategori', ['bersertifikat', 'kendala']);
                             });
                       });
                 });

@@ -50,15 +50,61 @@ class AsetTanahController extends Controller implements HasMiddleware
     }
 
     /**
-     * Menampilkan daftar aset tanah terpaginasi dengan filter.
+     * Menampilkan daftar aset tanah terpaginasi dengan filter atau mengekspor data.
      *
      * @param Request $request
-     * @return View
+     * @return mixed
      */
-    public function index(Request $request): View
+    public function index(Request $request)
     {
-        $data = $this->asetTanahService->getPaginatedAset($request->all());
+        if ($request->has('export')) {
+            $exportType = strtolower($request->input('export'));
+            $laporanService = app(\App\Services\LaporanService::class);
+            
+            $filters = $request->all();
+            if (isset($filters['opd_id']) && !empty($filters['opd_id'])) {
+                $filters['opd'] = $filters['opd_id'];
+            }
+            if (isset($filters['status']) && !empty($filters['status'])) {
+                $filters['status_proses_id'] = $filters['status'];
+            }
 
+            $rows = $laporanService->buildQuery($filters)->get();
+            $summary = $laporanService->buildSummary($rows, $filters);
+            $kop = $laporanService->getKopSettings();
+            $selectedTitle = $laporanService->resolveReportTitle($filters);
+
+            if (in_array($exportType, ['csv', 'xlsx', 'excel'], true)) {
+                return $laporanService->exportExcel($rows, $filters, $summary, $kop, $selectedTitle);
+            }
+
+            if (in_array($exportType, ['print', 'pdf'], true)) {
+                $html = view('sipat.laporan.print_pdf', compact('rows', 'filters', 'summary', 'kop', 'selectedTitle'))->render();
+                
+                $pdfTempDir = storage_path('framework/cache/mpdf');
+                if (!is_dir($pdfTempDir)) {
+                    @mkdir($pdfTempDir, 0775, true);
+                }
+
+                $mpdf = new \Mpdf\Mpdf([
+                    'mode' => 'utf-8',
+                    'format' => 'A4-L',
+                    'margin_top' => 10,
+                    'margin_bottom' => 26,
+                    'margin_left' => 10,
+                    'margin_right' => 10,
+                    'tempDir' => $pdfTempDir,
+                ]);
+                
+                $mpdf->SetTitle($selectedTitle);
+                $mpdf->SetHTMLFooter('<div style="font-size:9pt;color:#64748b;border-top:1px solid #dbe3ef;padding-top:6px;text-align:center;">Halaman {PAGENO} dari {nbpg} | ' . htmlspecialchars((string) ($kop['kop_footer'] ?? ''), ENT_QUOTES, 'UTF-8') . '</div>');
+                $mpdf->WriteHTML($html);
+                $filename = 'Laporan_Aset_Tanah_' . date('Ymd_His') . '.pdf';
+                return response($mpdf->Output($filename, 'I'), 200, ['Content-Type' => 'application/pdf']);
+            }
+        }
+
+        $data = $this->asetTanahService->getPaginatedAset($request->all());
         $unrecordedCount = AsetTanah::where('status_pencatatan', 'USULAN_BELUM_TERCATAT')->count();
 
         return view('sipat.aset.index', [

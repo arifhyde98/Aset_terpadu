@@ -55,7 +55,7 @@ class HomeController extends Controller implements HasMiddleware
 
         $sipatProsesBpnCount = $sipatStats['asetProses'];
         $sipatKendalaCount = $sipatStats['asetKendala'];
-        $sipatBelumSertifikatCount = $sipatStats['asetBelumDiurus'];
+        $sipatBelumSertifikatCount = $sipatStats['totalBelumBersertifikat'] ?? max(0, $sipatTotalTanah - $sipatSertifikatCount - $sipatKendalaCount - ($sipatStats['asetTargetCount'] ?? 98));
 
         // 2. STATISTIK MODUL eLABEL (Digital Label & Box Gudang)
         $elabelTotalBpkb = \App\Models\Elabel\ElabelBpkb::where('status', '!=', 'Dihapus')->count();

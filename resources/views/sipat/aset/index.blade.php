@@ -74,15 +74,28 @@
             <!-- Dropdown Export -->
             <div class="dropdown">
                 <button type="button" class="btn btn-outline-secondary dropdown-toggle d-flex align-items-center gap-2 rounded-3" data-bs-toggle="dropdown" aria-expanded="false">
-                    <i class="bi bi-download"></i> Export Data
+                    <i class="bi bi-download text-success"></i> <span class="fw-semibold">Export Data</span>
                 </button>
-                <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0">
-                    <li><a class="dropdown-item py-2" href="{{ route('sipat.aset.index') }}?export=print" target="_blank"><i class="bi bi-file-pdf text-danger me-2"></i> Pratinjau Cetak / PDF</a></li>
-                    <li><a class="dropdown-item py-2" href="{{ route('sipat.aset.index') }}?export=csv"><i class="bi bi-file-earmark-spreadsheet text-success me-2"></i> Download Data CSV</a></li>
+                <ul class="dropdown-menu dropdown-menu-end shadow border-0 rounded-3">
+                    <li>
+                        <a class="dropdown-item py-2 fw-medium" href="{{ route('sipat.aset.index') }}?{{ http_build_query(array_merge(request()->query(), ['export' => 'xlsx'])) }}">
+                            <i class="bi bi-file-earmark-excel text-success me-2 fs-5"></i> Download Excel (.xlsx)
+                        </a>
+                    </li>
+                    <li>
+                        <a class="dropdown-item py-2 fw-medium" href="{{ route('sipat.aset.index') }}?{{ http_build_query(array_merge(request()->query(), ['export' => 'pdf'])) }}" target="_blank">
+                            <i class="bi bi-file-pdf text-danger me-2 fs-5"></i> Pratinjau Cetak / PDF
+                        </a>
+                    </li>
                 </ul>
             </div>
 
             @if(in_array(auth()->user()->role->value, ['superadmin', 'admin']))
+                <!-- Tombol Import Data -->
+                <button type="button" class="btn btn-outline-primary d-flex align-items-center gap-2 rounded-3" data-bs-toggle="modal" data-bs-target="#modalImportAset">
+                    <i class="bi bi-file-earmark-arrow-up text-primary"></i> <span class="fw-semibold">Import Data</span>
+                </button>
+
                 <button type="button" class="btn btn-outline-warning d-flex align-items-center gap-2 rounded-3" id="btnCheckDuplicates">
                     <i class="bi bi-exclamation-triangle"></i> Diagnosis Ganda
                 </button>
@@ -293,6 +306,107 @@
 </div>
 
 @push('modals')
+<!-- Modal Import Data Aset Tanah (2 Tab) -->
+<div class="modal fade" id="modalImportAset" tabindex="-1" aria-hidden="true" style="z-index: 1060;">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content rounded-4 border-0 shadow-lg overflow-hidden">
+            <div class="modal-header bg-primary-subtle border-bottom px-4 py-3">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                        <i class="bi bi-file-earmark-arrow-up-fill fs-5"></i>
+                    </div>
+                    <div>
+                        <h5 class="modal-title fw-bold text-dark mb-0">Import Data Aset Tanah SIPAT</h5>
+                        <small class="text-primary fw-medium">Unggah Berkas Excel (.xlsx, .xls) atau CSV Massal</small>
+                    </div>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            
+            <div class="modal-body p-4">
+                <ul class="nav nav-pills nav-fill bg-light p-1 rounded-3 mb-4" id="importModalTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active fw-semibold py-2" id="import-data-tab" data-bs-toggle="tab" data-bs-target="#import-data-pane" type="button" role="tab">
+                            <i class="bi bi-plus-square me-1"></i> Impor Aset Tanah Baru
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link fw-semibold py-2" id="import-status-tab" data-bs-toggle="tab" data-bs-target="#import-status-pane" type="button" role="tab">
+                            <i class="bi bi-clock-history me-1"></i> Impor Status BPN Massal
+                        </button>
+                    </li>
+                </ul>
+
+                <div class="tab-content" id="importModalTabsContent">
+                    <!-- Tab 1: Import Aset Baru -->
+                    <div class="tab-pane fade show active" id="import-data-pane" role="tabpanel">
+                        <form action="{{ route('master.import.data') }}" method="POST" enctype="multipart/form-data">
+                            @csrf
+                            <div class="alert alert-info border-0 d-flex align-items-start gap-3 p-3 rounded-3 mb-3">
+                                <i class="bi bi-info-circle-fill fs-4 text-info flex-shrink-0"></i>
+                                <div class="small">
+                                    Format berkas harus sesuai kolom template master Aset Tanah.
+                                    <br>Kolom wajib: <strong>kode_aset, nama_aset, peruntukan, luas, opd</strong>.
+                                </div>
+                            </div>
+
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <label class="form-label small fw-semibold text-secondary mb-0">Pilih Berkas Excel / CSV <span class="text-danger">*</span></label>
+                                <a href="{{ route('master.import.template-data') }}" class="btn btn-sm btn-outline-success rounded-pill px-3">
+                                    <i class="bi bi-download me-1"></i> Download Template Aset
+                                </a>
+                            </div>
+
+                            <div class="mb-4">
+                                <input type="file" name="file" class="form-control form-control-lg" accept=".xlsx,.xls,.csv,.txt" required>
+                            </div>
+
+                            <div class="d-flex justify-content-end gap-2">
+                                <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Batal</button>
+                                <button type="submit" class="btn btn-primary rounded-pill px-4 fw-semibold shadow-sm">
+                                    <i class="bi bi-upload me-1"></i> Unggah & Impor Data Baru
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Tab 2: Import Status BPN -->
+                    <div class="tab-pane fade" id="import-status-pane" role="tabpanel">
+                        <form action="{{ route('master.import.update') }}" method="POST" enctype="multipart/form-data">
+                            @csrf
+                            <div class="alert alert-warning border-0 d-flex align-items-start gap-3 p-3 rounded-3 mb-3">
+                                <i class="bi bi-info-circle-fill fs-4 text-warning flex-shrink-0"></i>
+                                <div class="small">
+                                    Digunakan untuk pembaruan status BPN massal berdasarkan NIB/Kode Aset.
+                                    <br>Kolom wajib: <strong>nibar, status_proses, tanggal_proses, keterangan</strong>.
+                                </div>
+                            </div>
+
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <label class="form-label small fw-semibold text-secondary mb-0">Pilih Berkas Excel / CSV <span class="text-danger">*</span></label>
+                                <a href="{{ route('master.import.template-status') }}" class="btn btn-sm btn-outline-warning text-dark rounded-pill px-3">
+                                    <i class="bi bi-download me-1"></i> Download Template Status
+                                </a>
+                            </div>
+
+                            <div class="mb-4">
+                                <input type="file" name="file" class="form-control form-control-lg" accept=".xlsx,.xls,.csv,.txt" required>
+                            </div>
+
+                            <div class="d-flex justify-content-end gap-2">
+                                <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Batal</button>
+                                <button type="submit" class="btn btn-warning rounded-pill px-4 fw-semibold shadow-sm text-dark">
+                                    <i class="bi bi-upload me-1"></i> Unggah & Perbarui Status
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Modal Ubah Status Massal -->
 <div class="modal fade" id="modalBulkStatus" tabindex="-1" aria-hidden="true" style="z-index: 1060;">
     <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
