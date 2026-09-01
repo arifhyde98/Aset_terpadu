@@ -4,7 +4,7 @@
         <div class="row g-4 justify-content-between mb-4">
             <!-- Brand Column -->
             <div class="col-lg-5">
-                <div class="d-flex align-items-center gap-2 mb-3">
+                <div class="d-flex align-items-center gap-2 mb-3 flex-wrap">
                     @php
                         $siteLogo = $settings['site_logo'] ?? null;
                         $siteLogoRight = $settings['site_logo_right'] ?? null;
@@ -14,22 +14,22 @@
 
                     <!-- Logo Kiri -->
                     @if($siteLogo)
-                        <img src="{{ \App\Models\Setting::imageUrl($siteLogo) }}" alt="Logo Kiri" class="bg-white rounded-circle p-1" style="height: 36px; width: 36px; object-fit: contain; border: 1px solid #e2e8f0;">
+                        <img src="{{ \App\Models\Setting::imageUrl($siteLogo) }}" alt="Logo Daerah" style="height: 38px; width: auto; max-width: 44px; object-fit: contain;">
                     @else
                         <div class="bg-navy rounded-circle p-1 d-flex align-items-center justify-content-center" style="width: 36px; height: 36px;">
                             <i class="bi bi-shield-shaded text-amber fs-5"></i>
                         </div>
                     @endif
 
-                    <!-- Logo Kanan -->
-                    @if($siteLogoRight)
-                        <img src="{{ \App\Models\Setting::imageUrl($siteLogoRight) }}" alt="Logo Kanan" class="bg-white rounded-circle p-1" style="height: 36px; width: 36px; object-fit: contain; border: 1px solid #e2e8f0;">
-                    @endif
-
                     <div>
                         <span class="fw-bold text-navy fs-6">{{ $siteName }}</span>
                         <div class="small text-secondary" style="font-size: 0.75rem;">{{ $siteSubtitle }}</div>
                     </div>
+
+                    <!-- Logo Kanan (Natural Ratio) -->
+                    @if($siteLogoRight)
+                        <img src="{{ \App\Models\Setting::imageUrl($siteLogoRight) }}" alt="Logo Instansi" class="ms-2" style="height: 38px; width: auto; max-width: 140px; object-fit: contain;">
+                    @endif
                 </div>
                 <p class="text-secondary small mb-3 lh-base" style="max-width: 420px;">
                     Portal terpadu penyediaan informasi, pelacakan, dan transparansi pengelolaan aset Pemerintah Daerah secara akuntabel, real-time, dan mudah diakses publik.
@@ -41,7 +41,7 @@
                 <h6 class="fw-bold text-navy mb-3 small text-uppercase tracking-wider">Modul Terpadu</h6>
                 <ul class="list-unstyled small text-secondary d-flex flex-column gap-2 mb-0">
                     <li><a href="#search-section" class="text-decoration-none text-secondary hover-navy quick-service-link" data-target-tab="vehicle">Kendaraan Dinas</a></li>
-                    <li><a href="#search-section" class="text-decoration-none text-secondary hover-navy quick-service-link" data-target-tab="land">Sertifikat Tanah</a></li>
+                    <li><a href="#search-section" class="text-decoration-none text-secondary hover-navy quick-service-link" data-target-tab="land">Sertifikasi Tanah</a></li>
                     <li><a href="#search-section" class="text-decoration-none text-secondary hover-navy quick-service-link" data-target-tab="archive">Arsip Dokumen</a></li>
                 </ul>
             </div>

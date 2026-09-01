@@ -1,8 +1,8 @@
-<!-- Statistics Section -->
+<!-- Statistics Section with Animated Counters & Glowing Cards -->
 <section id="statistics-section" class="landing-statistics-section py-5 bg-light-subtle border-top border-bottom border-light-subtle">
     <div class="container">
         <!-- Section Header -->
-        <div class="text-center mb-4 mb-md-5">
+        <div class="text-center mb-5">
             <span class="text-uppercase tracking-wider text-primary fw-bold small">Data Terpadu</span>
             <h3 class="fw-bold text-navy mt-1 mb-2">Statistik Data Aset Daerah</h3>
             <p class="text-secondary small mx-auto mb-0" style="max-width: 580px;">
@@ -10,91 +10,91 @@
             </p>
         </div>
 
-        <!-- 4 Stats Cards -->
-        <div class="row g-2 g-sm-3 g-lg-4 justify-content-center">
-            <!-- Total Aset -->
+        <!-- 4 Stats Cards (Total Aset, Kendaraan, Tanah, Dokumen Arsip) -->
+        <div class="row g-3 g-lg-4 justify-content-center">
+            <!-- 1. Total Aset (Purple Gradient Accent) -->
             <div class="col-6 col-md-3">
-                <div class="stat-card p-3 p-md-4 rounded-4 bg-white border border-light-subtle shadow-sm text-center h-100 position-relative overflow-hidden d-flex flex-column justify-content-between">
-                    <div class="stat-icon-bg">
+                <div class="stat-card stat-total p-3 p-md-4 rounded-4 bg-white border border-light-subtle shadow-sm text-center h-100 position-relative overflow-hidden d-flex flex-column justify-content-between">
+                    <div class="stat-icon-bg text-primary">
                         <i class="bi bi-layers-fill"></i>
                     </div>
                     <div>
-                        <div class="stat-number fw-extrabold text-navy mb-1">
-                            {{ number_format($stats['total_aset'] ?? 0, 0, ',', '.') }}
+                        <div class="stat-number fw-extrabold text-navy mb-1 counter-animate" data-target="{{ $stats['total_aset'] ?? 0 }}">
+                            0
                         </div>
                         <div class="stat-label text-secondary fw-semibold small">
-                            Total Aset Daerah
+                            Total Aset
                         </div>
                     </div>
                     <div>
-                        <span class="badge bg-primary-subtle text-primary mt-2 rounded-pill small px-2 py-0" style="font-size: 0.72rem;">
+                        <span class="badge bg-primary text-white mt-2 rounded-pill small px-3 py-1 fw-medium shadow-sm" style="font-size: 0.72rem;">
                             Tanah & Kendaraan
                         </span>
                     </div>
                 </div>
             </div>
 
-            <!-- Kendaraan Dinas -->
+            <!-- 2. Kendaraan (Blue Gradient Accent) -->
             <div class="col-6 col-md-3">
-                <div class="stat-card p-3 p-md-4 rounded-4 bg-white border border-light-subtle shadow-sm text-center h-100 position-relative overflow-hidden d-flex flex-column justify-content-between">
-                    <div class="stat-icon-bg text-primary-subtle">
+                <div class="stat-card stat-vehicle p-3 p-md-4 rounded-4 bg-white border border-light-subtle shadow-sm text-center h-100 position-relative overflow-hidden d-flex flex-column justify-content-between">
+                    <div class="stat-icon-bg text-info">
                         <i class="bi bi-car-front-fill"></i>
                     </div>
                     <div>
-                        <div class="stat-number fw-extrabold text-primary mb-1">
-                            {{ number_format($stats['total_kendaraan'] ?? 0, 0, ',', '.') }}
+                        <div class="stat-number fw-extrabold text-primary mb-1 counter-animate" data-target="{{ $stats['total_kendaraan'] ?? 0 }}">
+                            0
                         </div>
                         <div class="stat-label text-secondary fw-semibold small">
-                            Kendaraan Dinas
+                            Kendaraan
                         </div>
                     </div>
                     <div>
-                        <span class="badge bg-primary-subtle text-primary mt-2 rounded-pill small px-2 py-0" style="font-size: 0.72rem;">
+                        <span class="badge bg-info text-dark mt-2 rounded-pill small px-3 py-1 fw-semibold shadow-sm" style="font-size: 0.72rem;">
                             E-RANDIS
                         </span>
                     </div>
                 </div>
             </div>
 
-            <!-- Aset Tanah -->
+            <!-- 3. Tanah (Emerald Gradient Accent) -->
             <div class="col-6 col-md-3">
-                <div class="stat-card p-3 p-md-4 rounded-4 bg-white border border-light-subtle shadow-sm text-center h-100 position-relative overflow-hidden d-flex flex-column justify-content-between">
-                    <div class="stat-icon-bg text-success-subtle">
+                <div class="stat-card stat-land p-3 p-md-4 rounded-4 bg-white border border-light-subtle shadow-sm text-center h-100 position-relative overflow-hidden d-flex flex-column justify-content-between">
+                    <div class="stat-icon-bg text-success">
                         <i class="bi bi-geo-alt-fill"></i>
                     </div>
                     <div>
-                        <div class="stat-number fw-extrabold text-success mb-1">
-                            {{ number_format($stats['total_tanah'] ?? 0, 0, ',', '.') }}
+                        <div class="stat-number fw-extrabold text-success mb-1 counter-animate" data-target="{{ $stats['total_tanah'] ?? 0 }}">
+                            0
                         </div>
                         <div class="stat-label text-secondary fw-semibold small">
-                            Aset Tanah
+                            Tanah
                         </div>
                     </div>
                     <div>
-                        <span class="badge bg-success-subtle text-success mt-2 rounded-pill small px-2 py-0" style="font-size: 0.72rem;">
+                        <span class="badge bg-success text-white mt-2 rounded-pill small px-3 py-1 fw-medium shadow-sm" style="font-size: 0.72rem;">
                             SIPAT
                         </span>
                     </div>
                 </div>
             </div>
 
-            <!-- Arsip Tersedia -->
+            <!-- 4. Dokumen Arsip (Amber Gradient Accent) -->
             <div class="col-6 col-md-3">
-                <div class="stat-card p-3 p-md-4 rounded-4 bg-white border border-light-subtle shadow-sm text-center h-100 position-relative overflow-hidden d-flex flex-column justify-content-between">
-                    <div class="stat-icon-bg text-warning-subtle">
+                <div class="stat-card stat-archive p-3 p-md-4 rounded-4 bg-white border border-light-subtle shadow-sm text-center h-100 position-relative overflow-hidden d-flex flex-column justify-content-between">
+                    <div class="stat-icon-bg text-warning">
                         <i class="bi bi-archive-fill"></i>
                     </div>
                     <div>
-                        <div class="stat-number fw-extrabold text-warning-emphasis mb-1">
-                            {{ number_format($stats['total_arsip'] ?? 0, 0, ',', '.') }}
+                        <div class="stat-number fw-extrabold text-warning-emphasis mb-1 counter-animate" data-target="{{ $stats['total_arsip'] ?? 0 }}">
+                            0
                         </div>
                         <div class="stat-label text-secondary fw-semibold small">
-                            Arsip Tersedia
+                            Dokumen Arsip
                         </div>
                     </div>
                     <div>
-                        <span class="badge bg-amber-subtle text-dark mt-2 rounded-pill small px-2 py-0" style="font-size: 0.72rem;">
-                            EARSIP / eLABEL
+                        <span class="badge bg-amber text-dark mt-2 rounded-pill small px-3 py-1 fw-bold shadow-sm" style="font-size: 0.72rem;">
+                            Tersedia di Box
                         </span>
                     </div>
                 </div>

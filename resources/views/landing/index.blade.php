@@ -110,6 +110,39 @@
                 });
             });
 
+            // Dynamic Placeholder Switcher per Domain & Criteria
+            const setupDynamicPlaceholder = (selectId, inputId, placeholderMap) => {
+                const select = document.getElementById(selectId);
+                const input = document.getElementById(inputId);
+                if (!select || !input) return;
+
+                select.addEventListener('change', function () {
+                    const placeholder = placeholderMap[this.value] || 'Masukkan kata kunci...';
+                    input.placeholder = placeholder;
+                });
+            };
+
+            setupDynamicPlaceholder('vehicleSearchBy', 'vehicleQueryInput', {
+                'no_polisi': 'Contoh: DN 1234 XX atau B 1234 XX',
+                'nibar': 'Contoh NIBAR: 02.01.01.001.0001',
+                'kode_barang': 'Contoh: Toyota Avanza, Mitsubishi, dll.',
+                'all': 'Masukkan nomor polisi / NIBAR / merk...'
+            });
+
+            setupDynamicPlaceholder('landSearchBy', 'landQueryInput', {
+                'nibar': 'Contoh NIBAR: 02.01.01.001.0001',
+                'no_sertifikat': 'Contoh: Hak Pakai No. 12 / Banawa',
+                'nib_nama': 'Contoh: Kantor Bupati, Lapangan, dll.',
+                'all': 'Masukkan NIBAR / no sertifikat / nama aset...'
+            });
+
+            setupDynamicPlaceholder('archiveSearchBy', 'archiveQueryInput', {
+                'nibar': 'Contoh NIBAR: 02.01.01.001.0001',
+                'no_dokumen': 'Contoh: 12345/BPKB/2020 atau Sertifikat No. 10',
+                'kode_barang': 'Contoh: DN 1234 XX atau kode barang',
+                'all': 'Masukkan NIBAR / no dokumen / plat...'
+            });
+
             // Dismiss Results Button
             if (dismissResultsBtn) {
                 dismissResultsBtn.addEventListener('click', () => {
@@ -458,23 +491,94 @@
             attachSearchFormHandler(
                 'vehicleSearchForm',
                 'Kendaraan Dinas (E-RANDIS)',
-                'bg-primary-subtle text-primary border border-primary-subtle',
+                'bg-primary text-white',
                 renderVehicleResults
             );
 
             attachSearchFormHandler(
                 'landSearchForm',
                 'Sertifikat Tanah (SIPAT)',
-                'bg-success-subtle text-success border border-success-subtle',
+                'bg-success text-white',
                 renderLandResults
             );
 
             attachSearchFormHandler(
                 'archiveSearchForm',
                 'Arsip Aset (EARSIP / eLABEL)',
-                'bg-amber-subtle text-dark border border-warning-subtle',
+                'bg-amber text-dark',
                 renderArchiveResults
             );
+
+            // Quick Search Suggestion Chips Click
+            document.querySelectorAll('.quick-query-chip').forEach(chip => {
+                chip.addEventListener('click', function () {
+                    const inputId = this.dataset.targetInput;
+                    const formId = this.dataset.targetForm;
+                    const query = this.dataset.query;
+
+                    const input = document.getElementById(inputId);
+                    const form = document.getElementById(formId);
+                    if (input && form) {
+                        input.value = query;
+                        // Trigger submit
+                        if (typeof form.requestSubmit === 'function') {
+                            form.requestSubmit();
+                        } else {
+                            form.dispatchEvent(new Event('submit', { cancelable: true }));
+                        }
+                    }
+                });
+            });
+
+            // Animated Counters using IntersectionObserver
+            const counters = document.querySelectorAll('.counter-animate');
+            let countersAnimated = false;
+
+            const animateCounters = () => {
+                counters.forEach(counter => {
+                    const target = parseInt(counter.dataset.target, 10) || 0;
+                    const duration = 1500;
+                    const startTime = performance.now();
+
+                    const updateCount = (currentTime) => {
+                        const elapsed = currentTime - startTime;
+                        const progress = Math.min(elapsed / duration, 1);
+                        // Ease out cubic
+                        const easeProgress = 1 - Math.pow(1 - progress, 3);
+                        const currentCount = Math.floor(easeProgress * target);
+
+                        counter.textContent = new Intl.NumberFormat('id-ID').format(currentCount);
+
+                        if (progress < 1) {
+                            requestAnimationFrame(updateCount);
+                        } else {
+                            counter.textContent = new Intl.NumberFormat('id-ID').format(target);
+                        }
+                    };
+
+                    requestAnimationFrame(updateCount);
+                });
+            };
+
+            if ('IntersectionObserver' in window && counters.length > 0) {
+                const statsSection = document.getElementById('statistics-section');
+                if (statsSection) {
+                    const observer = new IntersectionObserver((entries) => {
+                        entries.forEach(entry => {
+                            if (entry.isIntersecting && !countersAnimated) {
+                                countersAnimated = true;
+                                animateCounters();
+                                observer.unobserve(entry.target);
+                            }
+                        });
+                    }, { threshold: 0.2 });
+                    observer.observe(statsSection);
+                } else {
+                    animateCounters();
+                }
+            } else {
+                animateCounters();
+            }
         });
     </script>
 </body>
