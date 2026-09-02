@@ -85,7 +85,7 @@ Dokumen ini merupakan sumber kebenaran tunggal (*Single Source of Truth*) mengen
 *   **surat_skpt**: Dokumen Surat Keterangan Pendaftaran Tanah (`id`, `aset_tanah_id`, `nomor_surat`, `tanggal_surat`, `pemohon_id`, `camat_id`, `kades_id`, `keterangan`).
 *   **opd_mappings**: Tabel jembatan pemetaan OPD (`id`, `sipat_opd_id`, `erandis_opd_id`, `status_verifikasi`).
 
-### C. Tabel Modul eLABEL (Pengarsipan Dokumen)
+### C. Tabel Modul eLABEL (Pengarsipan Dokumen & Dynamic Archive Engine)
 - **elabel_boxes**: Box penyimpanan fisik berkas BPKB.
 - **elabel_box_years**: Tahun berkas di dalam box BPKB.
 - **elabel_bpkb**: Katalog berkas BPKB (`id`, `box_id`, `plate_number`, `no_bpkb`, `nibar`, `vehicle_type`, `status`, `sipat_opd_id`, `pdf_path`).
@@ -93,7 +93,12 @@ Dokumen ini merupakan sumber kebenaran tunggal (*Single Source of Truth*) mengen
 - **elabel_sertifikat_boxes**: Box penyimpanan fisik berkas sertifikat tanah.
 - **elabel_sertifikat_tanah**: Katalog berkas sertifikat tanah.
 - **elabel_surat_penyerahan**: Dokumen berita acara penyerahan berkas.
-- **elabel_loans**: Log peminjaman berkas atau pengajuan scan request oleh OPD.
+- **elabel_loans**: Log peminjaman berkas atau pengajuan scan request oleh OPD (Legacy BPKB).
+- **archive_types**: Master jenis & skema form builder arsip dinamis (`id`, `kode`, `nama`, `deskripsi`, `icon`, `warna_badge`, `schema_fields` [JSON], `is_active`).
+- **archive_boxes**: Manajemen box fisik universal arsip dinamis (`id`, `archive_type_id`, `nomor_box`, `barcode_code`, `lokasi_rak`, `tahun`, `kapasitas_maksimal`, `keterangan`, `created_by`).
+- **archive_items**: Dokumen berkas arsip dinamis (`id`, `archive_type_id`, `archive_box_id`, `opd_id`, `nomor_dokumen`, `nama_dokumen`, `tahun_dokumen`, `metadata` [JSON], `file_scan_pdf`, `status`, `keterangan`, `input_by`).
+- **archive_attachments**: Berkas lampiran pendukung (`id`, `archive_item_id`, `field_name`, `file_title`, `file_path`, `file_type`, `file_size`).
+- **archive_loans**: Permohonan & riwayat peminjaman/scan berkas dinamis (`id`, `archive_item_id`, `user_id`, `opd_id`, `requester_name`, `jenis_layanan`, `tanggal_pinjam`, `tanggal_kembali`, `status_persetujuan`, `keperluan`, `catatan_admin`, `approved_by`, `approved_at`).
 
 ---
 
@@ -106,6 +111,7 @@ Logika bisnis dan kalkulasi diletakkan di dalam kelas *Service*:
 - `ReportService`: ringkasan laporan, orkestrasi preview terpaginasi, dan integrasi strategi laporan modular.
 - `AsetTanahService`: ringkasan dan query pencarian aset tanah SIPAT. Kueri Master Aset Tanah diurutkan menggunakan `CASE` SQL agar aset yang memiliki NIBAR resmi selalu berada di posisi paling atas, sedangkan tanah usulan / NIBAR sementara (`DRAFT-`, `BELUM-`, null, `-`) berada di posisi paling bawah.
 - `ElabelSmartBpkbExtractorController`: modul terisolasi pada rute `/elabel/bpkb-smart-extractor` untuk pembacaan isi dokumen PDF BPKB otomatis (*Smart PDF Extractor & OCR*) dengan verifikasi 4 aturan presisi (Pencocokan Nopol 100% Persis, Proteksi Berkas Ganda, dan Dry-Run Audit Preview).
+- `DynamicArchiveService`: service layer inti untuk **Universal Dynamic Archive Engine (e-Arsip Dinamis)** yang menangani CRUD berkas dinamis, sanitasi skema JSON metadata, penyimpanan/penimpaan berkas scan PDF utama & multi-lampiran, penomoran kode box otomatis (`BOX-{KODE}-{NUM}`), dan pencatatan audit log aktivitas.
 - `BackupController@restoreSql`: utilitas upload dan restore database secara menyeluruh dari berkas `.sql`, `.gz`, atau `.zip` dump database MySQL.
 - `BackupController@syncDb`, `BackupController@syncDbStream` & `RunSyncDbBg`: utilitas replikasi/sinkronisasi penuh database staging dari `db_sipat_terpadu` ke `db_sipat_staging` menggunakan arsitektur **Server-Sent Events (SSE) streaming per-tabel** via `mysqldump --single-transaction --quick --extended-insert --add-drop-table` yang mengalirkan progress real-time per tabel ke antarmuka pengguna tanpa delay, bebas dari risiko HTTP 504 Gateway Timeout Cloudflare, dan menjadikan staging 100% identik dengan database sumber.
 
@@ -169,11 +175,12 @@ Aplikasi **menggunakan sentuhan visual premium & animasi mikro kustom** secara b
 ### B. Modul SIPAT (Pertanahan)
 - **Katalog Aset Tanah (`/sipat/aset`)**: Pencatatan data tanah daerah, luas, dasar perolehan, harga, dan koordinat peta. Dilengkapi filter **Kategori Aset / Status** (Status Sertifikasi BPN & Pencatatan NIBAR), filter **Status BPN Multi-Select** (centang bebas tanpa refresh otomatis dengan tombol eksekusi 'Cek / Filter' & penghitung dinamis), **Session Filter Persistence** (mempertahankan semua filter aktif secara otomatis saat mengubah data, menambah riwayat proses BPN, mengedit spasial GIS, mengunggah dokumen, atau menghapus data), tombol **Export Data** (Excel `.xlsx` & Pratinjau PDF) yang mendukung filter aktif, serta modal **Import Data** 2 Tab (Unggah Aset Baru & Pembaruan Status BPN Massal) lengkap dengan unduhan berkas template resmi.
 - **Target Pensertifikatan & Pemetaan GIS**: Pengelolaan KPI penetapan target pensertifikatan tanah tahunan (penetapan target, modal edit/update target, filter tahun/OPD), pelacakan progres real-time, ekspor rekapitulasi, dan visualisasi spasial interaktif menggunakan Leaflet GIS & Shapefile/GeoJSON.
-- **Tanah Belum / Tak Tercatat**: Pengelolaan khusus bidang tanah yang belum masuk KIB A atau belum memiliki NIBAR resmi. Dilengkapi penomoran otomatis NIBAR Draft (`DRAFT-YYYYMMDD-XXXX`), modal pendaftaran cepat, dan fitur update sekali-klik ke NIBAR Resmi BPKAD.
+- **Tanah Belum / Tak Tercatat & Dashboard Breakdown**: Pengelolaan khusus bidang tanah yang belum masuk KIB A atau belum memiliki NIBAR resmi (`DRAFT-YYYYMMDD-XXXX`). Pada **Dashboard Utama (`/home`)** dan **Dashboard SIPAT (`/sipat/dashboard`)**, metrik tanah kini menyajikan pemisahan jelas: **Tanah Keseluruhan** (1.189 bidang), **Tercatat KIB A** (1.188 bidang), dan **Belum Tercatat** (1 bidang) berdampingan dengan rekap pensertifikatan BPN.
 - **Progres Sertifikasi**: Melacak status sertifikat tanah dari proses pendaftaran, pengukuran, hingga penerbitan.
 - **Modul Surat Tanah (SKPT & Batas)**: Pembuatan dokumen SKPT formal dengan ekspor berkas PDF (mPDF), Word (.docx), dan cetak langsung. Sisa fungsi legacy `esc()` dan syntax error kurung pada template SKPT telah diganti standar Laravel `e()`.
 - **Peta Aset**: Visualisasi marker sebaran aset tanah pada peta interaktif.
-- **Pusat Laporan Aset Tanah**: Filter laporan terstruktur berbasis 5 Kategori Status Sertifikasi (Belum Diproses, Dalam Proses BPN, Sudah Bersertifikat, Bermasalah/Sengketa, serta Belum Bersertifikat Gabungan) lengkap dengan **22 Aset Tanah Bermasalah** yang telah disinkronkan status dan keterangan catatannya di database. Mendukung **Auto-Terapkan Filter** secara instan saat mengubah opsi OPD, Kategori Status, Tanggal Perolehan, maupun Judul Laporan. Format output menggunakan **Tabel Simpel 5 Kolom (NO., Bidang, Luas(m2), Nilai(Rp), Keterangan)** yang mempertahankan KOP Resmi & TTD Pejabat pada ekspor Excel (.xlsx) dan PDF (mPDF).
+- **Pusat Laporan Aset Tanah**: Filter laporan terstruktur berbasis 5 Kategori Status Sertifikasi (Belum Diproses, Dalam Proses BPN, Sudah Bersertifikat, Bermasalah/Sengketa, serta Belum Bersertifikat Gabungan) lengkap dengan **22 Aset Tanah Bermasalah** yang telah disinkronkan status dan keterangan catatannya di database. Mendukung **Auto-Terapkan Filter** secara instan saat mengubah opsi OPD, Kategori Status, Tanggal Perolehan, maupun Judul Laporan. Format output tabel memuat **Kode Aset / NIBAR, Bidang, Luas(m2), Nilai(Rp), dan Keterangan** yang mempertahankan KOP Resmi & TTD Pejabat pada ekspor Excel (.xlsx) dan PDF (mPDF).
+- **Master Status Proses Multi-Kategori (`/master-data/status-proses`)**: Pengelolaan status proses BPN dinamis dengan dukungan **Multi-Kategori per Status** (1 status proses dapat dicentang ke lebih dari satu kategori, misal: *Dalam Proses*, *Bersertifikat*, *Kendala/Sengketa*, *Belum Diurus*, atau kategori kustom). Seluruh agregasi statistik dashboard dan filter laporan otomatis menghitung berdasarkan relasi kategori ini dengan auto-flush cache.
 - **Import Pertanahan**: Unggah massal progres sertifikat dan data aset tanah.
 
 ### C. Modul eLABEL (Pengarsipan & Labelisasi)
@@ -181,6 +188,7 @@ Aplikasi **menggunakan sentuhan visual premium & animasi mikro kustom** secara b
 - **Smart BPKB PDF Folder Scanner**: Pemindaian folder lokal server/PC dengan dry-run audit, penautan otomatis PDF ke record BPKB DB (`elabel/bpkb/`), timer elapsed pemindaian (S1), checkbox selektif (S2), pratinjau PDF di tab baru (S3), export hasil audit CSV (S4), dukungan nopol multi-prefix Sulawesi (S5), serta reset hasil audit (S6).
 - **Sertifikat Tanah & Box**: Pengarsipan fisik sertifikat tanah dengan integrasi otomatis ke Master Aset Tanah (SIPAT), pemilihan lokasi/kecamatan terstandarisasi via dropdown Master Kecamatan SIPAT, dan operasi split (pecah) and merge (gabung) box.
 - **Peminjaman Dokumen (Scan Request)**: Alur permohonan peminjaman berkas fisik atau file scan dokumen oleh operator OPD dengan validasi status persetujuan dari admin global.
+- **Universal Dynamic Archive Engine (e-Arsip Dinamis)**: Mesin pengarsipan dinamis mandiri (*Zero-Code Schema Extensibility*) yang memungkinkan penambahan jenis arsip baru (contoh: IMB/PBG Bangunan, Kontrak/SPK Pengadaan, Kuitansi/SPJ Keuangan, Kepegawaian/SK) lengkap dengan visual Form Builder, input field kustom, manajemen box fisik otomatis, cetak stiker barcode resmi, pratinjau PDF interaktif, multi-lampiran berkas, dan permohonan scan/pinjam dokumen terpadu.
 
 ---
 
@@ -215,6 +223,13 @@ Aplikasi **menggunakan sentuhan visual premium & animasi mikro kustom** secara b
 | **eLABEL** | GET | `/elabel/boxes/{id}/label` | `Elabel\ElabelBoxController@label` | Auth | Cetak Barcode Label Box |
 | **eLABEL** | GET | `/elabel/sertifikat` | `Elabel\ElabelSertifikatController@index` | Auth | Katalog Sertifikat Tanah |
 | **eLABEL** | GET | `/elabel/peminjaman` | `Elabel\ElabelLoanController@index` | Auth | Request Peminjaman Dokumen |
+| **eLABEL** | Resource | `/elabel/dynamic/types` | `Elabel\Dynamic\ArchiveTypeController` | Auth | Master Kategori & Visual Form Builder Arsip |
+| **eLABEL** | Resource | `/elabel/dynamic/boxes` | `Elabel\Dynamic\ArchiveBoxController` | Auth | Manajemen Box Fisik Arsip Dinamis & Barcode |
+| **eLABEL** | GET | `/elabel/dynamic/boxes/{id}/label` | `Elabel\Dynamic\ArchiveBoxController@label` | Auth | Cetak Stiker Label Barcode Box Dinamis |
+| **eLABEL** | Resource | `/elabel/dynamic/items` | `Elabel\Dynamic\ArchiveItemController` | Auth | Katalog & Input Arsip Dinamis Multi-Field |
+| **eLABEL** | GET | `/elabel/dynamic/items/export` | `Elabel\Dynamic\ArchiveItemController@export` | Auth | Ekspor Excel Katalog Arsip Dinamis |
+| **eLABEL** | GET | `/elabel/dynamic/items/{id}/view-pdf` | `Elabel\Dynamic\ArchiveItemController@viewPdf` | Auth | Viewer Berkas Scan PDF Arsip Dinamis |
+| **eLABEL** | GET/POST | `/elabel/dynamic/loans` | `Elabel\Dynamic\ArchiveLoanController` | Auth | Layanan Peminjaman & Scan Berkas Dinamis |
 | **System** | POST | `/settings/backups/sync-db` | `BackupController@syncDb` | Auth | Trigger background sinkronisasi DB Staging |
 | **System** | GET | `/settings/backups/sync-db-status` | `BackupController@syncDbStatus` | Auth | Polling status sinkronisasi DB Staging |
 | **System** | GET | `/settings/backups/sync-db-stream` | `BackupController@syncDbStream` | Auth | Real-time SSE streaming sinkronisasi DB Staging |
@@ -228,3 +243,4 @@ Aplikasi **menggunakan sentuhan visual premium & animasi mikro kustom** secara b
 4. **Keamanan HasMiddleware:** Controller baru wajib mengimplementasikan interface `HasMiddleware` standar Laravel 12.
 5. **No Destructive DB Ops:** Jangan menyarankan *Soft Deletes* jika tidak ada di skema awal. Hormati arsitektur `Set Null` pada tabel Audit.
 6. **Wajib Update Dokumentasi (.md):** Setiap kali ada perubahan rute, database/migration, controller/service, atau penambahan fitur baru, agen AI WAJIB langsung memperbarui `AI_HANDOVER.md`, `PROJECT_MASTER.md`, dan dokumen spesifikasi terkait (`docs/*.md`) sebelum mengakhiri sesi.
+

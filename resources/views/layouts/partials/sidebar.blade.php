@@ -437,6 +437,46 @@
                         </div>
                     </div>
 
+                    <!-- Nested Submenu 4: Universal Dynamic Archive Engine -->
+                    <div class="nested-group">
+                        <a class="nested-header {{ Request::is('elabel/dynamic*') ? '' : 'collapsed' }}"
+                           data-bs-toggle="collapse"
+                           href="#elabelSubDynamic"
+                           role="button"
+                           aria-expanded="{{ Request::is('elabel/dynamic*') ? 'true' : 'false' }}">
+                            <span><i class="bi bi-collection-play me-1 text-info"></i> ARSIP DINAMIS</span>
+                            <i class="bi bi-chevron-down nested-chevron"></i>
+                        </a>
+                        <div id="elabelSubDynamic" class="collapse {{ Request::is('elabel/dynamic*') ? 'show' : '' }}">
+                            <ul class="submenu-list">
+                                <li class="{{ Request::is('elabel/dynamic/items*') ? 'active' : '' }}">
+                                    <a href="{{ route('elabel.dynamic.items.index') }}" data-bs-toggle="tooltip" data-bs-placement="right" title="Katalog Berkas Arsip Dinamis">
+                                        <i class="bi bi-folder2-open text-primary"></i>
+                                        <span>Katalog Berkas</span>
+                                    </a>
+                                </li>
+                                <li class="{{ Request::is('elabel/dynamic/boxes*') ? 'active' : '' }}">
+                                    <a href="{{ route('elabel.dynamic.boxes.index') }}" data-bs-toggle="tooltip" data-bs-placement="right" title="Manajemen Box Fisik Arsip Dinamis">
+                                        <i class="bi bi-box-seam text-warning"></i>
+                                        <span>Manajemen Box</span>
+                                    </a>
+                                </li>
+                                <li class="{{ Request::is('elabel/dynamic/types*') ? 'active' : '' }}">
+                                    <a href="{{ route('elabel.dynamic.types.index') }}" data-bs-toggle="tooltip" data-bs-placement="right" title="Master Jenis & Form Builder">
+                                        <i class="bi bi-sliders text-success"></i>
+                                        <span>Master Kategori & Form</span>
+                                    </a>
+                                </li>
+                                <li class="{{ Request::is('elabel/dynamic/loans*') ? 'active' : '' }}">
+                                    <a href="{{ route('elabel.dynamic.loans.index') }}" data-bs-toggle="tooltip" data-bs-placement="right" title="Layanan Peminjaman & Scan Digital">
+                                        <i class="bi bi-arrow-left-right text-info"></i>
+                                        <span>Layanan Peminjaman</span>
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+
                 </div>
             </div>
 

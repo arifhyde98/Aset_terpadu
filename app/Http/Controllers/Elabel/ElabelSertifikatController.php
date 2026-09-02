@@ -80,9 +80,7 @@ class ElabelSertifikatController extends Controller implements HasMiddleware
             $isBersertifikat = false;
             if ($aset->latestProses && $aset->latestProses->statusProses) {
                 $status = $aset->latestProses->statusProses;
-                if ($status->kategori === 'bersertifikat' || 
-                    str_contains(strtolower($status->nama_status), 'sertifikat') || 
-                    str_contains(strtolower($status->nama_status), 'selesai')) {
+                if ($status->hasCategory('bersertifikat')) {
                     $isBersertifikat = true;
                 }
             }
@@ -97,9 +95,7 @@ class ElabelSertifikatController extends Controller implements HasMiddleware
                 $isBersertifikat = false;
                 if ($aset->latestProses && $aset->latestProses->statusProses) {
                     $status = $aset->latestProses->statusProses;
-                    if ($status->kategori === 'bersertifikat' || 
-                        str_contains(strtolower($status->nama_status), 'sertifikat') || 
-                        str_contains(strtolower($status->nama_status), 'selesai')) {
+                    if ($status->hasCategory('bersertifikat')) {
                         $isBersertifikat = true;
                     }
                 }

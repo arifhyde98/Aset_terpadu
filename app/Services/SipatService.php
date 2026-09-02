@@ -101,10 +101,14 @@ class SipatService
     private function computeDashboardStats(): array
     {
         $totalAset = AsetTanah::count();
+        $totalTanahTercatat = AsetTanah::where(function($q) {
+            $q->where('status_pencatatan', 'TERCATAT_KIB_A')
+              ->orWhereNull('status_pencatatan')
+              ->orWhere('status_pencatatan', '!=', 'USULAN_BELUM_TERCATAT');
+        })->count();
+        $totalTanahTakTercatat = AsetTanah::where('status_pencatatan', 'USULAN_BELUM_TERCATAT')->count();
         $totalLuas = AsetTanah::sum('luas');
         $statusMaster = StatusProses::orderBy('urutan', 'asc')->get();
-
-        $totalTanahTakTercatat = AsetTanah::where('status_pencatatan', 'USULAN_BELUM_TERCATAT')->count();
 
         $statusMap = [];
         $statusCategoryMap = [];
@@ -176,17 +180,25 @@ class SipatService
             $statusCounts[$statusName]++;
 
             $explicitCategory = $statusCategoryMap[$statusId] ?? ($latest['kategori'] ?? null);
-            $category = $this->getStatusCategory($statusName, $explicitCategory);
+            $categories = $this->getStatusCategories($explicitCategory, $statusName);
             
-            $statusBreakdowns[$category][$statusName] = ($statusBreakdowns[$category][$statusName] ?? 0) + 1;
+            foreach ($categories as $cat) {
+                if (!isset($statusBreakdowns[$cat])) {
+                    $statusBreakdowns[$cat] = [];
+                }
+                $statusBreakdowns[$cat][$statusName] = ($statusBreakdowns[$cat][$statusName] ?? 0) + 1;
+            }
 
-            if ($category === 'kendala') {
+            if (in_array('kendala', $categories, true)) {
                 $asetKendala++;
-            } elseif ($category === 'bersertifikat') {
+            }
+            if (in_array('bersertifikat', $categories, true)) {
                 $asetBersertifikat++;
-            } elseif ($category === 'belum_diurus') {
+            }
+            if (in_array('belum_diurus', $categories, true)) {
                 $asetBelumDiurus++;
-            } else {
+            }
+            if (in_array('proses', $categories, true)) {
                 $asetProses++;
             }
 
@@ -225,38 +237,31 @@ class SipatService
         }
 
         for ($m = 1; $m <= 12; $m++) {
-            $endOfMonth = date("Y-m-t 23:59:59", strtotime("$year-$m-01"));
-            
-            foreach ($allAsetsForChart as $asetChart) {
-                $asetCreatedAt = $asetChart->created_at ?? date('Y-01-01');
-                
-                if ($asetCreatedAt > $endOfMonth) {
-                    continue;
-                }
+            $cutoffDate = sprintf('%04d-%02d-31 23:59:59', $year, $m);
+            foreach ($allAsetsForChart as $a) {
+                $asetId = $a->id_aset;
+                $prosesList = $prosesByAset[$asetId] ?? [];
                 
                 $currentStatusName = 'Belum Diurus';
-                $explicitCat = 'belum_diurus';
-                $asetIdChart = $asetChart->id_aset;
+                $explicitCat = null;
                 
-                if (isset($prosesByAset[$asetIdChart])) {
-                    $latestProsesInMonth = null;
-                    foreach ($prosesByAset[$asetIdChart] as $p) {
-                        $pDate = $p->tgl_mulai ?? $p->created_at;
-                        if ($pDate <= $endOfMonth) {
-                            $latestProsesInMonth = $p;
-                        }
-                    }
-                    if ($latestProsesInMonth) {
+                if (!empty($prosesList)) {
+                    $validProses = array_filter($prosesList, function($p) use ($cutoffDate) {
+                        return ($p->tgl_mulai && $p->tgl_mulai <= $cutoffDate) || ($p->created_at && $p->created_at <= $cutoffDate);
+                    });
+                    
+                    if (!empty($validProses)) {
+                        $latestProsesInMonth = end($validProses);
                         $stId = (int) $latestProsesInMonth->id_status;
                         $currentStatusName = $statusMap[$stId] ?? 'Belum Diurus';
                         $explicitCat = $statusCategoryMap[$stId] ?? null;
                     }
                 }
                 
-                $cat = $this->getStatusCategory($currentStatusName, $explicitCat);
-                if ($cat === 'bersertifikat') {
+                $cats = $this->getStatusCategories($explicitCat, $currentStatusName);
+                if (in_array('bersertifikat', $cats, true)) {
                     $chartSelesai[$m - 1]++;
-                } elseif ($cat === 'proses' || $cat === 'kendala') {
+                } elseif (in_array('proses', $cats, true) || in_array('kendala', $cats, true)) {
                     $chartProses[$m - 1]++;
                 } else {
                     $chartBelum[$m - 1]++;
@@ -300,10 +305,10 @@ class SipatService
             ->where(function($q) {
                 $q->doesntHave('latestProses')
                   ->orWhereHas('latestProses', function($lq) {
-                      $lq->whereNotIn('id_status', [1, 4, 10, 3])
-                        ->whereHas('statusProses', function($sq) {
-                            $sq->whereNotIn('kategori', ['bersertifikat', 'kendala']);
-                        });
+                      $lq->whereHas('statusProses', function($sq) {
+                          $sq->where('kategori', 'NOT LIKE', '%bersertifikat%')
+                            ->where('kategori', 'NOT LIKE', '%kendala%');
+                      });
                   });
             })->pluck('id_aset')->toArray();
         $asetTargetCount = count(array_unique($targetBelumSertifikatIds));
@@ -313,8 +318,9 @@ class SipatService
 
         return [
             'totalAset'               => $totalAset,
-            'totalLuas'               => $totalLuas,
+            'totalTanahTercatat'      => $totalTanahTercatat,
             'totalTanahTakTercatat'   => $totalTanahTakTercatat,
+            'totalLuas'               => $totalLuas,
             'asetBersertifikat'       => $asetBersertifikat,
             'asetKendala'             => $asetKendala,
             'asetProses'              => $asetProses,
@@ -337,19 +343,24 @@ class SipatService
         ];
     }
 
-    public function getStatusCategory(string $statusName, ?string $explicitCategory = null): string
+    public function getStatusCategories(?string $explicitCategory, string $statusName): array
     {
         if (!empty($explicitCategory)) {
-            $cat = strtolower(trim($explicitCategory));
-            if (in_array($cat, ['belum_diurus', 'proses', 'kendala', 'bersertifikat'], true)) {
-                return $cat;
+            $raw = trim($explicitCategory);
+            if (str_contains($raw, ',')) {
+                $cats = array_values(array_filter(array_map('trim', explode(',', $raw))));
+                if (!empty($cats)) {
+                    return $cats;
+                }
+            } else {
+                return [$raw];
             }
         }
 
         $normalized = strtolower(trim($statusName));
 
         if ($normalized === '' || str_contains($normalized, 'belum') || str_contains($normalized, 'tanpa')) {
-            return 'belum_diurus';
+            return ['belum_diurus'];
         }
 
         if (str_contains($normalized, 'kendala')
@@ -358,16 +369,22 @@ class SipatService
             || str_contains($normalized, 'bermasalah')
             || str_contains($normalized, 'batal')
             || str_contains($normalized, 'ditolak')) {
-            return 'kendala';
+            return ['kendala'];
         }
 
         if (((str_contains($normalized, 'sertifikat') || str_contains($normalized, 'sertipikat')) && !str_contains($normalized, 'proses'))
             || str_contains($normalized, 'terbit sertifikat')
             || str_contains($normalized, 'terbit sertipikat')
             || $normalized === 'selesai') {
-            return 'bersertifikat';
+            return ['bersertifikat'];
         }
 
-        return 'proses';
+        return ['proses'];
+    }
+
+    public function getStatusCategory(string $statusName, ?string $explicitCategory = null): string
+    {
+        $cats = $this->getStatusCategories($explicitCategory, $statusName);
+        return $cats[0] ?? 'proses';
     }
 }

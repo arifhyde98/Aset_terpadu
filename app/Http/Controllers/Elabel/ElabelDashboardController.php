@@ -71,7 +71,13 @@ class ElabelDashboardController extends Controller implements HasMiddleware
         $sertifikatCount = ElabelSertifikat::count();
         $suratPenyerahanCount = ElabelSuratPenyerahan::count();
 
-        $boxCount = $bpkbBoxCount + $sertifikatBoxCount + $suratPenyerahanBoxCount;
+        // Dynamic Archives Integration
+        $dynamicBoxesCount = \App\Models\Elabel\Dynamic\ArchiveBox::count();
+        $dynamicItemsCount = \App\Models\Elabel\Dynamic\ArchiveItem::count();
+        $dynamicTypesCount = \App\Models\Elabel\Dynamic\ArchiveType::count();
+        $dynamicLoansCount = \App\Models\Elabel\Dynamic\ArchiveLoan::count();
+
+        $boxCount = $bpkbBoxCount + $sertifikatBoxCount + $suratPenyerahanBoxCount + $dynamicBoxesCount;
 
         $boxFilledPercent = $boxCount > 0 ? (int) round(($filledBoxCount / $boxCount) * 100) : 0;
         $bpkbActivePercent = $bpkbCount > 0 ? (int) round(($bpkbAvailableCount / $bpkbCount) * 100) : 0;
@@ -89,6 +95,10 @@ class ElabelDashboardController extends Controller implements HasMiddleware
             'bpkbBoxCount',
             'sertifikatBoxCount',
             'suratPenyerahanBoxCount',
+            'dynamicBoxesCount',
+            'dynamicItemsCount',
+            'dynamicTypesCount',
+            'dynamicLoansCount',
             'boxMobilCount',
             'boxMotorCount',
             'bpkbCount',

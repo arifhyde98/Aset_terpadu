@@ -96,4 +96,41 @@ Route::prefix('elabel')->name('elabel.')->group(function () {
     Route::post('peminjaman/{id}/reject', [\App\Http\Controllers\Elabel\ElabelLoanController::class, 'reject'])->name('peminjaman.reject');
     Route::delete('peminjaman/{id}', [\App\Http\Controllers\Elabel\ElabelLoanController::class, 'destroy'])->name('peminjaman.destroy');
     Route::get('peminjaman/{id}/download', [\App\Http\Controllers\Elabel\ElabelLoanController::class, 'download'])->name('peminjaman.download');
+
+    // ===== UNIVERSAL DYNAMIC ARCHIVE ENGINE =====
+    Route::prefix('dynamic')->name('dynamic.')->group(function () {
+        // Master Jenis Arsip & Form Builder
+        Route::get('types', [\App\Http\Controllers\Elabel\Dynamic\ArchiveTypeController::class, 'index'])->name('types.index');
+        Route::get('types/create', [\App\Http\Controllers\Elabel\Dynamic\ArchiveTypeController::class, 'create'])->name('types.create');
+        Route::post('types', [\App\Http\Controllers\Elabel\Dynamic\ArchiveTypeController::class, 'store'])->name('types.store');
+        Route::get('types/{id}/edit', [\App\Http\Controllers\Elabel\Dynamic\ArchiveTypeController::class, 'edit'])->name('types.edit');
+        Route::put('types/{id}', [\App\Http\Controllers\Elabel\Dynamic\ArchiveTypeController::class, 'update'])->name('types.update');
+        Route::delete('types/{id}', [\App\Http\Controllers\Elabel\Dynamic\ArchiveTypeController::class, 'destroy'])->name('types.destroy');
+
+        // Manajemen Box Fisik Arsip Dinamis
+        Route::get('boxes', [\App\Http\Controllers\Elabel\Dynamic\ArchiveBoxController::class, 'index'])->name('boxes.index');
+        Route::post('boxes', [\App\Http\Controllers\Elabel\Dynamic\ArchiveBoxController::class, 'store'])->name('boxes.store');
+        Route::get('boxes/{id}', [\App\Http\Controllers\Elabel\Dynamic\ArchiveBoxController::class, 'show'])->name('boxes.show');
+        Route::get('boxes/{id}/label', [\App\Http\Controllers\Elabel\Dynamic\ArchiveBoxController::class, 'label'])->name('boxes.label');
+        Route::delete('boxes/{id}', [\App\Http\Controllers\Elabel\Dynamic\ArchiveBoxController::class, 'destroy'])->name('boxes.destroy');
+
+        // Katalog Dokumen Berkas Arsip Dinamis
+        Route::get('items', [\App\Http\Controllers\Elabel\Dynamic\ArchiveItemController::class, 'index'])->name('items.index');
+        Route::get('items/create', [\App\Http\Controllers\Elabel\Dynamic\ArchiveItemController::class, 'create'])->name('items.create');
+        Route::post('items', [\App\Http\Controllers\Elabel\Dynamic\ArchiveItemController::class, 'store'])->name('items.store');
+        Route::get('items/export', [\App\Http\Controllers\Elabel\Dynamic\ArchiveItemController::class, 'export'])->name('items.export');
+        Route::get('items/{id}', [\App\Http\Controllers\Elabel\Dynamic\ArchiveItemController::class, 'show'])->name('items.show');
+        Route::get('items/{id}/edit', [\App\Http\Controllers\Elabel\Dynamic\ArchiveItemController::class, 'edit'])->name('items.edit');
+        Route::put('items/{id}', [\App\Http\Controllers\Elabel\Dynamic\ArchiveItemController::class, 'update'])->name('items.update');
+        Route::delete('items/{id}', [\App\Http\Controllers\Elabel\Dynamic\ArchiveItemController::class, 'destroy'])->name('items.destroy');
+        Route::get('items/{id}/view-pdf', [\App\Http\Controllers\Elabel\Dynamic\ArchiveItemController::class, 'viewPdf'])->name('items.view-pdf');
+
+        // Layanan Peminjaman & Scan Berkas Dinamis
+        Route::get('loans', [\App\Http\Controllers\Elabel\Dynamic\ArchiveLoanController::class, 'index'])->name('loans.index');
+        Route::post('loans', [\App\Http\Controllers\Elabel\Dynamic\ArchiveLoanController::class, 'store'])->name('loans.store');
+        Route::post('loans/{id}/approve', [\App\Http\Controllers\Elabel\Dynamic\ArchiveLoanController::class, 'approve'])->name('loans.approve');
+        Route::post('loans/{id}/reject', [\App\Http\Controllers\Elabel\Dynamic\ArchiveLoanController::class, 'reject'])->name('loans.reject');
+        Route::post('loans/{id}/returned', [\App\Http\Controllers\Elabel\Dynamic\ArchiveLoanController::class, 'markReturned'])->name('loans.returned');
+        Route::delete('loans/{id}', [\App\Http\Controllers\Elabel\Dynamic\ArchiveLoanController::class, 'destroy'])->name('loans.destroy');
+    });
 });

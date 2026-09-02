@@ -5,7 +5,7 @@
     <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
         <div>
             <h4 class="fw-bold mb-1">Master Status & Kategori Proses BPN</h4>
-            <p class="text-body-secondary small mb-0">Kelola nama status, warna label, dan pengelompokan kategori tahapan pensertifikatan tanah</p>
+            <p class="text-body-secondary small mb-0">Kelola nama status, warna label, dan pengelompokan kategori (1 status dapat memiliki banyak kategori)</p>
         </div>
         <button type="button" class="btn btn-primary rounded-3 d-flex align-items-center gap-2 shadow-sm" data-bs-toggle="modal" data-bs-target="#modalTambahStatus">
             <i class="bi bi-plus-lg"></i> Tambah Status Proses
@@ -34,8 +34,8 @@
             <i class="bi bi-exclamation-triangle-fill"></i> Kendala / Sengketa
             <span class="badge {{ request('kategori') === 'kendala' ? 'bg-white text-danger' : 'bg-danger-subtle text-danger-emphasis' }} rounded-pill ms-1">{{ $counts['kendala'] ?? 0 }}</span>
         </a>
-        @if(isset($customCategories))
-            @foreach($customCategories as $customKat)
+        @if(isset($customCategoryKeys))
+            @foreach($customCategoryKeys as $customKat)
                 <a href="{{ route('status-proses.index', ['kategori' => $customKat]) }}" class="btn btn-sm rounded-pill px-3 py-1.5 fw-semibold d-inline-flex align-items-center gap-1.5 {{ request('kategori') === $customKat ? 'btn-dark text-white shadow-sm' : 'btn-outline-dark bg-body' }}">
                     <i class="bi bi-tag-fill"></i> {{ ucwords(str_replace('_', ' ', $customKat)) }}
                     <span class="badge {{ request('kategori') === $customKat ? 'bg-white text-dark' : 'bg-secondary-subtle text-body' }} rounded-pill ms-1">{{ $counts[$customKat] ?? 0 }}</span>
@@ -50,8 +50,9 @@
             <table class="table table-hover align-middle mb-0">
                 <thead class="bg-body-tertiary text-body-secondary small fw-semibold">
                     <tr>
-                        <th class="ps-4 py-3">NAMA STATUS PROSES BPN</th>
-                        <th class="py-3">KATEGORI UTAMA</th>
+                        <th class="ps-4 py-3" style="width: 60px;">URUTAN</th>
+                        <th class="py-3">NAMA STATUS PROSES BPN</th>
+                        <th class="py-3">KATEGORI PENGELOMPOKAN (MULTI-KATEGORI)</th>
                         <th class="py-3">WARNA LABEL</th>
                         <th class="text-center py-3 pe-4" style="width: 120px;">AKSI</th>
                     </tr>
@@ -78,34 +79,44 @@
                                 'dot' => (str_starts_with($w, '#') ? $w : '#0d6efd')
                             ];
 
-                            $kat = strtolower(trim($status->kategori ?? 'proses'));
+                            $cats = $status->categories;
                         @endphp
                         <tr>
-                            <td class="ps-4">
+                            <td class="ps-4 font-monospace text-secondary fw-bold">
+                                #{{ $status->urutan ?? 0 }}
+                            </td>
+                            <td>
                                 <div class="fw-bold text-body fs-6">{{ $status->nama_status }}</div>
                             </td>
                             <td>
-                                @if($kat === 'bersertifikat')
-                                    <span class="badge bg-success-subtle text-success-emphasis border border-success-subtle px-2.5 py-1 text-uppercase small rounded-pill fw-semibold">
-                                        <i class="bi bi-patch-check-fill me-1"></i> Bersertifikat
-                                    </span>
-                                @elseif($kat === 'kendala')
-                                    <span class="badge bg-danger-subtle text-danger-emphasis border border-danger-subtle px-2.5 py-1 text-uppercase small rounded-pill fw-semibold">
-                                        <i class="bi bi-exclamation-triangle-fill me-1"></i> Kendala / Sengketa
-                                    </span>
-                                @elseif($kat === 'belum_diurus')
-                                    <span class="badge bg-secondary-subtle text-secondary-emphasis border border-secondary-subtle px-2.5 py-1 text-uppercase small rounded-pill fw-semibold">
-                                        <i class="bi bi-clock-history me-1"></i> Belum Diurus
-                                    </span>
-                                @elseif($kat === 'proses')
-                                    <span class="badge bg-info-subtle text-info-emphasis border border-info-subtle px-2.5 py-1 text-uppercase small rounded-pill fw-semibold">
-                                        <i class="bi bi-hourglass-split me-1"></i> Dalam Proses
-                                    </span>
-                                @else
-                                    <span class="badge bg-dark-subtle text-dark-emphasis border border-dark-subtle px-2.5 py-1 text-uppercase small rounded-pill fw-semibold">
-                                        <i class="bi bi-tag-fill me-1"></i> {{ ucwords(str_replace('_', ' ', $kat)) }}
-                                    </span>
-                                @endif
+                                <div class="d-flex flex-wrap gap-1.5">
+                                    @forelse($cats as $cat)
+                                        @php $cat = strtolower(trim($cat)); @endphp
+                                        @if($cat === 'bersertifikat')
+                                            <span class="badge bg-success-subtle text-success-emphasis border border-success-subtle px-2 py-1 small rounded-pill fw-semibold">
+                                                <i class="bi bi-patch-check-fill me-1"></i> Bersertifikat
+                                            </span>
+                                        @elseif($cat === 'kendala')
+                                            <span class="badge bg-danger-subtle text-danger-emphasis border border-danger-subtle px-2 py-1 small rounded-pill fw-semibold">
+                                                <i class="bi bi-exclamation-triangle-fill me-1"></i> Kendala / Sengketa
+                                            </span>
+                                        @elseif($cat === 'belum_diurus')
+                                            <span class="badge bg-secondary-subtle text-secondary-emphasis border border-secondary-subtle px-2 py-1 small rounded-pill fw-semibold">
+                                                <i class="bi bi-clock-history me-1"></i> Belum Diurus
+                                            </span>
+                                        @elseif($cat === 'proses')
+                                            <span class="badge bg-info-subtle text-info-emphasis border border-info-subtle px-2 py-1 small rounded-pill fw-semibold">
+                                                <i class="bi bi-hourglass-split me-1"></i> Dalam Proses
+                                            </span>
+                                        @else
+                                            <span class="badge bg-dark-subtle text-dark-emphasis border border-dark-subtle px-2 py-1 small rounded-pill fw-semibold">
+                                                <i class="bi bi-tag-fill me-1"></i> {{ ucwords(str_replace('_', ' ', $cat)) }}
+                                            </span>
+                                        @endif
+                                    @empty
+                                        <span class="badge bg-secondary-subtle text-secondary px-2 py-1 rounded-pill">Tanpa Kategori</span>
+                                    @endforelse
+                                </div>
                             </td>
                             <td>
                                 <div class="d-inline-flex align-items-center gap-2 px-2.5 py-1 rounded-pill border {{ $cfg['badge'] }} small fw-semibold">
@@ -115,7 +126,7 @@
                             </td>
                             <td class="text-center pe-4">
                                 <div class="btn-group btn-group-sm">
-                                    <button type="button" class="btn btn-body-secondary text-primary border-0 rounded-2 p-1.5 me-1" onclick="editStatus({{ json_encode($status) }})" title="Edit Status & Kategori">
+                                    <button type="button" class="btn btn-body-secondary text-primary border-0 rounded-2 p-1.5 me-1" onclick="editStatus({{ json_encode($status) }}, {{ json_encode($status->categories) }})" title="Edit Status & Multi-Kategori">
                                         <i class="bi bi-pencil-square fs-6"></i>
                                     </button>
                                     <form action="{{ route('status-proses.destroy', $status->id_status) }}" method="POST" class="d-inline delete-confirm" onsubmit="return confirm('Apakah Anda yakin ingin menghapus status proses ini?')">
@@ -130,7 +141,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="4" class="text-center py-5 text-body-secondary">
+                            <td colspan="5" class="text-center py-5 text-body-secondary">
                                 <i class="bi bi-inbox fs-1 d-block mb-2"></i>
                                 Belum ada data status proses untuk kategori ini.
                             </td>
@@ -158,35 +169,59 @@
                         <label class="form-label small fw-semibold">Nama Status Proses BPN <span class="text-danger">*</span></label>
                         <input type="text" name="nama_status" class="form-control" required placeholder="Contoh: Pengukuran BPN / Terbit Sertifikat">
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label small fw-semibold">Warna Label Visual</label>
-                        <select name="warna" class="form-select">
-                            <option value="primary">Primary (Biru)</option>
-                            <option value="success">Success (Hijau / Bersertifikat)</option>
-                            <option value="warning">Warning (Kuning / Proses)</option>
-                            <option value="danger">Danger (Merah / Kendala)</option>
-                            <option value="info">Info (Biru Muda)</option>
-                            <option value="secondary">Secondary (Abu-abu)</option>
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label small fw-semibold">Kategori Pengelompokan <span class="text-danger">*</span></label>
-                        <select id="addKategoriSelect" name="kategori" class="form-select mb-2" onchange="toggleCustomCategoryInput(this.value, 'addCustomCategoryWrapper', 'addCustomCategoryInput')" required>
-                            <option value="proses">Dalam Proses (Permohonan / Pengukuran / PERTEK / PKKPR)</option>
-                            <option value="bersertifikat">Bersertifikat (Selesai / Terbit Sertifikat BPN)</option>
-                            <option value="kendala">Kendala / Sengketa / Bermasalah</option>
-                            <option value="belum_diurus">Belum Diurus / Tahap Awal</option>
-                            @if(isset($customCategories) && count($customCategories) > 0)
-                                @foreach($customCategories as $cc)
-                                    <option value="{{ $cc }}">{{ ucwords(str_replace('_', ' ', $cc)) }}</option>
-                                @endforeach
-                            @endif
-                            <option value="CUSTOM">+ Tulis Kategori Kustom Baru...</option>
-                        </select>
-                        <div id="addCustomCategoryWrapper" class="d-none">
-                            <input type="text" id="addCustomCategoryInput" name="custom_kategori" class="form-control" placeholder="Tulis nama kategori baru (contoh: Hibah / Pengadaan)...">
+                    <div class="row g-2 mb-3">
+                        <div class="col-8">
+                            <label class="form-label small fw-semibold">Warna Label Visual</label>
+                            <select name="warna" class="form-select">
+                                <option value="primary">Primary (Biru)</option>
+                                <option value="success">Success (Hijau / Bersertifikat)</option>
+                                <option value="warning">Warning (Kuning / Proses)</option>
+                                <option value="danger">Danger (Merah / Kendala)</option>
+                                <option value="info">Info (Biru Muda)</option>
+                                <option value="secondary">Secondary (Abu-abu)</option>
+                            </select>
                         </div>
-                        <div class="form-text small">Kategori ini digunakan untuk pemfilteran otomatis pada Master Aset Tanah & Laporan.</div>
+                        <div class="col-4">
+                            <label class="form-label small fw-semibold">No. Urut</label>
+                            <input type="number" name="urutan" class="form-control" placeholder="Otomatis">
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold d-block mb-2">
+                            Pilih Kategori Pengelompokan (Bisa Pilih Lebih dari 1) <span class="text-danger">*</span>
+                        </label>
+                        <div class="p-3 bg-light rounded-3 border d-flex flex-column gap-2">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="kategori[]" value="proses" id="add_cat_proses" checked>
+                                <label class="form-check-label fw-semibold text-info-emphasis" for="add_cat_proses">
+                                    <i class="bi bi-hourglass-split me-1"></i> Dalam Proses <small class="text-secondary fw-normal">(Pengukuran, PERTEK, PKKPR, dll)</small>
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="kategori[]" value="bersertifikat" id="add_cat_bersertifikat">
+                                <label class="form-check-label fw-semibold text-success-emphasis" for="add_cat_bersertifikat">
+                                    <i class="bi bi-patch-check-fill me-1"></i> Bersertifikat <small class="text-secondary fw-normal">(Sertifikat Terbit / Selesai)</small>
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="kategori[]" value="kendala" id="add_cat_kendala">
+                                <label class="form-check-label fw-semibold text-danger-emphasis" for="add_cat_kendala">
+                                    <i class="bi bi-exclamation-triangle-fill me-1"></i> Kendala / Sengketa <small class="text-secondary fw-normal">(Bermasalah / Ditolak / Gugatan)</small>
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="kategori[]" value="belum_diurus" id="add_cat_belum_diurus">
+                                <label class="form-check-label fw-semibold text-secondary-emphasis" for="add_cat_belum_diurus">
+                                    <i class="bi bi-clock-history me-1"></i> Belum Diurus <small class="text-secondary fw-normal">(Tahap Awal / Belum Diproses)</small>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="mt-2">
+                            <label class="form-label small fw-semibold text-secondary">Kategori Kustom Tambahan (Opsional, pisahkan koma)</label>
+                            <input type="text" name="custom_kategori" class="form-control form-control-sm" placeholder="Contoh: hibah, pengadaan, redistribusi">
+                        </div>
                     </div>
                 </div>
                 <div class="modal-footer border-top">
@@ -206,7 +241,7 @@
                 @csrf
                 @method('PUT')
                 <div class="modal-header border-bottom">
-                    <h5 class="modal-title fw-bold">Edit Status Proses & Kategori</h5>
+                    <h5 class="modal-title fw-bold">Edit Status Proses & Multi-Kategori</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body p-4">
@@ -214,35 +249,60 @@
                         <label class="form-label small fw-semibold">Nama Status Proses BPN <span class="text-danger">*</span></label>
                         <input type="text" id="editNamaStatus" name="nama_status" class="form-control" required>
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label small fw-semibold">Warna Label Visual</label>
-                        <select id="editWarna" name="warna" class="form-select">
-                            <option value="primary">Primary (Biru)</option>
-                            <option value="success">Success (Hijau / Bersertifikat)</option>
-                            <option value="warning">Warning (Kuning / Proses)</option>
-                            <option value="danger">Danger (Merah / Kendala)</option>
-                            <option value="info">Info (Biru Muda)</option>
-                            <option value="secondary">Secondary (Abu-abu)</option>
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label small fw-semibold">Kategori Pengelompokan <span class="text-danger">*</span></label>
-                        <select id="editKategoriSelect" name="kategori" class="form-select mb-2" onchange="toggleCustomCategoryInput(this.value, 'editCustomCategoryWrapper', 'editCustomCategoryInput')" required>
-                            <option value="proses">Dalam Proses (Permohonan / Pengukuran / PERTEK / PKKPR)</option>
-                            <option value="bersertifikat">Bersertifikat (Selesai / Terbit Sertifikat BPN)</option>
-                            <option value="kendala">Kendala / Sengketa / Bermasalah</option>
-                            <option value="belum_diurus">Belum Diurus / Tahap Awal</option>
-                            @if(isset($customCategories) && count($customCategories) > 0)
-                                @foreach($customCategories as $cc)
-                                    <option value="{{ $cc }}">{{ ucwords(str_replace('_', ' ', $cc)) }}</option>
-                                @endforeach
-                            @endif
-                            <option value="CUSTOM">+ Tulis Kategori Kustom Baru...</option>
-                        </select>
-                        <div id="editCustomCategoryWrapper" class="d-none">
-                            <input type="text" id="editCustomCategoryInput" name="custom_kategori" class="form-control" placeholder="Tulis nama kategori baru (contoh: Hibah / Pengadaan)...">
+                    <div class="row g-2 mb-3">
+                        <div class="col-8">
+                            <label class="form-label small fw-semibold">Warna Label Visual</label>
+                            <select id="editWarna" name="warna" class="form-select">
+                                <option value="primary">Primary (Biru)</option>
+                                <option value="success">Success (Hijau / Bersertifikat)</option>
+                                <option value="warning">Warning (Kuning / Proses)</option>
+                                <option value="danger">Danger (Merah / Kendala)</option>
+                                <option value="info">Info (Biru Muda)</option>
+                                <option value="secondary">Secondary (Abu-abu)</option>
+                            </select>
                         </div>
-                        <div class="form-text small">Memperbarui kategori ini akan langsung mempengaruhi filter ringkasan aset.</div>
+                        <div class="col-4">
+                            <label class="form-label small fw-semibold">No. Urut</label>
+                            <input type="number" id="editUrutan" name="urutan" class="form-control">
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold d-block mb-2">
+                            Pilih Kategori Pengelompokan (Bisa Pilih Lebih dari 1) <span class="text-danger">*</span>
+                        </label>
+                        <div class="p-3 bg-light rounded-3 border d-flex flex-column gap-2">
+                            <div class="form-check">
+                                <input class="form-check-input edit-cat-checkbox" type="checkbox" name="kategori[]" value="proses" id="edit_cat_proses">
+                                <label class="form-check-label fw-semibold text-info-emphasis" for="edit_cat_proses">
+                                    <i class="bi bi-hourglass-split me-1"></i> Dalam Proses <small class="text-secondary fw-normal">(Pengukuran, PERTEK, PKKPR, dll)</small>
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input edit-cat-checkbox" type="checkbox" name="kategori[]" value="bersertifikat" id="edit_cat_bersertifikat">
+                                <label class="form-check-label fw-semibold text-success-emphasis" for="edit_cat_bersertifikat">
+                                    <i class="bi bi-patch-check-fill me-1"></i> Bersertifikat <small class="text-secondary fw-normal">(Sertifikat Terbit / Selesai)</small>
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input edit-cat-checkbox" type="checkbox" name="kategori[]" value="kendala" id="edit_cat_kendala">
+                                <label class="form-check-label fw-semibold text-danger-emphasis" for="edit_cat_kendala">
+                                    <i class="bi bi-exclamation-triangle-fill me-1"></i> Kendala / Sengketa <small class="text-secondary fw-normal">(Bermasalah / Ditolak / Gugatan)</small>
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input edit-cat-checkbox" type="checkbox" name="kategori[]" value="belum_diurus" id="edit_cat_belum_diurus">
+                                <label class="form-check-label fw-semibold text-secondary-emphasis" for="edit_cat_belum_diurus">
+                                    <i class="bi bi-clock-history me-1"></i> Belum Diurus <small class="text-secondary fw-normal">(Tahap Awal / Belum Diproses)</small>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="mt-2">
+                            <label class="form-label small fw-semibold text-secondary">Kategori Kustom Tambahan (Opsional, pisahkan koma)</label>
+                            <input type="text" id="editCustomKategori" name="custom_kategori" class="form-control form-control-sm" placeholder="Contoh: hibah, pengadaan, redistribusi">
+                        </div>
+                        <div class="form-text small mt-1">Perubahan kategori ini langsung otomatis memperbarui statistik dashboard & filter laporan.</div>
                     </div>
                 </div>
                 <div class="modal-footer border-top">
@@ -257,44 +317,33 @@
 
 @push('scripts')
 <script>
-    function toggleCustomCategoryInput(val, wrapperId, inputId) {
-        const wrapper = document.getElementById(wrapperId);
-        const input = document.getElementById(inputId);
-        if (val === 'CUSTOM') {
-            wrapper.classList.remove('d-none');
-            input.setAttribute('required', 'required');
-            input.focus();
-        } else {
-            wrapper.classList.add('d-none');
-            input.removeAttribute('required');
-            input.value = '';
-        }
-    }
-
-    function editStatus(status) {
+    function editStatus(status, categories) {
         document.getElementById('formEditStatus').action = `{{ url('master-data/status-proses') }}/${status.id_status}`;
         document.getElementById('editNamaStatus').value = status.nama_status;
         document.getElementById('editWarna').value = status.warna || 'primary';
-        
-        const editSelect = document.getElementById('editKategoriSelect');
-        const katVal = status.kategori || 'proses';
-        
-        let found = false;
-        for (let i = 0; i < editSelect.options.length; i++) {
-            if (editSelect.options[i].value === katVal) {
-                editSelect.selectedIndex = i;
-                found = true;
-                break;
+        document.getElementById('editUrutan').value = status.urutan || 0;
+
+        // Reset all checkboxes
+        const checkboxes = document.querySelectorAll('.edit-cat-checkbox');
+        checkboxes.forEach(cb => cb.checked = false);
+
+        const standardCats = ['proses', 'bersertifikat', 'kendala', 'belum_diurus'];
+        const customCats = [];
+
+        // Parse categories array
+        const catArray = Array.isArray(categories) ? categories : (status.kategori ? status.kategori.split(',').map(s => s.trim()) : []);
+
+        catArray.forEach(cat => {
+            const normalized = cat.toLowerCase();
+            const cb = document.getElementById(`edit_cat_${normalized}`);
+            if (cb) {
+                cb.checked = true;
+            } else if (!standardCats.includes(normalized) && normalized !== '') {
+                customCats.push(normalized);
             }
-        }
-        
-        if (!found) {
-            editSelect.value = 'CUSTOM';
-            toggleCustomCategoryInput('CUSTOM', 'editCustomCategoryWrapper', 'editCustomCategoryInput');
-            document.getElementById('editCustomCategoryInput').value = katVal;
-        } else {
-            toggleCustomCategoryInput(katVal, 'editCustomCategoryWrapper', 'editCustomCategoryInput');
-        }
+        });
+
+        document.getElementById('editCustomKategori').value = customCats.join(', ');
 
         const modal = new bootstrap.Modal(document.getElementById('modalEditStatus'));
         modal.show();

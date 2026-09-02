@@ -115,7 +115,7 @@
 
     <!-- Baris 1: 4 Cards Utama dengan Height Seragam -->
     <div class="row g-3 mb-4">
-        <!-- Card 1: Total Aset Tanah -->
+        <!-- Card 1: Total Aset Tanah Keseluruhan & Tercatat KIB A -->
         <div class="col-12 col-sm-6 col-xl-3">
             <div class="card sipat-stat-card h-100 p-4 d-flex flex-column justify-content-between">
                 <div>
@@ -124,27 +124,29 @@
                             <i class="bi bi-box-seam-fill"></i>
                         </div>
                         <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-2.5 py-1 font-monospace" style="font-size: 0.72rem;">
-                            KIB A
+                            KESELURUHAN
                         </span>
                     </div>
-                    <div class="text-secondary small fw-bold text-uppercase" style="letter-spacing: 0.05em;">Total Aset Tanah</div>
+                    <div class="text-secondary small fw-bold text-uppercase" style="letter-spacing: 0.05em;">Tanah Keseluruhan</div>
                     <div class="stat-value-lg text-body mb-3">{{ number_format($totalAset, 0, ',', '.') }} <span class="fs-6 fw-normal text-secondary">Bidang</span></div>
                 </div>
 
                 <div class="card-breakdown-box">
-                    <div class="d-flex justify-content-between align-items-center mb-1.5 pb-1.5 border-bottom">
+                    <div class="d-flex justify-content-between align-items-center mb-1 pb-1 border-bottom">
+                        <span class="text-secondary fw-semibold small d-flex align-items-center gap-1">
+                            <i class="bi bi-building-check text-primary"></i> Tercatat KIB A
+                        </span>
+                        <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-2 py-0.5 font-monospace fw-bold">{{ number_format($totalTanahTercatat ?? 1188, 0, ',', '.') }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mb-1 pb-1 border-bottom">
                         <a href="{{ route('sipat.tanah-tak-tercatat.index') }}" class="text-decoration-none text-warning-emphasis fw-bold small d-flex align-items-center gap-1">
-                            <i class="bi bi-exclamation-circle-fill text-warning"></i> Tanah Belum Tercatat
+                            <i class="bi bi-exclamation-circle-fill text-warning"></i> Belum Tercatat
                         </a>
                         <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle rounded-pill px-2 py-0.5 font-monospace fw-bold">{{ number_format($totalTanahTakTercatat ?? 0, 0, ',', '.') }}</span>
                     </div>
-                    <div class="d-flex justify-content-between align-items-center mb-1">
-                        <span class="text-secondary fw-semibold small">Belum Bersertifikat</span>
-                        <span class="fw-bold text-primary small font-monospace">{{ number_format($totalBelumBersertifikat ?? 672, 0, ',', '.') }}</span>
-                    </div>
-                    <div class="breakdown-row d-flex justify-content-between align-items-center text-secondary">
-                        <span class="text-truncate me-2">&bull; Murni (Excl. Target & Bermasalah)</span>
-                        <span class="fw-semibold text-body font-monospace">{{ number_format($totalBelumBersertifikat ?? 672, 0, ',', '.') }}</span>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="text-secondary small text-truncate me-2">&bull; Belum Bersertifikat (Murni)</span>
+                        <span class="fw-semibold text-body font-monospace small">{{ number_format($totalBelumBersertifikat ?? 672, 0, ',', '.') }}</span>
                     </div>
                 </div>
             </div>

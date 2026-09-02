@@ -88,7 +88,8 @@ resources/
   - `surat_skpt` mencatat surat keterangan pendaftaran tanah yang terelasi dengan data `aset_tanah`.
   - `elabel_bpkb` dan `elabel_sertifikat_tanah` menunjuk ke box arsipnya masing-masing (`elabel_boxes` / `elabel_sertifikat_boxes`) dan terelasi ke `opd` (`sipat_opd_id`) untuk isolasi kepemilikan dokumen.
   - `elabel_loans` mengelola peminjaman/request scan BPKB/Sertifikat oleh user dengan persetujuan admin.
-- **Indexing Strategy**: B-Tree Index diterapkan pada kolom relasi penting seperti `opd_id`, `sipat_opd_id`, `box_id`, serta kolom status operasional untuk menjamin kecepatan kueri jutaan baris data.
+  - `archive_types`, `archive_boxes`, `archive_items`, `archive_attachments`, `archive_loans` mengelola mesin arsip dinamis (*Universal Dynamic Archive Engine*) dengan form builder kustom JSON.
+- **Indexing Strategy**: B-Tree Index diterapkan pada kolom relasi penting seperti `opd_id`, `sipat_opd_id`, `box_id`, `archive_type_id`, serta kolom status operasional untuk menjamin kecepatan kueri jutaan baris data.
 
 ---
 
@@ -132,6 +133,7 @@ Berikut adalah status fitur yang telah diimplementasikan penuh pada platform SIP
 | **eLABEL** | Sertifikat & Box Sertifikat | DONE | Penyimpanan sertifikat tanah fisik, split/merge box sertifikat. |
 | **eLABEL** | Surat Penyerahan & Box | DONE | Pencatatan dokumen penyerahan aset & manajemen box terkait. |
 | **eLABEL** | Alur Peminjaman (Scan Request) | DONE | Pengajuan pinjam/scan BPKB/Sertifikat & approval admin. |
+| **eLABEL** | Universal Dynamic Archive Engine | DONE | e-Arsip dinamis, visual form builder, custom schema, box barcode, PDF viewer, multi-attachment, & loan workflow. |
 | **Terpadu** | Unified Asset Portal & Search | DONE | Mesin pencarian publik 3 modul (Kendaraan, Tanah, Arsip) + statistik live. |
 | **Terpadu** | OPD Mapping (Hub) | DONE | Jembatan pemetaan instansi antara E-RANDIS dan SIPAT. |
 | **Terpadu** | Audit Trail / Log Aktivitas | DONE | Log aktivitas terintegrasi E-RANDIS, SIPAT, dan eLABEL. |
@@ -143,4 +145,4 @@ Berikut adalah status fitur yang telah diimplementasikan penuh pada platform SIP
 - **Storage Link**: Jalankan `php artisan storage:link` untuk akses foto kendaraan dan pratinjau dokumen eLABEL.
 - **Upload Directories**: Pastikan folder `public/uploads/report/`, `public/uploads/settings/`, dan path file eLABEL (`public/uploads/elabel/`) memiliki izin tulis (writable).
 - **Vite Build**: Jalankan `npm run build` setelah memperbarui berkas SCSS/CSS agar perubahan visual terkompilasi bersih.
-- **Seeder Awal**: Pastikan `ReportSettingSeeder` dijalankan agar layout default kop surat laporan terisi di database.
+- **Seeder Awal**: Pastikan `ReportSettingSeeder` dan `DynamicArchiveSeeder` dijalankan agar layout default kop surat dan kategori awal e-Arsip terisi di database.

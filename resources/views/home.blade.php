@@ -44,13 +44,26 @@
                             <i class="bi bi-journal-album fs-4 text-primary"></i>
                         </div>
                     </div>
-                    <small class="text-secondary fw-semibold text-uppercase d-block mb-1">TOTAL ASET TANAH</small>
-                    <h2 class="fw-bold text-navy mb-1">{{ number_format($sipatTotalTanah) }} <span class="fs-6 text-secondary fw-normal">Bidang</span></h2>
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <small class="text-secondary fw-semibold text-uppercase">TOTAL TANAH KESELURUHAN</small>
+                    </div>
+                    <h2 class="fw-bold text-navy mb-2">{{ number_format($sipatTotalTanah) }} <span class="fs-6 text-secondary fw-normal">Bidang</span></h2>
                     
+                    <div class="p-2 bg-body-tertiary rounded-3 border mb-3">
+                        <div class="d-flex justify-content-between align-items-center small mb-1">
+                            <span class="text-secondary"><i class="bi bi-building-check text-primary me-1"></i> Tercatat KIB A:</span>
+                            <strong class="text-primary font-monospace">{{ number_format($sipatTanahTercatat) }}</strong>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center small">
+                            <span class="text-secondary"><i class="bi bi-exclamation-circle text-warning me-1"></i> Belum Tercatat:</span>
+                            <strong class="text-warning-emphasis font-monospace">{{ number_format($sipatTanahTakTercatat) }}</strong>
+                        </div>
+                    </div>
+
                     <!-- Breakdown Rincian Status Pensertifikatan SIPAT -->
-                    <div class="mt-2 pt-2 border-top">
+                    <div class="pt-2 border-top">
                         <div class="d-flex justify-content-between align-items-center text-secondary small mb-1">
-                            <span><i class="bi bi-patch-check-fill text-primary me-1"></i> Sudah Bersertifikat:</span>
+                            <span><i class="bi bi-patch-check-fill text-success me-1"></i> Sudah Bersertifikat:</span>
                             <strong class="text-dark">{{ number_format($sipatSertifikatCount) }} Bidang</strong>
                         </div>
                         <div class="d-flex justify-content-between align-items-center text-secondary small mb-1">

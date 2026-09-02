@@ -167,18 +167,19 @@
         <div class="subtitle">{{ $kop['kop_nama_instansi'] ?? 'PEMERINTAH KABUPATEN DONGGALA' }}</div>
     </div>
 
-    <!-- TABEL SIMPEL 5 KOLOM (NO., BIDANG, LUAS, NILAI, KETERANGAN) -->
+    <!-- TABEL DENGAN KODE ASET / NIBAR (NO., KODE ASET/NIBAR, BIDANG, LUAS, NILAI, KETERANGAN) -->
     <table class="table-report">
         <thead>
             <tr>
-                <th rowspan="2" width="6%" style="vertical-align: middle; text-align: center;">NO.</th>
+                <th rowspan="2" width="5%" style="vertical-align: middle; text-align: center;">NO.</th>
+                <th rowspan="2" width="18%" style="vertical-align: middle; text-align: center;">Kode Aset / NIBAR</th>
                 <th colspan="3" style="text-align: center;">{{ $groupHeader }}</th>
-                <th rowspan="2" width="28%" style="vertical-align: middle; text-align: center;">Keterangan</th>
+                <th rowspan="2" width="22%" style="vertical-align: middle; text-align: center;">Keterangan</th>
             </tr>
             <tr>
-                <th width="36%">Bidang</th>
-                <th width="14%" style="text-align: right;">Luas(m2)</th>
-                <th width="16%" style="text-align: right;">Nilai(Rp)</th>
+                <th width="27%">Bidang</th>
+                <th width="13%" style="text-align: right;">Luas(m2)</th>
+                <th width="15%" style="text-align: right;">Nilai(Rp)</th>
             </tr>
         </thead>
         <tbody>
@@ -193,11 +194,13 @@
                     $totalLuas += $luasVal;
                     $totalNilai += $nilaiVal;
 
+                    $kodeAsetText = $row->kode_aset ?? '-';
                     $bidangText = $row->peruntukan ?? $row->nama_aset ?? '-';
                     $keteranganText = $row->keterangan ?? $row->opdSipat->nama ?? $row->opd ?? '-';
                 @endphp
                 <tr>
                     <td class="text-center">{{ $index + 1 }}</td>
+                    <td style="font-family: monospace; font-size: 8.5pt;">{{ $kodeAsetText }}</td>
                     <td>{{ $bidangText }}</td>
                     <td class="text-right">{{ number_format($luasVal, 2, ',', '.') }}</td>
                     <td class="text-right">{{ $nilaiVal > 0 ? number_format($nilaiVal, 2, ',', '.') : '-' }}</td>
@@ -205,13 +208,13 @@
                 </tr>
             @empty
                 <tr>
-                    <td colspan="5" class="text-center">Tidak ada data aset tanah untuk ditampilkan.</td>
+                    <td colspan="6" class="text-center">Tidak ada data aset tanah untuk ditampilkan.</td>
                 </tr>
             @endforelse
         </tbody>
         <tfoot>
             <tr>
-                <td colspan="2" class="text-center">JUMLAH / TOTAL</td>
+                <td colspan="3" class="text-center">JUMLAH / TOTAL</td>
                 <td class="text-right">{{ number_format($totalLuas, 2, ',', '.') }}</td>
                 <td class="text-right">{{ number_format($totalNilai, 2, ',', '.') }}</td>
                 <td></td>

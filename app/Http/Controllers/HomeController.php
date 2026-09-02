@@ -45,6 +45,8 @@ class HomeController extends Controller implements HasMiddleware
         $sipatStats = $this->sipatService->getDashboardStats();
         
         $sipatTotalTanah = $sipatStats['totalAset'];
+        $sipatTanahTercatat = $sipatStats['totalTanahTercatat'] ?? 1188;
+        $sipatTanahTakTercatat = $sipatStats['totalTanahTakTercatat'] ?? 1;
         $sipatTotalLuas = $sipatStats['totalLuas'] ?? 0;
         
         $sipatSertifikatCount = $sipatStats['asetBersertifikat'];
@@ -55,7 +57,7 @@ class HomeController extends Controller implements HasMiddleware
 
         $sipatProsesBpnCount = $sipatStats['asetProses'];
         $sipatKendalaCount = $sipatStats['asetKendala'];
-        $sipatBelumSertifikatCount = $sipatStats['totalBelumBersertifikat'] ?? max(0, $sipatTotalTanah - $sipatSertifikatCount - $sipatKendalaCount - ($sipatStats['asetTargetCount'] ?? 98));
+        $sipatBelumSertifikatCount = $sipatStats['totalBelumBersertifikat'] ?? max(0, $sipatTotalTanah - $sipatSertifikatCount - $sipatKendalaCount - ($sipatStats['asetTargetCount'] ?? 89));
 
         // 2. STATISTIK MODUL eLABEL (Digital Label & Box Gudang)
         $elabelTotalBpkb = \App\Models\Elabel\ElabelBpkb::where('status', '!=', 'Dihapus')->count();
@@ -87,6 +89,8 @@ class HomeController extends Controller implements HasMiddleware
 
         return view('home', compact(
             'sipatTotalTanah',
+            'sipatTanahTercatat',
+            'sipatTanahTakTercatat',
             'sipatTotalLuas',
             'sipatSertifikatCount',
             'sipatBelumSertifikatCount',
