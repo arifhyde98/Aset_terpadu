@@ -160,6 +160,18 @@
         // Otomatis picu penarikan data pertama kali halaman dimuat untuk kenyamanan UX
         fetchPreview();
 
+        // Daftarkan event listener untuk otomatis terapkan filter saat ada perubahan input/select
+        const filterForm = document.getElementById('filter-form');
+        if (filterForm) {
+            const filterInputs = filterForm.querySelectorAll('select, input:not([type="hidden"])');
+            filterInputs.forEach(input => {
+                input.addEventListener('change', function() {
+                    // Reset sort parameter when filter changes for fresh result
+                    fetchPreview();
+                });
+            });
+        }
+
         // Daftarkan penanganan AJAX paginasi menggunakan event delegation
         document.getElementById('report-table-wrapper').addEventListener('click', function(e) {
             const paginationLink = e.target.closest('.pagination a, .pagination-modern a');

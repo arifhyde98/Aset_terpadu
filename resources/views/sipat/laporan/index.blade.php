@@ -158,13 +158,13 @@
                                 <div class="row g-2">
                                     <div class="col-md-6">
                                         <div class="form-check">
-                                            <input class="form-check-input" type="radio" name="title_mode" id="titleMaster" value="master" {{ request('title_mode', 'master') !== 'manual' ? 'checked' : '' }} onchange="toggleTitleMode()">
+                                            <input class="form-check-input" type="radio" name="title_mode" id="titleMaster" value="master" {{ request('title_mode', 'master') !== 'manual' ? 'checked' : '' }} onchange="toggleTitleMode(true)">
                                             <label class="form-check-label small fw-semibold text-body" for="titleMaster">Pilih dari Master Judul</label>
                                         </div>
                                     </div>
                                     <div class="col-md-6">
                                         <div class="form-check">
-                                            <input class="form-check-input" type="radio" name="title_mode" id="titleManual" value="manual" {{ request('title_mode') === 'manual' ? 'checked' : '' }} onchange="toggleTitleMode()">
+                                            <input class="form-check-input" type="radio" name="title_mode" id="titleManual" value="manual" {{ request('title_mode') === 'manual' ? 'checked' : '' }} onchange="toggleTitleMode(false)">
                                             <label class="form-check-label small fw-semibold text-body" for="titleManual">Ketik Judul Kustom</label>
                                         </div>
                                     </div>
@@ -291,12 +291,57 @@
 
 @push('scripts')
 <script>
-    function toggleTitleMode() {
+    function toggleTitleMode(autoSubmit = false) {
         const isManual = document.getElementById('titleManual').checked;
         document.getElementById('boxTitleMaster').style.display = isManual ? 'none' : 'block';
         document.getElementById('boxTitleManual').style.display = isManual ? 'block' : 'none';
+
+        if (autoSubmit && !isManual) {
+            document.getElementById('filterLaporanForm').submit();
+        }
     }
-    document.addEventListener('DOMContentLoaded', toggleTitleMode);
+
+    document.addEventListener('DOMContentLoaded', function() {
+        toggleTitleMode(false);
+
+        const filterForm = document.getElementById('filterLaporanForm');
+        if (!filterForm) return;
+
+        // Auto-submit saat dropdown (OPD, Kategori Status, Master Judul) atau tanggal perolehan berubah
+        const autoChangeElements = filterForm.querySelectorAll('select, input[type="date"]');
+        autoChangeElements.forEach(el => {
+            el.addEventListener('change', function() {
+                filterForm.submit();
+            });
+        });
+
+        // Auto-submit saat input pencarian teks (q) dengan debounce 600ms
+        const searchInput = filterForm.querySelector('input[name="q"]');
+        if (searchInput) {
+            let debounceTimer;
+            searchInput.addEventListener('input', function() {
+                clearTimeout(debounceTimer);
+                debounceTimer = setTimeout(() => {
+                    filterForm.submit();
+                }, 600);
+            });
+        }
+
+        // Auto-submit saat input judul manual dengan debounce 800ms atau saat blur/change
+        const manualTitleInput = filterForm.querySelector('input[name="manual_title"]');
+        if (manualTitleInput) {
+            let debounceTimer;
+            manualTitleInput.addEventListener('input', function() {
+                clearTimeout(debounceTimer);
+                debounceTimer = setTimeout(() => {
+                    filterForm.submit();
+                }, 800);
+            });
+            manualTitleInput.addEventListener('change', function() {
+                filterForm.submit();
+            });
+        }
+    });
 </script>
 @endpush
 @endsection
