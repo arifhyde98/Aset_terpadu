@@ -33,6 +33,7 @@ class LaporanService
 
         return [
             'opd_id' => $input['opd_id'] ?? ($input['opd'] ?? ''),
+            'kecamatan_id' => $input['kecamatan_id'] ?? '',
             'status' => $statusIds,
             'kategori_status' => $kategoriStatus,
             'tanggal_perolehan' => $input['tanggal_perolehan'] ?? '',
@@ -48,7 +49,7 @@ class LaporanService
      */
     public function buildQuery(array $filters)
     {
-        $query = AsetTanah::with(['latestProses.statusProses', 'opdSipat']);
+        $query = AsetTanah::with(['latestProses.statusProses', 'opdSipat', 'wilayahKecamatan']);
 
         $opdFilter = $filters['opd_id'] ?? '';
         if ($opdFilter !== '') {
@@ -63,6 +64,15 @@ class LaporanService
                 $query->where('opd_id', (int) $opdFilter);
             } else {
                 $query->where('opd', $opdFilter);
+            }
+        }
+
+        $kecFilter = $filters['kecamatan_id'] ?? '';
+        if ($kecFilter !== '') {
+            if ($kecFilter === 'KOSONG') {
+                $query->whereNull('kecamatan_id');
+            } elseif (is_numeric($kecFilter)) {
+                $query->where('kecamatan_id', (int) $kecFilter);
             }
         }
 
@@ -163,6 +173,19 @@ class LaporanService
                 $opdValue = (string) $filters['opd_id'];
             }
             $activeFilters[] = ['label' => $opdLabel, 'value' => $opdValue];
+        }
+
+        if (!empty($filters['kecamatan_id'])) {
+            $kecLabel = 'Kecamatan';
+            if ($filters['kecamatan_id'] === 'KOSONG') {
+                $kecValue = 'Luar Wilayah / Lainnya';
+            } elseif (is_numeric($filters['kecamatan_id'])) {
+                $kec = \App\Models\Kecamatan::find((int) $filters['kecamatan_id']);
+                $kecValue = $kec->nama ?? (string) $filters['kecamatan_id'];
+            } else {
+                $kecValue = (string) $filters['kecamatan_id'];
+            }
+            $activeFilters[] = ['label' => $kecLabel, 'value' => $kecValue];
         }
 
         if (!empty($filters['kategori_status'])) {

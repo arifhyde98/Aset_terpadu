@@ -126,11 +126,13 @@ class AsetTanahController extends Controller implements HasMiddleware
 
         $data = $this->asetTanahService->getPaginatedAset($request->all());
         $unrecordedCount = AsetTanah::where('status_pencatatan', 'USULAN_BELUM_TERCATAT')->count();
+        $kecamatanList = $data['kecamatanList'] ?? \App\Models\Kecamatan::orderBy('nama', 'asc')->get();
 
         return view('sipat.aset.index', [
             'asetTanah'       => $data['asetTanah'],
             'opdList'         => $data['opdList'],
             'statusList'      => $data['statusList'],
+            'kecamatanList'   => $kecamatanList,
             'unrecordedCount' => $unrecordedCount,
         ]);
     }
@@ -153,7 +155,9 @@ class AsetTanahController extends Controller implements HasMiddleware
     {
         $opdList = OpdSipat::where('aktif', 1)->orderBy('nama', 'asc')->get();
         $statusList = StatusProses::orderBy('urutan', 'asc')->get();
-        return view('sipat.aset.create', compact('opdList', 'statusList'));
+        $kecamatanList = \App\Models\Kecamatan::orderBy('nama', 'asc')->get();
+        $desaList = \App\Models\Desa::orderBy('nama', 'asc')->get();
+        return view('sipat.aset.create', compact('opdList', 'statusList', 'kecamatanList', 'desaList'));
     }
 
     /**
@@ -180,7 +184,7 @@ class AsetTanahController extends Controller implements HasMiddleware
      */
     public function show(AsetTanah $aset): JsonResponse
     {
-        return response()->json($aset->load(['prosesAset.statusProses', 'latestProses.statusProses']));
+        return response()->json($aset->load(['prosesAset.statusProses', 'latestProses.statusProses', 'wilayahKecamatan', 'wilayahDesa']));
     }
 
     /**
@@ -213,7 +217,9 @@ class AsetTanahController extends Controller implements HasMiddleware
     {
         $opdList = OpdSipat::where('aktif', 1)->orderBy('nama', 'asc')->get();
         $statusList = StatusProses::orderBy('urutan', 'asc')->get();
-        return view('sipat.aset.edit', compact('aset', 'opdList', 'statusList'));
+        $kecamatanList = \App\Models\Kecamatan::orderBy('nama', 'asc')->get();
+        $desaList = \App\Models\Desa::orderBy('nama', 'asc')->get();
+        return view('sipat.aset.edit', compact('aset', 'opdList', 'statusList', 'kecamatanList', 'desaList'));
     }
 
     /**

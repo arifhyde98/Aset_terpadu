@@ -131,10 +131,23 @@
                         <h6 class="fw-bold text-body mb-3">
                             <i class="bi bi-geo-alt-fill text-danger me-2"></i>3. Lokasi Geospasial & Catatan
                         </h6>
-                        <div class="row g-3">
-                            <div class="col-12">
-                                <label class="form-label small fw-semibold text-secondary mb-1">Alamat Lengkap</label>
-                                <textarea name="alamat" class="form-control" rows="2" placeholder="Jalan, Desa/Kelurahan, Kecamatan...">{{ old('alamat') }}</textarea>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold text-secondary mb-1">Wilayah Kecamatan</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-body border-0 text-secondary"><i class="bi bi-geo-alt"></i></span>
+                                    <select name="kecamatan_id" class="form-select">
+                                        <option value="">- Pilih Kecamatan -</option>
+                                        @if(isset($kecamatanList))
+                                            @foreach($kecamatanList as $kec)
+                                                <option value="{{ $kec->id }}" {{ old('kecamatan_id') == $kec->id ? 'selected' : '' }}>{{ $kec->nama }}</option>
+                                            @endforeach
+                                        @endif
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold text-secondary mb-1">Alamat Singkat / Detail Jalan</label>
+                                <textarea name="alamat" class="form-control" rows="1" placeholder="Jalan / Dusun / RT...">{{ old('alamat') }}</textarea>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label small fw-semibold text-secondary mb-1">Latitude (Koordinat Y)</label>

@@ -29,6 +29,8 @@ class StoreAsetTanahRequest extends FormRequest
             'harga_perolehan' => 'nullable|numeric',
             'tanggal_perolehan' => 'nullable|date',
             'keterangan' => 'nullable|string',
+            'kecamatan_id' => 'nullable|integer|exists:kecamatan,id',
+            'desa_id' => 'nullable|integer|exists:desa,id',
             'initial_status_id' => 'nullable|integer|exists:status_proses,id_status',
         ];
     }

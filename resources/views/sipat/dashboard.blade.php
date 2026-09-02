@@ -339,6 +339,113 @@
         </div>
     </div>
 
+    <!-- Baris Baru: Sebaran Wilayah Kecamatan & Progres Pensertifikatan -->
+    @if(isset($kecamatanStats) && count($kecamatanStats) > 0)
+    <div class="row g-3 mb-4">
+        <div class="col-12">
+            <div class="card sipat-stat-card p-4">
+                <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
+                    <div>
+                        <div class="d-flex align-items-center gap-2 mb-1">
+                            <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2.5 py-0.5 small fw-semibold">
+                                <i class="bi bi-geo-alt-fill me-1"></i> MASTER WILAYAH
+                            </span>
+                            <span class="text-secondary small">&bull;</span>
+                            <span class="text-secondary small fw-medium">16 Kecamatan Kabupaten Donggala</span>
+                        </div>
+                        <h5 class="fw-bold mb-0 text-body">Sebaran Aset Tanah & Progres Sertifikasi per Kecamatan</h5>
+                    </div>
+                    <a href="{{ route('sipat.aset.index') }}" class="btn btn-sm btn-outline-primary rounded-pill px-3">
+                        <i class="bi bi-table me-1"></i> Lihat Seluruh Data Aset
+                    </a>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="bg-body-tertiary text-secondary small fw-semibold text-uppercase">
+                            <tr>
+                                <th class="ps-3 py-2.5">WILAYAH KECAMATAN</th>
+                                <th class="text-center py-2.5">TOTAL BIDANG</th>
+                                <th class="text-end py-2.5">TOTAL LUAS (M²)</th>
+                                <th class="py-2.5" style="min-width: 180px;">PROGRES SERTIPIKAT</th>
+                                <th class="text-center py-2.5">PROSES BPN</th>
+                                <th class="text-center py-2.5">BELUM DIURUS</th>
+                                <th class="text-center py-2.5">KENDALA</th>
+                                <th class="text-center pe-3 py-2.5">AKSI</th>
+                            </tr>
+                        </thead>
+                        <tbody class="small">
+                            @foreach($kecamatanStats as $kecName => $kStat)
+                                @php
+                                    $kId = $kStat['id'] ?? 0;
+                                    $linkKec = $kId > 0 
+                                        ? route('sipat.aset.index', ['kecamatan_id' => $kId]) 
+                                        : route('sipat.aset.index', ['kecamatan_id' => 'KOSONG']);
+                                    $pctSertif = $kStat['persen_bersertifikat'] ?? 0;
+                                @endphp
+                                <tr>
+                                    <td class="ps-3 fw-bold text-body">
+                                        <div class="d-flex align-items-center gap-2">
+                                            @if($kId > 0)
+                                                <i class="bi bi-geo-alt-fill text-primary"></i>
+                                                <span class="text-body">{{ $kecName }}</span>
+                                            @else
+                                                <i class="bi bi-globe text-secondary"></i>
+                                                <span class="text-secondary italic">{{ $kecName }}</span>
+                                            @endif
+                                        </div>
+                                    </td>
+                                    <td class="text-center font-monospace fw-bold fs-6 text-primary">
+                                        {{ number_format($kStat['total'], 0, ',', '.') }}
+                                    </td>
+                                    <td class="text-end font-monospace text-secondary">
+                                        {{ number_format($kStat['luas'], 0, ',', '.') }} m²
+                                    </td>
+                                    <td>
+                                        <div class="d-flex align-items-center justify-content-between mb-1">
+                                            <span class="fw-semibold text-success font-monospace">{{ number_format($kStat['bersertifikat']) }} <small class="text-secondary fw-normal">Selesai</small></span>
+                                            <span class="badge bg-success-subtle text-success font-monospace" style="font-size: 0.7rem;">{{ $pctSertif }}%</span>
+                                        </div>
+                                        <div class="progress-bar-custom" style="height: 6px;">
+                                            <div class="progress-fill bg-success" style="width: {{ $pctSertif }}%;"></div>
+                                        </div>
+                                    </td>
+                                    <td class="text-center">
+                                        @if($kStat['proses'] > 0)
+                                            <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle font-monospace px-2 py-0.5 rounded-pill">{{ $kStat['proses'] }}</span>
+                                        @else
+                                            <span class="text-secondary font-monospace">-</span>
+                                        @endif
+                                    </td>
+                                    <td class="text-center">
+                                        @if($kStat['belum_diurus'] > 0)
+                                            <span class="badge bg-secondary-subtle text-secondary font-monospace px-2 py-0.5 rounded-pill">{{ $kStat['belum_diurus'] }}</span>
+                                        @else
+                                            <span class="text-secondary font-monospace">-</span>
+                                        @endif
+                                    </td>
+                                    <td class="text-center">
+                                        @if($kStat['kendala'] > 0)
+                                            <span class="badge bg-danger-subtle text-danger font-monospace px-2 py-0.5 rounded-pill">{{ $kStat['kendala'] }}</span>
+                                        @else
+                                            <span class="text-secondary font-monospace">-</span>
+                                        @endif
+                                    </td>
+                                    <td class="text-center pe-3">
+                                        <a href="{{ $linkKec }}" class="btn btn-xs btn-outline-primary rounded-pill px-2.5 py-1 small fw-semibold" title="Lihat aset di {{ $kecName }}">
+                                            <i class="bi bi-funnel-fill me-1"></i> Filter
+                                        </a>
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    @endif
+
     <!-- Baris 3: Aktivitas Terbaru Audit Log & Ringkasan Status -->
     <div class="row g-3 mb-4">
         <!-- Aktivitas Terbaru -->

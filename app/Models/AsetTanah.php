@@ -25,6 +25,8 @@ class AsetTanah extends Model
         'geojson',
         'opd_id',
         'opd',
+        'kecamatan_id',
+        'desa_id',
         'dasar_perolehan',
         'harga_perolehan',
         'tanggal_perolehan',
@@ -42,6 +44,16 @@ class AsetTanah extends Model
     public function opdSipat(): BelongsTo
     {
         return $this->belongsTo(OpdSipat::class, 'opd_id');
+    }
+
+    public function wilayahKecamatan(): BelongsTo
+    {
+        return $this->belongsTo(Kecamatan::class, 'kecamatan_id');
+    }
+
+    public function wilayahDesa(): BelongsTo
+    {
+        return $this->belongsTo(Desa::class, 'desa_id');
     }
 
     public function prosesAset()

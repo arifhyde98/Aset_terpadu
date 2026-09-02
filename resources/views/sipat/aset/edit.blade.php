@@ -74,6 +74,18 @@
                         <input type="text" name="dasar_perolehan" class="form-control" value="{{ old('dasar_perolehan', $aset->dasar_perolehan) }}">
                     </div>
 
+                    <div class="col-md-6">
+                        <label class="form-label small fw-semibold">Wilayah Kecamatan</label>
+                        <select name="kecamatan_id" class="form-select">
+                            <option value="">-- Pilih Kecamatan --</option>
+                            @if(isset($kecamatanList))
+                                @foreach($kecamatanList as $kec)
+                                    <option value="{{ $kec->id }}" {{ old('kecamatan_id', $aset->kecamatan_id) == $kec->id ? 'selected' : '' }}>{{ $kec->nama }}</option>
+                                @endforeach
+                            @endif
+                        </select>
+                    </div>
+
                     <div class="col-12">
                         <label class="form-label small fw-semibold">Alamat Lengkap / Lokasi</label>
                         <textarea name="alamat" class="form-control" rows="2">{{ old('alamat', $aset->alamat) }}</textarea>

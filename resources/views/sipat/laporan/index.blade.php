@@ -144,11 +144,24 @@
                             </div>
 
                             <div class="col-md-6">
+                                <label class="form-label small fw-semibold text-secondary mb-1"><i class="bi bi-geo-alt me-1"></i> Wilayah Kecamatan</label>
+                                <select name="kecamatan_id" class="form-select">
+                                    <option value="">-- Semua Kecamatan --</option>
+                                    <option value="KOSONG" {{ request('kecamatan_id') === 'KOSONG' ? 'selected' : '' }}>[Luar Wilayah / Lainnya]</option>
+                                    @if(isset($kecamatanList))
+                                        @foreach($kecamatanList as $kec)
+                                            <option value="{{ $kec->id }}" {{ (string) request('kecamatan_id') === (string) $kec->id ? 'selected' : '' }}>{{ $kec->nama }}</option>
+                                        @endforeach
+                                    @endif
+                                </select>
+                            </div>
+
+                            <div class="col-md-6">
                                 <label class="form-label small fw-semibold text-secondary mb-1"><i class="bi bi-calendar-event me-1"></i> Tanggal Perolehan</label>
                                 <input type="date" name="tanggal_perolehan" class="form-control" value="{{ request('tanggal_perolehan') }}">
                             </div>
 
-                            <div class="col-md-6">
+                            <div class="col-12">
                                 <label class="form-label small fw-semibold text-secondary mb-1"><i class="bi bi-search me-1"></i> Kata Kunci Pencarian</label>
                                 <input type="text" name="q" class="form-control" placeholder="Kode Aset, Nama, Alamat..." value="{{ request('q') }}">
                             </div>

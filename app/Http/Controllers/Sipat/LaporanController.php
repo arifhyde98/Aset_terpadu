@@ -59,9 +59,12 @@ class LaporanController extends Controller implements HasMiddleware
         $queryString = http_build_query(array_filter($filters));
         $exportQueryString = $queryString ? '?' . $queryString : '';
 
+        $kecamatanList = \App\Models\Kecamatan::orderBy('nama', 'asc')->get();
+
         return view('sipat.laporan.index', compact(
             'filters',
             'opdList',
+            'kecamatanList',
             'statusList',
             'reportTitles',
             'rows',

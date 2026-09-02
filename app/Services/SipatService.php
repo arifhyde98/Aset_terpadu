@@ -138,7 +138,7 @@ class SipatService
             ];
         }
 
-        $asetRows = AsetTanah::with('opdSipat')->select('id_aset', 'opd', 'opd_id')->get();
+        $asetRows = AsetTanah::with(['opdSipat', 'wilayahKecamatan'])->select('id_aset', 'opd', 'opd_id', 'kecamatan_id', 'luas', 'alamat')->get();
         $asetBersertifikat = 0;
         $asetKendala       = 0;
         $asetProses        = 0;
@@ -163,6 +163,7 @@ class SipatService
         }
 
         $opdStats = [];
+        $kecamatanStats = [];
 
         foreach ($asetRows as $aset) {
             $idAset = $aset->id_aset;
@@ -205,10 +206,46 @@ class SipatService
             $opdLabel = $aset->opdSipat->nama ?? trim((string) $aset->opd);
             $opdKey = $opdLabel !== '' ? $opdLabel : 'Tidak Diketahui';
             $opdStats[$opdKey] = ($opdStats[$opdKey] ?? 0) + 1;
+
+            // Grouping by Kecamatan
+            $kecLabel = $aset->wilayahKecamatan->nama ?? 'Luar Wilayah / Lainnya';
+            $kecId = $aset->kecamatan_id ?? 0;
+            if (!isset($kecamatanStats[$kecLabel])) {
+                $kecamatanStats[$kecLabel] = [
+                    'id'            => $kecId,
+                    'nama'          => $kecLabel,
+                    'total'         => 0,
+                    'luas'          => 0,
+                    'bersertifikat' => 0,
+                    'proses'        => 0,
+                    'kendala'       => 0,
+                    'belum_diurus'  => 0,
+                ];
+            }
+            $kecamatanStats[$kecLabel]['total']++;
+            $kecamatanStats[$kecLabel]['luas'] += (float) ($aset->luas ?? 0);
+            if (in_array('bersertifikat', $categories, true)) {
+                $kecamatanStats[$kecLabel]['bersertifikat']++;
+            }
+            if (in_array('proses', $categories, true)) {
+                $kecamatanStats[$kecLabel]['proses']++;
+            }
+            if (in_array('kendala', $categories, true)) {
+                $kecamatanStats[$kecLabel]['kendala']++;
+            }
+            if (in_array('belum_diurus', $categories, true)) {
+                $kecamatanStats[$kecLabel]['belum_diurus']++;
+            }
         }
 
         arsort($opdStats);
         $topOpdStats = array_slice($opdStats, 0, 5, true);
+
+        uasort($kecamatanStats, fn($a, $b) => $b['total'] <=> $a['total']);
+        foreach ($kecamatanStats as &$ks) {
+            $ks['persen_bersertifikat'] = $ks['total'] > 0 ? round(($ks['bersertifikat'] / $ks['total']) * 100, 1) : 0;
+        }
+        unset($ks);
 
         foreach ($statusBreakdowns as $cat => &$items) {
             arsort($items);
@@ -333,6 +370,7 @@ class SipatService
             'pctBelumDiurus'          => $pctBelumDiurus,
             'pctBelumBersertifikat'   => $pctBelumBersertifikat,
             'opdStats'                => $topOpdStats,
+            'kecamatanStats'          => $kecamatanStats,
             'statusCounts'            => $statusCounts,
             'statusBreakdowns'        => $statusBreakdowns,
             'recentLogs'              => $recentLogs,

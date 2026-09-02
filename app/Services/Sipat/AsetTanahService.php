@@ -29,7 +29,7 @@ class AsetTanahService
      */
     public function getPaginatedAset(array $filters): array
     {
-        $query = AsetTanah::with(['latestProses.statusProses', 'opdSipat']);
+        $query = AsetTanah::with(['latestProses.statusProses', 'opdSipat', 'wilayahKecamatan', 'wilayahDesa']);
 
         if (!empty($filters['search'])) {
             $search = $filters['search'];
@@ -39,6 +39,9 @@ class AsetTanahService
                   ->orWhere('opd', 'LIKE', "%{$search}%")
                   ->orWhereHas('opdSipat', function ($opdQuery) use ($search) {
                       $opdQuery->where('nama', 'LIKE', "%{$search}%");
+                  })
+                  ->orWhereHas('wilayahKecamatan', function ($kecQuery) use ($search) {
+                      $kecQuery->where('nama', 'LIKE', "%{$search}%");
                   })
                   ->orWhere('peruntukan', 'LIKE', "%{$search}%")
                   ->orWhere('alamat', 'LIKE', "%{$search}%")
@@ -72,6 +75,14 @@ class AsetTanahService
                 } else {
                     $query->where('opd', $opdFilter);
                 }
+            }
+        }
+
+        if (!empty($filters['kecamatan_id'])) {
+            if ($filters['kecamatan_id'] === 'KOSONG') {
+                $query->whereNull('kecamatan_id');
+            } else {
+                $query->where('kecamatan_id', (int) $filters['kecamatan_id']);
             }
         }
 
@@ -137,11 +148,13 @@ class AsetTanahService
 
         $opdList = OpdSipat::where('aktif', 1)->orderBy('nama', 'asc')->get();
         $statusList = StatusProses::orderBy('urutan', 'asc')->get();
+        $kecamatanList = \App\Models\Kecamatan::orderBy('nama', 'asc')->get();
 
         return [
             'asetTanah' => $asetTanah,
             'opdList' => $opdList,
             'statusList' => $statusList,
+            'kecamatanList' => $kecamatanList,
         ];
     }
 

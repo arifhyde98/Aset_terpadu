@@ -113,7 +113,7 @@
             <form method="GET" action="{{ route('sipat.aset.index') }}" id="filterForm">
                 <div class="row g-2 align-items-end">
                     <!-- 1. OPD Filter -->
-                    <div class="col-12 col-sm-6 col-md-3 col-xl-3">
+                    <div class="col-12 col-sm-6 col-md-3 col-xl-2">
                         <label class="form-label small fw-semibold text-secondary mb-1">OPD Pengelola</label>
                         <select name="opd_id" class="form-select" onchange="document.getElementById('filterForm').submit()">
                             <option value="">-- Semua OPD --</option>
@@ -124,8 +124,22 @@
                         </select>
                     </div>
 
-                    <!-- 2. Kategori Status Filter Dropdown -->
-                    <div class="col-12 col-sm-6 col-md-3 col-xl-3">
+                    <!-- 2. Kecamatan Filter -->
+                    <div class="col-12 col-sm-6 col-md-3 col-xl-2">
+                        <label class="form-label small fw-semibold text-secondary mb-1">Kecamatan</label>
+                        <select name="kecamatan_id" class="form-select" onchange="document.getElementById('filterForm').submit()">
+                            <option value="">-- Semua Kecamatan --</option>
+                            <option value="KOSONG" {{ request('kecamatan_id') === 'KOSONG' ? 'selected' : '' }}>[Luar Wilayah / Lainnya]</option>
+                            @if(isset($kecamatanList))
+                                @foreach($kecamatanList as $kec)
+                                    <option value="{{ $kec->id }}" {{ (string) request('kecamatan_id') === (string) $kec->id ? 'selected' : '' }}>{{ $kec->nama }}</option>
+                                @endforeach
+                            @endif
+                        </select>
+                    </div>
+
+                    <!-- 3. Kategori Status Filter Dropdown -->
+                    <div class="col-12 col-sm-6 col-md-3 col-xl-2">
                         <label class="form-label small fw-semibold text-secondary mb-1">Kategori Aset / Status</label>
                         <select name="kategori_status" class="form-select" onchange="document.getElementById('filterForm').submit()">
                             <option value="">-- Semua Kategori --</option>
@@ -152,7 +166,7 @@
                         </select>
                     </div>
 
-                    <!-- 3. Multi-select Checkbox Status Filter Dropdown -->
+                    <!-- 4. Multi-select Checkbox Status Filter Dropdown -->
                     <div class="col-12 col-sm-6 col-md-3 col-xl-2">
                         <label class="form-label small fw-semibold text-secondary mb-1">
                             Status BPN <span class="badge bg-warning-subtle text-body px-1.5 py-0.5 rounded-pill" style="font-size: 0.65rem;">Centang</span>
@@ -198,7 +212,7 @@
                         </div>
                     </div>
 
-                    <!-- 4. Per Page Limit -->
+                    <!-- 5. Per Page Limit -->
                     <div class="col-6 col-sm-3 col-md-1 col-xl-1">
                         <label class="form-label small fw-semibold text-secondary mb-1">Tampil</label>
                         <select name="per_page" class="form-select px-2" onchange="document.getElementById('filterForm').submit()">
@@ -209,14 +223,14 @@
                         </select>
                     </div>
 
-                    <!-- 5. Search Bar -->
+                    <!-- 6. Search Bar -->
                     <div class="col-12 col-sm-9 col-md-3 col-xl-3">
                         <label class="form-label small fw-semibold text-secondary mb-1">Pencarian Cepat</label>
                         <div class="input-group">
                             <span class="input-group-text bg-body border-0 text-secondary"><i class="bi bi-search"></i></span>
                             <input type="text" name="search" class="form-control" placeholder="Kode Aset, Nama Aset, Alamat..." value="{{ request('search') }}">
                             <button type="submit" class="btn btn-primary px-3">Cari</button>
-                            @if(request()->hasAny(['search', 'opd_id', 'opd', 'status', 'kategori_status']) || session()->has('sipat_aset_filters'))
+                            @if(request()->hasAny(['search', 'opd_id', 'opd', 'kecamatan_id', 'status', 'kategori_status']) || session()->has('sipat_aset_filters'))
                                 <a href="{{ route('sipat.aset.index') }}?reset=1" class="btn btn-outline-secondary px-3"><i class="bi bi-x-circle"></i> Reset</a>
                             @endif
                         </div>
