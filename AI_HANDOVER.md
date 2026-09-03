@@ -43,6 +43,15 @@ Dokumen ini merupakan sumber kebenaran tunggal (*Single Source of Truth*) mengen
     *   `AsetTanahObserver::saving()`: Mengunci dan memastikan nilai `luas` di `AsetTanah` selalu mengikuti luas sertifikat e-Label jika sertifikat resmi telah terbit.
     *   `ElabelSertifikatObserver::saved()`: Otomatis menyinkronkan nilai `luas` pada `AsetTanah` jika data luas pada sertifikat e-Label ditambahkan atau diperbarui.
     *   Artisan Audit Command: `php artisan sipat:sync-luas-sertifikat` untuk audit integritas dan verifikasi berkala.
+*   **Optimasi Ekspor Laporan E-RANDIS (Data Guard, Chunking & Kolom Jenis)**:
+    *   Fungsi JS trigger ekspor: `exportExcel()`, `exportPdf()`, dan `printReport()` aktif pada `reports.index`.
+    *   Batas data guard PDF dinaikkan ke 3.500 baris untuk mengakomodasi seluruh dataset e-BMD (2.041 unit) dan Data Real (1.038 unit).
+    *   Tabel PDF `reports.pdf` menggunakan teknik *table chunking* (100 baris per sub-tabel) guna mencegah batas memori dan PCRE backtrack limit pada mPDF.
+    *   Kolom **"Jenis Kendaraan" (`jenis`)** ditampilkan pada seluruh strategi laporan E-RANDIS (Status, Distribusi OPD, Dokumen/STNK, dan Duplikasi), terintegrasi penuh di Pratinjau Web, Cetak Browser, Unduh PDF, dan Ekspor Excel.
+*   **Integrasi Pengaturan Dokumen Cetak E-RANDIS (`reports/settings`)**:
+    *   Tabel `report_letterheads` dan `report_signatories` diselaraskan ke instansi resmi Pemerintah Kabupaten Donggala (BPKAD) dan pejabat pengesah Banawa.
+    *   Otomasi dua arah di `ReportSettingController`: setiap pembaruan Kop Surat atau Pejabat otomatis menyelaraskan `letterhead_id` dan `signatory_id` di seluruh `report_export_settings`.
+    *   Submenu **"Pengaturan Cetak Laporan"** telah ditambahkan di sidebar navigasi E-RANDIS (`MANAJEMEN KENDARAAN`) dengan akses untuk role `superadmin` dan `admin`.
 
 ---
 

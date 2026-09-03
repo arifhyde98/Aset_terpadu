@@ -135,12 +135,16 @@ class ReportGenerationService
 
         $strategy = $this->registry->resolve($type);
 
-        // 2. Mencegah overload memori produksi (Data Guard > 1000 baris)
+        ini_set('memory_limit', '1024M');
+        set_time_limit(300);
+        ini_set('pcre.backtrack_limit', '10000000');
+
+        // 2. Mencegah overload memori produksi (Data Guard > 3500 baris)
         $query = $strategy->query($filters);
         $query = $this->reportService->applySorting($query, $filters);
         $count = $query->count();
-        if ($count > 1000) {
-            return redirect()->route('reports.index')->with('error', 'Jumlah data mencapai ' . number_format($count) . ' baris. Demi menjaga stabilitas server, ekspor lebih dari 1.000 data wajib menggunakan format Excel.');
+        if ($count > 3500) {
+            return redirect()->route('reports.index')->with('error', 'Jumlah data mencapai ' . number_format($count) . ' baris. Demi menjaga stabilitas server, ekspor lebih dari 3.500 data wajib menggunakan format Excel.');
         }
 
         $data = $query->get();
@@ -157,10 +161,6 @@ class ReportGenerationService
 
         $reportTitle = $this->registry->getSupportedTypes()[$type] ?? 'Laporan Kendaraan';
         $docSettings = $this->docSettingService->getSettingsForReportType($type);
-
-        ini_set('memory_limit', '512M');
-        set_time_limit(120);
-        ini_set('pcre.backtrack_limit', '10000000');
 
         $tempDir = storage_path('app/public/mpdf_temp');
         if (!file_exists($tempDir)) {

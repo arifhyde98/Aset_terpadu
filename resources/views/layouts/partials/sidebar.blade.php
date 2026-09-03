@@ -249,7 +249,7 @@
                             <span><i class="bi bi-car-front me-1 text-warning"></i> MANAJEMEN KENDARAAN</span>
                             <i class="bi bi-chevron-down nested-chevron"></i>
                         </a>
-                        <div id="erandisSubKendaraan" class="collapse {{ Request::is('vehicles*') ? 'show' : '' }}">
+                        <div id="erandisSubKendaraan" class="collapse {{ Request::is('vehicles*', 'reports*') ? 'show' : '' }}">
                             <ul class="submenu-list">
                                 <li class="{{ Request::is('vehicles*') && !Request::is('vehicles/rekon-bpkb') ? 'active' : '' }}">
                                     <a href="{{ route('vehicles.index') }}" data-bs-toggle="tooltip" data-bs-placement="right" title="Data Kendaraan">
@@ -257,12 +257,20 @@
                                         <span>Data Kendaraan Dinas</span>
                                     </a>
                                 </li>
-                                <li class="{{ Request::is('reports*') ? 'active' : '' }}">
+                                <li class="{{ Request::is('reports') || (Request::is('reports*') && !Request::is('reports/settings*')) ? 'active' : '' }}">
                                     <a href="{{ route('reports.index') }}" data-bs-toggle="tooltip" data-bs-placement="right" title="Laporan Kendaraan">
                                         <i class="bi bi-graph-up"></i>
                                         <span>Laporan Kendaraan Dinas</span>
                                     </a>
                                 </li>
+                                @if(auth()->check() && in_array(auth()->user()->role->value, ['superadmin', 'admin']))
+                                    <li class="{{ Request::is('reports/settings*') ? 'active' : '' }}">
+                                        <a href="{{ route('reports.settings.index') }}" data-bs-toggle="tooltip" data-bs-placement="right" title="Pengaturan Dokumen Cetak">
+                                            <i class="bi bi-printer-fill text-primary"></i>
+                                            <span>Pengaturan Cetak Laporan</span>
+                                        </a>
+                                    </li>
+                                @endif
                                 <li class="{{ Request::is('vehicles/rekon-bpkb') ? 'active' : '' }}">
                                     <a href="{{ route('vehicles.rekon-bpkb') }}" data-bs-toggle="tooltip" data-bs-placement="right" title="Rekonsiliasi BPKB">
                                         <i class="bi bi-arrow-left-right"></i>

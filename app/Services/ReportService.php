@@ -168,7 +168,7 @@ class ReportService
         $sortBy = $filters['sort_by'] ?? null;
         $sortOrder = $filters['sort_order'] ?? 'asc';
         $allowedSorts = [
-            'no_polisi', 'nomor_register', 'merk', 'tipe', 'status', 'kondisi', 
+            'no_polisi', 'nomor_register', 'merk', 'tipe', 'jenis', 'status', 'kondisi', 
             'opd', 'pemegang', 'nilai_perolehan', 'stnk_ada', 'tgl_stnk', 
             'bpkb_ada', 'no_mesin', 'no_rangka'
         ];

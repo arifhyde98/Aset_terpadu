@@ -285,63 +285,73 @@
         <span class="filter-chip" style="background: #f1f5f9; color: #475569;">Dicetak: {{ \Carbon\Carbon::now()->translatedFormat('d F Y H:i') }} WITA</span>
     </div>
 
-    <!-- TABEL DATA UTAMA -->
-    <table class="table-report">
-        <thead>
-            <tr>
-                <th width="4%">No</th>
-                @foreach($headers as $key => $label)
-                    <th {!! $key === 'no_polisi' ? 'nowrap="nowrap" style="white-space: nowrap; width: 100px;"' : '' !!}>{{ $label }}</th>
-                @endforeach
-            </tr>
-        </thead>
-        <tbody>
-            @php
-                $groupColors = [];
-                $colorIndex = 0;
-            @endphp
-            @forelse($data as $index => $row)
-                @php
-                    $rowClass = '';
-                    $type = $filters['type'] ?? 'status';
-                    if ($type === 'duplicate') {
-                        $groupKey = $row->duplicate_group_key;
-                        if (!isset($groupColors[$groupKey])) {
-                            $groupColors[$groupKey] = ($colorIndex++ % 2 === 0);
-                        }
-                        
-                        if ($groupColors[$groupKey] && !str_starts_with($groupKey, 'none_')) {
-                            $rowClass = 'dup-highlight';
-                        }
-                    }
-                @endphp
-                <tr class="{{ $rowClass }}">
-                    <td class="text-center">{{ $index + 1 }}</td>
+    <!-- TABEL DATA UTAMA (Dichunk agar lancar merender dataset besar e-BMD tanpa memory/backtrack crash) -->
+    @php
+        $chunks = $data->chunk(100);
+        $globalIndex = 0;
+        $groupColors = [];
+        $colorIndex = 0;
+    @endphp
+
+    @forelse($chunks as $chunkIndex => $chunk)
+        <table class="table-report" style="{{ $chunkIndex > 0 ? 'margin-top: 0; border-top: none;' : '' }}">
+            <thead>
+                <tr>
+                    <th width="4%">No</th>
                     @foreach($headers as $key => $label)
-                        @php
-                            $isNoWrap = in_array($key, ['no_polisi', 'nilai_perolehan', 'tgl_stnk', 'tgl_perolehan']);
-                            $tdAttributes = $isNoWrap ? 'nowrap="nowrap" style="white-space: nowrap;"' : '';
-                        @endphp
-                        <td class="{{ $key === 'nilai_perolehan' ? 'text-right' : '' }} {{ $key === 'no_polisi' || $key === 'tgl_stnk' || $key === 'tgl_perolehan' ? 'text-center' : '' }}" {!! $tdAttributes !!}>
-                            @if($key === 'no_polisi')
-                                <span class="plate-number">{{ strtoupper(trim($row->{$key})) }}</span>
-                            @elseif($key === 'nilai_perolehan')
-                                Rp{{ number_format($row->{$key}, 0, ',', '.') }}
-                            @elseif($key === 'tgl_stnk' || $key === 'tgl_perolehan')
-                                {{ $row->{$key} ? \Carbon\Carbon::parse($row->{$key})->translatedFormat('d-m-Y') : '-' }}
-                            @else
-                                {{ $row->{$key} ?? '-' }}
-                            @endif
-                        </td>
+                        <th {!! $key === 'no_polisi' ? 'nowrap="nowrap" style="white-space: nowrap; width: 100px;"' : '' !!}>{{ $label }}</th>
                     @endforeach
                 </tr>
-            @empty
+            </thead>
+            <tbody>
+                @foreach($chunk as $row)
+                    @php
+                        $globalIndex++;
+                        $rowClass = '';
+                        $type = $filters['type'] ?? 'status';
+                        if ($type === 'duplicate') {
+                            $groupKey = $row->duplicate_group_key;
+                            if (!isset($groupColors[$groupKey])) {
+                                $groupColors[$groupKey] = ($colorIndex++ % 2 === 0);
+                            }
+                            
+                            if ($groupColors[$groupKey] && !str_starts_with($groupKey, 'none_')) {
+                                $rowClass = 'dup-highlight';
+                            }
+                        }
+                    @endphp
+                    <tr class="{{ $rowClass }}">
+                        <td class="text-center">{{ $globalIndex }}</td>
+                        @foreach($headers as $key => $label)
+                            @php
+                                $isNoWrap = in_array($key, ['no_polisi', 'nilai_perolehan', 'tgl_stnk', 'tgl_perolehan']);
+                                $tdAttributes = $isNoWrap ? 'nowrap="nowrap" style="white-space: nowrap;"' : '';
+                            @endphp
+                            <td class="{{ $key === 'nilai_perolehan' ? 'text-right' : '' }} {{ $key === 'no_polisi' || $key === 'tgl_stnk' || $key === 'tgl_perolehan' ? 'text-center' : '' }}" {!! $tdAttributes !!}>
+                                @if($key === 'no_polisi')
+                                    <span class="plate-number">{{ strtoupper(trim($row->{$key})) }}</span>
+                                @elseif($key === 'nilai_perolehan')
+                                    Rp{{ number_format($row->{$key}, 0, ',', '.') }}
+                                @elseif($key === 'tgl_stnk' || $key === 'tgl_perolehan')
+                                    {{ $row->{$key} ? \Carbon\Carbon::parse($row->{$key})->translatedFormat('d-m-Y') : '-' }}
+                                @else
+                                    {{ $row->{$key} ?? '-' }}
+                                @endif
+                            </td>
+                        @endforeach
+                    </tr>
+                @endforeach
+            </tbody>
+        </table>
+    @empty
+        <table class="table-report">
+            <tbody>
                 <tr>
                     <td colspan="100" class="text-center" style="padding: 20px; color: #64748b;">Belum ada data kendaraan dinas yang sesuai dengan kriteria filter.</td>
                 </tr>
-            @endforelse
-        </tbody>
-    </table>
+            </tbody>
+        </table>
+    @endforelse
 
     <!-- TANDA TANGAN KEPALA DINAS (PRESISI GAYA SIPAT) -->
     @if($docSettings['settings']['show_signature'] ?? true)

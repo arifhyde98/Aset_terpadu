@@ -313,7 +313,7 @@
             <tr>
                 <td class="logo-wrap">
                     @php
-                        $logoFile = $docSettings['letterhead']['logo_path'] ?? 'images/logo-sulteng.png';
+                        $logoFile = $docSettings['letterhead']['logo_path'] ?? 'images/logo.png';
                         $logoSrc = asset($logoFile);
                     @endphp
                     <img class="logo" src="{{ $logoSrc }}" alt="Logo Instansi">

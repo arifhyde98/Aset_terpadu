@@ -50,7 +50,7 @@ class ReportFilterRequest extends FormRequest
             'opd_id'  => ['nullable', 'integer', 'exists:opds,id'],
             'tahun'   => ['nullable', 'integer', 'min:1950', 'max:' . (now()->year + 1)],
             'sort_by' => ['nullable', 'string', Rule::in([
-                'no_polisi', 'nomor_register', 'merk', 'tipe', 'status', 'kondisi', 
+                'no_polisi', 'nomor_register', 'merk', 'tipe', 'jenis', 'status', 'kondisi', 
                 'opd', 'pemegang', 'nilai_perolehan', 'stnk_ada', 'tgl_stnk', 
                 'bpkb_ada', 'no_mesin', 'no_rangka'
             ])],

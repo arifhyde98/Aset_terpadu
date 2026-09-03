@@ -16,7 +16,7 @@
             </nav>
             <h3 class="fw-bold text-navy mb-0">Laporan & Rekapitulasi Aset</h3>
         </div>
-        @if(auth()->user()->role->value === 'superadmin')
+        @if(in_array(auth()->user()->role->value, ['superadmin', 'admin']))
             <div class="mt-2 mt-md-0">
                 <a href="{{ route('reports.settings.index') }}" class="btn btn-sm btn-outline-primary px-3 fw-semibold">
                     <i class="bi bi-gear-fill me-1"></i> Pengaturan Cetak
@@ -248,7 +248,7 @@
                         <span class="visually-hidden">Loading...</span>
                     </div>
                     <h6 class="fw-bold text-navy mb-1">Sedang Menyusun Laporan...</h6>
-                    <p class="text-secondary small mb-0">Sistem sedang mengagregasi data aset kendaraan dinas Bapenda.</p>
+                    <p class="text-secondary small mb-0">Sistem sedang mengagregasi data aset kendaraan dinas Pemerintah Daerah.</p>
                 </div>
             </div>
         `;
@@ -359,18 +359,36 @@
     }
 
     /**
-     * Penanganan dinamis jika tipe laporan berubah (antisipasi filter kustom di masa depan).
+     * Aksi pemicu Ekspor ke Excel (Dinas / Global terproteksi).
      */
-    function handleTypeChange() {
-        // Tipe laporan terpilih
-        const type = document.getElementById('type').value;
+    function exportExcel() {
+        const form = document.getElementById('filter-form');
+        const formData = new FormData(form);
+        const params = new URLSearchParams(formData).toString();
         
-        // Kita bisa menyembunyikan atau memunculkan filter tertentu jika dibutuhkan nanti
-        const kondisiFilter = document.getElementById('kondisi');
-        if (type === 'document') {
-            // Contoh: Laporan dokumen mungkin tidak butuh filter kondisi fisik tertentu pada kasus khusus,
-            // tapi saat ini kita biarkan aktif secara default
-        }
+        window.location.href = "{{ route('reports.export') }}?" + params;
+    }
+
+    /**
+     * Aksi pemicu unduh PDF server-side mPDF.
+     */
+    function exportPdf() {
+        const form = document.getElementById('filter-form');
+        const formData = new FormData(form);
+        const params = new URLSearchParams(formData).toString();
+        
+        window.location.href = "{{ route('reports.pdf') }}?" + params;
+    }
+
+    /**
+     * Aksi pemicu tab Cetak Laporan ramah tinta printer.
+     */
+    function printReport() {
+        const form = document.getElementById('filter-form');
+        const formData = new FormData(form);
+        const params = new URLSearchParams(formData).toString();
+        
+        window.open("{{ route('reports.print') }}?" + params, '_blank');
     }
 </script>
 @endpush

@@ -32,7 +32,7 @@ class ReportSettingController extends Controller implements HasMiddleware
     {
         return [
             new Middleware('auth'),
-            new Middleware('role:superadmin'),
+            new Middleware('role:superadmin,admin'),
         ];
     }
 
@@ -108,7 +108,10 @@ class ReportSettingController extends Controller implements HasMiddleware
         $letterhead->website = $validated['website'];
         $letterhead->save();
 
-        return redirect()->back()->with('success', 'Kop Surat laporan berhasil diperbarui.');
+        // Selaraskan seluruh pengaturan ekspor laporan agar mengarah ke Kop Surat aktif
+        ReportExportSetting::query()->update(['letterhead_id' => $letterhead->id]);
+
+        return redirect()->back()->with('success', 'Kop Surat laporan berhasil diperbarui dan diselaraskan ke seluruh jenis laporan.');
     }
 
     /**
@@ -158,7 +161,10 @@ class ReportSettingController extends Controller implements HasMiddleware
         $signatory->kota_ttd = $validated['kota_ttd'];
         $signatory->save();
 
-        return redirect()->back()->with('success', 'Data pejabat penanda tangan berhasil diperbarui.');
+        // Selaraskan seluruh pengaturan ekspor laporan agar mengarah ke Pejabat aktif
+        ReportExportSetting::query()->update(['signatory_id' => $signatory->id]);
+
+        return redirect()->back()->with('success', 'Data pejabat penanda tangan berhasil diperbarui dan diselaraskan ke seluruh jenis laporan.');
     }
 
     /**
