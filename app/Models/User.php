@@ -41,6 +41,7 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'plain_password',
         'role',
         'opd_id',
         'avatar',
@@ -68,6 +69,7 @@ class User extends Authenticatable
      */
     protected $hidden = [
         'password',
+        'plain_password',
         'remember_token',
     ];
 
@@ -81,6 +83,7 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'plain_password' => 'encrypted',
             'role' => \App\Enums\UserRole::class,
         ];
     }

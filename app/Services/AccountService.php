@@ -40,6 +40,7 @@ class AccountService
             'name' => "Admin " . ($opd->singkatan ?: $opd->nama),
             'email' => $email,
             'password' => $rawPassword, // hashed via model cast
+            'plain_password' => $rawPassword, // encrypted via model cast
             'role' => UserRole::OPD,
             'opd_id' => $opd->id,
         ]);

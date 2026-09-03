@@ -525,6 +525,12 @@
                                     <span>Pengaturan System</span>
                                 </a>
                             </li>
+                            <li class="{{ Request::is('reports/settings*', 'settings/reports*') ? 'active' : '' }}">
+                                <a href="{{ route('settings.reports.index') }}" data-bs-toggle="tooltip" data-bs-placement="right" title="Pengaturan Dokumen Cetak (KOP & Pejabat)">
+                                    <i class="bi bi-printer-fill text-primary"></i>
+                                    <span>Pengaturan Dokumen Cetak</span>
+                                </a>
+                            </li>
                             <li class="{{ Request::is('settings/backups*') ? 'active' : '' }}">
                                 <a href="{{ route('settings.backups.index') }}" data-bs-toggle="tooltip" data-bs-placement="right" title="Backup Sistem">
                                     <i class="bi bi-cloud-arrow-down"></i>

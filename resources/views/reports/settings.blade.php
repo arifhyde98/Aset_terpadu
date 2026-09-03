@@ -11,16 +11,19 @@
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb mb-1 small">
                     <li class="breadcrumb-item"><a href="{{ route('home') }}" class="text-decoration-none text-secondary">Dashboard</a></li>
-                    <li class="breadcrumb-item"><a href="{{ route('reports.index') }}" class="text-decoration-none text-secondary">Laporan</a></li>
-                    <li class="breadcrumb-item active text-navy fw-medium" aria-current="page">Pengaturan Cetak</li>
+                    <li class="breadcrumb-item"><a href="{{ route('settings.index') }}" class="text-decoration-none text-secondary">Pengaturan Sistem</a></li>
+                    <li class="breadcrumb-item active text-navy fw-medium" aria-current="page">Pengaturan Dokumen Cetak</li>
                 </ol>
             </nav>
-            <h3 class="fw-bold text-navy mb-0"><i class="bi bi-gear-fill me-2 text-primary"></i>Pengaturan Dokumen Cetak Laporan</h3>
+            <h3 class="fw-bold text-navy mb-0"><i class="bi bi-printer-fill me-2 text-primary"></i>Pengaturan Dokumen Cetak Laporan</h3>
             <p class="text-muted small mb-0">Konfigurasikan tata letak Kop instansi, logo, tanda tangan pejabat, dan ukuran kertas ekspor secara terpusat.</p>
         </div>
-        <div>
-            <a href="{{ route('reports.index') }}" class="btn btn-sm btn-outline-secondary px-3">
-                <i class="bi bi-arrow-left me-1"></i> Kembali ke Laporan
+        <div class="d-flex gap-2">
+            <a href="{{ route('settings.index') }}" class="btn btn-sm btn-outline-secondary px-3">
+                <i class="bi bi-gear me-1"></i> Pengaturan Konten
+            </a>
+            <a href="{{ route('reports.index') }}" class="btn btn-sm btn-outline-primary px-3">
+                <i class="bi bi-file-earmark-text me-1"></i> Laporan Kendaraan
             </a>
         </div>
     </div>

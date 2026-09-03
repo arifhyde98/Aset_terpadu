@@ -99,7 +99,7 @@
                     </a>
                 </th>
                 <th class="py-3 border-bottom-0 fw-semibold">Instansi (OPD)</th>
-                <th class="py-3 px-4 border-bottom-0 fw-semibold text-center" style="width: 100px;">Aksi</th>
+                <th class="py-3 px-4 border-bottom-0 fw-semibold text-center" style="width: 140px;">Aksi</th>
             </tr>
         </x-slot:thead>
 
@@ -130,7 +130,22 @@
                     {{ $user->opd->singkatan ?? ($user->role->value === 'opd' ? '-' : 'Akses Global') }}
                 </td>
                 <td class="px-4 py-3 text-center">
-                    <div class="d-flex justify-content-center gap-2">
+                    <div class="d-flex justify-content-center gap-1">
+                        <button type="button" class="btn btn-sm btn-light border shadow-none text-info btn-detail-user" 
+                                title="Lihat Detail & Password Akun"
+                                data-bs-toggle="modal" 
+                                data-bs-target="#detailUserModal"
+                                data-id="{{ $user->id }}"
+                                data-name="{{ $user->name }}"
+                                data-email="{{ $user->email }}"
+                                data-role="{{ $user->role->value }}"
+                                data-role-label="{{ $user->role->label() }}"
+                                data-opd="{{ $user->opd->nama ?? ($user->role->value === 'opd' ? '-' : 'Akses Global') }}"
+                                data-created="{{ $user->created_at ? $user->created_at->translatedFormat('d F Y, H:i') : '-' }}"
+                                data-password="{{ $user->plain_password ?? '' }}"
+                                data-reset-url="{{ route('users.reset-password', $user) }}">
+                            <i class="bi bi-eye"></i>
+                        </button>
                         <form action="{{ route('users.reset-password', $user) }}" method="POST" class="d-inline reset-password-confirm">
                             @csrf
                             <button type="submit" class="btn btn-sm btn-light border shadow-none text-warning" title="Reset Password">
@@ -144,14 +159,15 @@
                                 data-name="{{ $user->name }}"
                                 data-email="{{ $user->email }}"
                                 data-role="{{ $user->role->value }}"
-                                data-opd="{{ $user->opd_id }}">
+                                data-opd="{{ $user->opd_id }}"
+                                title="Edit Pengguna">
                             <i class="bi bi-pencil-square"></i>
                         </button>
                         @if(auth()->id() !== $user->id)
                         <form action="{{ route('users.destroy', $user) }}" method="POST" class="d-inline delete-confirm">
                             @csrf
                             @method('DELETE')
-                            <button type="submit" class="btn btn-sm btn-light border shadow-none text-danger">
+                            <button type="submit" class="btn btn-sm btn-light border shadow-none text-danger" title="Hapus Pengguna">
                                 <i class="bi bi-trash3"></i>
                             </button>
                         </form>
@@ -169,6 +185,92 @@
 </div>
 
 @push('modals')
+    <!-- DETAIL USER MODAL -->
+    <x-modal id="detailUserModal" title="Detail Akun & Kredensial" size="md">
+        <div class="text-center pb-3 border-bottom mb-3">
+            <div class="avatar-circle mx-auto mb-2 bg-primary-subtle text-primary border border-primary border-opacity-25 d-flex align-items-center justify-content-center rounded-circle shadow-sm" style="width: 60px; height: 60px; font-size: 1.5rem; font-weight: bold;" id="detail_avatar_initial">
+                <i class="bi bi-person-fill"></i>
+            </div>
+            <h5 class="fw-bold text-navy mb-1" id="detail_name">-</h5>
+            <span class="badge px-3 py-1 rounded-pill" id="detail_role_badge">Role</span>
+        </div>
+
+        <div class="row g-3 mb-2">
+            <div class="col-12">
+                <label class="form-label fw-semibold text-secondary small mb-1">Email / Username Akun</label>
+                <div class="input-group">
+                    <span class="input-group-text bg-light text-muted border-end-0"><i class="bi bi-envelope"></i></span>
+                    <input type="text" id="detail_email" class="form-control bg-light border-start-0 border-end-0" readonly>
+                    <button class="btn btn-light border border-start-0 text-primary" type="button" id="btnCopyDetailEmail" title="Salin Email">
+                        <i class="bi bi-clipboard" id="iconCopyDetailEmail"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div class="col-12">
+                <label class="form-label fw-semibold text-secondary small mb-1">Instansi / Unit Kerja (OPD)</label>
+                <div class="input-group">
+                    <span class="input-group-text bg-light text-muted border-end-0"><i class="bi bi-building"></i></span>
+                    <input type="text" id="detail_opd" class="form-control bg-light border-start-0" readonly>
+                </div>
+            </div>
+
+            <div class="col-12">
+                <label class="form-label fw-semibold text-secondary small mb-1">Terdaftar Pada</label>
+                <div class="input-group">
+                    <span class="input-group-text bg-light text-muted border-end-0"><i class="bi bi-calendar-check"></i></span>
+                    <input type="text" id="detail_created" class="form-control bg-light border-start-0" readonly>
+                </div>
+            </div>
+
+            <div class="col-12">
+                <div class="p-3 bg-light rounded-3 border">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <label class="form-label fw-bold text-navy small mb-0">
+                            <i class="bi bi-shield-lock-fill text-warning me-1"></i> Kata Sandi (Password)
+                        </label>
+                        <span class="badge bg-success-subtle text-success small" id="detail_pw_status">Tersedia</span>
+                    </div>
+
+                    <div id="detail_password_wrapper">
+                        <div class="input-group">
+                            <span class="input-group-text bg-white text-muted border-end-0"><i class="bi bi-key-fill"></i></span>
+                            <input type="password" id="detail_password" class="form-control bg-white border-start-0 border-end-0 font-monospace fw-semibold" readonly>
+                            <button class="btn btn-white border border-start-0 border-end-0 text-secondary" type="button" id="btnToggleDetailPassword" title="Lihat / Sembunyikan Kata Sandi">
+                                <i class="bi bi-eye fs-6" id="iconToggleDetailPassword"></i>
+                            </button>
+                            <button class="btn btn-white border border-start-0 text-primary" type="button" id="btnCopyDetailPassword" title="Salin Kata Sandi">
+                                <i class="bi bi-clipboard fs-6" id="iconCopyDetailPassword"></i>
+                            </button>
+                        </div>
+                        <div class="form-text text-muted small mt-1">
+                            <i class="bi bi-info-circle me-1"></i> Klik <strong>Ikon Mata</strong> untuk melihat kata sandi atau klik ikon salin untuk membagikan ke pengguna.
+                        </div>
+                    </div>
+
+                    <div id="detail_password_empty" class="d-none">
+                        <div class="alert alert-warning border-0 d-flex align-items-start gap-2 py-2 px-3 mb-2 small">
+                            <i class="bi bi-exclamation-triangle-fill fs-6 text-warning flex-shrink-0 mt-1"></i>
+                            <div>
+                                Akun ini menggunakan hash satu arah versi lama sehingga password aslinya tidak dapat dibaca.
+                            </div>
+                        </div>
+                        <form id="detailResetForm" method="POST" class="reset-password-confirm">
+                            @csrf
+                            <button type="submit" class="btn btn-sm btn-warning w-100 fw-semibold text-dark shadow-sm">
+                                <i class="bi bi-arrow-clockwise me-1"></i> Reset Password Sekarang (Buat Kata Sandi Baru)
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="d-flex justify-content-end pt-3 border-top">
+            <button type="button" class="btn btn-secondary px-4 fw-medium" data-bs-dismiss="modal">Tutup</button>
+        </div>
+    </x-modal>
+
     <!-- ADD MODAL -->
     <x-modal id="addUserModal" title="Tambah Pengguna Baru" size="md" submitLabel="Simpan Pengguna" form="addUserForm">
         <form id="addUserForm" action="{{ route('users.store') }}" method="POST">
@@ -183,7 +285,12 @@
             </div>
             <div class="mb-3">
                 <label class="form-label fw-semibold text-dark small">Password</label>
-                <input type="password" name="password" class="form-control" placeholder="Minimal 8 karakter" required>
+                <div class="input-group">
+                    <input type="password" name="password" id="add_password" class="form-control border-end-0" placeholder="Minimal 8 karakter" required>
+                    <button class="btn btn-white border border-start-0 text-secondary toggle-password-visibility" type="button" data-target="add_password" title="Lihat / Sembunyikan Password">
+                        <i class="bi bi-eye"></i>
+                    </button>
+                </div>
             </div>
             <div class="mb-3">
                 <label class="form-label fw-semibold text-dark small">Role / Hak Akses</label>
@@ -220,7 +327,12 @@
             </div>
             <div class="mb-3">
                 <label class="form-label fw-semibold text-dark small">Password (Kosongkan jika tidak diganti)</label>
-                <input type="password" name="password" class="form-control" placeholder="Isi hanya jika ingin mengganti password">
+                <div class="input-group">
+                    <input type="password" name="password" id="edit_password" class="form-control border-end-0" placeholder="Isi hanya jika ingin mengganti password">
+                    <button class="btn btn-white border border-start-0 text-secondary toggle-password-visibility" type="button" data-target="edit_password" title="Lihat / Sembunyikan Password">
+                        <i class="bi bi-eye"></i>
+                    </button>
+                </div>
             </div>
             <div class="mb-3">
                 <label class="form-label fw-semibold text-dark small">Role / Hak Akses</label>
@@ -281,8 +393,141 @@
             }
         }
 
-        addRoleSelect.addEventListener('change', (e) => toggleOpdSelect(e.target.value, addOpdGroup));
-        editRoleSelect.addEventListener('change', (e) => toggleOpdSelect(e.target.value, editOpdGroup));
+        if (addRoleSelect) addRoleSelect.addEventListener('change', (e) => toggleOpdSelect(e.target.value, addOpdGroup));
+        if (editRoleSelect) editRoleSelect.addEventListener('change', (e) => toggleOpdSelect(e.target.value, editOpdGroup));
+
+        // Detail User Modal Event
+        const detailModal = document.getElementById('detailUserModal');
+        if (detailModal) {
+            detailModal.addEventListener('show.bs.modal', function (event) {
+                const button = event.relatedTarget;
+                const name = button.getAttribute('data-name') || '-';
+                const email = button.getAttribute('data-email') || '-';
+                const role = button.getAttribute('data-role') || '';
+                const roleLabel = button.getAttribute('data-role-label') || '-';
+                const opd = button.getAttribute('data-opd') || '-';
+                const created = button.getAttribute('data-created') || '-';
+                const password = button.getAttribute('data-password') || '';
+                const resetUrl = button.getAttribute('data-reset-url') || '';
+
+                document.getElementById('detail_name').textContent = name;
+                document.getElementById('detail_email').value = email;
+                document.getElementById('detail_opd').value = opd;
+                document.getElementById('detail_created').value = created;
+
+                // Inisial Nama
+                const initial = name ? name.trim().charAt(0).toUpperCase() : 'U';
+                const avatarInit = document.getElementById('detail_avatar_initial');
+                avatarInit.textContent = initial;
+
+                // Role badge class
+                const badgeEl = document.getElementById('detail_role_badge');
+                badgeEl.textContent = roleLabel;
+                badgeEl.className = 'badge px-3 py-1 rounded-pill ';
+                if (role === 'superadmin') {
+                    badgeEl.className += 'bg-danger-subtle text-danger border border-danger border-opacity-25';
+                } else if (role === 'admin') {
+                    badgeEl.className += 'bg-primary-subtle text-primary border border-primary border-opacity-25';
+                } else {
+                    badgeEl.className += 'bg-success-subtle text-success border border-success border-opacity-25';
+                }
+
+                // Password handling
+                const pwInput = document.getElementById('detail_password');
+                const pwWrapper = document.getElementById('detail_password_wrapper');
+                const pwEmpty = document.getElementById('detail_password_empty');
+                const pwStatus = document.getElementById('detail_pw_status');
+                const iconToggle = document.getElementById('iconToggleDetailPassword');
+                const resetForm = document.getElementById('detailResetForm');
+
+                if (password && password.trim() !== '') {
+                    pwWrapper.classList.remove('d-none');
+                    pwEmpty.classList.add('d-none');
+                    pwStatus.textContent = 'Tersedia';
+                    pwStatus.className = 'badge bg-success-subtle text-success small';
+                    pwInput.value = password;
+                    pwInput.type = 'password';
+                    iconToggle.className = 'bi bi-eye fs-6 text-secondary';
+                } else {
+                    pwWrapper.classList.add('d-none');
+                    pwEmpty.classList.remove('d-none');
+                    pwStatus.textContent = 'Terenkripsi (Hash)';
+                    pwStatus.className = 'badge bg-warning-subtle text-warning small';
+                    pwInput.value = '';
+                    if (resetForm && resetUrl) {
+                        resetForm.action = resetUrl;
+                    }
+                }
+            });
+        }
+
+        // Toggle Password Visibility in Detail Modal
+        const btnToggleDetailPassword = document.getElementById('btnToggleDetailPassword');
+        if (btnToggleDetailPassword) {
+            btnToggleDetailPassword.addEventListener('click', function () {
+                const pwInput = document.getElementById('detail_password');
+                const iconToggle = document.getElementById('iconToggleDetailPassword');
+                if (pwInput.type === 'password') {
+                    pwInput.type = 'text';
+                    iconToggle.className = 'bi bi-eye-slash fs-6 text-primary';
+                } else {
+                    pwInput.type = 'password';
+                    iconToggle.className = 'bi bi-eye fs-6 text-secondary';
+                }
+            });
+        }
+
+        // Copy Password to Clipboard
+        const btnCopyDetailPassword = document.getElementById('btnCopyDetailPassword');
+        if (btnCopyDetailPassword) {
+            btnCopyDetailPassword.addEventListener('click', function () {
+                const pwInput = document.getElementById('detail_password');
+                if (!pwInput.value) return;
+
+                navigator.clipboard.writeText(pwInput.value).then(() => {
+                    const icon = document.getElementById('iconCopyDetailPassword');
+                    icon.className = 'bi bi-check-lg text-success fs-6';
+                    setTimeout(() => {
+                        icon.className = 'bi bi-clipboard fs-6';
+                    }, 2000);
+                });
+            });
+        }
+
+        // Copy Email to Clipboard
+        const btnCopyDetailEmail = document.getElementById('btnCopyDetailEmail');
+        if (btnCopyDetailEmail) {
+            btnCopyDetailEmail.addEventListener('click', function () {
+                const emailInput = document.getElementById('detail_email');
+                if (!emailInput.value) return;
+
+                navigator.clipboard.writeText(emailInput.value).then(() => {
+                    const icon = document.getElementById('iconCopyDetailEmail');
+                    icon.className = 'bi bi-check-lg text-success';
+                    setTimeout(() => {
+                        icon.className = 'bi bi-clipboard';
+                    }, 2000);
+                });
+            });
+        }
+
+        // Generic Toggle Password Visibility for Form Inputs (Add & Edit)
+        document.querySelectorAll('.toggle-password-visibility').forEach(button => {
+            button.addEventListener('click', function () {
+                const targetId = this.getAttribute('data-target');
+                const input = document.getElementById(targetId);
+                const icon = this.querySelector('i');
+                if (!input) return;
+
+                if (input.type === 'password') {
+                    input.type = 'text';
+                    if (icon) icon.className = 'bi bi-eye-slash text-primary';
+                } else {
+                    input.type = 'password';
+                    if (icon) icon.className = 'bi bi-eye text-secondary';
+                }
+            });
+        });
 
         // Bulk Generate Confirmation
         const bulkForm = document.querySelector('form[action*="generate-opd-accounts"]');
@@ -306,10 +551,9 @@
             });
         }
 
-        // Reset Password Confirmation
-        const resetForms = document.querySelectorAll('.reset-password-confirm');
-        resetForms.forEach(form => {
-            form.addEventListener('submit', function(e) {
+        // Reset Password Confirmation (delegated or querySelectorAll)
+        document.addEventListener('submit', function (e) {
+            if (e.target && e.target.classList.contains('reset-password-confirm')) {
                 e.preventDefault();
                 Swal.fire({
                     title: 'Reset Password?',
@@ -322,12 +566,13 @@
                     cancelButtonText: 'Batal'
                 }).then((result) => {
                     if (result.isConfirmed) {
-                        this.submit();
+                        e.target.submit();
                     }
                 });
-            });
+            }
         });
 
+        // Edit User Modal Event
         const editModal = document.getElementById('editUserModal');
         if (editModal) {
             editModal.addEventListener('show.bs.modal', function (event) {

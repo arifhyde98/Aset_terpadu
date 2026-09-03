@@ -76,6 +76,7 @@ class UserController extends Controller implements HasMiddleware
     public function store(StoreUserRequest $request)
     {
         $validated = $request->validated();
+        $validated['plain_password'] = $validated['password'];
 
         User::create($validated);
 
@@ -95,6 +96,9 @@ class UserController extends Controller implements HasMiddleware
 
         if (empty($validated['password'])) {
             unset($validated['password']);
+            unset($validated['plain_password']);
+        } else {
+            $validated['plain_password'] = $validated['password'];
         }
 
         $user->update($validated);
@@ -166,6 +170,7 @@ class UserController extends Controller implements HasMiddleware
         
         $user->update([
             'password' => $newPassword, // hashed via model cast
+            'plain_password' => $newPassword, // encrypted via model cast
         ]);
 
         return redirect()->route('users.index')->with([

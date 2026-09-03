@@ -89,6 +89,7 @@ resources/
   - `elabel_bpkb` dan `elabel_sertifikat_tanah` menunjuk ke box arsipnya masing-masing (`elabel_boxes` / `elabel_sertifikat_boxes`) dan terelasi ke `opd` (`sipat_opd_id`) untuk isolasi kepemilikan dokumen.
   - `elabel_loans` mengelola peminjaman/request scan BPKB/Sertifikat oleh user dengan persetujuan admin.
   - `archive_types`, `archive_boxes`, `archive_items`, `archive_attachments`, `archive_loans` mengelola mesin arsip dinamis (*Universal Dynamic Archive Engine*) dengan form builder kustom JSON.
+  - `users` menyimpan kredensial pengguna, dilengkapi kolom `plain_password` terenkripsi dua arah (AES-256 via cast `encrypted`) untuk pemulihan dan distribusi akun OPD oleh Superadmin.
 - **Indexing Strategy**: B-Tree Index diterapkan pada kolom relasi penting seperti `opd_id`, `sipat_opd_id`, `box_id`, `archive_type_id`, serta kolom status operasional untuk menjamin kecepatan kueri jutaan baris data.
 
 ---
@@ -138,6 +139,7 @@ Berikut adalah status fitur yang telah diimplementasikan penuh pada platform SIP
 | **Terpadu** | OPD Mapping (Hub) | DONE | Jembatan pemetaan instansi antara E-RANDIS dan SIPAT. |
 | **Terpadu** | Audit Trail / Log Aktivitas | DONE | Log aktivitas terintegrasi E-RANDIS, SIPAT, dan eLABEL. |
 | **System** | Sinkronisasi DB Staging | DONE | Utility sinkronisasi data dari db_sipat_terpadu ke db_sipat_staging. |
+| **System** | Manajemen Pengguna & Kredensial | DONE | Detail akun, lihat password dengan Ikon Mata (AES-256 encrypted), copy password, dan auto reset. |
 
 ---
 

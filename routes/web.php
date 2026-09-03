@@ -89,6 +89,7 @@ Route::get('reports/pdf', [ReportController::class, 'pdf'])->name('reports.pdf')
 
 // Pengaturan Cetak & Dokumen Laporan (Kop & TTD)
 Route::get('reports/settings', [\App\Http\Controllers\ReportSettingController::class, 'index'])->name('reports.settings.index');
+Route::get('settings/reports', [\App\Http\Controllers\ReportSettingController::class, 'index'])->name('settings.reports.index');
 Route::post('reports/settings/letterhead', [\App\Http\Controllers\ReportSettingController::class, 'updateLetterhead'])->name('reports.settings.letterhead');
 Route::post('reports/settings/signatory', [\App\Http\Controllers\ReportSettingController::class, 'updateSignatory'])->name('reports.settings.signatory');
 Route::post('reports/settings/export', [\App\Http\Controllers\ReportSettingController::class, 'updateExportSetting'])->name('reports.settings.export');

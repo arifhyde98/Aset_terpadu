@@ -6,8 +6,16 @@
 <div class="container-fluid px-0">
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 pb-2 border-bottom">
         <div>
-            <h3 class="fw-bold text-navy mb-1">Pengaturan Konten</h3>
-            <p class="text-secondary mb-0 small">Kelola teks dan gambar untuk Landing Page dan Halaman Login.</p>
+            <h3 class="fw-bold text-navy mb-1">Pengaturan Konten & Sistem</h3>
+            <p class="text-secondary mb-0 small">Kelola teks, logo, halaman portal publik, serta konfigurasi dokumen cetak.</p>
+        </div>
+        <div class="mt-3 mt-md-0 d-flex gap-2">
+            <a href="{{ route('settings.reports.index') }}" class="btn btn-outline-primary fw-semibold rounded-3 shadow-sm d-flex align-items-center gap-2">
+                <i class="bi bi-printer-fill"></i> Pengaturan Dokumen Cetak (KOP & TTD)
+            </a>
+            <a href="{{ route('settings.backups.index') }}" class="btn btn-outline-secondary fw-semibold rounded-3 shadow-sm d-flex align-items-center gap-2">
+                <i class="bi bi-cloud-arrow-down"></i> Backup Sistem
+            </a>
         </div>
     </div>
 

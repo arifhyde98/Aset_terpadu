@@ -51,14 +51,16 @@ Dokumen ini merupakan sumber kebenaran tunggal (*Single Source of Truth*) mengen
 *   **Integrasi Pengaturan Dokumen Cetak E-RANDIS (`reports/settings`)**:
     *   Tabel `report_letterheads` dan `report_signatories` diselaraskan ke instansi resmi Pemerintah Kabupaten Donggala (BPKAD) dan pejabat pengesah Banawa.
     *   Otomasi dua arah di `ReportSettingController`: setiap pembaruan Kop Surat atau Pejabat otomatis menyelaraskan `letterhead_id` dan `signatory_id` di seluruh `report_export_settings`.
-    *   Submenu **"Pengaturan Cetak Laporan"** telah ditambahkan di sidebar navigasi E-RANDIS (`MANAJEMEN KENDARAAN`) dengan akses untuk role `superadmin` dan `admin`.
+    *   Submenu **"Pengaturan Cetak Laporan"** telah ditambahkan di sidebar navigasi E-RANDIS (`MANAJEMEN KENDARAAN`) serta menu master utama **"PENGATURAN SISTEM"** (`/settings/reports`).
+    *   Halaman **Pengaturan Konten & Web** (`/settings`) kini dilengkapi tombol navigasi langsung ke pengaturan dokumen cetak (Kop & TTD).
+    *   Breadcrumbs dan navigasi atas pada halaman pengaturan cetak memungkinkan kembali ke Pengaturan Sistem ataupun ke Laporan Kendaraan dengan mulus.
 
 ---
 
 ## 3. Skema Database Utama
 
 ### A. Tabel Core & E-RANDIS
-*   **users**: Penambahan kolom `role` (string), `opd_id` (foreignId - Cascade ke `opds`), dan `avatar` (string - nullable).
+*   **users**: Penambahan kolom `role` (string), `opd_id` (foreignId - Cascade ke `opds`), `avatar` (string - nullable), dan `plain_password` (text - nullable, terenkripsi dua arah AES-256 via cast `encrypted` untuk fitur lihat password oleh Superadmin).
 *   **vehicles**: Penambahan kolom `opd_id` (foreignId) dan integrasi Global Scope.
 *   **opds**: Master data instansi yang terhubung 1-to-1 dengan user admin OPD.
 *   **activities**: Tabel log audit dengan relasi `user_id` (Set Null), menyimpan `description` dan `type` (untuk UI badging).
@@ -202,7 +204,14 @@ Aplikasi **menggunakan sentuhan visual premium & animasi mikro kustom** secara b
 - **Smart BPKB PDF Folder Scanner**: Pemindaian folder lokal server/PC dengan dry-run audit, penautan otomatis PDF ke record BPKB DB (`elabel/bpkb/`), timer elapsed pemindaian (S1), checkbox selektif (S2), pratinjau PDF di tab baru (S3), export hasil audit CSV (S4), dukungan nopol multi-prefix Sulawesi (S5), serta reset hasil audit (S6).
 - **Sertifikat Tanah & Box**: Pengarsipan fisik sertifikat tanah dengan integrasi otomatis ke Master Aset Tanah (SIPAT), pemilihan lokasi/kecamatan terstandarisasi via dropdown Master Kecamatan SIPAT, dan operasi split (pecah) and merge (gabung) box.
 - **Peminjaman Dokumen (Scan Request)**: Alur permohonan peminjaman berkas fisik atau file scan dokumen oleh operator OPD dengan validasi status persetujuan dari admin global.
-- **Universal Dynamic Archive Engine (e-Arsip Dinamis)**: Mesin pengarsipan dinamis mandiri (*Zero-Code Schema Extensibility*) yang memungkinkan penambahan jenis arsip baru (contoh: IMB/PBG Bangunan, Kontrak/SPK Pengadaan, Kuitansi/SPJ Keuangan, Kepegawaian/SK) lengkap dengan visual Form Builder, input field kustom, manajemen box fisik otomatis, cetak stiker barcode resmi, pratinjau PDF interaktif, multi-lampiran berkas, dan permohonan scan/pinjam dokumen terpadu.
+### D. Modul Administrasi & Manajemen Pengguna
+- **Manajemen Pengguna & Kredensial Akun (`/users`)**: Pengelolaan akun seluruh pengguna dengan role Superadmin, Admin, dan Admin OPD. Dilengkapi:
+  - **Tombol Aksi Ikon Mata (`bi bi-eye`)**: Membuka modal **Detail Akun & Kredensial** pengguna.
+  - **Lihat & Sembunyikan Kata Sandi**: Fitur toggle password dengan ikon mata (`bi-eye` / `bi-eye-slash`) untuk melihat kata sandi asli pengguna secara aman.
+  - **Penyimpanan Terenkripsi Dua Arah**: Kata sandi disimpan dengan enkripsi dua arah AES-256 (`plain_password` dengan cast `encrypted`), sehingga tidak dapat dibaca dari database raw/dump namun dapat didekripsi otomatis saat diakses Superadmin.
+  - **Salin Kredensial Cepat**: Tombol 1-klik untuk menyalin Email dan Password ke clipboard untuk memudahkan pendistribusian akun ke OPD.
+  - **Toggle Visibilitas Password Form**: Ikon mata pada form Tambah Pengguna dan Edit Pengguna untuk memeriksa password sebelum disimpan.
+  - **Reset Password Otomatis**: Generate acak format `DGL-XXXX` dengan sinkronisasi langsung ke `plain_password` dan notifikasi SweetAlert interaktif.
 
 ---
 
