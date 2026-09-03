@@ -5,6 +5,7 @@ namespace App\Reports\Strategies;
 use App\Reports\Contracts\ReportStrategy;
 use App\Reports\Contracts\PostProcessesReportRows;
 use App\Models\Vehicle;
+use App\Models\EbmdVehicle;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 
@@ -18,14 +19,16 @@ class DuplicateVehicleReport implements ReportStrategy, PostProcessesReportRows
     /**
      * Membangun kueri basis data untuk mendeteksi kendaraan ganda/identik.
      *
-     * @param array<string, mixed> $filters Kumpulan filter pencarian (opd_id)
+     * @param array<string, mixed> $filters Kumpulan filter pencarian (opd_id, source)
      * @return Builder Kueri Eloquent ter-eager load untuk mencegah N+1
      */
     public function query(array $filters): Builder
     {
+        $modelClass = ($filters['source'] ?? 'real') === 'ebmd' ? EbmdVehicle::class : Vehicle::class;
+
         // 1. Ambil HANYA plat nomor yang memiliki suffix ganda hasil impor (mengandung '(').
         // Ini sangat skalabel karena hanya menarik segelintir baris terduplikasi saja (bukan seluruh tabel).
-        $duplicatePlates = Vehicle::withoutGlobalScopes()
+        $duplicatePlates = $modelClass::withoutGlobalScopes()
             ->where('no_polisi', 'like', '%(%')
             ->pluck('no_polisi');
 
@@ -38,7 +41,7 @@ class DuplicateVehicleReport implements ReportStrategy, PostProcessesReportRows
         })->unique()->filter()->toArray();
 
         // 3. Ambil nomor mesin yang terdeteksi ganda (patuh ONLY_FULL_GROUP_BY)
-        $duplicateEngines = Vehicle::withoutGlobalScopes()
+        $duplicateEngines = $modelClass::withoutGlobalScopes()
             ->select('no_mesin')
             ->whereNotNull('no_mesin')
             ->whereNotIn('no_mesin', ['', '-'])
@@ -48,7 +51,7 @@ class DuplicateVehicleReport implements ReportStrategy, PostProcessesReportRows
             ->toArray();
 
         // 4. Ambil nomor rangka yang terdeteksi ganda (patuh ONLY_FULL_GROUP_BY)
-        $duplicateRangkas = Vehicle::withoutGlobalScopes()
+        $duplicateRangkas = $modelClass::withoutGlobalScopes()
             ->select('no_rangka')
             ->whereNotNull('no_rangka')
             ->whereNotIn('no_rangka', ['', '-'])
@@ -58,7 +61,7 @@ class DuplicateVehicleReport implements ReportStrategy, PostProcessesReportRows
             ->toArray();
 
         // 5. Bangun kueri Eloquent utama
-        $query = Vehicle::withoutGlobalScopes()
+        $query = $modelClass::withoutGlobalScopes()
             ->with(['opdRelation', 'vehicleType'])
             ->select([
                 'id',

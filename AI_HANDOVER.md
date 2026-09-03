@@ -118,13 +118,13 @@ Logika bisnis dan kalkulasi diletakkan di dalam kelas *Service*:
 ### Arsitektur Modul Laporan E-RANDIS (*Reporting Architecture*)
 Modul Laporan dibangun secara modular menggunakan kombinasi **Service Layer**, **Registry Pattern**, dan **Strategy Pattern**:
 - `ReportController`: menangani halaman laporan, preview AJAX, ekspor Excel, dan cetak browser.
-- `ReportService`: mengorkestrasi summary laporan serta pemanggilan strategy aktif.
+- `ReportService`: mengorkestrasi summary laporan (mendukung ringkasan data riil `vehicles` dan data e-BMD `ebmd_vehicles`) serta pemanggilan strategy aktif.
 - `ReportSettingController`: menangani halaman pengaturan dokumen laporan khusus superadmin, termasuk kop surat, pejabat penanda tangan, dan aturan ekspor per tipe laporan.
 - `ReportDocumentSettingService`: membaca konfigurasi dokumen per tipe laporan, menghubungkan `ReportExportSetting` dengan kop/pejabat aktif, dan menyediakan hardcoded fallback agar ekspor PDF tidak gagal ketika database kosong/bermasalah.
 - `ReportRegistry`: memetakan tipe laporan ke strategy yang sesuai.
-- `ReportStrategy`: kontrak bersama untuk seluruh jenis laporan, mendukung `referenceQuery` opsional untuk kueri referensi kustom global lintas OPD.
-- `VehicleStatusReport`, `OpdAssetReport`, `DocumentValidityReport`, `DuplicateVehicleReport`: empat strategy laporan modular.
-- `DynamicReportExport`: kelas induk abstrak untuk penataan dan pemetaan kolom Excel.
+- `ReportStrategy`: kontrak bersama untuk seluruh jenis laporan, mendukung `referenceQuery` opsional untuk kueri referensi kustom global lintas OPD serta pemilihan model dinamis (`Vehicle` vs `EbmdVehicle`) berdasarkan filter `source`.
+- `VehicleStatusReport`, `OpdAssetReport`, `DocumentValidityReport`, `DuplicateVehicleReport`: empat strategy laporan modular yang mendukung sumber data `real` dan `ebmd`.
+- `DynamicReportExport`: kelas induk abstrak untuk penataan dan pemetaan kolom Excel (mencantumkan sumber data pada header filter aktif).
 - `DynamicQueryReportExport` & `DynamicCollectionReportExport`: dua subclass yang membedakan kueri streaming hemat memori (`FromQuery`) untuk laporan standar dan ekspor berbasis koleksi (`FromCollection`) untuk laporan dengan pengayaan data.
 
 ### Validasi Kelas Permintaan (*Form Request Validation*)
@@ -132,7 +132,7 @@ Penyimpanan dan pembaruan data wajib menggunakan kelas validasi terpisah demi me
 - `StoreVehicleRequest` / `UpdateVehicleRequest`: Validasi data kendaraan dinas dan isolasi `opd_id` untuk admin OPD.
 - `StoreUserRequest` / `UpdateUserRequest`: Validasi manajemen pengguna dan role.
 - `StoreSuratSkptRequest`: Validasi pembuatan SKPT dengan data relasi berjenjang (camat, kades, pemohon).
-- `ReportFilterRequest`: Memvalidasi filter laporan dan memaksa `opd_id` user OPD kembali ke instansinya sendiri agar parameter URL tidak dapat dipakai untuk mengintip data tenant lain.
+- `ReportFilterRequest`: Memvalidasi filter laporan (termasuk jenis laporan, sumber data `real`/`ebmd`, kondisi, OPD, tahun) dan memaksa `opd_id` user OPD kembali ke instansinya sendiri agar parameter URL tidak dapat dipakai untuk mengintip data tenant lain.
 
 ### Konvensi Middleware & Akses Rute (Laravel 12 Standard)
 - Semua *Controller* wajib mengimplementasikan antarmuka `HasMiddleware` standar Laravel 12 dengan metode statis `middleware()`.

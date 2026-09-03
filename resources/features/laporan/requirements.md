@@ -22,10 +22,10 @@
 - [ ] Pengguna `superadmin` dan `admin` dapat memilih filter untuk seluruh OPD secara global.
 
 ### B. Kriteria Antarmuka Interaktif (*Interactive Preview*)
-- [ ] Halaman dashboard laporan menyediakan pemfilteran berbasis: Kondisi Kendaraan, Instansi OPD (untuk Admin Global), dan Tahun Perolehan.
+- [ ] Halaman dashboard laporan menyediakan pemfilteran berbasis: Sumber Data (Data Real / Operasional vs Data e-BMD), Jenis Laporan, Kondisi Kendaraan, Instansi OPD (untuk Admin Global), dan Tahun Perolehan.
 - [ ] Tersedia fitur **"Pratinjau Laporan" (Ajax Preview)** yang menampilkan tabel isi laporan (sampel/preview data asli) secara instan tanpa perlu memuat ulang halaman.
-- [ ] Pratinjau tabel harus menampilkan informasi paginasi yang rapi serta jumlah data total yang akurat.
-- [ ] Visualisasi ringkasan didukung oleh bagan grafik lingkaran/lingkaran donat (Kondisi Aset) dan diagram batang (Sebaran Aset) secara interaktif.
+- [ ] Pratinjau tabel harus menampilkan informasi paginasi yang rapi serta jumlah data total yang akurat baik saat menggunakan sumber Data Real maupun Data e-BMD.
+- [ ] Kartu ringkasan metrik statistik menyesuaikan secara dinamis saat pengguna beralih antara Data Real dan Data e-BMD.
 
 ### C. Kriteria Ekspor & Format Cetak (*Export Engine*)
 - [ ] Ekspor ke format Excel (.xlsx) menghasilkan struktur kolom yang rapi, normalisasi tanggal Indonesia, pemisah ribuan mata uang yang benar, dan header yang jelas.

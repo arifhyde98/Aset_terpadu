@@ -32,19 +32,21 @@ class ReportService
      * Data di-cache selama 5 menit (300 detik) untuk performa optimal.
      *
      * @param int|null $opdId ID instansi OPD (null untuk data global)
+     * @param string $source Sumber data ('real' atau 'ebmd')
      * @return array{total_unit: int, layak_jalan: int, surat_mati: int}
      */
-    public function getQuickSummary(?int $opdId = null): array
+    public function getQuickSummary(?int $opdId = null, string $source = 'real'): array
     {
         $user = auth()->user();
         $role = $user ? $user->role->value : 'guest';
         
-        // Buat cache key yang aman berdasarkan role dan scope OPD untuk mencegah pencemaran lintas-role
+        // Buat cache key yang aman berdasarkan sumber data, role, dan scope OPD untuk mencegah pencemaran lintas-role
         $scopeKey = $opdId ? "opd_{$opdId}" : ($user && $user->role->value === 'opd' ? 'opd_null' : 'global');
-        $cacheKey = "reports.summary.{$role}.{$scopeKey}";
+        $cacheKey = "reports.summary.{$source}.{$role}.{$scopeKey}";
 
-        return cache()->remember($cacheKey, 300, function () use ($opdId) {
-            $query = \App\Models\Vehicle::query();
+        return cache()->remember($cacheKey, 300, function () use ($opdId, $source) {
+            $modelClass = $source === 'ebmd' ? \App\Models\EbmdVehicle::class : \App\Models\Vehicle::class;
+            $query = $modelClass::query();
 
             if ($opdId) {
                 $query->where('opd_id', $opdId);
@@ -53,8 +55,8 @@ class ReportService
             // Kueri Agregasi Tunggal (Single Raw Query) teroptimasi B-Tree
             $result = $query->selectRaw("
                 COUNT(*) as total_unit,
-                SUM(CASE WHEN kondisi = 'Baik' THEN 1 ELSE 0 END) as layak_jalan,
-                SUM(CASE WHEN stnk_ada = 'Tidak' OR (tgl_stnk IS NOT NULL AND tgl_stnk < CURRENT_DATE) THEN 1 ELSE 0 END) as surat_mati
+                SUM(CASE WHEN UPPER(kondisi) IN ('BAIK', 'B') THEN 1 ELSE 0 END) as layak_jalan,
+                SUM(CASE WHEN LOWER(stnk_ada) IN ('tidak', 't') OR (tgl_stnk IS NOT NULL AND tgl_stnk < CURRENT_DATE) THEN 1 ELSE 0 END) as surat_mati
             ")->first();
 
             return [
@@ -77,23 +79,34 @@ class ReportService
      */
     public function invalidateSummaryCache(?int $opdId = null, ?int $oldOpdId = null, bool $invalidateAllOpd = false): void
     {
+        $sources = ['real', 'ebmd'];
+        $roles = ['superadmin', 'admin', 'guest'];
+
+        foreach ($sources as $source) {
+            foreach ($roles as $role) {
+                cache()->forget("reports.summary.{$source}.{$role}.global");
+            }
+            cache()->forget("reports.summary.{$source}.opd.opd_null");
+
+            if ($opdId) {
+                cache()->forget("reports.summary.{$source}.opd.opd_{$opdId}");
+            }
+            if ($oldOpdId && $oldOpdId !== $opdId) {
+                cache()->forget("reports.summary.{$source}.opd.opd_{$oldOpdId}");
+            }
+            if ($invalidateAllOpd) {
+                $opdIds = \App\Models\Opd::pluck('id');
+                foreach ($opdIds as $id) {
+                    cache()->forget("reports.summary.{$source}.opd.opd_{$id}");
+                }
+            }
+        }
+
+        // Hapus juga legacy cache keys
         cache()->forget('reports.summary.superadmin.global');
         cache()->forget('reports.summary.admin.global');
         cache()->forget('reports.summary.guest.global');
         cache()->forget('reports.summary.opd.opd_null');
-
-        if ($opdId) {
-            cache()->forget("reports.summary.opd.opd_{$opdId}");
-        }
-        if ($oldOpdId && $oldOpdId !== $opdId) {
-            cache()->forget("reports.summary.opd.opd_{$oldOpdId}");
-        }
-        if ($invalidateAllOpd) {
-            $opdIds = \App\Models\Opd::pluck('id');
-            foreach ($opdIds as $id) {
-                cache()->forget("reports.summary.opd.opd_{$id}");
-            }
-        }
     }
 
     /**
@@ -102,11 +115,12 @@ class ReportService
      * Sesuai keputusan PM, pratinjau data ini TIDAK di-cache untuk menjamin kesegaran data filter.
      *
      * @param array<string, mixed> $filters Filter pencarian ter-validasi
-     * @return array{data: LengthAwarePaginator, headers: array<string, string>, type: string}
+     * @return array{data: LengthAwarePaginator, headers: array<string, string>, type: string, source: string}
      */
     public function generatePreview(array $filters): array
     {
         $type = $filters['type'] ?? 'status';
+        $source = $filters['source'] ?? 'real';
         
         // Selesaikan strategi berdasarkan tipe laporan via registry
         $strategy = $this->registry->resolve($type);
@@ -136,6 +150,7 @@ class ReportService
             'data'       => $paginatedData,
             'headers'    => $strategy->headers(),
             'type'       => $type,
+            'source'     => $source,
             'sort_by'    => $filters['sort_by'] ?? null,
             'sort_order' => $filters['sort_order'] ?? 'asc',
         ];

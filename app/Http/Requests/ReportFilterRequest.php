@@ -45,6 +45,7 @@ class ReportFilterRequest extends FormRequest
     {
         return [
             'type'    => ['required', 'string', Rule::in(['status', 'opd', 'document', 'duplicate'])],
+            'source'  => ['nullable', 'string', Rule::in(['real', 'ebmd'])],
             'kondisi' => ['nullable', 'string', Rule::enum(VehicleCondition::class)],
             'opd_id'  => ['nullable', 'integer', 'exists:opds,id'],
             'tahun'   => ['nullable', 'integer', 'min:1950', 'max:' . (now()->year + 1)],
@@ -88,10 +89,18 @@ class ReportFilterRequest extends FormRequest
     protected function prepareForValidation(): void
     {
         $user = auth()->user();
+        $merges = [];
+
         if ($user && $user->role->value === 'opd') {
-            $this->merge([
-                'opd_id' => $user->opd_id,
-            ]);
+            $merges['opd_id'] = $user->opd_id;
+        }
+
+        if (!$this->filled('source')) {
+            $merges['source'] = 'real';
+        }
+
+        if (!empty($merges)) {
+            $this->merge($merges);
         }
     }
 }

@@ -63,7 +63,8 @@ class ReportController extends Controller implements HasMiddleware
         $opdId = $isOpd ? $user->opd_id : null;
 
         // 2. Tarik ringkasan statistik (Tunggal & Ter-cache)
-        $summary = $this->reportService->getQuickSummary($opdId);
+        $summary = $this->reportService->getQuickSummary($opdId, 'real');
+        $summaryEbmd = $this->reportService->getQuickSummary($opdId, 'ebmd');
 
         // 3. Persiapkan pilihan OPD khusus untuk Admin / Superadmin
         $opds = !$isOpd ? Opd::orderBy('nama')->get() : collect();
@@ -71,7 +72,7 @@ class ReportController extends Controller implements HasMiddleware
         // 4. Dapatkan daftar tipe laporan yang didukung oleh sistem
         $reportTypes = $this->registry->getSupportedTypes();
 
-        return view('reports.index', compact('summary', 'opds', 'reportTypes', 'isOpd'));
+        return view('reports.index', compact('summary', 'summaryEbmd', 'opds', 'reportTypes', 'isOpd'));
     }
 
     /**

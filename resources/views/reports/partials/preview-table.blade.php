@@ -93,10 +93,12 @@
                         </span>
                     @elseif($key === 'kondisi')
                         @php
-                            $badgeClass = match($row->{$key}) {
-                                'Baik' => 'bg-success-subtle text-success border border-success-subtle',
-                                'Rusak Ringan' => 'bg-warning-subtle text-warning-emphasis border border-warning-subtle',
-                                'Rusak Berat' => 'bg-danger-subtle text-danger border border-danger-subtle',
+                            $val = strtoupper(trim((string)$row->{$key}));
+                            $badgeClass = match(true) {
+                                in_array($val, ['BAIK', 'B']) => 'bg-success-subtle text-success border border-success-subtle',
+                                in_array($val, ['RUSAK RINGAN', 'RR']) => 'bg-warning-subtle text-warning-emphasis border border-warning-subtle',
+                                in_array($val, ['RUSAK BERAT', 'RB']) => 'bg-danger-subtle text-danger border border-danger-subtle',
+                                in_array($val, ['HILANG', 'H']) => 'bg-dark-subtle text-dark border border-dark-subtle',
                                 default => 'bg-secondary-subtle text-secondary border border-secondary-subtle',
                             };
                         @endphp
@@ -105,9 +107,10 @@
                         </span>
                     @elseif($key === 'status')
                         @php
-                            $badgeClass = match($row->{$key}) {
-                                'Tersedia', 'Aktif' => 'bg-info-subtle text-info border border-info-subtle',
-                                'Digunakan', 'Dipinjam' => 'bg-primary-subtle text-primary border border-primary-subtle',
+                            $val = strtolower(trim((string)$row->{$key}));
+                            $badgeClass = match(true) {
+                                in_array($val, ['tersedia', 'aktif', 'available']) => 'bg-info-subtle text-info border border-info-subtle',
+                                in_array($val, ['digunakan', 'dipinjam', 'in_use', 'used']) => 'bg-primary-subtle text-primary border border-primary-subtle',
                                 default => 'bg-secondary-subtle text-secondary border border-secondary-subtle',
                             };
                         @endphp

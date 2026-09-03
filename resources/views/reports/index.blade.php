@@ -29,6 +29,7 @@
     <div class="row g-3 mb-4">
         <div class="col-sm-12 col-md-4">
             <x-stat-card 
+                id="stat-card-total"
                 title="Total Unit Kendaraan" 
                 :value="$summary['total_unit']" 
                 icon="car-front" 
@@ -38,6 +39,7 @@
         </div>
         <div class="col-sm-6 col-md-4">
             <x-stat-card 
+                id="stat-card-layak"
                 title="Layak Operasional" 
                 :value="$summary['layak_jalan']" 
                 icon="check-circle" 
@@ -47,6 +49,7 @@
         </div>
         <div class="col-sm-6 col-md-4">
             <x-stat-card 
+                id="stat-card-dokumen"
                 title="Masalah Dokumen" 
                 :value="$summary['surat_mati']" 
                 icon="exclamation-triangle" 
@@ -59,9 +62,14 @@
     <!-- AREA FORM FILTER MODULAR (NAVY, PUTIH, ABU-ABU) -->
     <div class="card report-filter-card mb-4">
         <div class="card-header bg-white border-bottom py-3">
-            <div class="d-flex align-items-center gap-2">
-                <i class="bi bi-funnel-fill text-navy fs-5"></i>
-                <h5 class="fw-bold text-navy mb-0">Saring Kriteria Laporan</h5>
+            <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+                <div class="d-flex align-items-center gap-2">
+                    <i class="bi bi-funnel-fill text-navy fs-5"></i>
+                    <h5 class="fw-bold text-navy mb-0">Saring Kriteria Laporan</h5>
+                </div>
+                <div class="badge bg-light text-navy border px-3 py-2 fw-semibold" id="active-source-badge">
+                    <i class="bi bi-database me-1 text-primary"></i> Sumber: Data Real (Operasional)
+                </div>
             </div>
         </div>
         <div class="card-body p-4 bg-white">
@@ -70,8 +78,19 @@
                 <input type="hidden" name="sort_order" id="sort_order" value="asc">
                 <div class="row g-3">
                     
-                    <!-- 1. Pilihan Jenis Laporan -->
-                    <div class="col-md-3">
+                    <!-- 1. Pilihan Sumber Data (Real vs e-BMD) -->
+                    <div class="col-md-6 col-lg-{{ $isOpd ? '3' : '2' }}">
+                        <label for="source" class="form-label fw-semibold text-secondary small">
+                            <i class="bi bi-database me-1 text-primary"></i>Sumber Data
+                        </label>
+                        <select name="source" id="source" class="form-select border-slate fw-medium" onchange="handleSourceChange()">
+                            <option value="real" selected>Data Real (Operasional)</option>
+                            <option value="ebmd">Data e-BMD</option>
+                        </select>
+                    </div>
+
+                    <!-- 2. Pilihan Jenis Laporan -->
+                    <div class="col-md-6 col-lg-{{ $isOpd ? '3' : '3' }}">
                         <label for="type" class="form-label fw-semibold text-secondary small">Jenis Laporan</label>
                         <select name="type" id="type" class="form-select border-slate" required onchange="handleTypeChange()">
                             @foreach($reportTypes as $value => $label)
@@ -80,8 +99,8 @@
                         </select>
                     </div>
 
-                    <!-- 2. Pilihan Kondisi Fisik -->
-                    <div class="col-md-3">
+                    <!-- 3. Pilihan Kondisi Fisik -->
+                    <div class="col-md-6 col-lg-{{ $isOpd ? '3' : '2' }}">
                         <label for="kondisi" class="form-label fw-semibold text-secondary small">Kondisi Fisik Aset</label>
                         <select name="kondisi" id="kondisi" class="form-select border-slate">
                             <option value="">-- Semua Kondisi --</option>
@@ -91,9 +110,9 @@
                         </select>
                     </div>
 
-                    <!-- 3. Pilihan OPD / Instansi (Hanya Admin/Superadmin) -->
+                    <!-- 4. Pilihan OPD / Instansi (Hanya Admin/Superadmin) -->
                     @if(!$isOpd)
-                        <div class="col-md-3" id="opd-filter-group">
+                        <div class="col-md-6 col-lg-3" id="opd-filter-group">
                             <label for="opd_id" class="form-label fw-semibold text-secondary small">Instansi Pengelola (OPD)</label>
                             <select name="opd_id" id="opd_id" class="form-select border-slate">
                                 <option value="">-- Semua Instansi (Global) --</option>
@@ -104,8 +123,8 @@
                         </div>
                     @endif
 
-                    <!-- 4. Pilihan Tahun Perolehan -->
-                    <div class="col-md-3">
+                    <!-- 5. Pilihan Tahun Perolehan -->
+                    <div class="col-md-6 col-lg-{{ $isOpd ? '3' : '2' }}">
                         <label for="tahun" class="form-label fw-semibold text-secondary small">Tahun Perolehan</label>
                         <select name="tahun" id="tahun" class="form-select border-slate">
                             <option value="">-- Semua Tahun --</option>
@@ -281,6 +300,53 @@
         fetchPreview();
     }
 
+    const summaries = {
+        real: @json($summary),
+        ebmd: @json($summaryEbmd)
+    };
+
+    /**
+     * Penanganan perubahan Sumber Data (Real vs e-BMD).
+     */
+    function handleSourceChange() {
+        const source = document.getElementById('source').value;
+        const currentSummary = summaries[source] || summaries.real;
+        const badge = document.getElementById('active-source-badge');
+
+        if (badge) {
+            if (source === 'ebmd') {
+                badge.className = 'badge bg-success-subtle text-success border border-success-subtle px-3 py-2 fw-semibold';
+                badge.innerHTML = '<i class="bi bi-file-earmark-spreadsheet me-1"></i> Sumber: Data e-BMD';
+            } else {
+                badge.className = 'badge bg-light text-navy border px-3 py-2 fw-semibold';
+                badge.innerHTML = '<i class="bi bi-database me-1 text-primary"></i> Sumber: Data Real (Operasional)';
+            }
+        }
+
+        // Perbarui kartu ringkasan secara instan di UI
+        const totalCard = document.getElementById('stat-card-total');
+        if (totalCard) {
+            const h2 = totalCard.querySelector('h2');
+            const sub = totalCard.querySelector('.text-white-50.small');
+            if (h2) h2.textContent = currentSummary.total_unit.toLocaleString('id-ID');
+            if (sub) sub.textContent = source === 'ebmd' ? 'Database Aset e-BMD' : 'Terdaftar di E-RANDIS';
+        }
+
+        const layakCard = document.getElementById('stat-card-layak');
+        if (layakCard) {
+            const h2 = layakCard.querySelector('h2');
+            if (h2) h2.textContent = currentSummary.layak_jalan.toLocaleString('id-ID');
+        }
+
+        const dokumenCard = document.getElementById('stat-card-dokumen');
+        if (dokumenCard) {
+            const h2 = dokumenCard.querySelector('h2');
+            if (h2) h2.textContent = currentSummary.surat_mati.toLocaleString('id-ID');
+        }
+
+        fetchPreview();
+    }
+
     /**
      * Penanganan reset form filter.
      */
@@ -289,59 +355,7 @@
         form.reset();
         document.getElementById('sort_by').value = '';
         document.getElementById('sort_order').value = 'asc';
-        fetchPreview();
-    }
-
-    /**
-     * Memperbarui parameter pengurutan tersembunyi dan memicu reload data.
-     *
-     * @param {string} fieldName Nama kolom untuk pengurutan
-     */
-    function sortByField(fieldName) {
-        const sortByInput = document.getElementById('sort_by');
-        const sortOrderInput = document.getElementById('sort_order');
-        
-        if (sortByInput.value === fieldName) {
-            sortOrderInput.value = sortOrderInput.value === 'asc' ? 'desc' : 'asc';
-        } else {
-            sortByInput.value = fieldName;
-            sortOrderInput.value = 'asc';
-        }
-        
-        fetchPreview();
-    }
-
-    /**
-     * Aksi pemicu Ekspor ke Excel (Dinas / Global terproteksi).
-     */
-    function exportExcel() {
-        const form = document.getElementById('filter-form');
-        const formData = new FormData(form);
-        const params = new URLSearchParams(formData).toString();
-        
-        window.location.href = "{{ route('reports.export') }}?" + params;
-    }
-
-    /**
-     * Aksi pemicu Ekspor PDF (Server-Side mPDF).
-     */
-    function exportPdf() {
-        const form = document.getElementById('filter-form');
-        const formData = new FormData(form);
-        const params = new URLSearchParams(formData).toString();
-        
-        window.open("{{ route('reports.pdf') }}?" + params, '_blank');
-    }
-
-    /**
-     * Aksi pemicu tab Cetak Laporan ramah tinta printer.
-     */
-    function printReport() {
-        const form = document.getElementById('filter-form');
-        const formData = new FormData(form);
-        const params = new URLSearchParams(formData).toString();
-        
-        window.open("{{ route('reports.print') }}?" + params, '_blank');
+        handleSourceChange();
     }
 
     /**

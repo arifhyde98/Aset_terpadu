@@ -248,8 +248,10 @@ abstract class DynamicReportExport implements WithHeadings, WithMapping, ShouldA
                 $sheet->getStyle("A5:{$highestColumn}5")->getBorders()->getBottom()->setBorderStyle(Border::BORDER_DOUBLE)->getColor()->setRGB('1E293B');
 
                 // 3. JUDUL LAPORAN (Row 6)
+                $source = $this->filters['source'] ?? 'real';
+                $sourceLabel = $source === 'ebmd' ? ' (E-BMD)' : ' (DATA RIIL)';
                 $sheet->mergeCells("A6:{$highestColumn}6");
-                $sheet->setCellValue('A6', strtoupper($this->reportTitle));
+                $sheet->setCellValue('A6', strtoupper($this->reportTitle) . $sourceLabel);
                 $sheet->getStyle('A6')->getFont()->setBold(true)->setSize(13)->setColor(new \PhpOffice\PhpSpreadsheet\Style\Color('0F172A'));
                 $sheet->getStyle('A6')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
                 $sheet->getStyle('A6')->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
@@ -263,9 +265,10 @@ abstract class DynamicReportExport implements WithHeadings, WithMapping, ShouldA
                 // 5. FILTER AKTIF (Row 9)
                 $sheet->mergeCells("A9:{$highestColumn}9");
 
+                $sourceName = $source === 'ebmd' ? 'Data e-BMD' : 'Data Real (Operasional)';
                 $cond = $this->filters['kondisi'] ?? 'Semua';
                 $yr = $this->filters['tahun'] ?? 'Semua';
-                $filterText = "FILTER AKTIF -> Kondisi: " . strtoupper($cond) . " | Tahun: " . $yr;
+                $filterText = "FILTER AKTIF -> Sumber: " . strtoupper($sourceName) . " | Kondisi: " . strtoupper($cond) . " | Tahun: " . $yr;
                 if (!empty($this->filters['opd_id'])) {
                     $selectedOpd = \App\Models\Opd::find($this->filters['opd_id']);
                     if ($selectedOpd) {

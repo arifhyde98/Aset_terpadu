@@ -4,6 +4,7 @@ namespace App\Reports\Strategies;
 
 use App\Reports\Contracts\ReportStrategy;
 use App\Models\Vehicle;
+use App\Models\EbmdVehicle;
 use Illuminate\Database\Eloquent\Builder;
 
 /**
@@ -16,12 +17,14 @@ class OpdAssetReport implements ReportStrategy
     /**
      * Membangun kueri basis data untuk Laporan Distribusi Aset per OPD.
      *
-     * @param array<string, mixed> $filters Kumpulan filter pencarian (kondisi, opd_id, tahun)
+     * @param array<string, mixed> $filters Kumpulan filter pencarian (kondisi, opd_id, tahun, source)
      * @return Builder Kueri Eloquent ter-eager load untuk mencegah N+1
      */
     public function query(array $filters): Builder
     {
-        $query = Vehicle::query()
+        $modelClass = ($filters['source'] ?? 'real') === 'ebmd' ? EbmdVehicle::class : Vehicle::class;
+
+        $query = $modelClass::query()
             ->with(['opdRelation', 'vehicleType'])
             ->select([
                 'id',

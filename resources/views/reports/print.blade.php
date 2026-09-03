@@ -340,7 +340,7 @@
     <!-- JUDUL DOKUMEN LAPORAN -->
     <div class="report-title">
         <h2>{{ $reportTitle }}</h2>
-        <div class="subtitle">Sistem Informasi Manajemen Kendaraan Dinas (E-RANDIS)</div>
+        <div class="subtitle">Sistem Informasi Manajemen Kendaraan Dinas (E-RANDIS){{ ($filters['source'] ?? 'real') === 'ebmd' ? ' - Database Aset e-BMD' : '' }}</div>
     </div>
 
     <!-- KALKULASI RINGKASAN METRIK SECARA DINAMIS -->
@@ -354,7 +354,7 @@
             $statValue = number_format($data->filter(fn($row) => !str_starts_with($row->duplicate_group_key ?? '', 'none_'))->count()) . ' Kendaraan';
         } else {
             $statLabel = 'Kondisi Baik';
-            $statValue = number_format($data->where('kondisi', 'baik')->count()) . ' Kendaraan';
+            $statValue = number_format($data->filter(fn($r) => in_array(strtoupper(trim((string)$r->kondisi)), ['BAIK', 'B']))->count()) . ' Kendaraan';
         }
     @endphp
 
@@ -393,6 +393,7 @@
     <!-- CHIP FILTER AKTIF ala SIPAT -->
     <div class="filter-box">
         <h4>Kriteria Penyaringan (Active Filters)</h4>
+        <span class="filter-chip"><i class="bi bi-database me-1"></i>Sumber Data: {{ ($filters['source'] ?? 'real') === 'ebmd' ? 'Data e-BMD' : 'Data Real (Operasional)' }}</span>
         <span class="filter-chip"><i class="bi bi-funnel-fill me-1"></i>Kondisi: {{ $filters['kondisi'] ?? 'Semua Kondisi' }}</span>
         <span class="filter-chip"><i class="bi bi-calendar-event me-1"></i>Tahun Pengadaan: {{ $filters['tahun'] ?? 'Semua Tahun' }}</span>
         <span class="filter-chip"><i class="bi bi-tag-fill me-1"></i>Tipe Laporan: {{ $reportTitle }}</span>

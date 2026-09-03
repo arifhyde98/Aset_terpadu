@@ -43,8 +43,11 @@ class ReportGenerationService
         // 1. Selesaikan strategi laporan via registry
         $strategy = $this->registry->resolve($type);
 
+        $source = $filters['source'] ?? 'real';
+        $prefix = $source === 'ebmd' ? 'laporan_ebmd_' : 'laporan_';
+
         // 2. Susun nama berkas unduhan yang bersih
-        $filename = 'laporan_' . $type . '_' . now()->format('Ymd_His') . '.xlsx';
+        $filename = $prefix . $type . '_' . now()->format('Ymd_His') . '.xlsx';
 
         // 3. Ambil judul laporan pendukung
         $reportTitle = $this->registry->getSupportedTypes()[$type] ?? 'Laporan Kendaraan';
@@ -191,7 +194,9 @@ class ReportGenerationService
 
         $mpdf->WriteHTML($html);
 
-        $filename = 'laporan_' . $type . '_' . now()->format('Ymd_His') . '.pdf';
+        $source = $filters['source'] ?? 'real';
+        $prefix = $source === 'ebmd' ? 'laporan_ebmd_' : 'laporan_';
+        $filename = $prefix . $type . '_' . now()->format('Ymd_His') . '.pdf';
 
         return response($mpdf->Output('', 'S'), 200, [
             'Content-Type' => 'application/pdf',
