@@ -39,6 +39,10 @@ Dokumen ini merupakan sumber kebenaran tunggal (*Single Source of Truth*) mengen
     *   Database: `onDelete('cascade')` pada relasi `opd_id` di tabel `users` (telah disinkronkan ke mesin database MariaDB/MySQL).
     *   Audit: `onDelete('set null')` pada `user_id` di tabel `activities` untuk menjaga riwayat log tetap utuh meski akun dihapus.
     *   Storage: Eloquent Observer pada model `User` (Event `deleting`) otomatis menghapus file fisik `avatar` saat akun dihapus.
+*   **Aturan Integritas Luas Tanah Bersertifikat (SIPAT & e-LABEL)**: Seluruh tanah bersertifikat di `aset_tanah` wajib sama persis dengan luas fisik pada sertifikat di `elabel_sertifikat_tanah`. Aturan ini dijamin dua arah secara otomatis oleh:
+    *   `AsetTanahObserver::saving()`: Mengunci dan memastikan nilai `luas` di `AsetTanah` selalu mengikuti luas sertifikat e-Label jika sertifikat resmi telah terbit.
+    *   `ElabelSertifikatObserver::saved()`: Otomatis menyinkronkan nilai `luas` pada `AsetTanah` jika data luas pada sertifikat e-Label ditambahkan atau diperbarui.
+    *   Artisan Audit Command: `php artisan sipat:sync-luas-sertifikat` untuk audit integritas dan verifikasi berkala.
 
 ---
 
@@ -80,8 +84,8 @@ Dokumen ini merupakan sumber kebenaran tunggal (*Single Source of Truth*) mengen
   - `opd_id` (FK ke `opd.id`)
   - `opd` (String fallback)
   - `dasar_perolehan`, `harga_perolehan`, `tanggal_perolehan`, `keterangan`
-*   **sipat_target_sertifikat**: Menyimpan penetapan kuota/target pensertifikatan tanah tahunan (`id`, `tahun`, `aset_tanah_id` [FK ke `sipat_aset_tanah.id`], `target_jumlah`, `keterangan`, `created_at`, `updated_at`). *(Relasi OPD diambil langsung dari `asetTanah->opdSipat` pasca-refaktorisasi).*
-*   **proses_aset**: Tahapan progres sertifikasi tanah (`id_proses`, `id_aset`, `status_proses_id`, `tanggal`, `keterangan`, `dokumen`).
+*   **sipat_target_sertifikat**: Menyimpan penetapan kuota/target pensertifikatan tanah tahunan (`id`, `tahun`, `aset_tanah_id` [FK ke `sipat_aset_tanah.id`], `target_jumlah`, `keterangan`, `created_at`, `updated_at`). *(Relasi OPD diambil langsung dari `asetTanah->opdSipat` pasca-refaktorisasi. Ditampilkan sebagai badge label khusus `Target [Tahun]` pada tabel daftar Aset Tanah, modal detail 5-tab, halaman edit, dan opsi filter cepat `kategori_status = target_sertifikat`).*
+*   **proses_aset**: Tahapan progres sertifikasi tanah (`id_proses`, `id_aset`, `status_proses_id`, `tanggal`, `keterangan`, `dokumen`). Status aktif diambil dari baris terbaru (`latestProses`).
 *   **surat_skpt**: Dokumen Surat Keterangan Pendaftaran Tanah (`id`, `aset_tanah_id`, `nomor_surat`, `tanggal_surat`, `pemohon_id`, `camat_id`, `kades_id`, `keterangan`).
 *   **opd_mappings**: Tabel jembatan pemetaan OPD (`id`, `sipat_opd_id`, `erandis_opd_id`, `status_verifikasi`).
 
@@ -211,6 +215,11 @@ Aplikasi **menggunakan sentuhan visual premium & animasi mikro kustom** secara b
 | **SIPAT** | GET | `/sipat/aset` | `Sipat\AsetTanahController@index` | Auth | Daftar Aset Tanah |
 | **SIPAT** | GET | `/sipat/tanah-tak-tercatat` | `Sipat\TanahTakTercatatController@index` | Auth | Tanah Belum / Tak Tercatat |
 | **SIPAT** | POST/PUT | `/sipat/tanah-tak-tercatat/*` | `Sipat\TanahTakTercatatController` | Auth | CRUD Tanah Belum Tercatat & NIBAR Draft |
+| **SIPAT** | GET | `/sipat/laporan` | `Sipat\LaporanController@index` | Auth | Laporan Rincian Aset KIB A |
+| **SIPAT** | GET | `/sipat/laporan/rekap-opd` | `Sipat\LaporanController@rekapOpd` | Auth | Rekapitulasi Pensertifikatan Aset Tanah per OPD (Web) |
+| **SIPAT** | GET | `/sipat/laporan/rekap-opd/export-xlsx` | `Sipat\LaporanController@exportRekapOpdXlsx` | Auth | Ekspor Excel Rekapitulasi per OPD (.xlsx) |
+| **SIPAT** | GET | `/sipat/laporan/rekap-opd/download-pdf` | `Sipat\LaporanController@downloadRekapOpdPdf` | Auth | Unduh PDF Resmi Rekapitulasi per OPD (mPDF A4-L) |
+| **SIPAT** | GET | `/sipat/laporan/rekap-opd/print` | `Sipat\LaporanController@printRekapOpd` | Auth | Cetak Dokumen Browser Rekapitulasi per OPD |
 | **SIPAT** | GET | `/sipat/target-pensertifikatan` | `Sipat\TargetSertifikatController@index` | Auth | Target Pensertifikatan & GIS Map |
 | **SIPAT** | POST/PUT/DEL | `/sipat/target-pensertifikatan/*` | `Sipat\TargetSertifikatController` | Auth | CRUD Target Pensertifikatan |
 | **SIPAT** | GET | `/sipat/surat/skpt` | `Sipat\SuratController@skpt` | Auth | Modul Pembuatan SKPT |

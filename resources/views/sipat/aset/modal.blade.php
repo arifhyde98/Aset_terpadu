@@ -65,13 +65,21 @@
 
 <div class="modal-header border-bottom px-4 py-3">
     <div>
-        <div class="d-flex align-items-center gap-2 mb-1">
+        <div class="d-flex align-items-center gap-2 mb-1 flex-wrap">
             <span class="badge bg-primary-subtle text-primary font-monospace px-2.5 py-1" style="font-size: 0.8rem;">
                 {{ $aset->kode_aset ?? '-' }}
             </span>
             <span class="badge bg-secondary-subtle text-body-secondary fw-normal px-2.5 py-1" style="font-size: 0.78rem;">
                 {{ $aset->opdSipat->nama ?? $aset->opd ?? '-' }}
             </span>
+            @if($aset->targetSertifikat && $aset->targetSertifikat->isNotEmpty())
+                @php
+                    $targetYears = $aset->targetSertifikat->pluck('tahun')->unique()->implode(', ');
+                @endphp
+                <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle px-2.5 py-1" style="font-size: 0.78rem;">
+                    <i class="bi bi-bullseye text-warning me-1"></i> Target Pensertifikatan ({{ $targetYears }})
+                </span>
+            @endif
         </div>
         <h4 class="modal-title fw-bold mb-0 text-body">{{ $aset->nama_aset }}</h4>
     </div>
@@ -114,6 +122,23 @@
         
         <!-- TAB 1: Informasi Utama -->
         <div class="tab-pane fade show active" id="tab-info" role="tabpanel">
+            @if($aset->targetSertifikat && $aset->targetSertifikat->isNotEmpty())
+                @php
+                    $targets = $aset->targetSertifikat;
+                    $targetYears = $targets->pluck('tahun')->unique()->implode(', ');
+                @endphp
+                <div class="alert alert-warning border-0 bg-warning bg-opacity-10 text-dark rounded-3 mb-3 d-flex align-items-center gap-3">
+                    <div class="p-2 bg-warning bg-opacity-25 rounded-circle text-warning-emphasis">
+                        <i class="bi bi-bullseye fs-4"></i>
+                    </div>
+                    <div>
+                        <div class="fw-bold">Aset Masuk Target Pensertifikatan</div>
+                        <div class="small text-secondary">
+                            Bidang tanah ini tercatat dalam target kuota pensertifikatan tanah Pemda pada <strong>Tahun {{ $targetYears }}</strong>.
+                        </div>
+                    </div>
+                </div>
+            @endif
             <div class="detail-card-surface p-4">
                 <div class="row g-2">
                     <div class="col-md-6 col-lg-4">

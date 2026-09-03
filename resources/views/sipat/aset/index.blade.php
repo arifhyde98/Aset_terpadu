@@ -143,6 +143,7 @@
                         <label class="form-label small fw-semibold text-secondary mb-1">Kategori Aset / Status</label>
                         <select name="kategori_status" class="form-select" onchange="document.getElementById('filterForm').submit()">
                             <option value="">-- Semua Kategori --</option>
+                            <option value="target_sertifikat" class="fw-bold text-primary" {{ request('kategori_status') === 'target_sertifikat' ? 'selected' : '' }}>🎯 Target Pensertifikatan</option>
                             <optgroup label="Status Sertifikasi BPN">
                                 <option value="sudah_bersertifikat" {{ request('kategori_status') === 'sudah_bersertifikat' ? 'selected' : '' }}>Sudah Bersertifikat</option>
                                 <option value="dalam_proses" {{ request('kategori_status') === 'dalam_proses' ? 'selected' : '' }}>Dalam Proses BPN</option>
@@ -305,6 +306,16 @@
                                     <span class="d-inline-block rounded-circle me-1" style="width: 6px; height: 6px; background-color: currentColor;"></span>
                                     {{ $statusName }}
                                 </span>
+                                @if($item->targetSertifikat && $item->targetSertifikat->isNotEmpty())
+                                    @php
+                                        $targetYears = $item->targetSertifikat->pluck('tahun')->unique()->implode(', ');
+                                    @endphp
+                                    <div class="mt-1">
+                                        <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle px-1.5 py-0.5" style="font-size: 0.67rem;" data-bs-toggle="tooltip" title="Aset masuk target pensertifikatan tahun {{ $targetYears }}">
+                                            <i class="bi bi-bullseye text-warning me-1"></i>Target {{ $targetYears }}
+                                        </span>
+                                    </div>
+                                @endif
                             </td>
                             <td class="text-center pe-3">
                                 <div class="btn-group btn-group-sm">

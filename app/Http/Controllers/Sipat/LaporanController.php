@@ -153,4 +153,96 @@ class LaporanController extends Controller implements HasMiddleware
             ->header('Content-Type', 'application/pdf')
             ->header('Content-Disposition', 'inline; filename="' . $filename . '"');
     }
+
+    /**
+     * Menampilkan halaman rekapitulasi pensertifikatan aset tanah per OPD.
+     */
+    public function rekapOpd(Request $request)
+    {
+        $filters = ['q' => trim((string) $request->input('q', ''))];
+        $rekapData = $this->laporanService->getRekapPerOpd($filters);
+        $kop = $this->laporanService->getKopSettings();
+        $title = 'LAPORAN REKAPITULASI PENSERTIFIKATAN ASET TANAH PER OPD';
+
+        return view('sipat.laporan.rekap_opd', compact('rekapData', 'filters', 'kop', 'title'));
+    }
+
+    /**
+     * Mengunduh rekapitulasi per OPD dalam format Excel (.xlsx).
+     */
+    public function exportRekapOpdXlsx(Request $request)
+    {
+        $filters = ['q' => trim((string) $request->input('q', ''))];
+        $rekapData = $this->laporanService->getRekapPerOpd($filters);
+        $kop = $this->laporanService->getKopSettings();
+        $title = 'LAPORAN REKAPITULASI PENSERTIFIKATAN ASET TANAH PER ORGANISASI PERANGKAT DAERAH (OPD)';
+
+        return $this->laporanService->exportRekapOpdExcel($rekapData, $kop, $title);
+    }
+
+    /**
+     * Mengunduh berkas PDF resmi mPDF rekapitulasi per OPD.
+     */
+    public function downloadRekapOpdPdf(Request $request)
+    {
+        ini_set('memory_limit', '512M');
+        ini_set('max_execution_time', '300');
+
+        $filters = ['q' => trim((string) $request->input('q', ''))];
+        $rekapData = $this->laporanService->getRekapPerOpd($filters);
+        $kop = $this->laporanService->getKopSettings();
+        $title = 'LAPORAN REKAPITULASI PENSERTIFIKATAN ASET TANAH PER ORGANISASI PERANGKAT DAERAH (OPD)';
+
+        $pdfView = view('sipat.laporan.rekap_opd_pdf', compact('rekapData', 'filters', 'kop', 'title'))->render();
+
+        if (!class_exists(\Mpdf\Mpdf::class)) {
+            return response($pdfView)
+                ->header('Content-Type', 'text/html')
+                ->header('Content-Disposition', 'attachment; filename="Rekap_Aset_Tanah_OPD_' . date('Ymd_His') . '.html"');
+        }
+
+        $pdfTempDir = storage_path('framework/cache/mpdf');
+        if (!is_dir($pdfTempDir)) {
+            @mkdir($pdfTempDir, 0775, true);
+        }
+
+        $mpdf = new \Mpdf\Mpdf([
+            'mode' => 'utf-8',
+            'format' => 'A4-L',
+            'margin_top' => 10,
+            'margin_bottom' => 24,
+            'margin_left' => 10,
+            'margin_right' => 10,
+            'tempDir' => $pdfTempDir,
+        ]);
+
+        $mpdf->SetTitle($title);
+        $mpdf->SetHTMLFooter('<div style="font-size:9pt;color:#64748b;border-top:1px solid #dbe3ef;padding-top:6px;text-align:center;">Halaman {PAGENO} dari {nbpg} | ' . htmlspecialchars((string) ($kop['kop_footer'] ?? ''), ENT_QUOTES, 'UTF-8') . '</div>');
+        $mpdf->WriteHTML($pdfView);
+
+        $filename = 'Rekapitulasi_Aset_Tanah_Per_OPD_' . date('Ymd_His') . '.pdf';
+
+        return response($mpdf->Output($filename, 'S'))
+            ->header('Content-Type', 'application/pdf')
+            ->header('Content-Disposition', 'attachment; filename="' . $filename . '"');
+    }
+
+    /**
+     * Membuka pratinjau cetak printer browser (Ctrl+P) untuk rekapitulasi per OPD.
+     */
+    public function printRekapOpd(Request $request)
+    {
+        $filters = ['q' => trim((string) $request->input('q', ''))];
+        $rekapData = $this->laporanService->getRekapPerOpd($filters);
+        $kop = $this->laporanService->getKopSettings();
+        $title = 'LAPORAN REKAPITULASI PENSERTIFIKATAN ASET TANAH PER ORGANISASI PERANGKAT DAERAH (OPD)';
+
+        return view('sipat.laporan.rekap_opd_pdf', [
+            'rekapData'   => $rekapData,
+            'filters'     => $filters,
+            'kop'         => $kop,
+            'title'       => $title,
+            'isPrintView' => true,
+        ]);
+    }
 }

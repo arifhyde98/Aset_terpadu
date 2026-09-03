@@ -215,6 +215,7 @@ class AsetTanahController extends Controller implements HasMiddleware
      */
     public function edit(AsetTanah $aset): View
     {
+        $aset->load(['targetSertifikat', 'sertifikatElabel']);
         $opdList = OpdSipat::where('aktif', 1)->orderBy('nama', 'asc')->get();
         $statusList = StatusProses::orderBy('urutan', 'asc')->get();
         $kecamatanList = \App\Models\Kecamatan::orderBy('nama', 'asc')->get();

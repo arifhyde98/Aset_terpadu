@@ -34,5 +34,8 @@ class AppServiceProvider extends ServiceProvider
         // SIPAT Observers (Global Cache Invalidation)
         \App\Models\AsetTanah::observe(\App\Observers\AsetTanahObserver::class);
         \App\Models\ProsesAset::observe(\App\Observers\ProsesAsetObserver::class);
+
+        // eLABEL Observers (Sinkronisasi Luas Tanah Bersertifikat)
+        \App\Models\Elabel\ElabelSertifikat::observe(\App\Observers\ElabelSertifikatObserver::class);
     }
 }

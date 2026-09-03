@@ -29,7 +29,7 @@ class AsetTanahService
      */
     public function getPaginatedAset(array $filters): array
     {
-        $query = AsetTanah::with(['latestProses.statusProses', 'opdSipat', 'wilayahKecamatan', 'wilayahDesa']);
+        $query = AsetTanah::with(['latestProses.statusProses', 'targetSertifikat', 'opdSipat', 'wilayahKecamatan', 'wilayahDesa']);
 
         if (!empty($filters['search'])) {
             $search = $filters['search'];
@@ -88,7 +88,9 @@ class AsetTanahService
 
         if (!empty($filters['kategori_status'])) {
             $kat = $filters['kategori_status'];
-            if ($kat === 'sudah_bersertifikat') {
+            if ($kat === 'target_sertifikat') {
+                $query->whereHas('targetSertifikat');
+            } elseif ($kat === 'sudah_bersertifikat') {
                 $query->whereHas('latestProses.statusProses', function($sq) {
                     $sq->where('kategori', 'LIKE', '%bersertifikat%');
                 });
@@ -195,7 +197,7 @@ class AsetTanahService
      */
     public function getAsetDetailsForModal(int $id): array
     {
-        $aset = AsetTanah::with(['prosesAset.statusProses', 'latestProses.statusProses', 'opdSipat'])->findOrFail($id);
+        $aset = AsetTanah::with(['prosesAset.statusProses', 'latestProses.statusProses', 'targetSertifikat', 'opdSipat'])->findOrFail($id);
         
         $prosesList = ProsesAset::with('statusProses')
             ->where('id_aset', $id)

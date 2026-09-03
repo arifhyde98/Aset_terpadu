@@ -70,4 +70,24 @@ class AsetTanah extends Model
     {
         return $this->hasMany(SipatTargetSertifikat::class, 'aset_tanah_id', 'id_aset');
     }
+
+    public function latestTarget()
+    {
+        return $this->hasOne(SipatTargetSertifikat::class, 'aset_tanah_id', 'id_aset')->latestOfMany('id');
+    }
+
+    public function isTarget(): bool
+    {
+        return $this->relationLoaded('targetSertifikat') 
+            ? $this->targetSertifikat->isNotEmpty() 
+            : $this->targetSertifikat()->exists();
+    }
+
+    /**
+     * Relasi ke sertifikat fisik di modul e-Label (berdasarkan NIBAR / kode_aset).
+     */
+    public function sertifikatElabel(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(\App\Models\Elabel\ElabelSertifikat::class, 'nibar', 'kode_aset');
+    }
 }

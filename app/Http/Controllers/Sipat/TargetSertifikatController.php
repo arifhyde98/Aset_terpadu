@@ -234,6 +234,8 @@ class TargetSertifikatController extends Controller implements HasMiddleware
             Activity::logSipat("Menetapkan {$insertedCount} bidang tanah sebagai target pensertifikatan tahun {$tahun}", 'success');
         }
 
+        app(\App\Services\SipatService::class)->invalidateDashboardCache();
+
         return redirect()->route('sipat.target-pensertifikatan.index', ['tahun' => $tahun])
             ->with('success', "Berhasil menambahkan {$insertedCount} bidang tanah ke dalam Target Pensertifikatan Tahun {$tahun}.");
     }
@@ -274,6 +276,8 @@ class TargetSertifikatController extends Controller implements HasMiddleware
             Activity::logSipat($pesanLog, 'info');
         }
 
+        app(\App\Services\SipatService::class)->invalidateDashboardCache();
+
         return redirect()->route('sipat.target-pensertifikatan.index', ['tahun' => $tahunBaru])
             ->with('success', "Target pensertifikatan untuk aset '{$namaAset}' berhasil diperbarui.");
     }
@@ -290,6 +294,8 @@ class TargetSertifikatController extends Controller implements HasMiddleware
         if (class_exists(Activity::class)) {
             Activity::logSipat("Menghapus aset '{$namaAset}' dari target pensertifikatan tahun {$tahun}", 'warning');
         }
+
+        app(\App\Services\SipatService::class)->invalidateDashboardCache();
 
         return redirect()->route('sipat.target-pensertifikatan.index', ['tahun' => $tahun])
             ->with('success', "Aset tanah '{$namaAset}' berhasil dihapus dari daftar target tahun {$tahun}.");

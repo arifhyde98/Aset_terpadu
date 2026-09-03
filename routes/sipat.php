@@ -51,6 +51,12 @@ Route::prefix('sipat')->name('sipat.')->group(function () {
         Route::get('/export/xlsx', [\App\Http\Controllers\Sipat\LaporanController::class, 'exportXlsx'])->name('exportXlsx');
         Route::get('/preview-pdf', [\App\Http\Controllers\Sipat\LaporanController::class, 'previewPdf'])->name('previewPdf');
         Route::get('/download-pdf', [\App\Http\Controllers\Sipat\LaporanController::class, 'downloadPdf'])->name('downloadPdf');
+
+        // Rekapitulasi per OPD
+        Route::get('/rekap-opd', [\App\Http\Controllers\Sipat\LaporanController::class, 'rekapOpd'])->name('rekapOpd');
+        Route::get('/rekap-opd/export-xlsx', [\App\Http\Controllers\Sipat\LaporanController::class, 'exportRekapOpdXlsx'])->name('rekapOpd.exportXlsx');
+        Route::get('/rekap-opd/download-pdf', [\App\Http\Controllers\Sipat\LaporanController::class, 'downloadRekapOpdPdf'])->name('rekapOpd.downloadPdf');
+        Route::get('/rekap-opd/print', [\App\Http\Controllers\Sipat\LaporanController::class, 'printRekapOpd'])->name('rekapOpd.print');
     });
 
     // Rekonsiliasi & Peta

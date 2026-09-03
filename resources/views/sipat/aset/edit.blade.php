@@ -25,6 +25,18 @@
 
     <div class="card clean-card border-0 shadow-sm rounded-4">
         <div class="card-body p-4">
+            @if($aset->targetSertifikat && $aset->targetSertifikat->isNotEmpty())
+                @php
+                    $targetYears = $aset->targetSertifikat->pluck('tahun')->unique()->implode(', ');
+                @endphp
+                <div class="alert alert-warning border-0 bg-warning bg-opacity-10 text-dark rounded-3 d-flex align-items-center gap-2 mb-4">
+                    <i class="bi bi-bullseye fs-4 text-warning"></i>
+                    <div>
+                        <div class="fw-bold">Aset Masuk Target Pensertifikatan (Tahun {{ $targetYears }})</div>
+                        <div class="small text-secondary">Bidang tanah ini tercatat dalam kuota target pensertifikatan tanah Pemkab Donggala.</div>
+                    </div>
+                </div>
+            @endif
             <form action="{{ route('sipat.aset.update', $aset->id_aset) }}" method="POST">
                 @csrf
                 @method('PUT')
@@ -56,7 +68,19 @@
 
                     <div class="col-md-4">
                         <label class="form-label small fw-semibold">Luas Tanah (m²)</label>
-                        <input type="number" step="0.01" name="luas" class="form-control" value="{{ old('luas', $aset->luas) }}">
+                        @if($aset->sertifikatElabel && $aset->sertifikatElabel->luas > 0)
+                            <div class="input-group">
+                                <input type="number" step="0.01" name="luas" class="form-control bg-light" value="{{ old('luas', $aset->sertifikatElabel->luas) }}" readonly>
+                                <span class="input-group-text bg-success-subtle text-success border-success-subtle" title="Terkunci mengikuti Sertifikat Resmi e-Label">
+                                    <i class="bi bi-patch-check-fill me-1"></i> Bersertifikat
+                                </span>
+                            </div>
+                            <small class="text-success d-block mt-1" style="font-size: 0.75rem;">
+                                <i class="bi bi-info-circle me-1"></i> Luas terkunci otomatis sesuai Sertifikat Resmi BPN No. <strong>{{ $aset->sertifikatElabel->no_sertipikat }}</strong> ({{ number_format($aset->sertifikatElabel->luas, 2, ',', '.') }} m²).
+                            </small>
+                        @else
+                            <input type="number" step="0.01" name="luas" class="form-control" value="{{ old('luas', $aset->luas) }}">
+                        @endif
                     </div>
 
                     <div class="col-md-4">

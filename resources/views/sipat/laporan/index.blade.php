@@ -83,11 +83,29 @@
         font-size: 1.4rem;
         flex-shrink: 0;
     }
+    .report-tabs .nav-link {
+        font-size: 0.92rem;
+        font-weight: 600;
+        border: none;
+        border-bottom: 3px solid transparent;
+        padding: 0.75rem 1.25rem;
+        color: var(--bs-secondary-color, #64748b);
+        background: transparent;
+        transition: all 0.2s ease;
+    }
+    .report-tabs .nav-link:hover {
+        color: #1e40af;
+    }
+    .report-tabs .nav-link.active {
+        color: #1e40af;
+        border-bottom-color: #1e40af;
+        background: transparent;
+    }
 </style>
 
 <div class="container-fluid px-0">
     <!-- Page Header -->
-    <div class="d-flex justify-content-between align-items-start mb-4 flex-wrap gap-3">
+    <div class="d-flex justify-content-between align-items-start mb-3 flex-wrap gap-3">
         <div>
             <div class="d-flex align-items-center gap-2 mb-1">
                 <span class="badge bg-primary-subtle text-primary fw-semibold px-2.5 py-1 rounded-pill" style="font-size: 0.75rem;">
@@ -102,6 +120,22 @@
         <a href="{{ route('sipat.aset.index') }}" class="btn btn-outline-secondary rounded-pill px-4">
             <i class="bi bi-arrow-left me-1"></i> Data Aset Tanah
         </a>
+    </div>
+
+    <!-- Navigasi Tab Laporan -->
+    <div class="border-bottom mb-4">
+        <ul class="nav nav-tabs report-tabs border-bottom-0">
+            <li class="nav-item">
+                <a class="nav-link" href="{{ route('sipat.laporan.rekapOpd') }}">
+                    <i class="bi bi-building me-1.5"></i>Rekapitulasi per OPD
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link active" href="{{ route('sipat.laporan.index') }}">
+                    <i class="bi bi-list-columns-reverse me-1.5"></i>Rincian Daftar Aset KIB A
+                </a>
+            </li>
+        </ul>
     </div>
 
     <div class="report-shell">
