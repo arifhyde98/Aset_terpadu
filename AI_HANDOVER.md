@@ -40,6 +40,10 @@ Dokumen ini merupakan sumber kebenaran tunggal (*Single Source of Truth*) mengen
     *   **Sanitasi Data Akun**: `UserObserver` secara ketat membersihkan atribut sensitif (`password`, `plain_password`, `remember_token`) agar tidak bocor ke log aktivitas.
     *   **Helper SIPAT**: Method `Activity::logSipat()` mendukung parameter `$oldData` dan `$newData` yang dimanfaatkan oleh `AsetTanahService` pada operasi pembuatan, pembaruan, penghapusan aset, serta pencatatan proses BPN dan dokumen lampiran.
     *   **Keamanan Render JSON Blade**: Atribut pada tombol detail `activities/index.blade.php` di-escape menggunakan `{{ json_encode(...) }}` dengan HTML entity decoding otomatis oleh peramban untuk mencegah kerusakan DOM akibat karakter petik.
+    *   **UI/UX Tabel Ramping & Modal Diff**: 
+        *   Tabel menggabungkan kolom Modul & Aksi dengan indikator dot warna, kolom pengguna & waktu dua baris yang proporsional, serta indikator micro-badge payload (`Perubahan Data`, `Data Baru`, `Data Dihapus`) di bawah deskripsi.
+        *   Toolbar atas terintegrasi dengan filter tab modul berkounter dinamis dan pencarian teks cepat (`search`).
+        *   Modal detail menyediakan fitur *Dual-Mode*: **Tabel Perbandingan Kolom** (membandingkan nilai sebelum vs sesudah kolom per kolom dengan penanda warna diff) dan **JSON Mentah** dengan tombol salin cepat. Baris tabel mendukung klik langsung (*row clickable*).
 *   **Mekanisme Caching**: Statistik dashboard menggunakan *cache key* dinamis: `dashboard.stats.[role].[opd_id]`, sedangkan ringkasan Modul Laporan menggunakan `reports.summary.{role}.{scope}`. Seluruh aksi CRUD pada kendaraan dan OPD menggunakan helper terpusat `invalidateDashboardStats()` di `VehicleService` untuk melakukan *targeted invalidation* (bukan `Cache::flush()` global), sekaligus menyelaraskan pembersihan cache summary laporan agar cache pengaturan sistem (`setting.{key}`) tetap terjaga dan performa lebih optimal.
 *   **Integritas Data (Hardened)**: 
     *   Database: `onDelete('cascade')` pada relasi `opd_id` di tabel `users` (telah disinkronkan ke mesin database MariaDB/MySQL).
@@ -49,6 +53,11 @@ Dokumen ini merupakan sumber kebenaran tunggal (*Single Source of Truth*) mengen
     *   `AsetTanahObserver::saving()`: Mengunci dan memastikan nilai `luas` di `AsetTanah` selalu mengikuti luas sertifikat e-Label jika sertifikat resmi telah terbit.
     *   `ElabelSertifikatObserver::saved()`: Otomatis menyinkronkan nilai `luas` pada `AsetTanah` jika data luas pada sertifikat e-Label ditambahkan atau diperbarui.
     *   Artisan Audit Command: `php artisan sipat:sync-luas-sertifikat` untuk audit integritas dan verifikasi berkala.
+*   **Pengisian Otomatis Lokasi Kecamatan Aset Tanah (`PopulateAsetTanahKecamatanCommand`)**:
+    *   Artisan Command: `php artisan sipat:populate-kecamatan {--dry-run} {--sync-legacy}`.
+    *   Mendeteksi string kecamatan pada field `peruntukan` dan `nama_aset` untuk aset tanah yang belum terisi `kecamatan_id` (null atau 0), serta menyelaraskan data lama yang salah pasang via opsi `--sync-legacy`.
+    *   Menerapkan aturan prioritas nama majemuk (*longest string first*) seperti `Banawa Selatan` / `Banawa Tengah` sebelum `Banawa`, `Sindue Tobata` / `Sindue Tombusabora` sebelum `Sindue`, `Balaesang Tanjung` sebelum `Balaesang`, serta penanganan variasi spasi (`Rio Pakava` vs `Riopakava`) dan negative lookahead pada `Labuan` (mengecualikan kelurahan `Labuan Bajo`).
+    *   Otomatis memicu `invalidateDashboardCache()` pada `SipatService` agar statistik sebaran wilayah dashboard langsung terbarukan.
 *   **Optimasi Ekspor Laporan E-RANDIS (Data Guard, Chunking & Kolom Jenis)**:
     *   Fungsi JS trigger ekspor: `exportExcel()`, `exportPdf()`, dan `printReport()` aktif pada `reports.index`.
     *   Batas data guard PDF dinaikkan ke 3.500 baris untuk mengakomodasi seluruh dataset e-BMD (2.041 unit) dan Data Real (1.038 unit).

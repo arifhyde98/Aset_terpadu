@@ -104,8 +104,26 @@ class ActivityController extends Controller implements HasMiddleware
                 });
         }
 
-        $allLogs = $systemLogs->concat($elabelLogs)->concat($sipatAuditLogs)
+        $rawAllLogs = $systemLogs->concat($elabelLogs)->concat($sipatAuditLogs);
+        $search = trim((string) $request->get('search', ''));
+
+        $counts = [
+            'all' => $rawAllLogs->count(),
+            'erandis' => $rawAllLogs->where('module_key', 'erandis')->count(),
+            'sipat' => $rawAllLogs->where('module_key', 'sipat')->count(),
+            'elabel' => $rawAllLogs->where('module_key', 'elabel')->count(),
+        ];
+
+        $allLogs = $rawAllLogs
             ->when($selectedModule !== 'all', fn ($logs) => $logs->where('module_key', $selectedModule))
+            ->when($search !== '', function ($logs) use ($search) {
+                $term = strtolower($search);
+                return $logs->filter(function ($log) use ($term) {
+                    return str_contains(strtolower((string) $log->description), $term)
+                        || str_contains(strtolower((string) ($log->user->name ?? '')), $term)
+                        || str_contains(strtolower((string) ($log->user->email ?? '')), $term);
+                });
+            })
             ->sortByDesc('created_at')
             ->values();
 
@@ -124,7 +142,7 @@ class ActivityController extends Controller implements HasMiddleware
             'elabel' => 'eLABEL',
         ];
 
-        return view('activities.index', compact('activities', 'modules', 'selectedModule'));
+        return view('activities.index', compact('activities', 'modules', 'selectedModule', 'counts', 'search'));
     }
 
     /**
