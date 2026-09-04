@@ -66,6 +66,17 @@
     .opd-legend-item:hover {
         background-color: var(--bs-tertiary-bg, rgba(0, 0, 0, 0.03));
     }
+    .opd-card-item {
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .opd-card-item:hover {
+        background-color: var(--bs-body-bg, #ffffff) !important;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+        transform: translateY(-1px);
+    }
+    .hover-text-primary:hover {
+        color: #1e40af !important;
+    }
     .activity-timeline-item {
         position: relative;
         padding-left: 0.5rem;
@@ -290,39 +301,112 @@
         <div class="col-12 col-xl-5">
             <div class="card sipat-stat-card h-100 p-4 d-flex flex-column justify-content-between">
                 <div>
-                    <div class="d-flex align-items-center justify-content-between mb-3">
+                    <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
                         <div>
                             <h6 class="fw-bold mb-0 text-body">Distribusi Aset per OPD</h6>
-                            <small class="text-secondary">5 OPD dengan bidang tanah terbanyak</small>
+                            <small class="text-secondary">5 OPD dengan bidang tanah terbanyak & progres sertifikasi</small>
                         </div>
+                        <a href="{{ route('sipat.laporan.rekapOpd') }}" class="btn btn-xs btn-outline-primary rounded-pill px-2.5 py-1 text-decoration-none fw-medium" title="Lihat rekapitulasi data seluruh OPD">
+                            <i class="bi bi-list-columns-reverse me-1"></i> Rekap Semua OPD
+                        </a>
                     </div>
 
-                    <div class="row align-items-center g-3 my-2">
-                        <div class="col-12 col-sm-5">
-                            <div style="height: 180px; position: relative;">
+                    <div class="row align-items-center g-3 my-1">
+                        <div class="col-12 col-md-5 col-lg-5">
+                            <div style="height: 190px; position: relative;" class="d-flex align-items-center justify-content-center">
                                 <canvas id="sipatOpdChart"></canvas>
+                                <div class="position-absolute top-50 start-50 translate-middle text-center" style="pointer-events: none;">
+                                    <div class="fw-bold text-navy fs-5 font-monospace lh-1">{{ number_format($totalAset, 0, ',', '.') }}</div>
+                                    <div class="text-secondary small" style="font-size: 0.65rem;">Total Bidang</div>
+                                </div>
+                            </div>
+                            <div class="text-center mt-2">
+                                <span class="badge bg-light text-secondary border px-2 py-1 small" style="font-size: 0.72rem;">
+                                    <i class="bi bi-pie-chart-fill text-primary me-1"></i> Top 5: <strong>{{ number_format(is_array($opdStats) && isset(reset($opdStats)['total']) ? array_sum(array_column($opdStats, 'total')) : array_sum((array)$opdStats), 0, ',', '.') }}</strong> Bidang
+                                </span>
                             </div>
                         </div>
-                        <div class="col-12 col-sm-7">
-                            <div class="d-flex flex-column gap-1">
+
+                        <div class="col-12 col-md-7 col-lg-7">
+                            <div class="d-flex flex-column gap-2">
                                 @php
                                     $colors = ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ef4444'];
                                     $i = 0;
-                                    $opdTotalSum = array_sum($opdStats);
                                 @endphp
-                                @foreach($opdStats as $opdName => $count)
+                                @foreach($opdStats as $key => $opd)
                                     @php
-                                        $pctOpd = $opdTotalSum > 0 ? round(($count / $opdTotalSum) * 100, 1) : 0;
+                                        $color = $colors[$i % count($colors)];
+                                        $opdName = is_array($opd) ? ($opd['nama'] ?? $key) : $key;
+                                        $totalCount = is_array($opd) ? ($opd['total'] ?? 0) : $opd;
+                                        $bersertifikatCount = is_array($opd) ? ($opd['bersertifikat'] ?? 0) : 0;
+                                        $prosesCount = is_array($opd) ? ($opd['proses'] ?? 0) : 0;
+                                        $belumCount = is_array($opd) ? ($opd['belum_diproses'] ?? 0) : 0;
+                                        $pctTotal = is_array($opd) ? ($opd['pct_of_total'] ?? 0) : ($totalAset > 0 ? round(($totalCount / $totalAset) * 100, 1) : 0);
+                                        $pctSertif = is_array($opd) ? ($opd['pct_bersertifikat'] ?? 0) : ($totalCount > 0 ? round(($bersertifikatCount / $totalCount) * 100, 1) : 0);
+                                        $pctProses = is_array($opd) ? ($opd['pct_proses'] ?? 0) : ($totalCount > 0 ? round(($prosesCount / $totalCount) * 100, 1) : 0);
+                                        $pctBelum = is_array($opd) ? ($opd['pct_belum_diproses'] ?? 0) : ($totalCount > 0 ? round(($belumCount / $totalCount) * 100, 1) : 0);
+                                        $opdId = is_array($opd) ? ($opd['opd_id'] ?? null) : null;
+
+                                        $linkOpd = !empty($opdId)
+                                            ? route('sipat.aset.index', ['opd_id' => $opdId])
+                                            : route('sipat.aset.index', ['opd' => $opdName]);
+                                        $linkBersertifikat = !empty($opdId)
+                                            ? route('sipat.aset.index', ['opd_id' => $opdId, 'kategori_status' => 'sudah_bersertifikat'])
+                                            : route('sipat.aset.index', ['opd' => $opdName, 'kategori_status' => 'sudah_bersertifikat']);
+                                        $linkProses = !empty($opdId)
+                                            ? route('sipat.aset.index', ['opd_id' => $opdId, 'kategori_status' => 'dalam_proses'])
+                                            : route('sipat.aset.index', ['opd' => $opdName, 'kategori_status' => 'dalam_proses']);
+                                        $linkBelum = !empty($opdId)
+                                            ? route('sipat.aset.index', ['opd_id' => $opdId, 'kategori_status' => 'belum_diproses'])
+                                            : route('sipat.aset.index', ['opd' => $opdName, 'kategori_status' => 'belum_diproses']);
                                     @endphp
-                                    <div class="opd-legend-item d-flex align-items-center justify-content-between">
-                                        <div class="d-flex align-items-center gap-2 min-width-0 me-2">
-                                            <span class="d-inline-block rounded-circle flex-shrink-0" style="width: 8px; height: 8px; background-color: {{ $colors[$i % count($colors)] }};"></span>
-                                            <span class="text-body fw-medium text-truncate" title="{{ $opdName }}">{{ $opdName }}</span>
+                                    <div class="opd-card-item p-2 rounded-3 border bg-body-tertiary">
+                                        <!-- Header OPD: Titik Warna, Nama OPD & Total Bidang -->
+                                        <div class="d-flex align-items-center justify-content-between mb-1.5">
+                                            <div class="d-flex align-items-center gap-2 min-width-0 me-2">
+                                                <span class="d-inline-block rounded-circle flex-shrink-0" style="width: 10px; height: 10px; background-color: {{ $color }};"></span>
+                                                <a href="{{ $linkOpd }}" class="text-body fw-bold text-truncate text-decoration-none small hover-text-primary" title="Filter seluruh aset: {{ $opdName }}">
+                                                    {{ $opdName }}
+                                                </a>
+                                            </div>
+                                            <div class="text-end flex-shrink-0 font-monospace">
+                                                <span class="fw-bold text-navy small">{{ number_format($totalCount, 0, ',', '.') }}</span>
+                                                <span class="text-secondary opacity-75" style="font-size: 0.72rem;">({{ $pctTotal }}%)</span>
+                                            </div>
                                         </div>
-                                        <span class="fw-semibold text-secondary small flex-shrink-0 font-monospace">{{ number_format($count) }} <span class="opacity-75" style="font-size: 0.72rem;">({{ $pctOpd }}%)</span></span>
+
+                                        <!-- Multi-Segment Progress Bar -->
+                                        <div class="progress mb-1.5" style="height: 5px; border-radius: 4px; background-color: rgba(148, 163, 184, 0.2);">
+                                            <div class="progress-bar bg-success" style="width: {{ $pctSertif }}%;" title="Bersertifikat: {{ $bersertifikatCount }} bidang ({{ $pctSertif }}%)"></div>
+                                            <div class="progress-bar bg-warning" style="width: {{ $pctProses }}%;" title="Proses: {{ $prosesCount }} bidang ({{ $pctProses }}%)"></div>
+                                            <div class="progress-bar bg-secondary" style="width: {{ $pctBelum }}%;" title="Belum Diproses: {{ $belumCount }} bidang ({{ $pctBelum }}%)"></div>
+                                        </div>
+
+                                        <!-- Rincian Status Pensertifikatan: Bersertifikat, Proses, Belum Diproses -->
+                                        <div class="d-flex align-items-center justify-content-between gap-1 flex-wrap" style="font-size: 0.72rem;">
+                                            <a href="{{ $linkBersertifikat }}" class="badge bg-success-subtle text-success border border-success-subtle text-decoration-none px-1.5 py-0.5 rounded-pill font-monospace" title="{{ $bersertifikatCount }} Bidang Sudah Bersertifikat">
+                                                <i class="bi bi-check-circle-fill me-0.5"></i> {{ number_format($bersertifikatCount, 0, ',', '.') }} Bersertifikat
+                                            </a>
+                                            <a href="{{ $linkProses }}" class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle text-decoration-none px-1.5 py-0.5 rounded-pill font-monospace" title="{{ $prosesCount }} Bidang Dalam Proses BPN">
+                                                <i class="bi bi-hourglass-split me-0.5"></i> {{ number_format($prosesCount, 0, ',', '.') }} Proses
+                                            </a>
+                                            <a href="{{ $linkBelum }}" class="badge bg-secondary-subtle text-secondary border border-secondary-subtle text-decoration-none px-1.5 py-0.5 rounded-pill font-monospace" title="{{ $belumCount }} Bidang Belum Diproses BPN">
+                                                <i class="bi bi-dash-circle me-0.5"></i> {{ number_format($belumCount, 0, ',', '.') }} Belum
+                                            </a>
+                                        </div>
                                     </div>
                                     @php $i++; @endphp
                                 @endforeach
+
+                                @if(isset($opdLainnyaCount) && $opdLainnyaCount > 0)
+                                    <div class="d-flex align-items-center justify-content-between px-2 py-1 small text-secondary">
+                                        <div class="d-flex align-items-center gap-2">
+                                            <span class="d-inline-block rounded-circle flex-shrink-0" style="width: 8px; height: 8px; background-color: #94a3b8;"></span>
+                                            <span>OPD Lainnya (Sisa Keseluruhan)</span>
+                                        </div>
+                                        <span class="font-monospace fw-semibold">{{ number_format($opdLainnyaCount, 0, ',', '.') }} Bidang ({{ $opdLainnyaPct }}%)</span>
+                                    </div>
+                                @endif
                             </div>
                         </div>
                     </div>
@@ -333,11 +417,173 @@
                         <i class="bi bi-database-fill text-primary fs-5"></i>
                         <span class="small fw-semibold text-body">Total Aset Terdata</span>
                     </div>
-                    <span class="fw-bold text-primary fs-6 font-monospace">{{ number_format($totalAset, 0, ',', '.') }} Bidang</span>
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill font-monospace px-2.5 py-1">
+                            {{ number_format($totalTanahTercatat ?? 1188, 0, ',', '.') }} KIB A
+                        </span>
+                        <span class="fw-bold text-primary fs-6 font-monospace">{{ number_format($totalAset, 0, ',', '.') }} Bidang</span>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
+
+    <!-- Baris Baru: Sebaran Aset Tanah & Progres Sertifikasi per OPD -->
+    @if(isset($opdTableStats) && count($opdTableStats) > 0)
+    <div class="row g-3 mb-4">
+        <div class="col-12">
+            <div class="card sipat-stat-card p-4">
+                <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
+                    <div>
+                        <div class="d-flex align-items-center gap-2 mb-1">
+                            <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-2.5 py-0.5 small fw-semibold">
+                                <i class="bi bi-buildings-fill me-1"></i> REKAPITULASI INSTANSI
+                            </span>
+                            <span class="text-secondary small">&bull;</span>
+                            <span class="text-secondary small fw-medium">{{ count($opdTableStats) }} Organisasi Perangkat Daerah Terdata</span>
+                        </div>
+                        <h5 class="fw-bold mb-0 text-body">Sebaran Aset Tanah & Progres Sertifikasi per OPD</h5>
+                    </div>
+                    <div class="d-flex align-items-center gap-2 flex-wrap">
+                        <div class="input-group input-group-sm" style="max-width: 260px;">
+                            <span class="input-group-text bg-body-tertiary border-end-0">
+                                <i class="bi bi-search text-secondary"></i>
+                            </span>
+                            <input type="text" id="searchOpdTable" class="form-control border-start-0" placeholder="Cari nama instansi OPD..." onkeyup="filterOpdDashboardTable()">
+                        </div>
+                        <a href="{{ route('sipat.laporan.rekapOpd') }}" class="btn btn-sm btn-outline-primary rounded-pill px-3">
+                            <i class="bi bi-file-earmark-text me-1"></i> Rekap Lengkap OPD
+                        </a>
+                        <a href="{{ route('sipat.aset.index') }}" class="btn btn-sm btn-outline-secondary rounded-pill px-3">
+                            <i class="bi bi-table me-1"></i> Semua Aset
+                        </a>
+                    </div>
+                </div>
+
+                <div class="table-responsive" style="max-height: 540px; overflow-y: auto;">
+                    <table class="table table-hover align-middle mb-0" id="tableSebaranOpd">
+                        <thead class="bg-body-tertiary text-secondary small fw-semibold text-uppercase sticky-top" style="z-index: 2;">
+                            <tr>
+                                <th class="ps-3 py-2.5 text-center" style="width: 50px;">NO.</th>
+                                <th class="py-2.5">ORGANISASI PERANGKAT DAERAH (OPD)</th>
+                                <th class="text-center py-2.5">TOTAL BIDANG</th>
+                                <th class="text-end py-2.5">TOTAL LUAS (M²)</th>
+                                <th class="py-2.5" style="min-width: 190px;">PROGRES SERTIPIKAT</th>
+                                <th class="text-center py-2.5">PROSES BPN</th>
+                                <th class="text-center py-2.5">BELUM DIPROSES</th>
+                                <th class="text-center py-2.5">KENDALA</th>
+                                <th class="text-center pe-3 py-2.5">AKSI</th>
+                            </tr>
+                        </thead>
+                        <tbody class="small">
+                            @php $noOpd = 1; @endphp
+                            @foreach($opdTableStats as $opdNameKey => $opdItem)
+                                @php
+                                    $opdId = $opdItem['opd_id'] ?? null;
+                                    $linkOpd = !empty($opdId)
+                                        ? route('sipat.aset.index', ['opd_id' => $opdId])
+                                        : route('sipat.aset.index', ['opd' => $opdItem['nama']]);
+                                    $linkSertif = !empty($opdId)
+                                        ? route('sipat.aset.index', ['opd_id' => $opdId, 'kategori_status' => 'sudah_bersertifikat'])
+                                        : route('sipat.aset.index', ['opd' => $opdItem['nama'], 'kategori_status' => 'sudah_bersertifikat']);
+                                    $linkProses = !empty($opdId)
+                                        ? route('sipat.aset.index', ['opd_id' => $opdId, 'kategori_status' => 'dalam_proses'])
+                                        : route('sipat.aset.index', ['opd' => $opdItem['nama'], 'kategori_status' => 'dalam_proses']);
+                                    $linkBelum = !empty($opdId)
+                                        ? route('sipat.aset.index', ['opd_id' => $opdId, 'kategori_status' => 'belum_diproses'])
+                                        : route('sipat.aset.index', ['opd' => $opdItem['nama'], 'kategori_status' => 'belum_diproses']);
+                                    $pctSertif = $opdItem['persen_bersertifikat'] ?? 0;
+                                @endphp
+                                <tr class="opd-row-item" data-opd-name="{{ strtolower($opdItem['nama']) }}">
+                                    <td class="ps-3 text-center text-secondary font-monospace">{{ $noOpd++ }}</td>
+                                    <td class="fw-bold text-body">
+                                        <div class="d-flex align-items-center gap-2">
+                                            <i class="bi bi-buildings text-primary flex-shrink-0"></i>
+                                            <a href="{{ $linkOpd }}" class="text-body text-decoration-none hover-text-primary" title="Klik untuk filter aset: {{ $opdItem['nama'] }}">
+                                                {{ $opdItem['nama'] }}
+                                            </a>
+                                        </div>
+                                    </td>
+                                    <td class="text-center font-monospace fw-bold fs-6 text-primary">
+                                        {{ number_format($opdItem['total'], 0, ',', '.') }}
+                                    </td>
+                                    <td class="text-end font-monospace text-secondary">
+                                        {{ number_format($opdItem['luas'], 0, ',', '.') }} m²
+                                    </td>
+                                    <td>
+                                        <div class="d-flex align-items-center justify-content-between mb-1">
+                                            <a href="{{ $linkSertif }}" class="fw-semibold text-success font-monospace text-decoration-none" title="Lihat {{ $opdItem['bersertifikat'] }} bidang bersertifikat">
+                                                {{ number_format($opdItem['bersertifikat']) }} <small class="text-secondary fw-normal">Selesai</small>
+                                            </a>
+                                            <span class="badge bg-success-subtle text-success font-monospace" style="font-size: 0.7rem;">{{ $pctSertif }}%</span>
+                                        </div>
+                                        <div class="progress-bar-custom" style="height: 6px;">
+                                            <div class="progress-fill bg-success" style="width: {{ $pctSertif }}%;"></div>
+                                        </div>
+                                    </td>
+                                    <td class="text-center">
+                                        @if($opdItem['proses'] > 0)
+                                            <a href="{{ $linkProses }}" class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle font-monospace px-2 py-0.5 rounded-pill text-decoration-none" title="Lihat aset dalam proses BPN">{{ $opdItem['proses'] }}</a>
+                                        @else
+                                            <span class="text-secondary font-monospace">-</span>
+                                        @endif
+                                    </td>
+                                    <td class="text-center">
+                                        @if($opdItem['belum_diproses'] > 0)
+                                            <a href="{{ $linkBelum }}" class="badge bg-secondary-subtle text-secondary font-monospace px-2 py-0.5 rounded-pill text-decoration-none" title="Lihat aset belum diproses">{{ $opdItem['belum_diproses'] }}</a>
+                                        @else
+                                            <span class="text-secondary font-monospace">-</span>
+                                        @endif
+                                    </td>
+                                    <td class="text-center">
+                                        @if($opdItem['kendala'] > 0)
+                                            <span class="badge bg-danger-subtle text-danger font-monospace px-2 py-0.5 rounded-pill" title="Ada kendala/masalah">{{ $opdItem['kendala'] }}</span>
+                                        @else
+                                            <span class="text-secondary font-monospace">-</span>
+                                        @endif
+                                    </td>
+                                    <td class="text-center pe-3">
+                                        <a href="{{ $linkOpd }}" class="btn btn-xs btn-outline-primary rounded-pill px-2.5 py-1 small fw-semibold" title="Lihat aset di {{ $opdItem['nama'] }}">
+                                            <i class="bi bi-funnel-fill me-1"></i> Filter
+                                        </a>
+                                    </td>
+                                </tr>
+                            @endforeach
+                            <tr id="emptyOpdSearchRow" style="display: none;">
+                                <td colspan="9" class="text-center py-4 text-secondary">
+                                    <i class="bi bi-search fs-3 mb-2 d-block opacity-50"></i>
+                                    <span>Tidak ada OPD yang sesuai dengan kata kunci pencarian.</span>
+                                </td>
+                            </tr>
+                        </tbody>
+                        <tfoot class="bg-body-secondary fw-bold small text-body sticky-bottom" style="z-index: 1;">
+                            <tr>
+                                <td colspan="2" class="ps-3 py-2.5 text-uppercase">TOTAL KESELURUHAN ({{ count($opdTableStats) }} OPD)</td>
+                                <td class="text-center font-monospace fs-6 text-primary">{{ number_format($totalAset, 0, ',', '.') }}</td>
+                                <td class="text-end font-monospace">{{ number_format($totalLuas, 0, ',', '.') }} m²</td>
+                                <td>
+                                    <div class="d-flex align-items-center justify-content-between mb-1">
+                                        <span class="text-success font-monospace">{{ number_format($asetBersertifikat, 0, ',', '.') }} Selesai</span>
+                                        <span class="badge bg-success-subtle text-success font-monospace" style="font-size: 0.7rem;">{{ $pctBersertifikat }}%</span>
+                                    </div>
+                                    <div class="progress-bar-custom" style="height: 6px;">
+                                        <div class="progress-fill bg-success" style="width: {{ $pctBersertifikat }}%;"></div>
+                                    </div>
+                                </td>
+                                <td class="text-center font-monospace text-warning-emphasis">{{ number_format($asetProses, 0, ',', '.') }}</td>
+                                <td class="text-center font-monospace text-secondary">{{ number_format($asetBelumDiurus, 0, ',', '.') }}</td>
+                                <td class="text-center font-monospace text-danger">{{ number_format($asetKendala, 0, ',', '.') }}</td>
+                                <td class="text-center pe-3">
+                                    <a href="{{ route('sipat.aset.index') }}" class="btn btn-xs btn-primary rounded-pill px-2.5 py-1 small fw-semibold">Semua</a>
+                                </td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    @endif
 
     <!-- Baris Baru: Sebaran Wilayah Kecamatan & Progres Pensertifikatan -->
     @if(isset($kecamatanStats) && count($kecamatanStats) > 0)
@@ -624,15 +870,21 @@
         // 2. Doughnut Chart OPD
         const opdCtx = document.getElementById('sipatOpdChart');
         if (opdCtx) {
+            const opdLabels = @json($opdChartLabels ?? []);
+            const opdData = @json($opdChartData ?? []);
+            const opdBreakdown = @json($opdChartBreakdown ?? []);
+            const opdColors = ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ef4444', '#94a3b8'];
+
             new Chart(opdCtx, {
                 type: 'doughnut',
                 data: {
-                    labels: @json(array_keys($opdStats)),
+                    labels: opdLabels,
                     datasets: [{
-                        data: @json(array_values($opdStats)),
-                        backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ef4444'],
-                        borderWidth: 0,
-                        hoverOffset: 4
+                        data: opdData,
+                        backgroundColor: opdColors.slice(0, opdLabels.length),
+                        borderWidth: 2,
+                        borderColor: '#ffffff',
+                        hoverOffset: 6
                     }]
                 },
                 options: {
@@ -641,12 +893,56 @@
                     cutout: '72%',
                     plugins: {
                         legend: { display: false },
-                        tooltip: { padding: 10, cornerRadius: 8 }
+                        tooltip: {
+                            padding: 12,
+                            cornerRadius: 8,
+                            titleFont: { weight: 'bold', size: 12 },
+                            bodyFont: { size: 11 },
+                            callbacks: {
+                                label: function(context) {
+                                    const idx = context.dataIndex;
+                                    const item = opdBreakdown[idx];
+                                    if (!item) {
+                                        return `Total: ${context.raw} Bidang`;
+                                    }
+                                    const pct = item.pct_of_total ?? 0;
+                                    return [
+                                        `Total: ${item.total} Bidang (${pct}%)`,
+                                        `  ✓ Bersertifikat : ${item.bersertifikat ?? 0}`,
+                                        `  ⏳ Dalam Proses  : ${item.proses ?? 0}`,
+                                        `  — Belum Diproses: ${item.belum_diproses ?? 0}`
+                                    ];
+                                }
+                            }
+                        }
                     }
                 }
             });
         }
     });
+
+    function filterOpdDashboardTable() {
+        const input = document.getElementById('searchOpdTable');
+        if (!input) return;
+        const filter = input.value.toLowerCase().trim();
+        const rows = document.querySelectorAll('.opd-row-item');
+        let visibleCount = 0;
+
+        rows.forEach(row => {
+            const name = row.getAttribute('data-opd-name') || '';
+            if (filter === '' || name.includes(filter)) {
+                row.style.display = '';
+                visibleCount++;
+            } else {
+                row.style.display = 'none';
+            }
+        });
+
+        const emptyRow = document.getElementById('emptyOpdSearchRow');
+        if (emptyRow) {
+            emptyRow.style.display = (visibleCount === 0 && filter !== '') ? '' : 'none';
+        }
+    }
 </script>
 @endpush
 @endsection

@@ -128,7 +128,8 @@ Berikut adalah status fitur yang telah diimplementasikan penuh pada platform SIP
 | **SIPAT** | Modul Surat Tanah (SKPT) | DONE | Pembuatan SKPT, ekspor Word/PDF formal (mPDF), & cetak. |
 | **SIPAT** | Peta Interaktif & Wilayah | DONE | Visualisasi sebaran koordinat aset tanah & master wilayah. |
 | **SIPAT** | Import Aset Tanah & Status | DONE | Pengunggahan massal data sertifikat & status proses tanah. |
-| **SIPAT** | Target Pensertifikatan | DONE | KPI target tahunan, filter multi-kriteria (Tahun/OPD/Status/Pencarian), & ekspor Excel/PDF. |
+| **SIPAT** | Distribusi Aset per OPD (Breakdown) | DONE | Widget sebaran 5 OPD terbanyak, chart donat 100%, multi-segment bar, breakdown status (Bersertifikat, Proses, Belum), dan link filter. |
+| **SIPAT** | Tabel Sebaran Aset per OPD | DONE | Tabel master rekapitulasi 54 OPD di atas sebaran kecamatan, live search, luas m², progres bar sertifikat, dan link aksi filter. |
 | **eLABEL** | Katalog BPKB (R4 / R2) | DONE | Penyimpanan BPKB, import template, & cetak status BPKB. |
 | **eLABEL** | Manajemen Box Arsip BPKB | DONE | Penggabungan box BPKB dan pencetakan label barcode box. |
 | **eLABEL** | Sertifikat & Box Sertifikat | DONE | Penyimpanan sertifikat tanah fisik, split/merge box sertifikat. |
@@ -136,6 +137,7 @@ Berikut adalah status fitur yang telah diimplementasikan penuh pada platform SIP
 | **eLABEL** | Alur Peminjaman (Scan Request) | DONE | Pengajuan pinjam/scan BPKB/Sertifikat & approval admin. |
 | **eLABEL** | Universal Dynamic Archive Engine | DONE | e-Arsip dinamis, visual form builder, custom schema, box barcode, PDF viewer, multi-attachment, & loan workflow. |
 | **Terpadu** | Unified Asset Portal & Search | DONE | Mesin pencarian publik 3 modul (Kendaraan, Tanah, Arsip) + statistik live. |
+| **Terpadu** | Landing Sebaran OPD & Kecamatan | DONE | Diagram visual Pie/Donut interaktif di landing page, tabel data hanya muncul di modal saat diklik (54 OPD & 16 Kecamatan). |
 | **Terpadu** | OPD Mapping (Hub) | DONE | Jembatan pemetaan instansi antara E-RANDIS dan SIPAT. |
 | **Terpadu** | Audit Trail / Log Aktivitas | DONE | Log aktivitas terintegrasi E-RANDIS, SIPAT, dan eLABEL. |
 | **System** | Sinkronisasi DB Staging | DONE | Utility sinkronisasi data dari db_sipat_terpadu ke db_sipat_staging. |

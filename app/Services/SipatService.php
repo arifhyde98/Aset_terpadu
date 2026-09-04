@@ -163,6 +163,7 @@ class SipatService
         }
 
         $opdStats = [];
+        $opdFullStats = [];
         $kecamatanStats = [];
 
         foreach ($asetRows as $aset) {
@@ -204,8 +205,37 @@ class SipatService
             }
 
             $opdLabel = $aset->opdSipat->nama ?? trim((string) $aset->opd);
-            $opdKey = $opdLabel !== '' ? $opdLabel : 'Tidak Diketahui';
-            $opdStats[$opdKey] = ($opdStats[$opdKey] ?? 0) + 1;
+            $opdKey   = $opdLabel !== '' ? $opdLabel : 'Tidak Diketahui';
+            $opdId    = $aset->opd_id ?? ($aset->opdSipat->id ?? null);
+
+            if (!isset($opdFullStats[$opdKey])) {
+                $opdFullStats[$opdKey] = [
+                    'opd_id'         => $opdId,
+                    'nama'           => $opdKey,
+                    'total'          => 0,
+                    'luas'           => 0.0,
+                    'bersertifikat'  => 0,
+                    'proses'         => 0,
+                    'belum_diproses' => 0,
+                    'kendala'        => 0,
+                ];
+            }
+            $opdFullStats[$opdKey]['total']++;
+            $opdFullStats[$opdKey]['luas'] += (float) ($aset->luas ?? 0);
+            if (!$opdFullStats[$opdKey]['opd_id'] && $opdId) {
+                $opdFullStats[$opdKey]['opd_id'] = $opdId;
+            }
+
+            if (in_array('bersertifikat', $categories, true)) {
+                $opdFullStats[$opdKey]['bersertifikat']++;
+            } elseif (in_array('proses', $categories, true)) {
+                $opdFullStats[$opdKey]['proses']++;
+            } elseif (in_array('kendala', $categories, true)) {
+                $opdFullStats[$opdKey]['kendala']++;
+                $opdFullStats[$opdKey]['belum_diproses']++;
+            } else {
+                $opdFullStats[$opdKey]['belum_diproses']++;
+            }
 
             // Grouping by Kecamatan
             $kecLabel = $aset->wilayahKecamatan->nama ?? 'Luar Wilayah / Lainnya';
@@ -238,14 +268,80 @@ class SipatService
             }
         }
 
-        arsort($opdStats);
-        $topOpdStats = array_slice($opdStats, 0, 5, true);
+        uasort($opdFullStats, fn($a, $b) => $b['total'] <=> $a['total']);
+
+        foreach ($opdFullStats as &$opdItem) {
+            $t = $opdItem['total'];
+            $opdItem['persen_bersertifikat'] = $t > 0 ? round(($opdItem['bersertifikat'] / $t) * 100, 1) : 0;
+            $opdItem['pct_of_total']         = $totalAset > 0 ? round(($t / $totalAset) * 100, 1) : 0;
+            $opdItem['pct_bersertifikat']    = $t > 0 ? round(($opdItem['bersertifikat'] / $t) * 100, 1) : 0;
+            $opdItem['pct_proses']           = $t > 0 ? round(($opdItem['proses'] / $t) * 100, 1) : 0;
+            $opdItem['pct_belum_diproses']   = $t > 0 ? round(($opdItem['belum_diproses'] / $t) * 100, 1) : 0;
+        }
+        unset($opdItem);
+
+        $topOpdStats = array_slice($opdFullStats, 0, 5, true);
+        $top5Sum = array_sum(array_column($topOpdStats, 'total'));
+        $opdLainnyaCount = max(0, $totalAset - $top5Sum);
+        $opdLainnyaPct   = $totalAset > 0 ? round(($opdLainnyaCount / $totalAset) * 100, 1) : 0;
+
+        $opdChartLabels    = [];
+        $opdChartData      = [];
+        $opdChartBreakdown = [];
+
+        foreach ($topOpdStats as $opdItem) {
+            $opdChartLabels[]    = $opdItem['nama'];
+            $opdChartData[]      = $opdItem['total'];
+            $opdChartBreakdown[] = $opdItem;
+        }
+
+        if ($opdLainnyaCount > 0) {
+            $opdChartLabels[]    = 'OPD Lainnya';
+            $opdChartData[]      = $opdLainnyaCount;
+            $opdChartBreakdown[] = [
+                'nama'           => 'OPD Lainnya',
+                'total'          => $opdLainnyaCount,
+                'bersertifikat'  => max(0, $asetBersertifikat - array_sum(array_column($topOpdStats, 'bersertifikat'))),
+                'proses'         => max(0, $asetProses - array_sum(array_column($topOpdStats, 'proses'))),
+                'belum_diproses' => max(0, $asetBelumDiurus - array_sum(array_column($topOpdStats, 'belum_diproses'))),
+                'pct_of_total'   => $opdLainnyaPct,
+            ];
+        }
 
         uasort($kecamatanStats, fn($a, $b) => $b['total'] <=> $a['total']);
         foreach ($kecamatanStats as &$ks) {
             $ks['persen_bersertifikat'] = $ks['total'] > 0 ? round(($ks['bersertifikat'] / $ks['total']) * 100, 1) : 0;
+            $ks['pct_of_total']         = $totalAset > 0 ? round(($ks['total'] / $totalAset) * 100, 1) : 0;
         }
         unset($ks);
+
+        $topKecStats = array_slice($kecamatanStats, 0, 5, true);
+        $top5KecSum  = array_sum(array_column($topKecStats, 'total'));
+        $kecLainnyaCount = max(0, $totalAset - $top5KecSum);
+        $kecLainnyaPct   = $totalAset > 0 ? round(($kecLainnyaCount / $totalAset) * 100, 1) : 0;
+
+        $kecChartLabels    = [];
+        $kecChartData      = [];
+        $kecChartBreakdown = [];
+
+        foreach ($topKecStats as $kItem) {
+            $kecChartLabels[]    = $kItem['nama'];
+            $kecChartData[]      = $kItem['total'];
+            $kecChartBreakdown[] = $kItem;
+        }
+
+        if ($kecLainnyaCount > 0) {
+            $kecChartLabels[]    = 'Kecamatan Lainnya';
+            $kecChartData[]      = $kecLainnyaCount;
+            $kecChartBreakdown[] = [
+                'nama'           => 'Kecamatan Lainnya',
+                'total'          => $kecLainnyaCount,
+                'bersertifikat'  => max(0, $asetBersertifikat - array_sum(array_column($topKecStats, 'bersertifikat'))),
+                'proses'         => max(0, $asetProses - array_sum(array_column($topKecStats, 'proses'))),
+                'belum_diurus'   => max(0, $asetBelumDiurus - array_sum(array_column($topKecStats, 'belum_diurus'))),
+                'pct_of_total'   => $kecLainnyaPct,
+            ];
+        }
 
         foreach ($statusBreakdowns as $cat => &$items) {
             arsort($items);
@@ -370,7 +466,18 @@ class SipatService
             'pctBelumDiurus'          => $pctBelumDiurus,
             'pctBelumBersertifikat'   => $pctBelumBersertifikat,
             'opdStats'                => $topOpdStats,
+            'opdTableStats'           => $opdFullStats,
+            'opdChartLabels'          => $opdChartLabels,
+            'opdChartData'            => $opdChartData,
+            'opdChartBreakdown'       => $opdChartBreakdown,
+            'opdLainnyaCount'         => $opdLainnyaCount,
+            'opdLainnyaPct'           => $opdLainnyaPct,
             'kecamatanStats'          => $kecamatanStats,
+            'kecChartLabels'          => $kecChartLabels,
+            'kecChartData'            => $kecChartData,
+            'kecChartBreakdown'       => $kecChartBreakdown,
+            'kecLainnyaCount'         => $kecLainnyaCount,
+            'kecLainnyaPct'           => $kecLainnyaPct,
             'statusCounts'            => $statusCounts,
             'statusBreakdowns'        => $statusBreakdowns,
             'recentLogs'              => $recentLogs,

@@ -198,6 +198,23 @@ Aplikasi **menggunakan sentuhan visual premium & animasi mikro kustom** secara b
 - **Master Wilayah Kecamatan & Sebaran Aset (`/sipat/dashboard`, `/sipat/aset`, `/sipat/laporan`)**: Relasi formal database `kecamatan_id` (dan `desa_id`) pada tabel `aset_tanah` ke master `kecamatan` (16 Kecamatan Kabupaten Donggala). Dilengkapi algoritma *Longest-Match-First* (memisahkan Banawa, Banawa Selatan, dan Banawa Tengah secara presisi), widget tabel **Sebaran Aset Tanah & Progres Sertifikasi per Kecamatan** di Dashboard SIPAT, filter dropdown Kecamatan pada Katalog Aset Tanah, form Tambah/Edit Aset, serta Pusat Laporan.
 - **Master Status Proses Multi-Kategori (`/master-data/status-proses`)**: Pengelolaan status proses BPN dinamis dengan dukungan **Multi-Kategori per Status** (1 status proses dapat dicentang ke lebih dari satu kategori, misal: *Dalam Proses*, *Bersertifikat*, *Kendala/Sengketa*, *Belum Diurus*, atau kategori kustom). Seluruh agregasi statistik dashboard dan filter laporan otomatis menghitung berdasarkan relasi kategori ini dengan auto-flush cache.
 - **Import Pertanahan**: Unggah massal progres sertifikat dan data aset tanah.
+- **Widget Distribusi Aset per OPD (Dashboard SIPAT)**:
+  - Rekapitulasi sebaran aset tanah untuk 5 OPD dengan bidang tanah terbanyak disertai breakdown status pensertifikatan BPN: **Bersertifikat**, **Dalam Proses BPN**, dan **Belum Diproses**.
+  - Multi-segment progress bar proporsional untuk memvisualisasikan komposisi status pertanahan di setiap OPD.
+  - Tiga badge status interaktif (Bersertifikat, Proses, Belum) dengan tautan langsung ke filter katalog aset tanah (`sipat.aset.index?opd_id=...&kategori_status=...`).
+  - Doughnut Chart (`#sipatOpdChart`) kini merepresentasikan 100% total aset terdata (Top 5 OPD + OPD Lainnya) dengan custom tooltip rincian status per slice dan label total bidang di titik tengah grafik.
+  - Tombol tautan cepat menuju halaman **Rekapitulasi Pensertifikatan Aset Tanah per OPD** (`sipat.laporan.rekapOpd`).
+- **Tabel Sebaran Aset Tanah & Progres Sertifikasi per OPD (`/sipat/dashboard`)**:
+  - Ditempatkan tepat di atas tabel sebaran per kecamatan, menampilkan rekapitulasi lengkap seluruh 54 OPD Pemerintah Kabupaten Donggala yang memiliki aset tanah terdata.
+  - Kolom lengkap: Nomor Urut, Nama OPD, Total Bidang, Total Luas (m²), Progres Sertipikat (persen & bar), Proses BPN, Belum Diproses, Kendala, dan Tombol Aksi Filter.
+  - Dilengkapi fitur **Pencarian Cepat Instansi (Live Search)** via JavaScript (`filterOpdDashboardTable`), sticky header & footer total agregasi wilayah, serta tautan aksi filter terpadu ke katalog aset tanah.
+- **Integrasi 2 Sebaran Aset & Progres di Landing Page (`/`)**:
+  - **Visualisasi Diagram Pie / Donut Interaktif**: Menampilkan 2 kartu Pie/Donut Chart berdampingan (*Side-by-Side*) pada seksi Capaian Sertifikasi Tanah: Pie Sebaran per OPD dan Pie Sebaran per Kecamatan lengkap dengan angka total di tengah donat dan badge legend warna-warni.
+  - **Tabel Hanya Muncul Saat Diklik (Modal Interaktif Full-Featured)**:
+    - Tidak ada tabel statis yang memenuhi halaman muka (*zero-clutter space-saving*). Tabel hanya muncul ketika pengunjung mengklik diagram Pie atau tombol 'Buka Tabel Rekapitulasi Lengkap'.
+    1. `#modalSebaranOpdLanding`: Tabel lengkap seluruh 54 OPD dengan live search instansi, rincian bidang/luas/status BPN, dan footer agregasi total.
+    2. `#modalSebaranKecamatanLanding`: Tabel lengkap 16 Kecamatan Kabupaten Donggala dengan live search wilayah, rincian bidang/luas/status BPN, dan footer agregasi total.
+  - Terintegrasi langsung dengan cache real-time `SipatService::getDashboardStats()`.
 
 ### C. Modul eLABEL (Pengarsipan & Labelisasi)
 - **Katalog & Box BPKB**: Pengarsipan BPKB ke dalam box fisik, pencetakan stiker label barcode box, dan penggabungan/merge box BPKB.

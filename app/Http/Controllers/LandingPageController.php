@@ -43,7 +43,45 @@ class LandingPageController extends Controller
             'hero_bg_image' => Setting::get('hero_bg_image', 'images/hero-illustration.png'),
         ];
 
-        return view('landing.index', compact('stats', 'filterOptions', 'settings'));
+        // 4. Ambil Statistik Sebaran Aset Pertanahan (OPD & Kecamatan)
+        $sipatService = app(\App\Services\SipatService::class);
+        $sipatStats = $sipatService->getDashboardStats();
+        $opdTableStats = $sipatStats['opdTableStats'] ?? [];
+        $kecamatanStats = $sipatStats['kecamatanStats'] ?? [];
+        $totalAsetTanah = $sipatStats['totalAset'] ?? 0;
+        $totalLuasTanah = $sipatStats['totalLuas'] ?? 0;
+        $asetBersertifikat = $sipatStats['asetBersertifikat'] ?? 0;
+        $asetProses = $sipatStats['asetProses'] ?? 0;
+        $asetBelumDiurus = $sipatStats['asetBelumDiurus'] ?? 0;
+        $asetKendala = $sipatStats['asetKendala'] ?? 0;
+        $pctBersertifikat = $sipatStats['pctBersertifikat'] ?? 0;
+        $opdChartLabels = $sipatStats['opdChartLabels'] ?? [];
+        $opdChartData = $sipatStats['opdChartData'] ?? [];
+        $opdChartBreakdown = $sipatStats['opdChartBreakdown'] ?? [];
+        $kecChartLabels = $sipatStats['kecChartLabels'] ?? [];
+        $kecChartData = $sipatStats['kecChartData'] ?? [];
+        $kecChartBreakdown = $sipatStats['kecChartBreakdown'] ?? [];
+
+        return view('landing.index', compact(
+            'stats', 
+            'filterOptions', 
+            'settings',
+            'opdTableStats',
+            'kecamatanStats',
+            'totalAsetTanah',
+            'totalLuasTanah',
+            'asetBersertifikat',
+            'asetProses',
+            'asetBelumDiurus',
+            'asetKendala',
+            'pctBersertifikat',
+            'opdChartLabels',
+            'opdChartData',
+            'opdChartBreakdown',
+            'kecChartLabels',
+            'kecChartData',
+            'kecChartBreakdown'
+        ));
     }
 
     /**
