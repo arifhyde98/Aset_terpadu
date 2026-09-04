@@ -58,6 +58,12 @@ Dokumen ini merupakan sumber kebenaran tunggal (*Single Source of Truth*) mengen
     *   Mendeteksi string kecamatan pada field `peruntukan` dan `nama_aset` untuk aset tanah yang belum terisi `kecamatan_id` (null atau 0), serta menyelaraskan data lama yang salah pasang via opsi `--sync-legacy`.
     *   Menerapkan aturan prioritas nama majemuk (*longest string first*) seperti `Banawa Selatan` / `Banawa Tengah` sebelum `Banawa`, `Sindue Tobata` / `Sindue Tombusabora` sebelum `Sindue`, `Balaesang Tanjung` sebelum `Balaesang`, serta penanganan variasi spasi (`Rio Pakava` vs `Riopakava`) dan negative lookahead pada `Labuan` (mengecualikan kelurahan `Labuan Bajo`).
     *   Otomatis memicu `invalidateDashboardCache()` pada `SipatService` agar statistik sebaran wilayah dashboard langsung terbarukan.
+*   **Integritas Pendaftaran Tanah Belum Tercatat (`TanahTakTercatatController`)**:
+    *   Penyimpanan aset dan status awal dibungkus dalam `DB::transaction()` untuk menjamin atomisitas.
+    *   Memperbaiki pemanggilan `ProsesAset::create()` dengan key kolom resmi: `id_status`, `tanggal_proses`, dan `tgl_mulai` (mencegah `SQLSTATE[HY000]: 1364 Field 'id_status' doesn't have a default value`).
+*   **Standardisasi Dialog Konfirmasi Hapus (Single SweetAlert2)**:
+    *   Menghilangkan atribut inline `onsubmit="return confirm(...)"` pada form yang telah memiliki class `.delete-confirm` (seperti di `tanah_tak_tercatat`, `status_proses`, dan `target_sertifikat`).
+    *   Mencegah munculnya konfirmasi ganda (dialog native browser disusul SweetAlert2) sehingga seluruh aksi hapus kini konsisten menggunakan modal SweetAlert2 tunggal.
 *   **Optimasi Ekspor Laporan E-RANDIS (Data Guard, Chunking & Kolom Jenis)**:
     *   Fungsi JS trigger ekspor: `exportExcel()`, `exportPdf()`, dan `printReport()` aktif pada `reports.index`.
     *   Batas data guard PDF dinaikkan ke 3.500 baris untuk mengakomodasi seluruh dataset e-BMD (2.041 unit) dan Data Real (1.038 unit).

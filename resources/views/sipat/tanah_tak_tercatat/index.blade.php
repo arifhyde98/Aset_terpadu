@@ -257,7 +257,7 @@
                                         </a>
 
                                         <!-- 4. Tombol Hapus Aset -->
-                                        <form action="{{ route('sipat.aset.destroy', $item->id_aset) }}" method="POST" class="d-inline delete-confirm" onsubmit="return confirm('Apakah Anda yakin ingin menghapus aset tanah ini?')">
+                                        <form action="{{ route('sipat.aset.destroy', $item->id_aset) }}" method="POST" class="d-inline delete-confirm">
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit" class="btn btn-sm btn-outline-danger rounded-3" data-bs-toggle="tooltip" title="Hapus Aset">

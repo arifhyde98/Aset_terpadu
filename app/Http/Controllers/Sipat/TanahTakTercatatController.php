@@ -13,6 +13,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
 use Illuminate\View\View;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 
 class TanahTakTercatatController extends Controller implements HasMiddleware
@@ -108,31 +109,36 @@ class TanahTakTercatatController extends Controller implements HasMiddleware
 
         $opdObj = !empty($validated['opd_id']) ? OpdSipat::find($validated['opd_id']) : null;
 
-        $aset = AsetTanah::create([
-            'kode_aset' => $kodeAset,
-            'status_pencatatan' => 'USULAN_BELUM_TERCATAT',
-            'nama_aset' => $validated['nama_aset'],
-            'opd_id' => $validated['opd_id'] ?? null,
-            'opd' => $opdObj?->nama ?? null,
-            'peruntukan' => $validated['peruntukan'] ?? null,
-            'luas' => $validated['luas'] ?? 0,
-            'alamat' => $validated['alamat'] ?? null,
-            'lat' => $validated['lat'] ?? null,
-            'lng' => $validated['lng'] ?? null,
-            'dasar_perolehan' => $validated['dasar_perolehan'] ?? null,
-            'harga_perolehan' => $validated['harga_perolehan'] ?? null,
-            'tanggal_perolehan' => $validated['tanggal_perolehan'] ?? null,
-            'keterangan' => $validated['keterangan'] ?? 'Tanah belum tercatat di KIB A (NIBAR Draft)',
-        ]);
-
-        if (!empty($validated['initial_status_id'])) {
-            ProsesAset::create([
-                'id_aset' => $aset->id_aset,
-                'status_proses_id' => $validated['initial_status_id'],
-                'tanggal' => date('Y-m-d'),
-                'keterangan' => 'Pendaftaran tanah belum tercatat baru',
+        $aset = DB::transaction(function () use ($validated, $kodeAset, $opdObj) {
+            $aset = AsetTanah::create([
+                'kode_aset' => $kodeAset,
+                'status_pencatatan' => 'USULAN_BELUM_TERCATAT',
+                'nama_aset' => $validated['nama_aset'],
+                'opd_id' => $validated['opd_id'] ?? null,
+                'opd' => $opdObj?->nama ?? null,
+                'peruntukan' => $validated['peruntukan'] ?? null,
+                'luas' => $validated['luas'] ?? 0,
+                'alamat' => $validated['alamat'] ?? null,
+                'lat' => $validated['lat'] ?? null,
+                'lng' => $validated['lng'] ?? null,
+                'dasar_perolehan' => $validated['dasar_perolehan'] ?? null,
+                'harga_perolehan' => $validated['harga_perolehan'] ?? null,
+                'tanggal_perolehan' => $validated['tanggal_perolehan'] ?? null,
+                'keterangan' => $validated['keterangan'] ?? 'Tanah belum tercatat di KIB A (NIBAR Draft)',
             ]);
-        }
+
+            if (!empty($validated['initial_status_id'])) {
+                ProsesAset::create([
+                    'id_aset' => $aset->id_aset,
+                    'id_status' => (int) $validated['initial_status_id'],
+                    'tanggal_proses' => now()->toDateString(),
+                    'tgl_mulai' => now()->toDateString(),
+                    'keterangan' => 'Pendaftaran tanah belum tercatat baru',
+                ]);
+            }
+
+            return $aset;
+        });
 
         if (class_exists(Activity::class)) {
             Activity::logSipat("Mendaftarkan tanah belum tercatat baru '{$aset->nama_aset}' [Kode: {$kodeAset}]", 'success');

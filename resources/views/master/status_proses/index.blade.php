@@ -129,7 +129,7 @@
                                     <button type="button" class="btn btn-body-secondary text-primary border-0 rounded-2 p-1.5 me-1" onclick="editStatus({{ json_encode($status) }}, {{ json_encode($status->categories) }})" title="Edit Status & Multi-Kategori">
                                         <i class="bi bi-pencil-square fs-6"></i>
                                     </button>
-                                    <form action="{{ route('status-proses.destroy', $status->id_status) }}" method="POST" class="d-inline delete-confirm" onsubmit="return confirm('Apakah Anda yakin ingin menghapus status proses ini?')">
+                                    <form action="{{ route('status-proses.destroy', $status->id_status) }}" method="POST" class="d-inline delete-confirm">
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit" class="btn btn-body-secondary text-danger border-0 rounded-2 p-1.5" title="Hapus Status">

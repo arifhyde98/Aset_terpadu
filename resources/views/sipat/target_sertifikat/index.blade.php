@@ -270,7 +270,7 @@
                                                         title="Ubah Target">
                                                     <i class="bi bi-pencil-square"></i>
                                                 </button>
-                                                <form action="{{ route('sipat.target-pensertifikatan.destroy', $item->id) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin menghapus bidang tanah ini dari target tahun {{ $tahun }}?')">
+                                                <form action="{{ route('sipat.target-pensertifikatan.destroy', $item->id) }}" method="POST" class="d-inline delete-confirm">
                                                     @csrf
                                                     @method('DELETE')
                                                     <button type="submit" class="btn btn-sm btn-outline-danger border-0 rounded-circle" data-bs-toggle="tooltip" title="Hapus dari Target">
