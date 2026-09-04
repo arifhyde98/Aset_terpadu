@@ -176,7 +176,7 @@ class ElabelBpkbController extends Controller implements HasMiddleware
             'sipat_opd_id' => $request->get('sipat_opd_id'),
         ]);
 
-        $this->logActivity('create', 'BPKB', 'Menambahkan BPKB ' . $identity['plate_number'] . ' tahun ' . $year . '.', 'bpkb', $bpkb->id);
+        $this->logActivity('create', 'BPKB', 'Menambahkan BPKB ' . $identity['plate_number'] . ' tahun ' . $year . '.', 'bpkb', $bpkb->id, null, $bpkb->toArray());
 
         $redirectRoute = $vehicleType === 'R2' ? route('elabel.bpkb.index', ['type' => 'r2']) : route('elabel.bpkb.index', ['type' => 'r4']);
         return redirect($redirectRoute)->with('success', 'Data BPKB berhasil ditambahkan.');
@@ -263,6 +263,7 @@ class ElabelBpkbController extends Controller implements HasMiddleware
             $pdfPath = $newPdfPath;
         }
 
+        $oldBpkb = $item->toArray();
         $item->update([
             'box_id'       => $boxId,
             'year'         => $year,
@@ -281,7 +282,7 @@ class ElabelBpkbController extends Controller implements HasMiddleware
             'sipat_opd_id' => $request->get('sipat_opd_id'),
         ]);
 
-        $this->logActivity('update', 'BPKB', 'Mengubah BPKB ' . $identity['plate_number'] . ' tahun ' . $year . '.', 'bpkb', $id);
+        $this->logActivity('update', 'BPKB', 'Mengubah BPKB ' . $identity['plate_number'] . ' tahun ' . $year . '.', 'bpkb', $id, $oldBpkb, $item->fresh()->toArray());
 
         $redirectRoute = $vehicleType === 'R2' ? route('elabel.bpkb.index', ['type' => 'r2']) : route('elabel.bpkb.index', ['type' => 'r4']);
         return redirect($redirectRoute)->with('success', 'Data BPKB berhasil diperbarui.');
@@ -370,8 +371,9 @@ class ElabelBpkbController extends Controller implements HasMiddleware
             'support_doc_path' => $supportPath,
         ]);
 
+        $oldBpkb = $item->toArray();
         $item->delete();
-        $this->logActivity('delete', 'BPKB', 'Memindahkan BPKB ' . ($item->plate_number ?? '-') . ' ke BPKB keluar. Alasan: ' . $reason . '.', 'bpkb', $id);
+        $this->logActivity('delete', 'BPKB', 'Memindahkan BPKB ' . ($item->plate_number ?? '-') . ' ke BPKB keluar. Alasan: ' . $reason . '.', 'bpkb', $id, $oldBpkb, null);
 
         return redirect()->route('elabel.bpkb-deleted.index')->with('success', 'Data BPKB berhasil dipindahkan ke BPKB keluar.');
     }
@@ -699,13 +701,15 @@ class ElabelBpkbController extends Controller implements HasMiddleware
         return $v === '' ? null : $v;
     }
 
-    private function logActivity(string $action, string $module, string $description, ?string $refType = null, ?int $refId = null): void
+    private function logActivity(string $action, string $module, string $description, ?string $refType = null, ?int $refId = null, ?array $oldData = null, ?array $newData = null): void
     {
         ElabelActivityLog::create([
             'user_id'        => Auth::id() ?: 1,
             'action'         => $action,
             'module'         => $module,
             'description'    => $description,
+            'old_data'       => !is_null($oldData) ? json_encode($oldData) : null,
+            'new_data'       => !is_null($newData) ? json_encode($newData) : null,
             'reference_type' => $refType,
             'reference_id'   => $refId,
             'ip_address'     => request()->ip(),

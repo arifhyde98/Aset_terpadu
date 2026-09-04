@@ -40,7 +40,46 @@ class VehicleObserver
      */
     public function created(Vehicle $vehicle): void
     {
-        Activity::log("Menambahkan kendaraan baru: {$vehicle->no_polisi} ({$vehicle->merk})", 'success');
+        Activity::log(
+            "Menambahkan kendaraan baru: {$vehicle->no_polisi} ({$vehicle->merk})",
+            'success',
+            Activity::MODULE_ERANDIS,
+            'erandis',
+            null,
+            $vehicle->toArray()
+        );
+    }
+
+    /**
+     * Menangani event "updated" kendaraan.
+     * 
+     * @param Vehicle $vehicle
+     * @return void
+     */
+    public function updated(Vehicle $vehicle): void
+    {
+        $changes = $vehicle->getChanges();
+        unset($changes['updated_at']);
+
+        if (empty($changes)) {
+            return;
+        }
+
+        $oldData = [];
+        $newData = [];
+        foreach ($changes as $key => $newVal) {
+            $oldData[$key] = $vehicle->getOriginal($key);
+            $newData[$key] = $newVal;
+        }
+
+        Activity::log(
+            "Memperbarui data kendaraan: {$vehicle->no_polisi}",
+            'warning',
+            Activity::MODULE_ERANDIS,
+            'erandis',
+            $oldData,
+            $newData
+        );
     }
 
     /**
@@ -51,6 +90,13 @@ class VehicleObserver
      */
     public function deleted(Vehicle $vehicle): void
     {
-        Activity::log("Menghapus data kendaraan: {$vehicle->no_polisi}", 'danger');
+        Activity::log(
+            "Menghapus data kendaraan: {$vehicle->no_polisi}",
+            'danger',
+            Activity::MODULE_ERANDIS,
+            'erandis',
+            $vehicle->toArray(),
+            null
+        );
     }
 }

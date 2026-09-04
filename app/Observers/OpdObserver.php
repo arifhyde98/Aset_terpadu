@@ -34,7 +34,46 @@ class OpdObserver
             ]);
         }
 
-        Activity::log("Menambahkan Master Data OPD: {$opd->nama}", 'success');
+        Activity::log(
+            "Menambahkan Master Data OPD: {$opd->nama}",
+            'success',
+            Activity::MODULE_ERANDIS,
+            'erandis',
+            null,
+            $opd->toArray()
+        );
+    }
+
+    /**
+     * Menangani event "updated" OPD.
+     * 
+     * @param Opd $opd
+     * @return void
+     */
+    public function updated(Opd $opd): void
+    {
+        $changes = $opd->getChanges();
+        unset($changes['updated_at']);
+
+        if (empty($changes)) {
+            return;
+        }
+
+        $oldData = [];
+        $newData = [];
+        foreach ($changes as $key => $newVal) {
+            $oldData[$key] = $opd->getOriginal($key);
+            $newData[$key] = $newVal;
+        }
+
+        Activity::log(
+            "Memperbarui Master Data OPD: {$opd->nama}",
+            'warning',
+            Activity::MODULE_ERANDIS,
+            'erandis',
+            $oldData,
+            $newData
+        );
     }
 
     /**
@@ -45,6 +84,13 @@ class OpdObserver
      */
     public function deleted(Opd $opd): void
     {
-        Activity::log("Menghapus Master Data OPD: {$opd->nama}", 'danger');
+        Activity::log(
+            "Menghapus Master Data OPD: {$opd->nama}",
+            'danger',
+            Activity::MODULE_ERANDIS,
+            'erandis',
+            $opd->toArray(),
+            null
+        );
     }
 }

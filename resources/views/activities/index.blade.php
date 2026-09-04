@@ -103,8 +103,8 @@
                                     data-description="{{ e($activity->description) }}"
                                     data-user="{{ e($activity->user->name ?? 'Sistem') }}"
                                     data-created-at="{{ $activity->created_at->translatedFormat('d F Y H:i:s') }}"
-                                    data-before='@json($activity->before_data)'
-                                    data-after='@json($activity->after_data)'
+                                    data-before="{{ json_encode($activity->before_data) }}"
+                                    data-after="{{ json_encode($activity->after_data) }}"
                                     data-audit-action="{{ $activity->audit_action ?? '' }}"
                                     data-audit-entity="{{ $activity->audit_entity ?? '' }}"
                                     data-audit-id="{{ $activity->audit_entity_id ?? '' }}"
@@ -187,6 +187,11 @@
 .activity-detail-code {
     white-space: pre-wrap;
     word-break: break-word;
+    font-family: var(--bs-font-monospace, monospace);
+    max-height: 280px;
+    overflow-y: auto;
+    font-size: 0.8rem;
+    line-height: 1.45;
 }
 </style>
 
@@ -209,9 +214,22 @@ document.addEventListener('DOMContentLoaded', function () {
         };
 
         const formatValue = (value) => {
-            if (value === null || value === undefined || value === '') return '-';
-            if (typeof value === 'string') return value;
-            return JSON.stringify(value, null, 2);
+            if (value === null || value === undefined || value === '') return '(Tidak ada data)';
+            if (typeof value === 'object') {
+                if (Object.keys(value).length === 0) return '(Tidak ada data)';
+                return JSON.stringify(value, null, 2);
+            }
+            if (typeof value === 'string') {
+                try {
+                    const parsed = JSON.parse(value);
+                    if (parsed && typeof parsed === 'object') {
+                        if (Object.keys(parsed).length === 0) return '(Tidak ada data)';
+                        return JSON.stringify(parsed, null, 2);
+                    }
+                } catch (e) {}
+                return value;
+            }
+            return String(value);
         };
 
         document.getElementById('activityDetailMeta').textContent =

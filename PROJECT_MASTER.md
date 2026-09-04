@@ -41,7 +41,7 @@ Dokumen ini adalah ringkasan master proyek untuk platform **SIPAT Terpadu**. Unt
   - **Service Layer**: Logika bisnis kompleks diletakkan di Service (contoh: `VehicleService`, `AsetTanahService`) untuk memisahkan database queries dari Controller.
   - **OPD Mapping (Inter-Module Bridge)**: Menjembatani perbedaan data instansi antara Modul Pertanahan (`opd` / `OpdSipat`) dan Modul Kendaraan Dinas (`opds` / `Opd`) melalui tabel perantara `opd_mappings` sehingga data aset tetap konsisten dan terisolasi dengan benar.
   - **Data Isolation (Tenant Isolation)**: Penerapan `TenantScope` (Global Scope) pada modul E-RANDIS dan pembatasan akses data berdasarkan unit kerja OPD pada SIPAT dan eLABEL guna mencegah kebocoran data antar-OPD.
-  - **Observer Pattern**: Automasi sistem pencatatan riwayat (Audit Log) dikendalikan penuh oleh *Eloquent Observers* (`VehicleObserver`, `UserObserver`, dsb) yang mencatat aktivitas ke tabel `activities`.
+  - **Observer Pattern & Audit Trail Terpadu**: Automasi sistem pencatatan riwayat (Audit Log) dikendalikan oleh *Eloquent Observers* (`VehicleObserver`, `UserObserver`, `OpdObserver`, dll) yang merekam aktivitas lengkap beserta payload perbandingan data sebelum (`old_data`) dan sesudah (`new_data`) ke tabel `activities`. Modul SIPAT (`AsetTanahService`) dan eLABEL (`ElabelActivityLog`) juga telah distandarisasi untuk merekam data perubahan yang dapat diinspeksi melalui antarmuka Log Aktivitas Terpadu.
 - **Auth & Security Flow**:
   - Seluruh rute internal dilindungi otorisasi berbasis tipe *Enum* `UserRole`.
   - Keamanan akses controller pada seluruh modul diperkuat menggunakan interface `HasMiddleware` Laravel 12 dengan sintaks deklarasi eksplisit `new Middleware('auth')` untuk mencegah celah bypass otorisasi.

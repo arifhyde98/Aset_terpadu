@@ -68,8 +68,8 @@ class ActivityController extends Controller implements HasMiddleware
                     'description' => $log->description,
                     'user' => $log->user,
                     'created_at' => $log->created_at,
-                    'before_data' => null,
-                    'after_data' => null,
+                    'before_data' => !empty($log->old_data) ? (json_decode($log->old_data, true) ?: null) : null,
+                    'after_data' => !empty($log->new_data) ? (json_decode($log->new_data, true) ?: null) : null,
                 ];
             });
         }

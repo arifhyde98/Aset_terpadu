@@ -206,7 +206,7 @@ class ElabelSertifikatController extends Controller implements HasMiddleware
 
         $sertifikat = ElabelSertifikat::create($payload);
 
-        $this->logActivity('create', 'Sertipikat Tanah', 'Menambahkan sertipikat ' . ($sertifikat->no_sertipikat ?? '-') . '.', 'sertifikat_tanah', $sertifikat->id);
+        $this->logActivity('create', 'Sertipikat Tanah', 'Menambahkan sertipikat ' . ($sertifikat->no_sertipikat ?? '-') . '.', 'sertifikat_tanah', $sertifikat->id, null, $sertifikat->toArray());
 
         return redirect()->route('elabel.sertifikat.index')->with('success', 'Data sertipikat berhasil ditambahkan.');
     }
@@ -271,9 +271,10 @@ class ElabelSertifikatController extends Controller implements HasMiddleware
             $payload['pdf_path'] = $this->storeUploadedPdf($request->file('pdf'), $payload);
         }
 
+        $oldSertifikat = $item->toArray();
         $item->update($payload);
 
-        $this->logActivity('update', 'Sertipikat Tanah', 'Mengubah sertipikat ' . ($item->no_sertipikat ?? '-') . '.', 'sertifikat_tanah', $id);
+        $this->logActivity('update', 'Sertipikat Tanah', 'Mengubah sertipikat ' . ($item->no_sertipikat ?? '-') . '.', 'sertifikat_tanah', $id, $oldSertifikat, $item->fresh()->toArray());
 
         return redirect()->route('elabel.sertifikat.index')->with('success', 'Data sertipikat berhasil diperbarui.');
     }
@@ -308,10 +309,11 @@ class ElabelSertifikatController extends Controller implements HasMiddleware
             Storage::disk('public')->delete($item->pdf_path);
         }
 
+        $oldSertifikat = $item->toArray();
         $noSert = $item->no_sertipikat;
         $item->delete();
 
-        $this->logActivity('delete', 'Sertipikat Tanah', 'Menghapus sertipikat ' . ($noSert ?? '-') . '.', 'sertifikat_tanah', $id);
+        $this->logActivity('delete', 'Sertipikat Tanah', 'Menghapus sertipikat ' . ($noSert ?? '-') . '.', 'sertifikat_tanah', $id, $oldSertifikat, null);
 
         return redirect()->route('elabel.sertifikat.index')->with('success', 'Data sertipikat berhasil dihapus.');
     }
@@ -520,13 +522,15 @@ class ElabelSertifikatController extends Controller implements HasMiddleware
         return 'No. Sertipikat "' . $duplicate['value'] . '" sudah terdaftar pada data Sertifikat Tanah.';
     }
 
-    private function logActivity(string $action, string $module, string $description, ?string $refType = null, ?int $refId = null): void
+    private function logActivity(string $action, string $module, string $description, ?string $refType = null, ?int $refId = null, ?array $oldData = null, ?array $newData = null): void
     {
         ElabelActivityLog::create([
             'user_id'        => Auth::id() ?: 1,
             'action'         => $action,
             'module'         => $module,
             'description'    => $description,
+            'old_data'       => !is_null($oldData) ? json_encode($oldData) : null,
+            'new_data'       => !is_null($newData) ? json_encode($newData) : null,
             'reference_type' => $refType,
             'reference_id'   => $refId,
             'ip_address'     => request()->ip(),

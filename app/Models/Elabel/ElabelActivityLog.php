@@ -38,6 +38,8 @@ class ElabelActivityLog extends Model
         'action',
         'module',
         'description',
+        'old_data',
+        'new_data',
         'reference_type',
         'reference_id',
         'ip_address',

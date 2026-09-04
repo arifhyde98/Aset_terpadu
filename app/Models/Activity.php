@@ -58,8 +58,8 @@ class Activity extends \Illuminate\Database\Eloquent\Model
         return self::create($payload);
     }
 
-    public static function logSipat(string $description, string $type = 'info')
+    public static function logSipat(string $description, string $type = 'info', ?array $oldData = null, ?array $newData = null)
     {
-        return self::log($description, $type, self::MODULE_SIPAT, 'sipat');
+        return self::log($description, $type, self::MODULE_SIPAT, 'sipat', $oldData, $newData);
     }
 }
