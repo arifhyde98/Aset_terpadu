@@ -47,12 +47,10 @@ return new class extends Migration
         // 3. pemohon
         Schema::create('pemohon', function (Blueprint $table) {
             $table->increments('id');
-            $table->string('nama_pemohon', 150);
+            $table->string('nama', 150);
             $table->string('nik', 30)->nullable();
-            $table->string('nomor_telepon', 30)->nullable();
-            $table->string('tempat_lahir', 100)->nullable();
-            $table->date('tanggal_lahir')->nullable();
-            $table->integer('umur')->nullable();
+            $table->string('ttl', 150)->nullable();
+            $table->string('umur', 50)->nullable();
             $table->string('jenis_kelamin', 20)->nullable();
             $table->string('warga_negara', 50)->nullable();
             $table->string('agama', 50)->nullable();

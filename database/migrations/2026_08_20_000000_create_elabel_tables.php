@@ -110,6 +110,7 @@ return new class extends Migration
                 $table->string('pengguna', 100)->nullable();
                 $table->string('status', 20)->default('Tersedia');
                 $table->string('pdf_path', 255)->nullable();
+                $table->string('telegram_file_id', 255)->nullable();
                 $table->unsignedInteger('sipat_opd_id')->nullable()->index();
                 $table->unsignedBigInteger('input_by')->nullable()->index();
                 $table->timestamps();

@@ -16,6 +16,7 @@ return new class extends Migration
             $table->string('nama')->unique();
             $table->string('singkatan')->nullable();
             $table->text('alamat')->nullable();
+            $table->boolean('aktif')->default(true);
             $table->timestamps();
         });
     }
