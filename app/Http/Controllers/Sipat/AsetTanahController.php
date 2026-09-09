@@ -62,7 +62,7 @@ class AsetTanahController extends Controller implements HasMiddleware
             return redirect()->route('sipat.aset.index');
         }
 
-        $filterKeys = ['opd_id', 'opd', 'status', 'kategori_status', 'search', 'per_page', 'page'];
+        $filterKeys = ['opd_id', 'opd', 'status', 'kategori_status', 'search', 'per_page', 'page', 'sort_by', 'sort_order'];
         $queryFilters = array_filter($request->only($filterKeys), function($v) {
             if (is_array($v)) return !empty(array_filter($v));
             return !is_null($v) && $v !== '';

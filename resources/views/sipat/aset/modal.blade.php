@@ -181,19 +181,19 @@
                         <div class="detail-label">ALAMAT / LOKASI TANAH</div>
                         <div class="p-3 bg-body rounded-3 border text-body" style="font-size: 0.9rem;">
                             <div class="d-flex align-items-start gap-2">
-                                <i class="bi bi-geo-alt-fill text-danger fs-5 mt-0.5 flex-shrink-0"></i>
+                                <i class="bi bi-geo-alt text-secondary opacity-75 fs-5 mt-0.5 flex-shrink-0"></i>
                                 <div class="flex-grow-1">
                                     <div class="fw-semibold">{{ $aset->alamat ?? 'Belum ada alamat detail' }}</div>
                                     @if($aset->wilayahKecamatan || $aset->wilayahDesa)
                                         <div class="mt-2 d-flex align-items-center gap-1.5 flex-wrap">
                                             @if($aset->wilayahKecamatan)
-                                                <span class="badge bg-info-subtle text-info-emphasis border border-info-subtle px-2 py-0.5" style="font-size: 0.72rem;">
-                                                    <i class="bi bi-geo-alt me-1"></i>Kecamatan: <strong>{{ $aset->wilayahKecamatan->nama }}</strong>
+                                                <span class="badge bg-body-secondary text-secondary border px-2 py-0.5" style="font-size: 0.72rem;">
+                                                    Kecamatan: <strong class="text-body">{{ $aset->wilayahKecamatan->nama }}</strong>
                                                 </span>
                                             @endif
                                             @if($aset->wilayahDesa)
-                                                <span class="badge bg-light text-secondary border px-2 py-0.5" style="font-size: 0.72rem;">
-                                                    Desa/Kelurahan: <strong>{{ $aset->wilayahDesa->nama }}</strong>
+                                                <span class="badge bg-body-secondary text-secondary border px-2 py-0.5" style="font-size: 0.72rem;">
+                                                    Desa/Kelurahan: <strong class="text-body">{{ $aset->wilayahDesa->nama }}</strong>
                                                 </span>
                                             @endif
                                         </div>

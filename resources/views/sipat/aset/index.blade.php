@@ -292,12 +292,23 @@
                             @endif
                         </div>
                     </div>
+                    @if(request('sort_by'))
+                        <input type="hidden" name="sort_by" value="{{ request('sort_by') }}">
+                    @endif
+                    @if(request('sort_order'))
+                        <input type="hidden" name="sort_order" value="{{ request('sort_order') }}">
+                    @endif
                 </div>
             </form>
         </div>
     </div>
 
     <!-- Data Table Container -->
+    @php
+        $currentSortBy = request('sort_by', 'nama_aset');
+        $currentSortOrder = request('sort_order', 'asc');
+        $nextSortOrder = $currentSortOrder === 'asc' ? 'desc' : 'asc';
+    @endphp
     <div class="card clean-card border-0 shadow-sm table-container-sipat overflow-hidden mb-4">
         <div class="table-responsive">
             <table class="table table-hover align-middle mb-0 aset-table">
@@ -307,10 +318,46 @@
                             <input type="checkbox" id="checkAll" class="form-check-input">
                         </th>
                         <th class="py-3" style="width: 50px;">NO</th>
-                        <th class="py-3" style="min-width: 260px;">PERUNTUKAN / NAMA ASET</th>
-                        <th class="py-3">LUAS (M²)</th>
-                        <th class="py-3">OPD PENGELOLA</th>
-                        <th class="py-3" style="min-width: 220px;">ALAMAT / LOKASI</th>
+                        <th class="py-3" style="min-width: 260px;">
+                            <a href="{{ request()->fullUrlWithQuery(['sort_by' => 'nama_aset', 'sort_order' => $currentSortBy === 'nama_aset' ? $nextSortOrder : 'asc']) }}" class="text-secondary text-decoration-none d-inline-flex align-items-center gap-1" title="Urutkan berdasarkan Abjad Nama/Peruntukan">
+                                <span>PERUNTUKAN / NAMA ASET</span>
+                                @if($currentSortBy === 'nama_aset')
+                                    <i class="bi bi-sort-alpha-{{ $currentSortOrder === 'asc' ? 'down' : 'up' }} text-primary fw-bold"></i>
+                                @else
+                                    <i class="bi bi-arrow-down-up text-secondary opacity-50 small" style="font-size: 0.72rem;"></i>
+                                @endif
+                            </a>
+                        </th>
+                        <th class="py-3">
+                            <a href="{{ request()->fullUrlWithQuery(['sort_by' => 'luas', 'sort_order' => $currentSortBy === 'luas' ? $nextSortOrder : 'asc']) }}" class="text-secondary text-decoration-none d-inline-flex align-items-center gap-1" title="Urutkan berdasarkan Luas">
+                                <span>LUAS (M²)</span>
+                                @if($currentSortBy === 'luas')
+                                    <i class="bi bi-sort-numeric-{{ $currentSortOrder === 'asc' ? 'down' : 'up' }} text-primary fw-bold"></i>
+                                @else
+                                    <i class="bi bi-arrow-down-up text-secondary opacity-50 small" style="font-size: 0.72rem;"></i>
+                                @endif
+                            </a>
+                        </th>
+                        <th class="py-3">
+                            <a href="{{ request()->fullUrlWithQuery(['sort_by' => 'opd', 'sort_order' => $currentSortBy === 'opd' ? $nextSortOrder : 'asc']) }}" class="text-secondary text-decoration-none d-inline-flex align-items-center gap-1" title="Urutkan berdasarkan OPD Pengelola">
+                                <span>OPD PENGELOLA</span>
+                                @if($currentSortBy === 'opd')
+                                    <i class="bi bi-sort-alpha-{{ $currentSortOrder === 'asc' ? 'down' : 'up' }} text-primary fw-bold"></i>
+                                @else
+                                    <i class="bi bi-arrow-down-up text-secondary opacity-50 small" style="font-size: 0.72rem;"></i>
+                                @endif
+                            </a>
+                        </th>
+                        <th class="py-3" style="min-width: 220px;">
+                            <a href="{{ request()->fullUrlWithQuery(['sort_by' => 'alamat', 'sort_order' => $currentSortBy === 'alamat' ? $nextSortOrder : 'asc']) }}" class="text-secondary text-decoration-none d-inline-flex align-items-center gap-1" title="Urutkan berdasarkan Alamat">
+                                <span>ALAMAT / LOKASI</span>
+                                @if($currentSortBy === 'alamat')
+                                    <i class="bi bi-sort-alpha-{{ $currentSortOrder === 'asc' ? 'down' : 'up' }} text-primary fw-bold"></i>
+                                @else
+                                    <i class="bi bi-arrow-down-up text-secondary opacity-50 small" style="font-size: 0.72rem;"></i>
+                                @endif
+                            </a>
+                        </th>
                         <th class="py-3">STATUS PROSES BPN</th>
                         <th class="text-center py-3 pe-3" style="width: 140px;">AKSI</th>
                     </tr>
@@ -367,29 +414,28 @@
                                 </span>
                             </td>
                             <td style="min-width: 220px; max-width: 280px;">
-                                <div class="d-flex flex-column gap-1">
-                                    @if($item->wilayahKecamatan || $item->wilayahDesa)
-                                        <div class="d-flex align-items-center gap-1 flex-wrap">
-                                            @if($item->wilayahKecamatan)
-                                                <span class="badge bg-info-subtle text-info-emphasis border border-info-subtle px-1.5 py-0.5" style="font-size: 0.68rem;">
-                                                    <i class="bi bi-geo-alt-fill me-0.5 text-danger"></i>Kec. {{ $item->wilayahKecamatan->nama }}
-                                                </span>
-                                            @endif
-                                            @if($item->wilayahDesa)
-                                                <span class="badge bg-light text-secondary border px-1.5 py-0.5" style="font-size: 0.68rem;">
-                                                    Desa {{ $item->wilayahDesa->nama }}
-                                                </span>
-                                            @endif
-                                        </div>
-                                    @endif
-
+                                <div class="d-flex flex-column gap-0.5">
                                     @if(!empty($item->alamat))
-                                        <div class="text-body-secondary small" style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.35; font-size: 0.78rem;" title="{{ $item->alamat }}">
-                                            <i class="bi bi-geo-alt text-danger me-1 flex-shrink-0"></i>{{ $item->alamat }}
+                                        <div class="text-body-secondary" style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.35; font-size: 0.78rem;" title="{{ $item->alamat }}">
+                                            <i class="bi bi-geo-alt text-secondary opacity-75 me-1 flex-shrink-0"></i>{{ $item->alamat }}
                                         </div>
                                     @else
                                         <div class="text-muted fst-italic small" style="font-size: 0.76rem;">
                                             <i class="bi bi-geo-alt text-secondary opacity-50 me-1"></i>Belum ada alamat detail
+                                        </div>
+                                    @endif
+
+                                    @if($item->wilayahKecamatan || $item->wilayahDesa)
+                                        <div class="text-secondary opacity-75 small d-flex align-items-center gap-1.5 flex-wrap mt-0.5" style="font-size: 0.7rem;">
+                                            @if($item->wilayahKecamatan)
+                                                <span>Kec. {{ $item->wilayahKecamatan->nama }}</span>
+                                            @endif
+                                            @if($item->wilayahKecamatan && $item->wilayahDesa)
+                                                <span>&bull;</span>
+                                            @endif
+                                            @if($item->wilayahDesa)
+                                                <span>Desa {{ $item->wilayahDesa->nama }}</span>
+                                            @endif
                                         </div>
                                     @endif
                                 </div>

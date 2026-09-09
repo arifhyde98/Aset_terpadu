@@ -104,12 +104,24 @@ class AsetTanahService
             $query->whereDate('tanggal_perolehan', $filters['tanggal_perolehan']);
         }
 
-        $orderQuery = $query->orderByRaw("
-            CASE 
-                WHEN status_pencatatan = 'USULAN_BELUM_TERCATAT' THEN 1 
-                ELSE 0 
-            END ASC
-        ")->orderBy('id_aset', 'desc');
+        // Pengurutan (Default: Abjad A-Z berdasarkan Peruntukan / Nama Aset)
+        $sortBy = $filters['sort_by'] ?? 'nama_aset';
+        $sortOrder = strtolower($filters['sort_order'] ?? 'asc') === 'desc' ? 'desc' : 'asc';
+
+        $allowedSorts = ['nama_aset', 'peruntukan', 'luas', 'opd', 'alamat', 'kode_aset', 'id_aset'];
+        if (!in_array($sortBy, $allowedSorts, true)) {
+            $sortBy = 'nama_aset';
+        }
+
+        if ($sortBy === 'nama_aset') {
+            $query->orderByRaw("COALESCE(NULLIF(TRIM(peruntukan), ''), TRIM(nama_aset)) {$sortOrder}");
+        } elseif ($sortBy === 'opd') {
+            $query->orderBy('opd', $sortOrder);
+        } else {
+            $query->orderBy($sortBy, $sortOrder);
+        }
+
+        $orderQuery = $query->orderBy('id_aset', 'desc');
 
         $perPage = $filters['per_page'] ?? 15;
         if ($perPage === 'all') {
