@@ -12,12 +12,14 @@ return new class extends Migration
     public function up(): void
     {
         // SIPAT Master OPD
-        Schema::create('opd', function (Blueprint $table) {
-            $table->increments('id');
-            $table->string('nama', 150)->unique('opd_nama_unique');
-            $table->boolean('aktif')->default(true);
-            $table->timestamps();
-        });
+        if (!Schema::hasTable('opd')) {
+            Schema::create('opd', function (Blueprint $table) {
+                $table->increments('id');
+                $table->string('nama', 150)->unique('opd_nama_unique');
+                $table->boolean('aktif')->default(true);
+                $table->timestamps();
+            });
+        }
     }
 
     /**

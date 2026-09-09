@@ -11,25 +11,27 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('opd_mappings', function (Blueprint $table) {
-            $table->bigIncrements('id');
-            $table->unsignedInteger('sipat_opd_id');
-            $table->unsignedBigInteger('erandis_opd_id');
-            $table->enum('status_verifikasi', ['matched', 'pending'])->default('matched');
-            $table->timestamps();
+        if (!Schema::hasTable('opd_mappings')) {
+            Schema::create('opd_mappings', function (Blueprint $table) {
+                $table->bigIncrements('id');
+                $table->unsignedInteger('sipat_opd_id');
+                $table->unsignedBigInteger('erandis_opd_id');
+                $table->enum('status_verifikasi', ['matched', 'pending'])->default('matched');
+                $table->timestamps();
 
-            $table->unique(['sipat_opd_id', 'erandis_opd_id'], 'opd_mappings_sipat_opd_id_erandis_opd_id_unique');
+                $table->unique(['sipat_opd_id', 'erandis_opd_id'], 'opd_mappings_sipat_opd_id_erandis_opd_id_unique');
 
-            $table->foreign('sipat_opd_id', 'opd_mappings_sipat_opd_id_foreign')
-                ->references('id')
-                ->on('opd')
-                ->onDelete('cascade');
+                $table->foreign('sipat_opd_id', 'opd_mappings_sipat_opd_id_foreign')
+                    ->references('id')
+                    ->on('opd')
+                    ->onDelete('cascade');
 
-            $table->foreign('erandis_opd_id', 'opd_mappings_erandis_opd_id_foreign')
-                ->references('id')
-                ->on('opds')
-                ->onDelete('cascade');
-        });
+                $table->foreign('erandis_opd_id', 'opd_mappings_erandis_opd_id_foreign')
+                    ->references('id')
+                    ->on('opds')
+                    ->onDelete('cascade');
+            });
+        }
     }
 
     /**

@@ -10,7 +10,7 @@ Dokumen ini merupakan sumber kebenaran tunggal (*Single Source of Truth*) mengen
 
 ## 1. 🛠️ Environment & Technology Stack
 - **Framework Core:** Laravel 12 / PHP 8.2+
-- **Database:** MySQL / MariaDB / PostgreSQL (Supabase Compatible) — Seluruh 54 tabel dilengkapi migrasi Laravel Blueprint murni (`database/migrations/`) yang 100% database-agnostic dan siap dieksekusi via `php artisan migrate`.
+- **Database:** MySQL / MariaDB / PostgreSQL (Supabase Compatible) — Seluruh migrasi Laravel Blueprint murni (`database/migrations/`) dirancang idempoten dengan guard `if (!Schema::hasTable(...))` pada pembuatan tabel sehingga aman dieksekusi via `php artisan migrate` tanpa risiko konflik `Table already exists` maupun kehilangan data riil. JANGAN PERNAH menjalankan `migrate:fresh` atau `migrate:reset` pada environment aktif/produksi.
 - **Timezone:** Dikonfigurasi secara terpusat melalui variabel lingkungan `APP_TIMEZONE` di `.env` & `config/app.php`.
 - **Frontend / Assets:** 
   - **Bundler:** Vite
