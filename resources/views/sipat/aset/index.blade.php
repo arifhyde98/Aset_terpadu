@@ -141,14 +141,15 @@
                     <!-- 3. Kategori Status Filter Dropdown -->
                     <div class="col-12 col-sm-6 col-md-3 col-xl-2">
                         <label class="form-label small fw-semibold text-secondary mb-1">Kategori Aset / Status</label>
-                        <select name="kategori_status" class="form-select" onchange="document.getElementById('filterForm').submit()">
+                        <select name="kategori_status" id="filterKategoriStatus" class="form-select" onchange="handleKategoriStatusChange(this.value)">
                             <option value="">-- Semua Kategori --</option>
-                            <option value="target_sertifikat" class="fw-bold text-primary" {{ request('kategori_status') === 'target_sertifikat' ? 'selected' : '' }}>🎯 Target Pensertifikatan</option>
+                           
                             <optgroup label="Status Aset Tanah PEMDA">
                                 <option value="sudah_bersertifikat" {{ request('kategori_status') === 'sudah_bersertifikat' ? 'selected' : '' }}>Sudah Bersertifikat</option>
                                 <option value="dalam_proses" {{ request('kategori_status') === 'dalam_proses' ? 'selected' : '' }}>Dalam Proses BPN</option>
                                 <option value="belum_bersertifikat" {{ in_array(request('kategori_status'), ['belum_bersertifikat', 'belum_diproses']) ? 'selected' : '' }}>Belum Bersertifikat</option>
                                 <option value="bermasalah" {{ request('kategori_status') === 'bermasalah' ? 'selected' : '' }}>Bermasalah / Sengketa</option>
+                                <option value="target_sertifikat" {{ request('kategori_status') === 'target_sertifikat' ? 'selected' : '' }}>Target Pensertifikatan</option>
                             </optgroup>
                             <optgroup label="Status Pencatatan NIBAR">
                                 <option value="TERCATAT_KIB_A" {{ request('kategori_status') === 'TERCATAT_KIB_A' ? 'selected' : '' }}>KIB A (Tercatat Resmi)</option>
@@ -167,7 +168,7 @@
                         </select>
                     </div>
 
-                    <!-- 4. Multi-select Checkbox Status Filter Dropdown -->
+                    <!-- 4. Multi-select Checkbox Status Filter Dropdown (Dinamis Sesuai Kategori) -->
                     <div class="col-12 col-sm-6 col-md-3 col-xl-2">
                         <label class="form-label small fw-semibold text-secondary mb-1">
                             Status BPN <span class="badge bg-warning-subtle text-body px-1.5 py-0.5 rounded-pill" style="font-size: 0.65rem;">Centang</span>
@@ -186,14 +187,63 @@
                                     @endif
                                 </span>
                             </button>
-                            <div class="dropdown-menu p-3 shadow-lg border-0 rounded-4" style="min-width: 260px; max-height: 380px; overflow-y: auto;">
+                            <div class="dropdown-menu p-3 shadow-lg border-0 rounded-4" style="min-width: 270px; max-height: 380px; overflow-y: auto;">
+                                @php
+                                    $activeKat = request('kategori_status');
+                                    $katLabelMap = [
+                                        'sudah_bersertifikat'   => 'Sudah Bersertifikat',
+                                        'dalam_proses'          => 'Dalam Proses BPN',
+                                        'belum_bersertifikat'   => 'Belum Bersertifikat',
+                                        'belum_diproses'        => 'Belum Bersertifikat',
+                                        'bermasalah'            => 'Bermasalah / Sengketa',
+                                        'target_sertifikat'     => 'Target Pensertifikatan',
+                                        'TERCATAT_KIB_A'        => 'Tercatat KIB A',
+                                        'USULAN_BELUM_TERCATAT' => 'Tanpa NIBAR',
+                                    ];
+                                    $isCategoryFiltered = !empty($activeKat) && !in_array($activeKat, ['target_sertifikat', 'TERCATAT_KIB_A', 'USULAN_BELUM_TERCATAT']);
+                                @endphp
                                 <div class="d-flex align-items-center justify-content-between mb-2 border-bottom pb-1">
-                                    <span class="fw-semibold small text-secondary">Centang Status BPN:</span>
-                                    <span class="badge bg-primary-subtle text-primary small" id="statusHeaderCount">{{ $selectedCount }} Terpilih</span>
+                                    <span class="fw-semibold small text-secondary text-truncate me-1">
+                                        @if($isCategoryFiltered)
+                                            Status (<span class="text-primary fw-bold">{{ $katLabelMap[$activeKat] ?? ucwords(str_replace('_', ' ', $activeKat)) }}</span>):
+                                        @else
+                                            Centang Status BPN:
+                                        @endif
+                                    </span>
+                                    <span class="badge bg-primary-subtle text-primary small flex-shrink-0" id="statusHeaderCount">{{ $selectedCount }} Terpilih</span>
                                 </div>
-                                <div class="mb-2">
+
+                                @if($isCategoryFiltered)
+                                    <div class="mb-2 p-1.5 bg-body-tertiary rounded-2 small d-flex align-items-center justify-content-between">
+                                        <span class="text-secondary" style="font-size: 0.72rem;"><i class="bi bi-funnel me-1"></i>Otomatis disaring</span>
+                                        <button type="button" class="btn btn-link p-0 text-decoration-none fw-semibold" style="font-size: 0.72rem;" id="btnToggleAllStatuses">Lihat Semua</button>
+                                    </div>
+                                @endif
+
+                                <div class="mb-2" id="statusCheckboxesContainer">
+                                    @php
+                                        $visibleStatusCount = 0;
+                                    @endphp
                                     @foreach($statusList as $st)
-                                        <div class="form-check mb-1.5">
+                                        @php
+                                            $stCats = array_map('strtolower', $st->categories);
+                                            $isMatch = true;
+                                            if ($isCategoryFiltered) {
+                                                if ($activeKat === 'sudah_bersertifikat') {
+                                                    $isMatch = in_array('bersertifikat', $stCats, true);
+                                                } elseif ($activeKat === 'dalam_proses') {
+                                                    $isMatch = in_array('proses', $stCats, true) || in_array('permohonan_bpn', $stCats, true);
+                                                } elseif (in_array($activeKat, ['belum_bersertifikat', 'belum_diproses'])) {
+                                                    $isMatch = !in_array('bersertifikat', $stCats, true) && !in_array('kendala', $stCats, true);
+                                                } elseif (in_array($activeKat, ['bermasalah', 'kendala'])) {
+                                                    $isMatch = in_array('kendala', $stCats, true);
+                                                } else {
+                                                    $isMatch = in_array(strtolower($activeKat), $stCats, true);
+                                                }
+                                            }
+                                            if ($isMatch) $visibleStatusCount++;
+                                        @endphp
+                                        <div class="form-check mb-1.5 status-item {{ !$isMatch ? 'd-none status-other-category' : '' }}" data-categories="{{ implode(',', $st->categories) }}">
                                             <input class="form-check-input status-checkbox" type="checkbox" name="status[]" value="{{ $st->id_status }}" id="status_chk_{{ $st->id_status }}"
                                             {{ (is_array(request('status')) && in_array($st->id_status, request('status'))) || request('status') == $st->id_status ? 'checked' : '' }}>
                                             <label class="form-check-label small fw-medium text-body cursor-pointer" for="status_chk_{{ $st->id_status }}">
@@ -202,6 +252,12 @@
                                             </label>
                                         </div>
                                     @endforeach
+
+                                    @if($visibleStatusCount === 0)
+                                        <div class="text-center py-2 text-muted small fst-italic" id="emptyStatusNotice">
+                                            Tidak ada status spesifik untuk kategori ini
+                                        </div>
+                                    @endif
                                 </div>
                                 <div class="pt-2 border-top d-flex gap-2 justify-content-between align-items-center">
                                     <button type="button" class="btn btn-xs btn-link text-decoration-none text-muted p-0 small" id="btnClearStatusCheckboxes">Bersihkan</button>
@@ -727,6 +783,58 @@
             btnClearStatus.addEventListener('click', function() {
                 statusCheckboxes.forEach(cb => cb.checked = false);
                 updateStatusFilterUI();
+            });
+        }
+
+        // Handler dinamis Kategori Status: uncheck status yang tidak sesuai kategori baru lalu submit form
+        window.handleKategoriStatusChange = function(newKategori) {
+            const checkboxes = document.querySelectorAll('.status-checkbox');
+            checkboxes.forEach(cb => {
+                const item = cb.closest('.status-item');
+                if (!item) return;
+                const cats = (item.getAttribute('data-categories') || '').split(',').map(c => c.trim().toLowerCase());
+                
+                let isMatch = true;
+                if (!newKategori || ['target_sertifikat', 'TERCATAT_KIB_A', 'USULAN_BELUM_TERCATAT'].includes(newKategori)) {
+                    isMatch = true;
+                } else if (newKategori === 'sudah_bersertifikat') {
+                    isMatch = cats.includes('bersertifikat');
+                } else if (newKategori === 'dalam_proses') {
+                    isMatch = cats.includes('proses') || cats.includes('permohonan_bpn');
+                } else if (newKategori === 'belum_bersertifikat' || newKategori === 'belum_diproses') {
+                    isMatch = !cats.includes('bersertifikat') && !cats.includes('kendala');
+                } else if (newKategori === 'bermasalah' || newKategori === 'kendala') {
+                    isMatch = cats.includes('kendala');
+                } else {
+                    isMatch = cats.includes(newKategori.toLowerCase());
+                }
+
+                if (!isMatch) {
+                    cb.checked = false;
+                }
+            });
+
+            document.getElementById('filterForm').submit();
+        };
+
+        // Tombol toggle "Lihat Semua Status" jika ingin melihat status di luar kategori aktif
+        const btnToggleAllStatuses = document.getElementById('btnToggleAllStatuses');
+        if (btnToggleAllStatuses) {
+            btnToggleAllStatuses.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                const hiddenItems = document.querySelectorAll('.status-other-category');
+                const isShowingAll = this.getAttribute('data-showing-all') === 'true';
+                
+                if (isShowingAll) {
+                    hiddenItems.forEach(item => item.classList.add('d-none'));
+                    this.textContent = 'Lihat Semua';
+                    this.setAttribute('data-showing-all', 'false');
+                } else {
+                    hiddenItems.forEach(item => item.classList.remove('d-none'));
+                    this.textContent = 'Saring Kategori';
+                    this.setAttribute('data-showing-all', 'true');
+                }
             });
         }
 
