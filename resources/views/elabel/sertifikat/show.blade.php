@@ -49,6 +49,10 @@
                                 <td class="fw-bold text-navy fs-5">: {{ $item->no_sertipikat }}</td>
                             </tr>
                             <tr>
+                                <td class="text-secondary small fw-semibold">Tanggal Sertifikat</td>
+                                <td class="fw-medium text-dark">: {{ $item->tanggal_sertifikat ? $item->tanggal_sertifikat->format('d M Y') : '-' }}</td>
+                            </tr>
+                            <tr>
                                 <td class="text-secondary small fw-semibold">NIBAR</td>
                                 <td class="fw-medium text-dark">: {{ $item->nibar ?: '-' }}</td>
                             </tr>

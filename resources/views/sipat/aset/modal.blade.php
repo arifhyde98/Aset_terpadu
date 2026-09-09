@@ -443,6 +443,9 @@
                             <div class="p-3 bg-body rounded-3 border h-100">
                                 <small class="text-secondary d-block fw-semibold text-uppercase mb-1">NO. SERTIPIKAT (eLABEL)</small>
                                 <span class="fw-bold text-navy font-monospace fs-6">{{ $elabelSertifikat->no_sertipikat }}</span>
+                                @if($elabelSertifikat->tanggal_sertifikat)
+                                    <div class="small text-secondary mt-1"><i class="bi bi-calendar-event text-primary me-1"></i> Terbit: {{ $elabelSertifikat->tanggal_sertifikat->format('d/m/Y') }}</div>
+                                @endif
                             </div>
                         </div>
                     </div>
@@ -543,6 +546,7 @@
                                 'tanggal_perolehan' => $aset->tanggal_perolehan ?? '',
                                 'nilai_perolehan' => $aset->harga_perolehan ?? '',
                                 'cara_perolehan' => $aset->dasar_perolehan ?? '',
+                                'tanggal_sertifikat' => $aset->latestProses?->tgl_selesai ?? $aset->latestProses?->tanggal_proses ?? '',
                                 'alamat' => $aset->alamat ?? '',
                                 'status_penggunaan' => $aset->peruntukan ?? '',
                             ]) }}" target="_blank" class="btn btn-primary fw-bold px-4 py-2 shadow-sm">

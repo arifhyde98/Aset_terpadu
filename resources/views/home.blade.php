@@ -62,22 +62,22 @@
 
                     <!-- Breakdown Rincian Status Pensertifikatan SIPAT -->
                     <div class="pt-2 border-top">
-                        <div class="d-flex justify-content-between align-items-center text-secondary small mb-1">
+                        <a href="{{ route('sipat.aset.index', ['kategori_status' => 'sudah_bersertifikat']) }}" class="d-flex justify-content-between align-items-center text-secondary small mb-1 text-decoration-none py-0.5 px-1 rounded hover-bg-light">
                             <span><i class="bi bi-patch-check-fill text-success me-1"></i> Sudah Bersertifikat:</span>
                             <strong class="text-dark">{{ number_format($sipatSertifikatCount) }} Bidang</strong>
-                        </div>
-                        <div class="d-flex justify-content-between align-items-center text-secondary small mb-1">
+                        </a>
+                        <a href="{{ route('sipat.aset.index', ['kategori_status' => 'dalam_proses']) }}" class="d-flex justify-content-between align-items-center text-secondary small mb-1 text-decoration-none py-0.5 px-1 rounded hover-bg-light">
                             <span><i class="bi bi-hourglass-split text-warning me-1"></i> Sedang Diproses BPN:</span>
                             <strong class="text-dark">{{ number_format($sipatProsesBpnCount) }} Berkas</strong>
-                        </div>
-                        <div class="d-flex justify-content-between align-items-center text-secondary small mb-1">
+                        </a>
+                        <a href="{{ route('sipat.aset.index', ['kategori_status' => 'bermasalah']) }}" class="d-flex justify-content-between align-items-center text-secondary small mb-1 text-decoration-none py-0.5 px-1 rounded hover-bg-light">
                             <span><i class="bi bi-exclamation-triangle-fill text-danger me-1"></i> Terkendala / Masalah:</span>
                             <strong class="text-danger">{{ number_format($sipatKendalaCount) }} Bidang</strong>
-                        </div>
-                        <div class="d-flex justify-content-between align-items-center text-secondary small">
+                        </a>
+                        <a href="{{ route('sipat.aset.index', ['kategori_status' => 'belum_bersertifikat']) }}" class="d-flex justify-content-between align-items-center text-secondary small text-decoration-none py-0.5 px-1 rounded hover-bg-light">
                             <span><i class="bi bi-dash-circle text-secondary me-1"></i> Belum Bersertifikat:</span>
                             <strong class="text-secondary">{{ number_format($sipatBelumSertifikatCount) }} Bidang</strong>
-                        </div>
+                        </a>
                     </div>
                 </div>
             </div>

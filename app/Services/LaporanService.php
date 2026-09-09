@@ -79,43 +79,7 @@ class LaporanService
         // Filter Kategori Status (Belum Diproses, Dalam Proses, Sudah Bersertifikat, Bermasalah, Belum Bersertifikat)
         $kat = $filters['kategori_status'] ?? '';
         if ($kat !== '') {
-            if ($kat === 'sudah_bersertifikat') {
-                $query->whereHas('latestProses.statusProses', function($sq) {
-                    $sq->where('kategori', 'LIKE', '%bersertifikat%');
-                });
-            } elseif ($kat === 'dalam_proses') {
-                $query->whereHas('latestProses.statusProses', function($sq) {
-                    $sq->where('kategori', 'LIKE', '%proses%');
-                });
-            } elseif ($kat === 'belum_diproses') {
-                $query->where(function($q) {
-                    $q->doesntHave('latestProses')
-                      ->orWhereHas('latestProses.statusProses', function($sq) {
-                          $sq->where('kategori', 'LIKE', '%belum_diurus%');
-                      });
-                });
-            } elseif ($kat === 'bermasalah') {
-                $query->whereHas('latestProses.statusProses', function($sq) {
-                    $sq->where('kategori', 'LIKE', '%kendala%');
-                });
-            } elseif ($kat === 'belum_bersertifikat') {
-                // Aturan Baku User: Tanah Belum Bersertifikat = Tanah Seluruhnya - Tanah Bersertifikat - Tanah Bermasalah - Tanah Target
-                $targetAsetIds = DB::table('sipat_target_sertifikat')->pluck('aset_tanah_id')->filter()->toArray();
-                if (!empty($targetAsetIds)) {
-                    $query->whereNotIn('id_aset', $targetAsetIds);
-                }
-                $query->where(function($q) {
-                    $q->doesntHave('latestProses')
-                      ->orWhereHas('latestProses.statusProses', function($sq) {
-                          $sq->where('kategori', 'NOT LIKE', '%bersertifikat%')
-                            ->where('kategori', 'NOT LIKE', '%kendala%');
-                      });
-                });
-            } else {
-                $query->whereHas('latestProses.statusProses', function($sq) use ($kat) {
-                    $sq->where('kategori', 'LIKE', "%{$kat}%");
-                });
-            }
+            $query->filterKategoriStatus($kat);
         } elseif (!empty($filters['status'])) {
             $query->whereHas('latestProses', function($q) use ($filters) {
                 $q->whereIn('id_status', $filters['status']);

@@ -55,6 +55,7 @@ Route::prefix('elabel')->name('elabel.')->group(function () {
     Route::get('sertifikat/create', [\App\Http\Controllers\Elabel\ElabelSertifikatController::class, 'create'])->name('sertifikat.create');
     Route::post('sertifikat', [\App\Http\Controllers\Elabel\ElabelSertifikatController::class, 'store'])->name('sertifikat.store');
     Route::get('sertifikat/export', [\App\Http\Controllers\Elabel\ElabelSertifikatController::class, 'export'])->name('sertifikat.export');
+    Route::post('sertifikat/import', [\App\Http\Controllers\Elabel\ElabelSertifikatController::class, 'import'])->name('sertifikat.import');
     Route::get('sertifikat/template', [\App\Http\Controllers\Elabel\ElabelSertifikatController::class, 'downloadImportTemplate'])->name('sertifikat.template');
     Route::get('sertifikat/{id}', [\App\Http\Controllers\Elabel\ElabelSertifikatController::class, 'show'])->name('sertifikat.show');
     Route::get('sertifikat/{id}/edit', [\App\Http\Controllers\Elabel\ElabelSertifikatController::class, 'edit'])->name('sertifikat.edit');

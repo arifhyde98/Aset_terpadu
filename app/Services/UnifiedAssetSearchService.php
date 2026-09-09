@@ -573,7 +573,8 @@ class UnifiedAssetSearchService
                     'status_label' => '🟢 Arsip Tersedia',
                     'box_code' => $c->box ? $c->box->box_code : '-',
                     'lokasi_box' => $c->box ? $c->box->lokasi : '-',
-                    'tahun' => $c->tanggal_perolehan ? date('Y', strtotime($c->tanggal_perolehan)) : '-',
+                    'tahun' => $c->tanggal_sertifikat ? $c->tanggal_sertifikat->format('Y') : ($c->tanggal_perolehan ? date('Y', strtotime($c->tanggal_perolehan)) : '-'),
+                    'tanggal_sertifikat' => $c->tanggal_sertifikat ? $c->tanggal_sertifikat->format('d/m/Y') : null,
                 ]);
             }
         }

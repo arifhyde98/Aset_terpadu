@@ -144,10 +144,10 @@
                         <select name="kategori_status" class="form-select" onchange="document.getElementById('filterForm').submit()">
                             <option value="">-- Semua Kategori --</option>
                             <option value="target_sertifikat" class="fw-bold text-primary" {{ request('kategori_status') === 'target_sertifikat' ? 'selected' : '' }}>🎯 Target Pensertifikatan</option>
-                            <optgroup label="Status Sertifikasi BPN">
+                            <optgroup label="Status Aset Tanah PEMDA">
                                 <option value="sudah_bersertifikat" {{ request('kategori_status') === 'sudah_bersertifikat' ? 'selected' : '' }}>Sudah Bersertifikat</option>
                                 <option value="dalam_proses" {{ request('kategori_status') === 'dalam_proses' ? 'selected' : '' }}>Dalam Proses BPN</option>
-                                <option value="belum_diproses" {{ request('kategori_status') === 'belum_diproses' ? 'selected' : '' }}>Belum Diproses BPN</option>
+                                <option value="belum_bersertifikat" {{ in_array(request('kategori_status'), ['belum_bersertifikat', 'belum_diproses']) ? 'selected' : '' }}>Belum Bersertifikat</option>
                                 <option value="bermasalah" {{ request('kategori_status') === 'bermasalah' ? 'selected' : '' }}>Bermasalah / Sengketa</option>
                             </optgroup>
                             <optgroup label="Status Pencatatan NIBAR">
@@ -231,7 +231,7 @@
                             <span class="input-group-text bg-body border-0 text-secondary"><i class="bi bi-search"></i></span>
                             <input type="text" name="search" class="form-control" placeholder="Kode Aset, Nama Aset, Alamat..." value="{{ request('search') }}">
                             <button type="submit" class="btn btn-primary px-3">Cari</button>
-                            @if(request()->hasAny(['search', 'opd_id', 'opd', 'kecamatan_id', 'status', 'kategori_status']) || session()->has('sipat_aset_filters'))
+                            @if(request()->hasAny(['search', 'opd_id', 'opd', 'kecamatan_id', 'status', 'kategori_status']))
                                 <a href="{{ route('sipat.aset.index') }}?reset=1" class="btn btn-outline-secondary px-3"><i class="bi bi-x-circle"></i> Reset</a>
                             @endif
                         </div>

@@ -65,6 +65,12 @@
                             <td class="px-4 text-center fw-medium text-secondary">{{ $loop->iteration }}</td>
                             <td>
                                 <div class="fw-bold text-navy"><i class="bi bi-patch-check-fill text-success me-1"></i> {{ $item->no_sertipikat }}</div>
+                                @if($item->tanggal_sertifikat)
+                                    <div class="small text-secondary"><i class="bi bi-calendar-event text-primary me-1"></i> Terbit: {{ $item->tanggal_sertifikat->format('d/m/Y') }}</div>
+                                @endif
+                                @if($item->nibar)
+                                    <div class="small text-muted font-monospace"><i class="bi bi-upc-scan me-1"></i> {{ $item->nibar }}</div>
+                                @endif
                             </td>
                             <td>
                                 <div class="fw-medium text-dark">{{ $item->status_penggunaan ?: '-' }}</div>
@@ -123,7 +129,7 @@
 <div class="modal fade" id="importModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content rounded-4 border-0 shadow">
-            <form action="{{ route('elabel.sertifikat.index') }}" method="POST" enctype="multipart/form-data">
+            <form action="{{ route('elabel.sertifikat.import') }}" method="POST" enctype="multipart/form-data">
                 @csrf
                 <div class="modal-header border-bottom px-4 py-3">
                     <h5 class="modal-title fw-bold text-navy"><i class="bi bi-file-earmark-arrow-up text-success me-2"></i> Import Data Sertifikat Tanah</h5>

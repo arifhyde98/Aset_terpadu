@@ -107,20 +107,29 @@ class ElabelSertifikatController extends Controller implements HasMiddleware
             }
         }
 
+        $tanggalSertifikatAset = null;
+        if ($aset && $aset->latestProses && $aset->latestProses->statusProses) {
+            $status = $aset->latestProses->statusProses;
+            if ($status->hasCategory('bersertifikat')) {
+                $tanggalSertifikatAset = $aset->latestProses->tgl_selesai ?? $aset->latestProses->tanggal_proses ?? null;
+            }
+        }
+
         $item = [
-            'no_sertipikat'     => $request->get('no_sertipikat') ?: ($aset->no_sertifikat ?? null),
-            'nibar'             => $request->get('nibar') ?: ($aset ? $aset->kode_aset : null),
-            'spesifikasi'       => $request->get('spesifikasi') ?: ($request->get('nama') ?: ($aset ? $aset->nama_aset : null)),
-            'dinas'             => $request->get('dinas') ?: ($request->get('opd') ?: ($aset ? ($aset->opdSipat->nama ?? $aset->opd) : null)),
-            'sipat_opd_id'      => $request->get('sipat_opd_id') ?: ($aset ? $aset->opd_id : null),
-            'nama_pemilik'      => $request->get('nama_pemilik') ?: ($aset ? 'Pemerintah Kabupaten Donggala' : null),
-            'luas'              => $request->get('luas') ?: ($aset ? $aset->luas : null),
-            'tanggal_perolehan' => $request->get('tanggal_perolehan') ?: ($aset ? $aset->tanggal_perolehan : null),
-            'nilai_perolehan'   => $request->get('nilai_perolehan') ?: ($aset ? $aset->harga_perolehan : null),
-            'cara_perolehan'    => $request->get('cara_perolehan') ?: ($aset ? $aset->dasar_perolehan : null),
-            'alamat'            => $request->get('alamat') ?: ($aset ? $aset->alamat : null),
-            'lokasi'            => $request->get('lokasi') ?: ($request->get('alamat') ?: ($aset ? $aset->alamat : null)),
-            'status_penggunaan' => $request->get('status_penggunaan') ?: ($request->get('peruntukan') ?: ($aset ? $aset->peruntukan : null)),
+            'no_sertipikat'      => $request->get('no_sertipikat') ?: ($aset->no_sertifikat ?? null),
+            'tanggal_sertifikat' => $request->get('tanggal_sertifikat') ?: $tanggalSertifikatAset,
+            'nibar'              => $request->get('nibar') ?: ($aset ? $aset->kode_aset : null),
+            'spesifikasi'        => $request->get('spesifikasi') ?: ($request->get('nama') ?: ($aset ? $aset->nama_aset : null)),
+            'dinas'              => $request->get('dinas') ?: ($request->get('opd') ?: ($aset ? ($aset->opdSipat->nama ?? $aset->opd) : null)),
+            'sipat_opd_id'       => $request->get('sipat_opd_id') ?: ($aset ? $aset->opd_id : null),
+            'nama_pemilik'       => $request->get('nama_pemilik') ?: ($aset ? 'Pemerintah Kabupaten Donggala' : null),
+            'luas'               => $request->get('luas') ?: ($aset ? $aset->luas : null),
+            'tanggal_perolehan'  => $request->get('tanggal_perolehan') ?: ($aset ? $aset->tanggal_perolehan : null),
+            'nilai_perolehan'    => $request->get('nilai_perolehan') ?: ($aset ? $aset->harga_perolehan : null),
+            'cara_perolehan'     => $request->get('cara_perolehan') ?: ($aset ? $aset->dasar_perolehan : null),
+            'alamat'             => $request->get('alamat') ?: ($aset ? $aset->alamat : null),
+            'lokasi'             => $request->get('lokasi') ?: ($request->get('alamat') ?: ($aset ? $aset->alamat : null)),
+            'status_penggunaan'  => $request->get('status_penggunaan') ?: ($request->get('peruntukan') ?: ($aset ? $aset->peruntukan : null)),
         ];
 
         $opds = \App\Models\OpdSipat::where('aktif', 1)->orderBy('nama', 'asc')->get();
@@ -328,7 +337,7 @@ class ElabelSertifikatController extends Controller implements HasMiddleware
         $sheet->setTitle('Data Sertipikat');
 
         $sheet->fromArray([[
-            'No', 'No. Sertipikat', 'NIBAR', 'Status Penggunaan', 'Spesifikasi', 'Luas',
+            'No', 'No. Sertipikat', 'Tanggal Sertifikat', 'NIBAR', 'Status Penggunaan', 'Spesifikasi', 'Luas',
             'Tanggal Perolehan', 'Nilai Perolehan', 'Nama Pemilik', 'Cara Perolehan', 'Alamat', 'Lokasi', 'Dinas',
         ]], null, 'A1');
 
@@ -338,6 +347,7 @@ class ElabelSertifikatController extends Controller implements HasMiddleware
             $sheet->fromArray([[
                 $i++,
                 $item->no_sertipikat ?? '',
+                $item->tanggal_sertifikat ? $item->tanggal_sertifikat->format('Y-m-d') : '',
                 $item->nibar ?? '',
                 $item->status_penggunaan ?? '',
                 $item->spesifikasi ?? '',
@@ -370,11 +380,11 @@ class ElabelSertifikatController extends Controller implements HasMiddleware
         $sheet = $spreadsheet->getActiveSheet();
         $sheet->setTitle('Import Sertipikat');
         $sheet->fromArray([
-            ['No', 'No. Sertipikat', 'NIBAR', 'Status Penggunaan', 'Spesifikasi', 'Luas', 'Tanggal Perolehan', 'Nilai Perolehan', 'Nama Pemilik', 'Cara Perolehan', 'Alamat', 'Lokasi', 'Dinas'],
-            [1, '123/ABC/2024', 'NBR-001', 'Dipakai', 'Hak Pakai', '250.50', '2024-01-15', '150000000', 'Pemerintah Kabupaten Donggala', 'Pembelian', 'Jl. Contoh No.1', 'Donggala', 'BPKAD'],
+            ['No', 'No. Sertipikat', 'Tanggal Sertifikat', 'NIBAR', 'Status Penggunaan', 'Spesifikasi', 'Luas', 'Tanggal Perolehan', 'Nilai Perolehan', 'Nama Pemilik', 'Cara Perolehan', 'Alamat', 'Lokasi', 'Dinas'],
+            [1, '123/ABC/2024', '2024-02-20', 'NBR-001', 'Dipakai', 'Hak Pakai', '250.50', '2024-01-15', '150000000', 'Pemerintah Kabupaten Donggala', 'Pembelian', 'Jl. Contoh No.1', 'Donggala', 'BPKAD'],
         ], null, 'A1');
 
-        foreach (range('A', 'M') as $column) {
+        foreach (range('A', 'N') as $column) {
             $sheet->getColumnDimension($column)->setAutoSize(true);
         }
 
@@ -385,6 +395,115 @@ class ElabelSertifikatController extends Controller implements HasMiddleware
             'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
             'Cache-Control' => 'no-store, no-cache, must-revalidate',
         ]);
+    }
+
+    public function import(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'import_file' => ['required', 'file', 'mimes:xlsx,xls'],
+        ]);
+
+        try {
+            $file = $request->file('import_file');
+            $spreadsheet = \PhpOffice\PhpSpreadsheet\IOFactory::load($file->getRealPath());
+            $sheet = $spreadsheet->getActiveSheet();
+            $rows = $sheet->toArray(null, true, true, true);
+
+            $imported = 0;
+            $skipped = 0;
+
+            $first = true;
+            foreach ($rows as $row) {
+                if ($first) {
+                    $first = false;
+                    continue;
+                }
+
+                $noSert = trim((string) ($row['B'] ?? ''));
+                if ($noSert === '') {
+                    $skipped++;
+                    continue;
+                }
+
+                if (ElabelSertifikat::where('no_sertipikat', $noSert)->exists()) {
+                    $skipped++;
+                    continue;
+                }
+
+                $parseDate = function ($val) {
+                    if (empty($val)) return null;
+                    try {
+                        if (is_numeric($val)) {
+                            return \PhpOffice\PhpSpreadsheet\Shared\Date::excelToDateTimeObject($val)->format('Y-m-d');
+                        }
+                        return \Carbon\Carbon::parse($val)->format('Y-m-d');
+                    } catch (\Throwable $e) {
+                        return null;
+                    }
+                };
+
+                $colC = trim((string) ($row['C'] ?? ''));
+                $colD = trim((string) ($row['D'] ?? ''));
+
+                // Jika format 14 kolom (ada kolom N atau kolom C berbentuk tanggal)
+                if (isset($row['N']) || preg_match('/^\d{4}-\d{2}-\d{2}$/', $colC) || (is_numeric($colC) && (int)$colC > 10000)) {
+                    $tglSertifikat = $parseDate($colC);
+                    $nibar = $colD ?: null;
+                    $statusPenggunaan = trim((string) ($row['E'] ?? '')) ?: null;
+                    $spesifikasi = trim((string) ($row['F'] ?? '')) ?: null;
+                    $luas = is_numeric($row['G'] ?? null) ? (float) $row['G'] : null;
+                    $tglPerolehan = $parseDate($row['H'] ?? null);
+                    $nilaiPerolehan = is_numeric($row['I'] ?? null) ? (float) $row['I'] : null;
+                    $namaPemilik = trim((string) ($row['J'] ?? '')) ?: null;
+                    $caraPerolehan = trim((string) ($row['K'] ?? '')) ?: null;
+                    $alamat = trim((string) ($row['L'] ?? '')) ?: null;
+                    $lokasi = trim((string) ($row['M'] ?? '')) ?: null;
+                    $dinas = trim((string) ($row['N'] ?? '')) ?: null;
+                } else {
+                    $tglSertifikat = null;
+                    $nibar = $colC ?: null;
+                    $statusPenggunaan = $colD ?: null;
+                    $spesifikasi = trim((string) ($row['E'] ?? '')) ?: null;
+                    $luas = is_numeric($row['F'] ?? null) ? (float) $row['F'] : null;
+                    $tglPerolehan = $parseDate($row['G'] ?? null);
+                    $nilaiPerolehan = is_numeric($row['H'] ?? null) ? (float) $row['H'] : null;
+                    $namaPemilik = trim((string) ($row['I'] ?? '')) ?: null;
+                    $caraPerolehan = trim((string) ($row['J'] ?? '')) ?: null;
+                    $alamat = trim((string) ($row['K'] ?? '')) ?: null;
+                    $lokasi = trim((string) ($row['L'] ?? '')) ?: null;
+                    $dinas = trim((string) ($row['M'] ?? '')) ?: null;
+                }
+
+                $boxId = $this->resolveSertifikatBoxId($lokasi);
+
+                ElabelSertifikat::create([
+                    'no_sertipikat'      => $noSert,
+                    'tanggal_sertifikat' => $tglSertifikat,
+                    'nibar'              => $nibar,
+                    'status_penggunaan'  => $statusPenggunaan,
+                    'spesifikasi'        => $spesifikasi,
+                    'luas'               => $luas,
+                    'tanggal_perolehan'  => $tglPerolehan,
+                    'nilai_perolehan'    => $nilaiPerolehan,
+                    'nama_pemilik'       => $namaPemilik,
+                    'cara_perolehan'     => $caraPerolehan,
+                    'alamat'             => $alamat,
+                    'lokasi'             => $lokasi,
+                    'dinas'              => $dinas,
+                    'box_id'             => $boxId,
+                ]);
+
+                $imported++;
+            }
+
+            $this->logActivity('import', 'Sertipikat Tanah', "Mengimpor {$imported} data sertipikat tanah dari file Excel.");
+
+            return redirect()->route('elabel.sertifikat.index')
+                ->with('success', "Proses import selesai. Berhasil diimpor: {$imported}, Dilewati: {$skipped}.");
+        } catch (\Throwable $e) {
+            return redirect()->route('elabel.sertifikat.index')
+                ->with('error', 'Gagal memproses file import: ' . $e->getMessage());
+        }
     }
 
     private function resolveSertifikatBoxId(?string $lokasi, ?int $excludeSertifikatId = null, ?int $preferredBoxId = null): ?int

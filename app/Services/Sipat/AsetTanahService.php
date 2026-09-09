@@ -87,37 +87,7 @@ class AsetTanahService
         }
 
         if (!empty($filters['kategori_status'])) {
-            $kat = $filters['kategori_status'];
-            if ($kat === 'target_sertifikat') {
-                $query->whereHas('targetSertifikat');
-            } elseif ($kat === 'sudah_bersertifikat') {
-                $query->whereHas('latestProses.statusProses', function($sq) {
-                    $sq->where('kategori', 'LIKE', '%bersertifikat%');
-                });
-            } elseif ($kat === 'dalam_proses') {
-                $query->whereHas('latestProses.statusProses', function($sq) {
-                    $sq->where('kategori', 'LIKE', '%proses%');
-                });
-            } elseif ($kat === 'belum_diproses') {
-                $query->where(function($q) {
-                    $q->doesntHave('latestProses')
-                      ->orWhereHas('latestProses.statusProses', function($sq) {
-                          $sq->where('kategori', 'LIKE', '%belum_diurus%');
-                      });
-                });
-            } elseif ($kat === 'bermasalah') {
-                $query->whereHas('latestProses.statusProses', function($sq) {
-                    $sq->where('kategori', 'LIKE', '%kendala%');
-                });
-            } elseif ($kat === 'TERCATAT_KIB_A') {
-                $query->where('status_pencatatan', 'TERCATAT_KIB_A');
-            } elseif ($kat === 'USULAN_BELUM_TERCATAT') {
-                $query->where('status_pencatatan', 'USULAN_BELUM_TERCATAT');
-            } else {
-                $query->whereHas('latestProses.statusProses', function($sq) use ($kat) {
-                    $sq->where('kategori', 'LIKE', "%{$kat}%");
-                });
-            }
+            $query->filterKategoriStatus($filters['kategori_status']);
         }
 
         if (!empty($filters['status'])) {

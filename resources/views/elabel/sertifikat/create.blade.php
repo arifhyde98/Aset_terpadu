@@ -48,6 +48,11 @@
                     </div>
 
                     <div class="col-md-4">
+                        <label class="form-label fw-semibold small">Tanggal Sertifikat</label>
+                        <input type="date" name="tanggal_sertifikat" value="{{ old('tanggal_sertifikat', $item['tanggal_sertifikat'] ?? '') }}" class="form-control">
+                    </div>
+
+                    <div class="col-md-4">
                         <label class="form-label fw-semibold small">NIBAR</label>
                         <input type="text" name="nibar" value="{{ old('nibar', $item['nibar'] ?? '') }}" class="form-control" placeholder="NBR-XXXXX">
                     </div>

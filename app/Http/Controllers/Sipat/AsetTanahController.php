@@ -58,7 +58,7 @@ class AsetTanahController extends Controller implements HasMiddleware
     public function index(Request $request)
     {
         if ($request->has('reset')) {
-            session()->forget('sipat_aset_filters');
+            $this->clearSessionFilters();
             return redirect()->route('sipat.aset.index');
         }
 
@@ -69,12 +69,8 @@ class AsetTanahController extends Controller implements HasMiddleware
         });
 
         if (!empty($queryFilters)) {
-            session(['sipat_aset_filters' => $queryFilters]);
-        } elseif (session()->has('sipat_aset_filters') && !$request->has('export')) {
-            $savedFilters = session('sipat_aset_filters', []);
-            if (!empty($savedFilters)) {
-                return redirect()->route('sipat.aset.index', $savedFilters);
-            }
+            // Simpan filter aktif terikat ke User ID dengan masa kedaluwarsa 15 menit
+            $this->saveSessionFilters($queryFilters);
         }
 
         if ($request->has('export')) {
@@ -138,12 +134,58 @@ class AsetTanahController extends Controller implements HasMiddleware
     }
 
     /**
-     * Helper privat untuk melakukan redirect dengan mempertahankan filter aktif.
+     * Helper privat untuk melakukan redirect dengan mempertahankan filter aktif yang belum kedaluwarsa.
      */
     private function redirectWithFilters(string $message, string $type = 'success'): RedirectResponse
     {
-        $params = session('sipat_aset_filters', []);
+        $params = $this->getSessionFilters();
         return redirect()->route('sipat.aset.index', $params)->with($type, $message);
+    }
+
+    /**
+     * Mendapatkan nama session key filter unik per user ID aktif.
+     */
+    private function getFilterSessionKey(): string
+    {
+        return 'sipat_aset_filters_' . (auth()->id() ?? 'guest');
+    }
+
+    /**
+     * Menyimpan filter aktif ke session dengan masa kedaluwarsa (TTL 15 menit).
+     */
+    private function saveSessionFilters(array $filters): void
+    {
+        session([
+            $this->getFilterSessionKey() => [
+                'filters'    => $filters,
+                'expires_at' => now()->addMinutes(15)->timestamp,
+            ]
+        ]);
+        session(['sipat_aset_filters' => $filters]);
+    }
+
+    /**
+     * Mengambil filter aktif dari session jika belum kedaluwarsa.
+     */
+    private function getSessionFilters(): array
+    {
+        $data = session($this->getFilterSessionKey());
+        if (is_array($data) && isset($data['filters']) && isset($data['expires_at'])) {
+            if (now()->timestamp <= $data['expires_at']) {
+                return $data['filters'];
+            }
+            $this->clearSessionFilters();
+        }
+        return [];
+    }
+
+    /**
+     * Menghapus filter session milik user.
+     */
+    private function clearSessionFilters(): void
+    {
+        session()->forget($this->getFilterSessionKey());
+        session()->forget('sipat_aset_filters');
     }
 
     /**
@@ -220,7 +262,8 @@ class AsetTanahController extends Controller implements HasMiddleware
         $statusList = StatusProses::orderBy('urutan', 'asc')->get();
         $kecamatanList = \App\Models\Kecamatan::orderBy('nama', 'asc')->get();
         $desaList = \App\Models\Desa::orderBy('nama', 'asc')->get();
-        return view('sipat.aset.edit', compact('aset', 'opdList', 'statusList', 'kecamatanList', 'desaList'));
+        $savedFilters = $this->getSessionFilters();
+        return view('sipat.aset.edit', compact('aset', 'opdList', 'statusList', 'kecamatanList', 'desaList', 'savedFilters'));
     }
 
     /**

@@ -15,6 +15,7 @@ class UpdateElabelSertifikatRequest extends FormRequest
     {
         return [
             'no_sertipikat'     => ['required', 'string', 'max:100'],
+            'tanggal_sertifikat'=> ['nullable', 'date'],
             'nibar'             => ['nullable', 'string', 'max:100'],
             'status_penggunaan' => ['nullable', 'string', 'max:100'],
             'spesifikasi'       => ['nullable', 'string', 'max:255'],

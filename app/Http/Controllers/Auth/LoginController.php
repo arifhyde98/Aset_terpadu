@@ -41,4 +41,22 @@ class LoginController extends Controller implements HasMiddleware
             new Middleware('auth', only: ['logout']),
         ];
     }
+
+    /**
+     * Hook setelah pengguna berhasil masuk (login).
+     * Membersihkan session filter SIPAT agar pengguna baru mendapatkan tampilan awal default yang bersih.
+     */
+    protected function authenticated(\Illuminate\Http\Request $request, $user)
+    {
+        $request->session()->forget('sipat_aset_filters');
+        $request->session()->forget('sipat_aset_filters_' . $user->id);
+    }
+
+    /**
+     * Hook setelah pengguna keluar (logout).
+     */
+    protected function loggedOut(\Illuminate\Http\Request $request)
+    {
+        $request->session()->forget('sipat_aset_filters');
+    }
 }

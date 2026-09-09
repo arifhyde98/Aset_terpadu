@@ -474,6 +474,7 @@ DROP TABLE IF EXISTS `elabel_sertifikat_tanah`;
 CREATE TABLE `elabel_sertifikat_tanah` (
   `id` int unsigned NOT NULL AUTO_INCREMENT,
   `no_sertipikat` varchar(100) NOT NULL,
+  `tanggal_sertifikat` date DEFAULT NULL,
   `nibar` varchar(100) DEFAULT NULL,
   `status_penggunaan` varchar(100) DEFAULT NULL,
   `spesifikasi` varchar(255) DEFAULT NULL,

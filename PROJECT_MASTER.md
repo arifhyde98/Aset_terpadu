@@ -132,7 +132,7 @@ Berikut adalah status fitur yang telah diimplementasikan penuh pada platform SIP
 | **SIPAT** | Tabel Sebaran Aset per OPD | DONE | Tabel master rekapitulasi 54 OPD di atas sebaran kecamatan, live search, luas m², progres bar sertifikat, dan link aksi filter. |
 | **eLABEL** | Katalog BPKB (R4 / R2) | DONE | Penyimpanan BPKB, import template, & cetak status BPKB. |
 | **eLABEL** | Manajemen Box Arsip BPKB | DONE | Penggabungan box BPKB dan pencetakan label barcode box. |
-| **eLABEL** | Sertifikat & Box Sertifikat | DONE | Penyimpanan sertifikat tanah fisik, split/merge box sertifikat. |
+| **eLABEL** | Sertifikat & Box Sertifikat | DONE | Penyimpanan sertifikat tanah fisik, tanggal sertifikat, split/merge box sertifikat, ekspor/impor Excel, & integrasi SIPAT. |
 | **eLABEL** | Surat Penyerahan & Box | DONE | Pencatatan dokumen penyerahan aset & manajemen box terkait. |
 | **eLABEL** | Alur Peminjaman (Scan Request) | DONE | Pengajuan pinjam/scan BPKB/Sertifikat & approval admin. |
 | **eLABEL** | Universal Dynamic Archive Engine | DONE | e-Arsip dinamis, visual form builder, custom schema, box barcode, PDF viewer, multi-attachment, & loan workflow. |

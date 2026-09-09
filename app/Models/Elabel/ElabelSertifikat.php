@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  *
  * @property int $id
  * @property string $no_sertipikat
+ * @property \Carbon\Carbon|null $tanggal_sertifikat
  * @property string|null $nibar
  * @property string|null $status_penggunaan
  * @property string|null $spesifikasi
@@ -39,10 +40,12 @@ class ElabelSertifikat extends Model
         'luas' => 'decimal:2',
         'nilai_perolehan' => 'decimal:2',
         'tanggal_perolehan' => 'date',
+        'tanggal_sertifikat' => 'date',
     ];
 
     protected $fillable = [
         'no_sertipikat',
+        'tanggal_sertifikat',
         'nibar',
         'status_penggunaan',
         'spesifikasi',

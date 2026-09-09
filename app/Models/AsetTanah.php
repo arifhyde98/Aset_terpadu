@@ -90,4 +90,73 @@ class AsetTanah extends Model
     {
         return $this->hasOne(\App\Models\Elabel\ElabelSertifikat::class, 'nibar', 'kode_aset');
     }
+
+    /**
+     * Scope: Hanya aset yang sudah bersertifikat resmi.
+     */
+    public function scopeSudahBersertifikat($query)
+    {
+        return $query->whereHas('latestProses.statusProses', function($sq) {
+            $sq->where('kategori', 'LIKE', '%bersertifikat%');
+        });
+    }
+
+    /**
+     * Scope: Hanya aset yang sedang dalam proses pensertifikatan BPN.
+     */
+    public function scopeDalamProses($query)
+    {
+        return $query->whereHas('latestProses.statusProses', function($sq) {
+            $sq->where('kategori', 'LIKE', '%proses%');
+        });
+    }
+
+    /**
+     * Scope: Hanya aset yang berkendala / bersengketa / bermasalah.
+     */
+    public function scopeBermasalah($query)
+    {
+        return $query->whereHas('latestProses.statusProses', function($sq) {
+            $sq->where('kategori', 'LIKE', '%kendala%');
+        });
+    }
+
+    /**
+     * Scope: Aset tanah belum bersertifikat (Total Tanah - Bersertifikat - Kendala - Target).
+     * Selaras 100% dengan metrik Dashboard Utama SIPAT.
+     */
+    public function scopeBelumBersertifikat($query)
+    {
+        return $query->whereDoesntHave('targetSertifikat')
+            ->where(function($q) {
+                $q->doesntHave('latestProses')
+                  ->orWhereHas('latestProses.statusProses', function($sq) {
+                      $sq->where('kategori', 'NOT LIKE', '%bersertifikat%')
+                        ->where('kategori', 'NOT LIKE', '%kendala%');
+                  });
+            });
+    }
+
+    /**
+     * Scope: Filter terpadu berdasarkan parameter kategori status.
+     */
+    public function scopeFilterKategoriStatus($query, ?string $kategori)
+    {
+        if (empty($kategori)) {
+            return $query;
+        }
+
+        return match ($kategori) {
+            'target_sertifikat'                         => $query->whereHas('targetSertifikat'),
+            'sudah_bersertifikat'                       => $query->sudahBersertifikat(),
+            'dalam_proses'                              => $query->dalamProses(),
+            'belum_bersertifikat', 'belum_diproses'     => $query->belumBersertifikat(),
+            'bermasalah', 'kendala'                     => $query->bermasalah(),
+            'TERCATAT_KIB_A'                            => $query->where('status_pencatatan', 'TERCATAT_KIB_A'),
+            'USULAN_BELUM_TERCATAT'                     => $query->where('status_pencatatan', 'USULAN_BELUM_TERCATAT'),
+            default                                     => $query->whereHas('latestProses.statusProses', function($sq) use ($kategori) {
+                $sq->where('kategori', 'LIKE', "%{$kategori}%");
+            }),
+        };
+    }
 }
