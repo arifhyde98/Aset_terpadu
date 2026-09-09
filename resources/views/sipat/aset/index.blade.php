@@ -736,13 +736,13 @@
                 </div>
                 
                 <div class="table-responsive border rounded-3 bg-white shadow-sm" style="max-height: 400px; overflow-y: auto;">
-                    <table class="table table-hover table-striped mb-0 align-middle">
-                        <thead class="table-navy text-white text-uppercase" style="font-size: 0.75rem; letter-spacing: 0.5px; position: sticky; top: 0; z-index: 2;">
+                    <table class="table table-hover align-middle mb-0 aset-table">
+                        <thead class="bg-body text-secondary sticky-top" style="z-index: 2;">
                             <tr>
-                                <th class="px-3 py-3" style="width: 25%;">Data Ganda (Hasil Impor/Baru)</th>
-                                <th class="px-3 py-3" style="width: 25%;">Data Induk (Asli/Lama)</th>
-                                <th class="px-3 py-3" style="width: 30%;">Indikasi Duplikasi</th>
-                                <th class="px-3 py-3 text-center" style="width: 20%;">Aksi Resolusi</th>
+                                <th class="px-3" style="width: 25%;">DATA GANDA (HASIL IMPOR/BARU)</th>
+                                <th class="px-3" style="width: 25%;">DATA INDUK (ASLI/LAMA)</th>
+                                <th class="px-3" style="width: 30%;">INDIKASI DUPLIKASI</th>
+                                <th class="px-3 text-center" style="width: 20%;">AKSI RESOLUSI</th>
                             </tr>
                         </thead>
                         <tbody id="aset-dup-list">
@@ -771,13 +771,13 @@
                 </div>
                 
                 <div class="table-responsive border rounded-3 bg-white shadow-sm" style="max-height: 400px; overflow-y: auto;">
-                    <table class="table table-hover table-striped mb-0 align-middle">
-                        <thead class="table-navy text-white text-uppercase" style="font-size: 0.75rem; letter-spacing: 0.5px; position: sticky; top: 0; z-index: 2;">
+                    <table class="table table-hover align-middle mb-0 aset-table">
+                        <thead class="bg-body text-secondary sticky-top" style="z-index: 2;">
                             <tr>
-                                <th class="px-3 py-3" style="width: 35%;">OPD Utama (Dipertahankan)</th>
-                                <th class="px-3 py-3" style="width: 35%;">OPD Duplikat (Akan Dihapus)</th>
-                                <th class="px-3 py-3" style="width: 15%;">Indikasi</th>
-                                <th class="px-3 py-3 text-center" style="width: 15%;">Aksi Konsolidasi</th>
+                                <th class="px-3" style="width: 35%;">OPD UTAMA (DIPERTAHANKAN)</th>
+                                <th class="px-3" style="width: 35%;">OPD DUPLIKAT (AKAN DIHAPUS)</th>
+                                <th class="px-3" style="width: 15%;">INDIKASI</th>
+                                <th class="px-3 text-center" style="width: 15%;">AKSI KONSOLIDASI</th>
                             </tr>
                         </thead>
                         <tbody id="opd-dup-list">

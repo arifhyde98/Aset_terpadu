@@ -9,6 +9,24 @@
         box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.05);
         overflow: hidden;
     }
+    .table-container-sipat {
+        border-radius: 1rem;
+        border: 1px solid var(--border-color, rgba(0,0,0,0.08));
+    }
+    .aset-table thead th {
+        font-size: 0.7rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        padding: 0.75rem 0.85rem;
+        border-bottom: 2px solid var(--border-color, rgba(0,0,0,0.08));
+        white-space: nowrap;
+    }
+    .aset-table tbody td {
+        padding: 0.65rem 0.85rem;
+        vertical-align: middle;
+        font-size: 0.82rem;
+    }
     .target-card-header {
         background: var(--bs-tertiary-bg, rgba(59, 130, 246, 0.04));
         padding: 1.25rem 1.5rem;
@@ -195,24 +213,24 @@
     <div class="tab-content" id="targetTabContent">
         <!-- Tab 1: Daftar Bidang Tanah Target -->
         <div class="tab-pane fade show active" id="daftarAsetPane" role="tabpanel">
-            <div class="card target-card">
+            <div class="card clean-card border-0 shadow-sm table-container-sipat overflow-hidden mb-4">
                 <div class="target-card-header d-flex justify-content-between align-items-center">
                     <h5 class="fw-bold mb-0 text-body">Daftar Bidang Tanah Target Pensertifikatan Tahun {{ $tahun }}</h5>
                     <input type="text" id="searchTargetTable" class="form-control form-control-sm w-auto" placeholder="Cari NIBAR / Nama Aset...">
                 </div>
                 <div class="card-body p-0">
                     <div class="table-responsive">
-                        <table class="table table-hover align-middle mb-0" id="targetTable">
-                            <thead class="table-light">
+                        <table class="table table-hover align-middle mb-0 aset-table" id="targetTable">
+                            <thead class="bg-body text-secondary">
                                 <tr>
-                                    <th class="ps-4" style="width: 50px;">No</th>
-                                    <th>Kode Aset (NIBAR)</th>
-                                    <th>Nama Aset Tanah / Peruntukan</th>
-                                    <th>OPD Pengelola</th>
-                                    <th>Status BPN Terakhir</th>
-                                    <th>Indikator Capaian</th>
-                                    <th>Catatan / Ket. Target</th>
-                                    <th class="text-end pe-4" style="width: 100px;">Aksi</th>
+                                    <th class="ps-4" style="width: 50px;">NO</th>
+                                    <th>KODE ASET (NIBAR)</th>
+                                    <th>NAMA ASET TANAH / PERUNTUKAN</th>
+                                    <th>OPD PENGELOLA</th>
+                                    <th>STATUS BPN TERAKHIR</th>
+                                    <th>INDIKATOR CAPAIAN</th>
+                                    <th>CATATAN / KET. TARGET</th>
+                                    <th class="text-end pe-4" style="width: 100px;">AKSI</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -220,7 +238,15 @@
                                     <tr data-search="{{ strtolower(($item->asetTanah->kode_aset ?? '') . ' ' . ($item->asetTanah->nama_aset ?? '') . ' ' . ($item->asetTanah->peruntukan ?? '') . ' ' . ($item->opdSipat->nama ?? $item->asetTanah->opdSipat->nama ?? $item->asetTanah->opd ?? '')) }}">
                                         <td class="ps-4 fw-semibold text-secondary">{{ $index + 1 }}</td>
                                         <td>
-                                            <span class="font-monospace fw-bold text-primary">{{ $item->asetTanah->kode_aset ?? '-' }}</span>
+                                            <div class="d-inline-flex align-items-center font-monospace text-secondary" style="font-size: 0.78rem;">
+                                                <i class="bi bi-upc opacity-75 me-1 text-secondary"></i>
+                                                <span class="user-select-all">{{ $item->asetTanah->kode_aset ?? '-' }}</span>
+                                                @if(!empty($item->asetTanah->kode_aset) && $item->asetTanah->kode_aset !== '-')
+                                                    <button type="button" class="btn btn-link p-0 text-secondary border-0 ms-1 btn-copy-nibar opacity-75" data-nibar="{{ $item->asetTanah->kode_aset }}" title="Salin NIBAR" style="font-size: 0.7rem; line-height: 1;">
+                                                        <i class="bi bi-clipboard"></i>
+                                                    </button>
+                                                @endif
+                                            </div>
                                         </td>
                                         <td>
                                             <div class="fw-bold text-body">{{ $item->asetTanah->nama_aset ?? 'Tanpa Nama' }}</div>
@@ -308,22 +334,22 @@
 
         <!-- Tab 2: Rekapitulasi per OPD -->
         <div class="tab-pane fade" id="rekapOpdPane" role="tabpanel">
-            <div class="card target-card">
+            <div class="card clean-card border-0 shadow-sm table-container-sipat overflow-hidden mb-4">
                 <div class="target-card-header">
                     <h5 class="fw-bold mb-0 text-body">Ringkasan Kinerja Pensertifikatan per OPD (Tahun {{ $tahun }})</h5>
                 </div>
                 <div class="card-body p-0">
                     <div class="table-responsive">
-                        <table class="table table-hover align-middle mb-0">
-                            <thead class="table-light">
+                        <table class="table table-hover align-middle mb-0 aset-table">
+                            <thead class="bg-body text-secondary">
                                 <tr>
-                                    <th class="ps-4" style="width: 50px;">No</th>
-                                    <th>Nama OPD / Pengelola Aset</th>
-                                    <th class="text-center">Total Target Bidang</th>
-                                    <th class="text-center">Realisasi (Terbit Sertifikat)</th>
-                                    <th class="text-center">Dalam Pengurusan</th>
-                                    <th class="text-center">Persentase Capaian</th>
-                                    <th class="text-center pe-4">Status Kinerja</th>
+                                    <th class="ps-4" style="width: 50px;">NO</th>
+                                    <th>NAMA OPD / PENGELOLA ASET</th>
+                                    <th class="text-center">TOTAL TARGET BIDANG</th>
+                                    <th class="text-center">REALISASI (TERBIT SERTIFIKAT)</th>
+                                    <th class="text-center">DALAM PENGURUSAN</th>
+                                    <th class="text-center">PERSENTASE CAPAIAN</th>
+                                    <th class="text-center pe-4">STATUS KINERJA</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -591,6 +617,35 @@
                 });
             });
         }
+
+        // Copy NIBAR Helper
+        document.addEventListener('click', function(e) {
+            const btn = e.target.closest('.btn-copy-nibar');
+            if (!btn) return;
+            e.preventDefault();
+            const nibar = btn.getAttribute('data-nibar');
+            if (nibar && navigator.clipboard) {
+                navigator.clipboard.writeText(nibar).then(() => {
+                    const icon = btn.querySelector('i');
+                    if (icon) {
+                        const oldClass = icon.className;
+                        icon.className = 'bi bi-check2 text-success';
+                        btn.classList.add('text-success');
+                        setTimeout(() => {
+                            icon.className = oldClass;
+                            btn.classList.remove('text-success');
+                        }, 1500);
+                    }
+                }).catch(() => {
+                    const tempInput = document.createElement('input');
+                    tempInput.value = nibar;
+                    document.body.appendChild(tempInput);
+                    tempInput.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(tempInput);
+                });
+            }
+        });
     });
 </script>
 @endpush

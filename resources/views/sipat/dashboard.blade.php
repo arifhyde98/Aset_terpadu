@@ -81,6 +81,26 @@
         position: relative;
         padding-left: 0.5rem;
     }
+    .table-container-sipat {
+        border-radius: 1.25rem;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+    }
+    .aset-table thead th {
+        font-size: 0.7rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        padding: 0.75rem 0.85rem;
+        border-bottom: 2px solid var(--border-color, rgba(0,0,0,0.08));
+        white-space: nowrap;
+    }
+    .aset-table tbody td {
+        padding: 0.65rem 0.85rem;
+        font-size: 0.82rem;
+    }
+    .aset-table tbody tr:hover {
+        background-color: var(--bs-tertiary-bg, rgba(0, 0, 0, 0.015));
+    }
 </style>
 
 <div class="container-fluid px-0">
@@ -461,18 +481,18 @@
                 </div>
 
                 <div class="table-responsive" style="max-height: 540px; overflow-y: auto;">
-                    <table class="table table-hover align-middle mb-0" id="tableSebaranOpd">
-                        <thead class="bg-body-tertiary text-secondary small fw-semibold text-uppercase sticky-top" style="z-index: 2;">
+                    <table class="table table-hover align-middle mb-0 aset-table" id="tableSebaranOpd">
+                        <thead class="bg-body text-secondary sticky-top" style="z-index: 2;">
                             <tr>
-                                <th class="ps-3 py-2.5 text-center" style="width: 50px;">NO.</th>
-                                <th class="py-2.5">ORGANISASI PERANGKAT DAERAH (OPD)</th>
-                                <th class="text-center py-2.5">TOTAL BIDANG</th>
-                                <th class="text-end py-2.5">TOTAL LUAS (M²)</th>
-                                <th class="py-2.5" style="min-width: 190px;">PROGRES SERTIPIKAT</th>
-                                <th class="text-center py-2.5">PROSES BPN</th>
-                                <th class="text-center py-2.5">BELUM DIPROSES</th>
-                                <th class="text-center py-2.5">KENDALA</th>
-                                <th class="text-center pe-3 py-2.5">AKSI</th>
+                                <th class="ps-3 text-center" style="width: 50px;">NO.</th>
+                                <th>ORGANISASI PERANGKAT DAERAH (OPD)</th>
+                                <th class="text-center">TOTAL BIDANG</th>
+                                <th class="text-end">TOTAL LUAS (M²)</th>
+                                <th style="min-width: 190px;">PROGRES SERTIPIKAT</th>
+                                <th class="text-center">PROSES BPN</th>
+                                <th class="text-center">BELUM DIPROSES</th>
+                                <th class="text-center">KENDALA</th>
+                                <th class="text-center pe-3">AKSI</th>
                             </tr>
                         </thead>
                         <tbody class="small">
@@ -607,17 +627,17 @@
                 </div>
 
                 <div class="table-responsive">
-                    <table class="table table-hover align-middle mb-0">
-                        <thead class="bg-body-tertiary text-secondary small fw-semibold text-uppercase">
+                    <table class="table table-hover align-middle mb-0 aset-table">
+                        <thead class="bg-body text-secondary">
                             <tr>
-                                <th class="ps-3 py-2.5">WILAYAH KECAMATAN</th>
-                                <th class="text-center py-2.5">TOTAL BIDANG</th>
-                                <th class="text-end py-2.5">TOTAL LUAS (M²)</th>
-                                <th class="py-2.5" style="min-width: 180px;">PROGRES SERTIPIKAT</th>
-                                <th class="text-center py-2.5">PROSES BPN</th>
-                                <th class="text-center py-2.5">BELUM DIURUS</th>
-                                <th class="text-center py-2.5">KENDALA</th>
-                                <th class="text-center pe-3 py-2.5">AKSI</th>
+                                <th class="ps-3">WILAYAH KECAMATAN</th>
+                                <th class="text-center">TOTAL BIDANG</th>
+                                <th class="text-end">TOTAL LUAS (M²)</th>
+                                <th style="min-width: 180px;">PROGRES SERTIPIKAT</th>
+                                <th class="text-center">PROSES BPN</th>
+                                <th class="text-center">BELUM DIURUS</th>
+                                <th class="text-center">KENDALA</th>
+                                <th class="text-center pe-3">AKSI</th>
                             </tr>
                         </thead>
                         <tbody class="small">

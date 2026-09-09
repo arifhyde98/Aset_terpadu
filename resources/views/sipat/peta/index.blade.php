@@ -439,13 +439,13 @@
                     </div>
                     <div class="table-responsive border rounded-3" style="max-height: 260px; overflow-y: auto;">
                         <table class="table table-sm table-hover align-middle mb-0" id="previewMatchingTable">
-                            <thead class="table-light sticky-top">
+                            <thead class="bg-body text-secondary sticky-top" style="font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;">
                                 <tr>
-                                    <th style="width: 40px;">No</th>
-                                    <th>NIBAR (Dari File)</th>
-                                    <th>Status Cocok di DB</th>
-                                    <th>Nama Aset di SIPAT</th>
-                                    <th>Luas Spasial</th>
+                                    <th class="ps-3 text-center" style="width: 45px;">NO</th>
+                                    <th>NIBAR (DARI FILE)</th>
+                                    <th>STATUS COCOK DI DB</th>
+                                    <th>NAMA ASET DI SIPAT</th>
+                                    <th class="pe-3">LUAS SPASIAL</th>
                                 </tr>
                             </thead>
                             <tbody></tbody>

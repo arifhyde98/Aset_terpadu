@@ -47,15 +47,18 @@
         line-height: 1.2;
     }
     .table-rekap-opd th {
-        font-size: 0.78rem;
+        font-size: 0.7rem;
+        font-weight: 700;
         text-transform: uppercase;
-        letter-spacing: 0.04em;
+        letter-spacing: 0.05em;
         vertical-align: middle;
         text-align: center;
+        padding: 0.75rem 0.65rem;
     }
     .table-rekap-opd td {
-        font-size: 0.86rem;
+        font-size: 0.82rem;
         vertical-align: middle;
+        padding: 0.65rem 0.65rem;
     }
 </style>
 

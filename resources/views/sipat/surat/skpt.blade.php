@@ -1,6 +1,29 @@
 @extends('layouts.app')
 
 @section('content')
+<style>
+    .table-container-sipat {
+        border-radius: 1rem;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+    }
+    .aset-table thead th {
+        font-size: 0.7rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        padding: 0.75rem 0.85rem;
+        border-bottom: 2px solid var(--border-color, rgba(0,0,0,0.08));
+        white-space: nowrap;
+    }
+    .aset-table tbody td {
+        padding: 0.65rem 0.85rem;
+        font-size: 0.82rem;
+    }
+    .aset-table tbody tr:hover {
+        background-color: var(--bs-tertiary-bg, rgba(0, 0, 0, 0.015));
+    }
+</style>
+
 <div class="d-flex justify-content-between align-items-center mb-4">
     <div>
         <h1 class="h4 fw-semibold mb-1">Generate Surat Tanah - SKPT</h1>
@@ -229,14 +252,14 @@
         </div>
 
         @if (!empty($recent))
-            <div class="card clean-card border-0">
-                <div class="card-body">
-                    <h6 class="fw-semibold">SKPT Terbaru</h6>
-                    <form method="get" action="{!! url()->current() !!}" class="row g-2 align-items-end mb-3">
+            <div class="card clean-card border-0 shadow-sm table-container-sipat overflow-hidden mb-3">
+                <div class="card-body p-3 border-bottom">
+                    <h6 class="fw-bold mb-3"><i class="bi bi-clock-history text-primary me-1"></i> SKPT Terbaru</h6>
+                    <form method="get" action="{!! url()->current() !!}" class="row g-2 align-items-end">
                         <div class="col-md-8">
-                            <label class="form-label">Filter Kecamatan</label>
-                            <select name="kecamatan_id" class="form-select">
-                                <option value="">- semua kecamatan -</option>
+                            <label class="form-label small fw-semibold text-secondary mb-1">Filter Kecamatan</label>
+                            <select name="kecamatan_id" class="form-select form-select-sm">
+                                <option value="">-- Semua Kecamatan --</option>
                                 @foreach ($kecamatanList ?? [] as $kecamatan)
                                     <option value="{{ $kecamatan['id'] }}" {!! ((int) ($filterKecamatan ?? 0) === (int) $kecamatan['id']) ? 'selected' : '' !!}>
                                         {{ $kecamatan['nama'] }}
@@ -245,46 +268,53 @@
                             </select>
                         </div>
                         <div class="col-md-4">
-                            <button class="btn btn-outline-primary w-100">Terapkan</button>
+                            <button class="btn btn-sm btn-outline-primary w-100 rounded-3">Terapkan</button>
                         </div>
                     </form>
-                    <div class="table-responsive">
-                        <table class="table align-middle mb-0 table-premium">
-                            <thead>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0 aset-table">
+                        <thead class="bg-body text-secondary">
+                            <tr>
+                                <th class="text-center" style="width: 50px;">NO</th>
+                                <th>NOMOR SURAT</th>
+                                <th>PEMOHON</th>
+                                <th>KECAMATAN</th>
+                                <th>TANGGAL</th>
+                                <th class="text-center pe-3" style="width: 160px;">AKSI</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach ($recent as $r)
                                 <tr>
-                                    <th>No</th>
-                                    <th>Nomor Surat</th>
-                                    <th>Pemohon</th>
-                                    <th>Kecamatan</th>
-                                    <th>Tanggal</th>
-                                    <th>Aksi</th>
+                                    <td class="text-center text-secondary font-monospace">{{ $r['id'] }}</td>
+                                    <td>
+                                        <div class="fw-semibold font-monospace text-dark">{{ $r['nomor_surat'] }}</div>
+                                    </td>
+                                    <td class="fw-medium text-body">{{ $r['pemohon_nama'] ?? '-' }}</td>
+                                    <td>
+                                        <span class="text-secondary small d-flex align-items-center gap-1">
+                                            <i class="bi bi-geo-alt text-secondary opacity-75"></i>
+                                            {{ $r['kecamatan_nama'] ?? '-' }}
+                                        </span>
+                                    </td>
+                                    <td class="text-secondary font-monospace small">{{ $r['tanggal_surat'] ?? '-' }}</td>
+                                    <td class="text-center pe-3">
+                                        <div class="d-flex justify-content-center gap-1">
+                                            <a href="{!! url('sipat/surat/skpt/' . $r['id']) !!}" class="btn btn-xs btn-outline-primary rounded-pill px-2 py-0.5" style="font-size: 0.75rem;">Preview</a>
+                                            <a href="{!! url('sipat/surat/skpt/' . $r['id'] . '/pdf') !!}" class="btn btn-xs btn-outline-danger rounded-pill px-2 py-0.5" style="font-size: 0.75rem;">PDF</a>
+                                            <a href="{!! url('sipat/surat/skpt/' . $r['id'] . '/word') !!}" class="btn btn-xs btn-outline-primary rounded-pill px-2 py-0.5" style="font-size: 0.75rem;">Word</a>
+                                            <form action="{!! url('sipat/surat/skpt/' . $r['id']) !!}" method="post" data-confirm="Hapus SKPT ini?" class="d-inline">
+                                                {!! csrf_field() !!}
+                                                <input type="hidden" name="_method" value="DELETE">
+                                                <button type="submit" class="btn btn-xs btn-outline-danger rounded-pill px-2 py-0.5" style="font-size: 0.75rem;">Hapus</button>
+                                            </form>
+                                        </div>
+                                    </td>
                                 </tr>
-                            </thead>
-                            <tbody>
-                                @foreach ($recent as $r)
-                                    <tr>
-                                        <td>{{ $r['id'] }}</td>
-                                        <td>{{ $r['nomor_surat'] }}</td>
-                                        <td>{{ $r['pemohon_nama'] ?? '-' }}</td>
-                                        <td>{{ $r['kecamatan_nama'] ?? '-' }}</td>
-                                        <td>{{ $r['tanggal_surat'] ?? '-' }}</td>
-                                        <td>
-                                            <div class="d-flex flex-wrap gap-1">
-                                                <a href="{!! url('sipat/surat/skpt/' . $r['id']) !!}" class="btn btn-sm btn-outline-primary">Preview</a>
-                                                <a href="{!! url('sipat/surat/skpt/' . $r['id'] . '/pdf') !!}" class="btn btn-sm btn-outline-danger">PDF</a>
-                                                <a href="{!! url('sipat/surat/skpt/' . $r['id'] . '/word') !!}" class="btn btn-sm btn-outline-primary">Word</a>
-                                                <form action="{!! url('sipat/surat/skpt/' . $r['id']) !!}" method="post" data-confirm="Hapus SKPT ini?">
-                                                    {!! csrf_field() !!}
-                                                    <input type="hidden" name="_method" value="DELETE">
-                                                    <button type="submit" class="btn btn-sm btn-outline-danger">Hapus</button>
-                                                </form>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
-                    </div>
+                            @endforeach
+                        </tbody>
+                    </table>
                 </div>
             </div>
         @endif

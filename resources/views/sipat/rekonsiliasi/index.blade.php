@@ -54,7 +54,30 @@
     </div>
 </div>
 
-<div class="card clean-card border-0 mb-4">
+<style>
+    .table-container-sipat {
+        border-radius: 1rem;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+    }
+    .aset-table thead th {
+        font-size: 0.7rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        padding: 0.75rem 0.85rem;
+        border-bottom: 2px solid var(--border-color, rgba(0,0,0,0.08));
+        white-space: nowrap;
+    }
+    .aset-table tbody td {
+        padding: 0.65rem 0.85rem;
+        font-size: 0.82rem;
+    }
+    .aset-table tbody tr:hover {
+        background-color: var(--bs-tertiary-bg, rgba(0, 0, 0, 0.015));
+    }
+</style>
+
+<div class="card clean-card border-0 shadow-sm table-container-sipat overflow-hidden mb-4">
     <div class="card-header bg-transparent border-bottom p-3 d-flex justify-content-between align-items-center">
         <ul class="nav nav-pills" id="rekonTabs" role="tablist">
             <li class="nav-item" role="presentation">
@@ -74,37 +97,50 @@
             
             <!-- Tab Selisih -->
             <div class="tab-pane fade show active" id="miss-tab-pane" role="tabpanel">
-                <div class="p-4 bg-light text-muted small border-bottom">
-                    <i class="bi bi-info-circle me-1"></i> <strong>Aset Selisih:</strong> Aset di bawah ini tercatat berstatus "Bersertifikat" di SIPAT, namun NIB-nya <strong>belum ditemukan</strong> di dalam gudang arsip fisik (eLabel).
+                <div class="p-3 bg-body-tertiary text-muted small border-bottom">
+                    <i class="bi bi-info-circle text-danger me-1"></i> <strong>Aset Selisih:</strong> Aset di bawah ini tercatat berstatus "Bersertifikat" di SIPAT, namun NIB-nya <strong>belum ditemukan</strong> di dalam gudang arsip fisik (eLabel).
                 </div>
                 <div class="table-responsive">
-                    <table class="table table-premium table-hover align-middle mb-0 js-datatable">
-                        <thead>
+                    <table class="table table-hover align-middle mb-0 aset-table js-datatable">
+                        <thead class="bg-body text-secondary">
                             <tr>
-                                <th width="5%">No</th>
-                                <th width="25%">NIB (Kode Aset)</th>
-                                <th>Nama Aset & Lokasi</th>
-                                <th width="15%" class="text-center">Status SIPAT</th>
-                                <th width="10%" class="text-center">Aksi</th>
+                                <th width="5%" class="text-center">NO</th>
+                                <th width="25%">NIB (KODE ASET)</th>
+                                <th>NAMA ASET & LOKASI</th>
+                                <th width="15%" class="text-center">STATUS SIPAT</th>
+                                <th width="10%" class="text-center pe-3">AKSI</th>
                             </tr>
                         </thead>
                         <tbody>
                             @php $no = 1; @endphp
-@foreach ($missList as $aset)
+                            @foreach ($missList as $aset)
                             <tr>
-                                <td class="text-center text-muted">{!! $no++ !!}</td>
-                                <td class="font-monospace text-primary fw-semibold">{{ $aset->kode_aset }}</td>
+                                <td class="text-center text-secondary font-monospace">{{ $no++ }}</td>
                                 <td>
-                                    <div class="fw-bold text-dark">{{ $aset->nama_aset }}</div>
-                                    <div class="text-muted small"><i class="bi bi-geo-alt me-1"></i> {{ $aset->alamat }}</div>
+                                    <div class="d-inline-flex align-items-center gap-1 font-monospace text-secondary" style="font-size: 0.8rem;">
+                                        <i class="bi bi-upc opacity-50"></i>
+                                        <span>{{ $aset->kode_aset ?: '-' }}</span>
+                                        @if(!empty($aset->kode_aset))
+                                        <button type="button" class="btn btn-link p-0 text-muted btn-copy-nibar" data-nibar="{{ $aset->kode_aset }}" title="Salin Kode Aset / NIB" style="font-size: 0.75rem; text-decoration: none;">
+                                            <i class="bi bi-clipboard"></i>
+                                        </button>
+                                        @endif
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="fw-semibold text-dark text-truncate" style="max-width: 380px;">{{ $aset->nama_aset }}</div>
+                                    <div class="text-secondary small d-flex align-items-center gap-1 mt-0.5" style="font-size: 0.75rem;">
+                                        <i class="bi bi-geo-alt text-secondary opacity-75 flex-shrink-0"></i>
+                                        <span class="text-truncate" style="max-width: 360px;">{{ $aset->alamat ?: '-' }}</span>
+                                    </div>
                                 </td>
                                 <td class="text-center">
-                                    <span class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25 rounded-pill px-3">
+                                    <span class="badge bg-danger-subtle text-danger border border-danger-subtle rounded-pill px-3 py-1 font-monospace" style="font-size: 0.75rem;">
                                         {{ $aset->status_saat_ini }}
                                     </span>
                                 </td>
-                                <td class="text-center">
-                                    <a href="{!! url('sipat/aset/' . $aset->id) !!}" data-modal-aset data-modal-url="{!! url('sipat/aset/' . $aset->id . '/modal') !!}" class="btn btn-sm btn-outline-primary rounded-pill px-3">
+                                <td class="text-center pe-3">
+                                    <a href="{!! url('sipat/aset/' . $aset->id) !!}" data-modal-aset data-modal-url="{!! url('sipat/aset/' . $aset->id . '/modal') !!}" class="btn btn-xs btn-outline-primary rounded-pill px-3 py-1" style="font-size: 0.75rem;">
                                         Detail
                                     </a>
                                 </td>
@@ -128,37 +164,50 @@
 
             <!-- Tab Cocok -->
             <div class="tab-pane fade" id="match-tab-pane" role="tabpanel">
-                <div class="p-4 bg-light text-muted small border-bottom">
+                <div class="p-3 bg-body-tertiary text-muted small border-bottom">
                     <i class="bi bi-check-circle text-success me-1"></i> <strong>Aset Cocok:</strong> Aset di bawah ini tercatat berstatus "Bersertifikat" di SIPAT dan fisiknya <strong>sudah aman diarsipkan</strong> di eLabel.
                 </div>
                 <div class="table-responsive">
-                    <table class="table table-premium table-hover align-middle mb-0 js-datatable">
-                        <thead>
+                    <table class="table table-hover align-middle mb-0 aset-table js-datatable">
+                        <thead class="bg-body text-secondary">
                             <tr>
-                                <th width="5%">No</th>
-                                <th width="25%">NIB (Kode Aset)</th>
-                                <th>Nama Aset & Lokasi</th>
-                                <th width="15%" class="text-center">Status Arsip</th>
-                                <th width="10%" class="text-center">Aksi</th>
+                                <th width="5%" class="text-center">NO</th>
+                                <th width="25%">NIB (KODE ASET)</th>
+                                <th>NAMA ASET & LOKASI</th>
+                                <th width="15%" class="text-center">STATUS ARSIP</th>
+                                <th width="10%" class="text-center pe-3">AKSI</th>
                             </tr>
                         </thead>
                         <tbody>
                             @php $no = 1; @endphp
-@foreach ($matchList as $aset)
+                            @foreach ($matchList as $aset)
                             <tr>
-                                <td class="text-center text-muted">{!! $no++ !!}</td>
-                                <td class="font-monospace text-primary fw-semibold">{{ $aset->kode_aset }}</td>
+                                <td class="text-center text-secondary font-monospace">{{ $no++ }}</td>
                                 <td>
-                                    <div class="fw-bold text-dark">{{ $aset->nama_aset }}</div>
-                                    <div class="text-muted small"><i class="bi bi-geo-alt me-1"></i> {{ $aset->alamat }}</div>
+                                    <div class="d-inline-flex align-items-center gap-1 font-monospace text-secondary" style="font-size: 0.8rem;">
+                                        <i class="bi bi-upc opacity-50"></i>
+                                        <span>{{ $aset->kode_aset ?: '-' }}</span>
+                                        @if(!empty($aset->kode_aset))
+                                        <button type="button" class="btn btn-link p-0 text-muted btn-copy-nibar" data-nibar="{{ $aset->kode_aset }}" title="Salin Kode Aset / NIB" style="font-size: 0.75rem; text-decoration: none;">
+                                            <i class="bi bi-clipboard"></i>
+                                        </button>
+                                        @endif
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="fw-semibold text-dark text-truncate" style="max-width: 380px;">{{ $aset->nama_aset }}</div>
+                                    <div class="text-secondary small d-flex align-items-center gap-1 mt-0.5" style="font-size: 0.75rem;">
+                                        <i class="bi bi-geo-alt text-secondary opacity-75 flex-shrink-0"></i>
+                                        <span class="text-truncate" style="max-width: 360px;">{{ $aset->alamat ?: '-' }}</span>
+                                    </div>
                                 </td>
                                 <td class="text-center">
-                                    <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 rounded-pill px-3">
+                                    <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-3 py-1 font-monospace" style="font-size: 0.75rem;">
                                         Tersedia
                                     </span>
                                 </td>
-                                <td class="text-center">
-                                    <a href="{!! url('sipat/aset/' . $aset->id) !!}" data-modal-aset data-modal-url="{!! url('sipat/aset/' . $aset->id . '/modal') !!}" class="btn btn-sm btn-outline-primary rounded-pill px-3">
+                                <td class="text-center pe-3">
+                                    <a href="{!! url('sipat/aset/' . $aset->id) !!}" data-modal-aset data-modal-url="{!! url('sipat/aset/' . $aset->id . '/modal') !!}" class="btn btn-xs btn-outline-primary rounded-pill px-3 py-1" style="font-size: 0.75rem;">
                                         Detail
                                     </a>
                                 </td>
@@ -187,9 +236,30 @@
 </div>
 @endsection
 
-@section('scripts')
+@push('scripts')
 <script>
     document.addEventListener('DOMContentLoaded', function () {
+        // Copy NIBAR / Kode Aset ke clipboard
+        document.addEventListener('click', function(e) {
+            const btn = e.target.closest('.btn-copy-nibar');
+            if (btn) {
+                e.preventDefault();
+                e.stopPropagation();
+                const nibar = btn.getAttribute('data-nibar');
+                if (navigator.clipboard && nibar) {
+                    navigator.clipboard.writeText(nibar).then(() => {
+                        const icon = btn.querySelector('i');
+                        if (icon) {
+                            icon.className = 'bi bi-check2 text-success';
+                            setTimeout(() => {
+                                icon.className = 'bi bi-clipboard';
+                            }, 1500);
+                        }
+                    });
+                }
+            }
+        });
+
         document.addEventListener('click', async function (e) {
             const link = e.target.closest('[data-modal-aset]');
             if (link) {
@@ -223,4 +293,4 @@
         });
     });
 </script>
-@endsection
+@endpush
