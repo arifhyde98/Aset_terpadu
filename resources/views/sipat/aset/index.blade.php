@@ -307,10 +307,10 @@
                             <input type="checkbox" id="checkAll" class="form-check-input">
                         </th>
                         <th class="py-3" style="width: 50px;">NO</th>
-                        <th class="py-3">PERUNTUKAN / NAMA ASET</th>
+                        <th class="py-3" style="min-width: 260px;">PERUNTUKAN / NAMA ASET</th>
                         <th class="py-3">LUAS (M²)</th>
                         <th class="py-3">OPD PENGELOLA</th>
-                        <th class="py-3">ALAMAT / LOKASI</th>
+                        <th class="py-3" style="min-width: 220px;">ALAMAT / LOKASI</th>
                         <th class="py-3">STATUS PROSES BPN</th>
                         <th class="text-center py-3 pe-3" style="width: 140px;">AKSI</th>
                     </tr>
@@ -325,8 +325,38 @@
                                 {{ $asetTanah->firstItem() + $index }}
                             </td>
                             <td>
-                                <div class="fw-bold text-body" style="font-size: 0.9rem;">{{ $item->peruntukan ?? $item->nama_aset }}</div>
-                                <small class="text-secondary" style="font-size: 0.78rem;">{{ $item->nama_aset }}</small>
+                                <!-- 1. Identitas Aset Utama (Nama & Peruntukan) -->
+                                <div class="fw-bold text-body" style="font-size: 0.88rem; line-height: 1.35;">
+                                    {{ $item->peruntukan ?? $item->nama_aset }}
+                                </div>
+                                @if($item->peruntukan && $item->nama_aset && trim(strtolower($item->peruntukan)) !== trim(strtolower($item->nama_aset)))
+                                    <small class="text-secondary d-block mt-0.5" style="font-size: 0.76rem; line-height: 1.3;">{{ $item->nama_aset }}</small>
+                                @endif
+
+                                <!-- 2. NIBAR & Status Pencatatan (Sub-teks Halus di Bawah) -->
+                                <div class="mt-1 d-flex align-items-center gap-2 flex-wrap" style="font-size: 0.73rem;">
+                                    @if(str_starts_with($item->kode_aset ?? '', 'DRAFT-'))
+                                        <span class="text-warning-emphasis font-monospace d-inline-flex align-items-center" title="NIBAR Sementara / Draft">
+                                            <i class="bi bi-tag text-warning me-1"></i>{{ $item->kode_aset }}
+                                        </span>
+                                    @elseif(!empty($item->kode_aset) && $item->kode_aset !== '-')
+                                        <span class="text-secondary font-monospace d-inline-flex align-items-center gap-1" title="NIBAR (Nomor Induk Barang)">
+                                            <i class="bi bi-upc text-secondary opacity-75"></i>
+                                            <span>NIBAR: <span class="user-select-all text-body-secondary">{{ $item->kode_aset }}</span></span>
+                                            <button type="button" class="btn btn-link p-0 text-secondary border-0 ms-1 btn-copy-nibar opacity-75" data-nibar="{{ $item->kode_aset }}" title="Salin NIBAR" style="font-size: 0.7rem; line-height: 1;">
+                                                <i class="bi bi-clipboard"></i>
+                                            </button>
+                                        </span>
+                                    @else
+                                        <span class="text-muted fst-italic">
+                                            <i class="bi bi-dash-circle text-secondary opacity-50 me-1"></i>Tanpa NIBAR
+                                        </span>
+                                    @endif
+
+                                    @if($item->status_pencatatan === 'USULAN_BELUM_TERCATAT')
+                                        <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-1.5 py-0.2" style="font-size: 0.65rem;">Belum KIB A</span>
+                                    @endif
+                                </div>
                             </td>
                             <td>
                                 <span class="fw-bold text-body">{{ number_format($item->luas ?? 0, 0, ',', '.') }}</span> <small class="text-secondary">m²</small>
@@ -336,9 +366,32 @@
                                     {{ $item->opdSipat->nama ?? $item->opd ?? '-' }}
                                 </span>
                             </td>
-                            <td style="max-width: 220px;">
-                                <div class="text-truncate small text-secondary" title="{{ $item->alamat }}">
-                                    <i class="bi bi-geo-alt me-1 text-danger"></i> {{ $item->alamat ?? 'Kabupaten Donggala' }}
+                            <td style="min-width: 220px; max-width: 280px;">
+                                <div class="d-flex flex-column gap-1">
+                                    @if($item->wilayahKecamatan || $item->wilayahDesa)
+                                        <div class="d-flex align-items-center gap-1 flex-wrap">
+                                            @if($item->wilayahKecamatan)
+                                                <span class="badge bg-info-subtle text-info-emphasis border border-info-subtle px-1.5 py-0.5" style="font-size: 0.68rem;">
+                                                    <i class="bi bi-geo-alt-fill me-0.5 text-danger"></i>Kec. {{ $item->wilayahKecamatan->nama }}
+                                                </span>
+                                            @endif
+                                            @if($item->wilayahDesa)
+                                                <span class="badge bg-light text-secondary border px-1.5 py-0.5" style="font-size: 0.68rem;">
+                                                    Desa {{ $item->wilayahDesa->nama }}
+                                                </span>
+                                            @endif
+                                        </div>
+                                    @endif
+
+                                    @if(!empty($item->alamat))
+                                        <div class="text-body-secondary small" style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.35; font-size: 0.78rem;" title="{{ $item->alamat }}">
+                                            <i class="bi bi-geo-alt text-danger me-1 flex-shrink-0"></i>{{ $item->alamat }}
+                                        </div>
+                                    @else
+                                        <div class="text-muted fst-italic small" style="font-size: 0.76rem;">
+                                            <i class="bi bi-geo-alt text-secondary opacity-50 me-1"></i>Belum ada alamat detail
+                                        </div>
+                                    @endif
                                 </div>
                             </td>
                             <td>
@@ -1239,6 +1292,36 @@
         };
         return String(text).replace(/[&<>'"]/g, function(m) { return map[m]; });
     }
+
+    // Copy NIBAR Helper with visual icon feedback
+    document.addEventListener('click', function(e) {
+        const btn = e.target.closest('.btn-copy-nibar');
+        if (!btn) return;
+        e.preventDefault();
+        const nibar = btn.getAttribute('data-nibar');
+        if (nibar && navigator.clipboard) {
+            navigator.clipboard.writeText(nibar).then(() => {
+                const icon = btn.querySelector('i');
+                if (icon) {
+                    const oldClass = icon.className;
+                    icon.className = 'bi bi-check2 text-success';
+                    btn.classList.add('text-success');
+                    setTimeout(() => {
+                        icon.className = oldClass;
+                        btn.classList.remove('text-success');
+                    }, 1500);
+                }
+            }).catch(() => {
+                // Fallback jika permission error
+                const tempInput = document.createElement('input');
+                tempInput.value = nibar;
+                document.body.appendChild(tempInput);
+                tempInput.select();
+                document.execCommand('copy');
+                document.body.removeChild(tempInput);
+            });
+        }
+    });
 
     function showDetail(id) {
         const modalEl = document.getElementById('modalDetailAset');

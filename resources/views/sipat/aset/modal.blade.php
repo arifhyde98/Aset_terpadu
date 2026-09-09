@@ -66,8 +66,14 @@
 <div class="modal-header border-bottom px-4 py-3">
     <div>
         <div class="d-flex align-items-center gap-2 mb-1 flex-wrap">
-            <span class="badge bg-primary-subtle text-primary font-monospace px-2.5 py-1" style="font-size: 0.8rem;">
-                {{ $aset->kode_aset ?? '-' }}
+            <span class="badge bg-primary-subtle text-primary font-monospace px-2.5 py-1 d-inline-flex align-items-center gap-1.5" style="font-size: 0.8rem;" title="NIBAR (Nomor Induk Barang)">
+                <i class="bi bi-upc-scan"></i>
+                <span>NIBAR: {{ $aset->kode_aset ?? '-' }}</span>
+                @if(!empty($aset->kode_aset) && $aset->kode_aset !== '-')
+                    <button type="button" class="btn btn-link p-0 text-primary border-0 ms-1 btn-copy-nibar" data-nibar="{{ $aset->kode_aset }}" title="Salin NIBAR" style="font-size: 0.75rem; line-height: 1;">
+                        <i class="bi bi-clipboard"></i>
+                    </button>
+                @endif
             </span>
             <span class="badge bg-secondary-subtle text-body-secondary fw-normal px-2.5 py-1" style="font-size: 0.78rem;">
                 {{ $aset->opdSipat->nama ?? $aset->opd ?? '-' }}
@@ -173,8 +179,27 @@
 
                     <div class="col-lg-6">
                         <div class="detail-label">ALAMAT / LOKASI TANAH</div>
-                        <div class="p-3 bg-body rounded-3 border text-body fw-medium" style="font-size: 0.9rem;">
-                            <i class="bi bi-geo-alt text-danger me-1"></i> {{ $aset->alamat ?? '-' }}
+                        <div class="p-3 bg-body rounded-3 border text-body" style="font-size: 0.9rem;">
+                            <div class="d-flex align-items-start gap-2">
+                                <i class="bi bi-geo-alt-fill text-danger fs-5 mt-0.5 flex-shrink-0"></i>
+                                <div class="flex-grow-1">
+                                    <div class="fw-semibold">{{ $aset->alamat ?? 'Belum ada alamat detail' }}</div>
+                                    @if($aset->wilayahKecamatan || $aset->wilayahDesa)
+                                        <div class="mt-2 d-flex align-items-center gap-1.5 flex-wrap">
+                                            @if($aset->wilayahKecamatan)
+                                                <span class="badge bg-info-subtle text-info-emphasis border border-info-subtle px-2 py-0.5" style="font-size: 0.72rem;">
+                                                    <i class="bi bi-geo-alt me-1"></i>Kecamatan: <strong>{{ $aset->wilayahKecamatan->nama }}</strong>
+                                                </span>
+                                            @endif
+                                            @if($aset->wilayahDesa)
+                                                <span class="badge bg-light text-secondary border px-2 py-0.5" style="font-size: 0.72rem;">
+                                                    Desa/Kelurahan: <strong>{{ $aset->wilayahDesa->nama }}</strong>
+                                                </span>
+                                            @endif
+                                        </div>
+                                    @endif
+                                </div>
+                            </div>
                         </div>
                     </div>
                     <div class="col-sm-6 col-lg-3">

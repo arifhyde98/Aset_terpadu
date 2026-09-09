@@ -182,24 +182,10 @@ class AsetTanahService
         $dokumenList = DB::table('dokumen_aset')->where('id_aset', $id)->orderBy('uploaded_at', 'desc')->get();
 
         $elabelSertifikat = null;
-        if (!empty($aset->no_sertifikat)) {
-            $cleanNo = trim($aset->no_sertifikat);
+        if (!empty($aset->kode_aset) && class_exists(\App\Models\Elabel\ElabelSertifikat::class)) {
+            $cleanNibar = trim($aset->kode_aset);
             $elabelSertifikat = \App\Models\Elabel\ElabelSertifikat::with('box')
-                ->where('no_sertipikat', $cleanNo)
-                ->orWhere('no_sertipikat', 'LIKE', '%' . $cleanNo . '%')
-                ->first();
-        }
-
-        if (!$elabelSertifikat && (!empty($aset->kode_aset) || !empty($aset->nama_aset))) {
-            $elabelSertifikat = \App\Models\Elabel\ElabelSertifikat::with('box')
-                ->where(function ($q) use ($aset) {
-                    if (!empty($aset->kode_aset)) {
-                        $q->where('nibar', $aset->kode_aset);
-                    }
-                    if (!empty($aset->nama_aset)) {
-                        $q->orWhere('nama_pemilik', 'LIKE', '%' . $aset->nama_aset . '%');
-                    }
-                })
+                ->where('nibar', $cleanNibar)
                 ->first();
         }
 
@@ -446,29 +432,46 @@ class AsetTanahService
             }
         }
 
-        // 3. Deteksi No Sertifikat BPN Sama Persis (Jika Terisi)
+        // 3. Deteksi No Sertifikat BPN Sama Persis dari Relasi e-Label (nibar = kode_aset)
         $certGroups = [];
-        foreach ($asets as $a) {
-            if (!empty($a->no_sertifikat)) {
-                $cleanCert = preg_replace('/[^A-Za-z0-9]/', '', $a->no_sertifikat);
-                if (strlen($cleanCert) > 4) {
-                    $certGroups[$cleanCert][] = $a;
+        if (\Illuminate\Support\Facades\Schema::hasTable('elabel_sertifikat_tanah')) {
+            $nibars = $asets->pluck('kode_aset')->filter()->unique()->toArray();
+            if (!empty($nibars)) {
+                $certs = DB::table('elabel_sertifikat_tanah')
+                    ->whereIn('nibar', $nibars)
+                    ->whereNotNull('no_sertipikat')
+                    ->where('no_sertipikat', '!=', '')
+                    ->pluck('no_sertipikat', 'nibar')
+                    ->toArray();
+
+                foreach ($asets as $a) {
+                    $noSertipikat = $certs[$a->kode_aset] ?? null;
+                    if (!empty($noSertipikat)) {
+                        $cleanCert = preg_replace('/[^A-Za-z0-9]/', '', $noSertipikat);
+                        if (strlen($cleanCert) > 4) {
+                            $certGroups[$cleanCert][] = [
+                                'aset'          => $a,
+                                'no_sertifikat' => $noSertipikat,
+                            ];
+                        }
+                    }
                 }
             }
         }
 
         foreach ($certGroups as $cert => $list) {
             if (count($list) > 1) {
-                $orig = $list[0];
+                $orig = $list[0]['aset'];
+                $certNo = $list[0]['no_sertifikat'];
                 for ($i = 1; $i < count($list); $i++) {
-                    $dup = $list[$i];
+                    $dup = $list[$i]['aset'];
                     $pair = min($orig->id_aset, $dup->id_aset) . '_' . max($orig->id_aset, $dup->id_aset);
                     if (!isset($addedPairs[$pair])) {
                         $addedPairs[$pair] = true;
                         $duplicates[] = [
                             'duplicate_aset' => $dup,
                             'original_aset'  => $orig,
-                            'reason'         => "No Sertifikat BPN Sama Persis: \"{$dup->no_sertifikat}\""
+                            'reason'         => "No Sertifikat BPN Sama Persis: \"{$certNo}\""
                         ];
                     }
                 }
@@ -687,4 +690,3 @@ class AsetTanahService
         });
     }
 }
-
