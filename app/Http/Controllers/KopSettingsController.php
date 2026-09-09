@@ -43,6 +43,7 @@ class KopSettingsController extends Controller implements HasMiddleware
     {
         return [
             new Middleware('auth'),
+            new Middleware('role:superadmin,admin'),
         ];
     }
 

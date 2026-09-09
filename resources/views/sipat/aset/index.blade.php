@@ -381,6 +381,7 @@
                                     <a href="{{ route('sipat.aset.edit', $item->id_aset) }}" class="btn btn-outline-secondary" data-bs-toggle="tooltip" title="Edit Aset">
                                         <i class="bi bi-pencil-square"></i>
                                     </a>
+                                    @if(auth()->user()?->role !== \App\Enums\UserRole::OPD)
                                     <form action="{{ route('sipat.aset.destroy', $item->id_aset) }}" method="POST" class="d-inline delete-confirm">
                                         @csrf
                                         @method('DELETE')
@@ -388,6 +389,7 @@
                                             <i class="bi bi-trash"></i>
                                         </button>
                                     </form>
+                                    @endif
                                 </div>
                             </td>
                         </tr>

@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\StatusProses;
+use App\Models\ProsesAset;
+use App\Models\Activity;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Routing\Controllers\HasMiddleware;
@@ -15,6 +17,7 @@ class StatusProsesController extends Controller implements HasMiddleware
     {
         return [
             new Middleware('auth'),
+            new Middleware('role:superadmin,admin'),
         ];
     }
 
@@ -154,10 +157,24 @@ class StatusProsesController extends Controller implements HasMiddleware
     public function destroy($id)
     {
         $status = StatusProses::findOrFail($id);
+
+        // Guard: Cegah penghapusan status jika masih digunakan pada riwayat proses aset tanah
+        $usedCount = ProsesAset::where('id_status', $id)->count();
+        if ($usedCount > 0) {
+            return redirect()->route('status-proses.index')
+                ->with('error', "Status '{$status->nama_status}' tidak dapat dihapus karena masih digunakan oleh {$usedCount} catatan riwayat proses aset tanah.");
+        }
+
+        $namaStatus = $status->nama_status;
         $status->delete();
 
-        Cache::forget('sipat_dashboard_stats');
+        if (class_exists(Activity::class)) {
+            Activity::logSipat("Menghapus status proses master '{$namaStatus}' [ID: {$id}]", 'warning');
+        }
 
-        return redirect()->route('status-proses.index')->with('success', 'Status Proses berhasil dihapus.');
+        Cache::forget('sipat_dashboard_stats');
+        app(\App\Services\SipatService::class)->invalidateDashboardCache();
+
+        return redirect()->route('status-proses.index')->with('success', "Status Proses '{$namaStatus}' berhasil dihapus.");
     }
 }

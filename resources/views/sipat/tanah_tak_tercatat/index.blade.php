@@ -238,6 +238,7 @@
                                             <i class="bi bi-eye"></i>
                                         </button>
 
+                                        @if(auth()->user()?->role !== \App\Enums\UserRole::OPD)
                                         <!-- 2. Tombol Update NIBAR Resmi -->
                                         <button type="button" 
                                                 class="btn btn-sm btn-success rounded-pill px-2.5 btn-update-nibar shadow-sm"
@@ -250,12 +251,14 @@
                                                 title="Update menjadi NIBAR Resmi BPKAD">
                                             <i class="bi bi-pencil-square me-1"></i> Update NIBAR
                                         </button>
+                                        @endif
 
                                         <!-- 3. Tombol Edit Aset Lengkap -->
                                         <a href="{{ route('sipat.aset.edit', $item->id_aset) }}" class="btn btn-sm btn-outline-secondary rounded-3" data-bs-toggle="tooltip" title="Edit Aset Lengkap">
                                             <i class="bi bi-gear"></i>
                                         </a>
 
+                                        @if(auth()->user()?->role !== \App\Enums\UserRole::OPD)
                                         <!-- 4. Tombol Hapus Aset -->
                                         <form action="{{ route('sipat.aset.destroy', $item->id_aset) }}" method="POST" class="d-inline delete-confirm">
                                             @csrf
@@ -264,6 +267,7 @@
                                                 <i class="bi bi-trash"></i>
                                             </button>
                                         </form>
+                                        @endif
                                     </div>
                                 </td>
                             </tr>

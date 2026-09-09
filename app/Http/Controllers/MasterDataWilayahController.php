@@ -18,6 +18,7 @@ class MasterDataWilayahController extends Controller implements HasMiddleware
     {
         return [
             new Middleware('auth'),
+            new Middleware('role:superadmin,admin'),
         ];
     }
 
@@ -39,22 +40,35 @@ class MasterDataWilayahController extends Controller implements HasMiddleware
 
     public function kecamatanStore(Request $request)
     {
-        $request->validate(['nama' => 'required|string|max:150']);
-        Kecamatan::create($request->all());
+        $validated = $request->validate(['nama' => 'required|string|max:150']);
+        Kecamatan::create($validated);
+        app(\App\Services\SipatService::class)->invalidateDashboardCache();
         return redirect()->route('master.wilayah.index')->with('success', 'Kecamatan berhasil ditambahkan.')->with('active_tab', 'kecamatan');
     }
 
     public function kecamatanUpdate(Request $request, $id)
     {
-        $request->validate(['nama' => 'required|string|max:150']);
+        $validated = $request->validate(['nama' => 'required|string|max:150']);
         $row = Kecamatan::findOrFail($id);
-        $row->update($request->all());
+        $row->update($validated);
+        app(\App\Services\SipatService::class)->invalidateDashboardCache();
         return redirect()->route('master.wilayah.index')->with('success', 'Kecamatan berhasil diperbarui.')->with('active_tab', 'kecamatan');
     }
 
     public function kecamatanDestroy($id)
     {
-        Kecamatan::findOrFail($id)->delete();
+        $row = Kecamatan::findOrFail($id);
+        if (\App\Models\AsetTanah::where('kecamatan_id', $id)->exists()) {
+            return redirect()->route('master.wilayah.index')->with('error', 'Kecamatan tidak dapat dihapus karena masih digunakan oleh data aset tanah.')->with('active_tab', 'kecamatan');
+        }
+        if (Desa::where('kecamatan_id', $id)->exists()) {
+            return redirect()->route('master.wilayah.index')->with('error', 'Kecamatan tidak dapat dihapus karena memiliki data desa terkait.')->with('active_tab', 'kecamatan');
+        }
+        if (Camat::where('kecamatan_id', $id)->exists()) {
+            return redirect()->route('master.wilayah.index')->with('error', 'Kecamatan tidak dapat dihapus karena memiliki data Camat terkait.')->with('active_tab', 'kecamatan');
+        }
+        $row->delete();
+        app(\App\Services\SipatService::class)->invalidateDashboardCache();
         return redirect()->route('master.wilayah.index')->with('success', 'Kecamatan berhasil dihapus.')->with('active_tab', 'kecamatan');
     }
 
@@ -68,30 +82,40 @@ class MasterDataWilayahController extends Controller implements HasMiddleware
 
     public function desaStore(Request $request)
     {
-        $request->validate([
+        $validated = $request->validate([
             'kecamatan_id' => 'required|exists:kecamatan,id',
             'nama' => 'required|string|max:150',
             'jenis' => 'required|in:Desa,Kelurahan',
         ]);
-        Desa::create($request->all());
+        Desa::create($validated);
         return redirect()->route('master.wilayah.index')->with('success', 'Desa/Kelurahan berhasil ditambahkan.')->with('active_tab', 'desa');
     }
 
     public function desaUpdate(Request $request, $id)
     {
-        $request->validate([
+        $validated = $request->validate([
             'kecamatan_id' => 'required|exists:kecamatan,id',
             'nama' => 'required|string|max:150',
             'jenis' => 'required|in:Desa,Kelurahan',
         ]);
         $row = Desa::findOrFail($id);
-        $row->update($request->all());
+        $row->update($validated);
         return redirect()->route('master.wilayah.index')->with('success', 'Desa/Kelurahan berhasil diperbarui.')->with('active_tab', 'desa');
     }
 
     public function desaDestroy($id)
     {
-        Desa::findOrFail($id)->delete();
+        $row = Desa::findOrFail($id);
+        if (\App\Models\AsetTanah::where('desa_id', $id)->exists()) {
+            return redirect()->route('master.wilayah.index')->with('error', 'Desa/Kelurahan tidak dapat dihapus karena masih digunakan oleh data aset tanah.')->with('active_tab', 'desa');
+        }
+        if (DB::table('surat_skpt')->where('desa_id', $id)->exists()) {
+            return redirect()->route('master.wilayah.index')->with('error', 'Desa/Kelurahan tidak dapat dihapus karena masih digunakan pada dokumen Surat SKPT.')->with('active_tab', 'desa');
+        }
+        if (KepalaDesa::where('desa_id', $id)->exists()) {
+            return redirect()->route('master.wilayah.index')->with('error', 'Desa/Kelurahan tidak dapat dihapus karena masih memiliki data Kepala Desa terkait.')->with('active_tab', 'desa');
+        }
+        $row->delete();
         return redirect()->route('master.wilayah.index')->with('success', 'Desa/Kelurahan berhasil dihapus.')->with('active_tab', 'desa');
     }
 
@@ -105,38 +129,42 @@ class MasterDataWilayahController extends Controller implements HasMiddleware
 
     public function kadesStore(Request $request)
     {
-        $request->validate([
+        $validated = $request->validate([
             'desa_id' => 'required|exists:desa,id',
             'nama' => 'required|string|max:150',
             'nip' => 'nullable|string|max:50',
         ]);
         
-        $data = $request->all();
-        $data['aktif'] = $request->has('aktif') ? 1 : 0;
+        $validated['aktif'] = $request->has('aktif') ? 1 : 0;
         
-        KepalaDesa::create($data);
+        KepalaDesa::create($validated);
         return redirect()->route('master.wilayah.index')->with('success', 'Kepala Desa berhasil ditambahkan.')->with('active_tab', 'kades');
     }
 
     public function kadesUpdate(Request $request, $id)
     {
-        $request->validate([
+        $validated = $request->validate([
             'desa_id' => 'required|exists:desa,id',
             'nama' => 'required|string|max:150',
             'nip' => 'nullable|string|max:50',
         ]);
         $row = KepalaDesa::findOrFail($id);
         
-        $data = $request->all();
-        $data['aktif'] = $request->has('aktif') ? 1 : 0;
+        $validated['aktif'] = $request->has('aktif') ? 1 : 0;
         
-        $row->update($data);
+        $row->update($validated);
         return redirect()->route('master.wilayah.index')->with('success', 'Kepala Desa berhasil diperbarui.')->with('active_tab', 'kades');
     }
 
     public function kadesDestroy($id)
     {
-        KepalaDesa::findOrFail($id)->delete();
+        $kades = KepalaDesa::findOrFail($id);
+        if (DB::table('surat_skpt')->where('kepala_desa_id', $id)->exists()) {
+            return redirect()->route('master.wilayah.index')
+                ->with('error', 'Kepala Desa tidak dapat dihapus karena masih digunakan pada dokumen Surat SKPT.')
+                ->with('active_tab', 'kades');
+        }
+        $kades->delete();
         return redirect()->route('master.wilayah.index')->with('success', 'Kepala Desa berhasil dihapus.')->with('active_tab', 'kades');
     }
 
@@ -150,38 +178,42 @@ class MasterDataWilayahController extends Controller implements HasMiddleware
 
     public function camatStore(Request $request)
     {
-        $request->validate([
+        $validated = $request->validate([
             'kecamatan_id' => 'required|exists:kecamatan,id',
             'nama' => 'required|string|max:150',
             'nip' => 'nullable|string|max:50',
         ]);
         
-        $data = $request->all();
-        $data['aktif'] = $request->has('aktif') ? 1 : 0;
+        $validated['aktif'] = $request->has('aktif') ? 1 : 0;
 
-        Camat::create($data);
+        Camat::create($validated);
         return redirect()->route('master.wilayah.index')->with('success', 'Camat berhasil ditambahkan.')->with('active_tab', 'camat');
     }
 
     public function camatUpdate(Request $request, $id)
     {
-        $request->validate([
+        $validated = $request->validate([
             'kecamatan_id' => 'required|exists:kecamatan,id',
             'nama' => 'required|string|max:150',
             'nip' => 'nullable|string|max:50',
         ]);
         $row = Camat::findOrFail($id);
         
-        $data = $request->all();
-        $data['aktif'] = $request->has('aktif') ? 1 : 0;
+        $validated['aktif'] = $request->has('aktif') ? 1 : 0;
 
-        $row->update($data);
+        $row->update($validated);
         return redirect()->route('master.wilayah.index')->with('success', 'Camat berhasil diperbarui.')->with('active_tab', 'camat');
     }
 
     public function camatDestroy($id)
     {
-        Camat::findOrFail($id)->delete();
+        $camat = Camat::findOrFail($id);
+        if (DB::table('surat_skpt')->where('camat_id', $id)->exists()) {
+            return redirect()->route('master.wilayah.index')
+                ->with('error', 'Camat tidak dapat dihapus karena masih digunakan pada dokumen Surat SKPT.')
+                ->with('active_tab', 'camat');
+        }
+        $camat->delete();
         return redirect()->route('master.wilayah.index')->with('success', 'Camat berhasil dihapus.')->with('active_tab', 'camat');
     }
 
@@ -194,7 +226,7 @@ class MasterDataWilayahController extends Controller implements HasMiddleware
 
     public function pemohonStore(Request $request)
     {
-        $request->validate([
+        $validated = $request->validate([
             'nama' => 'required|string|max:150',
             'nik' => 'nullable|string|max:50',
             'ttl' => 'nullable|string|max:100',
@@ -204,24 +236,36 @@ class MasterDataWilayahController extends Controller implements HasMiddleware
             'jabatan' => 'nullable|string|max:100',
             'alamat' => 'nullable|string',
         ]);
-        Pemohon::create($request->all());
+        Pemohon::create($validated);
         return redirect()->route('master.wilayah.index')->with('success', 'Pemohon SKPT berhasil ditambahkan.')->with('active_tab', 'pemohon');
     }
 
     public function pemohonUpdate(Request $request, $id)
     {
-        $request->validate([
+        $validated = $request->validate([
             'nama' => 'required|string|max:150',
             'nik' => 'nullable|string|max:50',
+            'ttl' => 'nullable|string|max:100',
+            'umur' => 'nullable|integer',
+            'warga_negara' => 'nullable|string|max:50',
+            'pekerjaan' => 'nullable|string|max:100',
+            'jabatan' => 'nullable|string|max:100',
+            'alamat' => 'nullable|string',
         ]);
         $row = Pemohon::findOrFail($id);
-        $row->update($request->all());
+        $row->update($validated);
         return redirect()->route('master.wilayah.index')->with('success', 'Pemohon SKPT berhasil diperbarui.')->with('active_tab', 'pemohon');
     }
 
     public function pemohonDestroy($id)
     {
-        Pemohon::findOrFail($id)->delete();
+        $pemohon = Pemohon::findOrFail($id);
+        if (DB::table('surat_skpt')->where('pemohon_id', $id)->exists()) {
+            return redirect()->route('master.wilayah.index')
+                ->with('error', 'Pemohon SKPT tidak dapat dihapus karena masih digunakan pada dokumen Surat SKPT.')
+                ->with('active_tab', 'pemohon');
+        }
+        $pemohon->delete();
         return redirect()->route('master.wilayah.index')->with('success', 'Pemohon SKPT berhasil dihapus.')->with('active_tab', 'pemohon');
     }
 
@@ -234,12 +278,12 @@ class MasterDataWilayahController extends Controller implements HasMiddleware
 
     public function judulStore(Request $request)
     {
-        $request->validate([
+        $validated = $request->validate([
             'judul' => 'required|string|max:255',
         ]);
         
         DB::table('report_titles')->insert([
-            'judul' => $request->judul,
+            'judul' => $validated['judul'],
             'aktif' => $request->has('aktif') ? 1 : 0,
         ]);
         return redirect()->route('master.wilayah.index')->with('success', 'Judul laporan berhasil ditambahkan.')->with('active_tab', 'judul');
@@ -247,12 +291,12 @@ class MasterDataWilayahController extends Controller implements HasMiddleware
 
     public function judulUpdate(Request $request, $id)
     {
-        $request->validate([
+        $validated = $request->validate([
             'judul' => 'required|string|max:255',
         ]);
         
         DB::table('report_titles')->where('id', $id)->update([
-            'judul' => $request->judul,
+            'judul' => $validated['judul'],
             'aktif' => $request->has('aktif') ? 1 : 0,
         ]);
         return redirect()->route('master.wilayah.index')->with('success', 'Judul laporan berhasil diperbarui.')->with('active_tab', 'judul');

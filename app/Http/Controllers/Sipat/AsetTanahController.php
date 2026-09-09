@@ -33,7 +33,7 @@ class AsetTanahController extends Controller implements HasMiddleware
     {
         return [
             new Middleware('auth'),
-            new Middleware('role:superadmin,admin', only: ['checkDuplicates', 'resolveDuplicateAset', 'resolveDuplicateOpdSipat']),
+            new Middleware('role:superadmin,admin', only: ['destroy', 'checkDuplicates', 'resolveDuplicateAset', 'resolveDuplicateOpdSipat']),
         ];
     }
 

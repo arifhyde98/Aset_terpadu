@@ -25,6 +25,7 @@ class TargetSertifikatController extends Controller implements HasMiddleware
     {
         return [
             new Middleware('auth'),
+            new Middleware('role:superadmin,admin', only: ['store', 'update', 'destroy']),
         ];
     }
 

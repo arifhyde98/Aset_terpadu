@@ -23,6 +23,7 @@ class SuratController extends Controller implements HasMiddleware
     {
         return [
             new Middleware('auth'),
+            new Middleware('role:superadmin,admin', only: ['deleteSkpt']),
         ];
     }
 
@@ -120,7 +121,7 @@ class SuratController extends Controller implements HasMiddleware
         ]);
         $mpdf->WriteHTML($html);
 
-        $filename = 'SKPT_' . preg_replace('/[^A-Za-z0-9_-]/', '_', $skpt->nomor_surat ?? $id) . '.pdf';
+        $filename = 'SKPT_' . preg_replace('/[^A-Za-z0-9_-]/', '_', $skpt->nomor_surat ?? $skpt->id) . '.pdf';
         
         return response($mpdf->Output($filename, 'S'))
             ->header('Content-Type', 'application/pdf')

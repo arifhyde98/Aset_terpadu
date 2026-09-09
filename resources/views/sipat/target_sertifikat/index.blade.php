@@ -49,9 +49,11 @@
         </div>
 
         <div class="d-flex align-items-center gap-2 flex-wrap">
+            @if(auth()->user()?->role !== \App\Enums\UserRole::OPD)
             <button type="button" class="btn btn-primary rounded-pill px-3 shadow-sm" data-bs-toggle="modal" data-bs-target="#modalSetTarget">
                 <i class="bi bi-plus-lg me-1"></i> Penetapan Target Baru
             </button>
+            @endif
 
             <a href="{{ route('sipat.target-pensertifikatan.export-excel', ['tahun' => $tahun, 'opd_id' => $opdId, 'status_capaian' => $statusCapaian, 'search' => $search]) }}" class="btn btn-outline-success rounded-pill px-3">
                 <i class="bi bi-file-earmark-excel me-1"></i> Excel (.xlsx)
@@ -257,6 +259,7 @@
                                             <small class="text-secondary">{{ $item->keterangan ?? '-' }}</small>
                                         </td>
                                         <td class="text-end pe-4">
+                                            @if(auth()->user()?->role !== \App\Enums\UserRole::OPD)
                                             <div class="d-flex justify-content-end gap-1">
                                                 <button type="button" 
                                                         class="btn btn-sm btn-outline-primary border-0 rounded-circle btn-edit-target"
@@ -278,6 +281,9 @@
                                                     </button>
                                                 </form>
                                             </div>
+                                            @else
+                                            <span class="text-secondary small fst-italic">Read-only</span>
+                                            @endif
                                         </td>
                                     </tr>
                                 @empty

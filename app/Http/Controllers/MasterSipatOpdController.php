@@ -14,6 +14,7 @@ class MasterSipatOpdController extends Controller implements HasMiddleware
     {
         return [
             new Middleware('auth'),
+            new Middleware('role:superadmin,admin'),
         ];
     }
 
@@ -79,13 +80,35 @@ class MasterSipatOpdController extends Controller implements HasMiddleware
     public function destroy($id)
     {
         $opd = OpdSipat::findOrFail($id);
+
+        // Guard 1: Cek apakah masih ada aset tanah yang menaungi OPD ini
+        $asetCount = \App\Models\AsetTanah::where('opd_id', $id)->count();
+        if ($asetCount > 0) {
+            return redirect()->route('opd-sipat.index')
+                ->with('error', "Master OPD '{$opd->nama}' tidak dapat dihapus karena masih digunakan oleh {$asetCount} data aset tanah aktif.");
+        }
+
+        // Guard 2: Cek apakah terhubung dalam Pemetaan OPD Terpadu
+        if (\Illuminate\Support\Facades\Schema::hasTable('opd_mappings') && DB::table('opd_mappings')->where('sipat_opd_id', $id)->exists()) {
+            return redirect()->route('opd-sipat.index')
+                ->with('error', "Master OPD '{$opd->nama}' tidak dapat dihapus karena masih terhubung pada Pemetaan OPD Terpadu.");
+        }
+
+        // Guard 3: Cek apakah terhubung dalam arsip e-Label
+        if (\Illuminate\Support\Facades\Schema::hasTable('elabel_sertifikat_tanah') && DB::table('elabel_sertifikat_tanah')->where('sipat_opd_id', $id)->exists()) {
+            return redirect()->route('opd-sipat.index')
+                ->with('error', "Master OPD '{$opd->nama}' tidak dapat dihapus karena masih terhubung pada data sertifikat e-Label.");
+        }
+
         $oldData = $opd->toArray();
+        $namaOpd = $opd->nama;
 
         $opd->delete();
 
         $this->logAudit('delete', 'opd', $id, $oldData, []);
+        app(\App\Services\SipatService::class)->invalidateDashboardCache();
 
-        return redirect()->route('opd-sipat.index')->with('success', 'Master OPD SIPAT berhasil dihapus.');
+        return redirect()->route('opd-sipat.index')->with('success', "Master OPD SIPAT '{$namaOpd}' berhasil dihapus.");
     }
 
     private function logAudit(string $action, string $entity, int $entityId, array $oldData = [], array $newData = []): void

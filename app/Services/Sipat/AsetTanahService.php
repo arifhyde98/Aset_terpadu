@@ -140,23 +140,26 @@ class AsetTanahService
     public function storeAset(array $data, ?int $initialStatusId): AsetTanah
     {
         $this->syncLegacyOpdLabel($data);
-        $aset = AsetTanah::create($data);
 
-        if ($initialStatusId) {
-            ProsesAset::create([
-                'id_aset' => $aset->id_aset,
-                'id_status' => $initialStatusId,
-                'tanggal_proses' => $data['tanggal_perolehan'] ?? date('Y-m-d'),
-                'tgl_mulai' => $data['tanggal_perolehan'] ?? date('Y-m-d'),
-                'keterangan' => 'Status awal pensertifikatan saat pendaftaran aset'
-            ]);
-        }
+        return DB::transaction(function () use ($data, $initialStatusId) {
+            $aset = AsetTanah::create($data);
 
-        $this->sipatService->invalidateDashboardCache();
+            if ($initialStatusId) {
+                ProsesAset::create([
+                    'id_aset'        => $aset->id_aset,
+                    'id_status'      => $initialStatusId,
+                    'tanggal_proses' => $data['tanggal_perolehan'] ?? date('Y-m-d'),
+                    'tgl_mulai'      => $data['tanggal_perolehan'] ?? date('Y-m-d'),
+                    'keterangan'     => 'Status awal pensertifikatan saat pendaftaran aset'
+                ]);
+            }
 
-        Activity::logSipat("Menambahkan data aset tanah baru: {$aset->nama_aset} (NIB: {$aset->kode_aset})", 'success', null, $aset->toArray());
+            $this->sipatService->invalidateDashboardCache();
 
-        return $aset;
+            Activity::logSipat("Menambahkan data aset tanah baru: {$aset->nama_aset} (NIB: {$aset->kode_aset})", 'success', null, $aset->toArray());
+
+            return $aset;
+        });
     }
 
     /**
@@ -235,17 +238,37 @@ class AsetTanahService
      */
     public function deleteAset(int $id): void
     {
-        $aset = AsetTanah::findOrFail($id);
-        $oldData = $aset->toArray();
-        $kodeAset = $aset->kode_aset;
-        $namaAset = $aset->nama_aset;
-        
-        ProsesAset::where('id_aset', $id)->delete();
-        $aset->delete();
+        DB::transaction(function () use ($id) {
+            $aset = AsetTanah::findOrFail($id);
+            $oldData = $aset->toArray();
+            $kodeAset = $aset->kode_aset;
+            $namaAset = $aset->nama_aset;
 
-        $this->sipatService->invalidateDashboardCache();
+            // 1. Ambil seluruh file lampiran fisik dan hapus dari storage disk
+            $dokumenList = DB::table('dokumen_aset')->where('id_aset', $id)->get();
+            foreach ($dokumenList as $doc) {
+                if (!empty($doc->file_path) && Storage::disk('public')->exists($doc->file_path)) {
+                    Storage::disk('public')->delete($doc->file_path);
+                }
+            }
 
-        Activity::logSipat("Menghapus data aset tanah secara permanen: {$namaAset} (NIB: {$kodeAset})", 'danger', $oldData, null);
+            // 2. Hapus data relasi terkait
+            DB::table('dokumen_aset')->where('id_aset', $id)->delete();
+            ProsesAset::where('id_aset', $id)->delete();
+            if (\Illuminate\Support\Facades\Schema::hasTable('pengamanan_aset')) {
+                DB::table('pengamanan_aset')->where('id_aset', $id)->delete();
+            }
+            if (\Illuminate\Support\Facades\Schema::hasTable('sipat_target_sertifikat')) {
+                DB::table('sipat_target_sertifikat')->where('aset_tanah_id', $id)->delete();
+            }
+
+            // 3. Hapus data utama aset
+            $aset->delete();
+
+            $this->sipatService->invalidateDashboardCache();
+
+            Activity::logSipat("Menghapus data aset tanah secara permanen: {$namaAset} (NIB: {$kodeAset})", 'danger', $oldData, null);
+        });
     }
 
     /**

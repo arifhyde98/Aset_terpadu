@@ -61,6 +61,9 @@ Dokumen ini merupakan sumber kebenaran tunggal (*Single Source of Truth*) mengen
 *   **Integritas Pendaftaran Tanah Belum Tercatat (`TanahTakTercatatController`)**:
     *   Penyimpanan aset dan status awal dibungkus dalam `DB::transaction()` untuk menjamin atomisitas.
     *   Memperbaiki pemanggilan `ProsesAset::create()` dengan key kolom resmi: `id_status`, `tanggal_proses`, dan `tgl_mulai` (mencegah `SQLSTATE[HY000]: 1364 Field 'id_status' doesn't have a default value`).
+*   **Atomisitas Transaksi & Pembersihan Berkas Lampiran Fisik (`AsetTanahService`)**:
+    *   Method `AsetTanahService::storeAset()` kini dibungkus penuh dalam `DB::transaction()` untuk menjamin atomisitas pembuatan aset tanah baru dan riwayat status BPN awal (*All-or-Nothing*).
+    *   Method `AsetTanahService::deleteAset()` dibungkus dalam `DB::transaction()` dan secara otomatis mendeteksi serta menghapus berkas fisik lampiran dari disk penyimpanan (`Storage::disk('public')->delete(...)`) sebelum baris database dihapus, mencegah terjadinya penumpukan berkas sampah yatim (*orphaned files*) pada server.
 *   **Standardisasi Dialog Konfirmasi Hapus (Single SweetAlert2)**:
     *   Menghilangkan atribut inline `onsubmit="return confirm(...)"` pada form yang telah memiliki class `.delete-confirm` (seperti di `tanah_tak_tercatat`, `status_proses`, dan `target_sertifikat`).
     *   Mencegah munculnya konfirmasi ganda (dialog native browser disusul SweetAlert2) sehingga seluruh aksi hapus kini konsisten menggunakan modal SweetAlert2 tunggal.
@@ -69,12 +72,44 @@ Dokumen ini merupakan sumber kebenaran tunggal (*Single Source of Truth*) mengen
     *   Batas data guard PDF dinaikkan ke 3.500 baris untuk mengakomodasi seluruh dataset e-BMD (2.041 unit) dan Data Real (1.038 unit).
     *   Tabel PDF `reports.pdf` menggunakan teknik *table chunking* (100 baris per sub-tabel) guna mencegah batas memori dan PCRE backtrack limit pada mPDF.
     *   Kolom **"Jenis Kendaraan" (`jenis`)** ditampilkan pada seluruh strategi laporan E-RANDIS (Status, Distribusi OPD, Dokumen/STNK, dan Duplikasi), terintegrasi penuh di Pratinjau Web, Cetak Browser, Unduh PDF, dan Ekspor Excel.
+*   **Perbaikan Safety Ekspor PDF SKPT (`SuratController`)**:
+    *   Memperbaiki fallback penamaan berkas unduhan PDF SKPT pada `SuratController@pdfSkpt` dari `$skpt->nomor_surat ?? $id` menjadi `$skpt->nomor_surat ?? $skpt->id`, mencegah terjadinya galat runtime PHP `Undefined variable $id` ketika nomor surat belum terisi.
+*   **Standardisasi Validasi & Guard Dependensi Master Wilayah (`MasterDataWilayahController`)**:
+    *   Mengganti seluruh pemanggilan `$request->all()` pada operasi simpan/update kecamatan, desa, camat, kepala desa, pemohon SKPT, dan judul laporan dengan data terverifikasi `$validated = $request->validate(...)` guna mencegah celah keamanan *mass assignment*.
+    *   Menambahkan guard dependensi relasi database: mencegah penghapusan data Kecamatan atau Desa/Kelurahan jika masih digunakan oleh catatan aset tanah aktif pada tabel `aset_tanah`, atau jika kecamatan masih menaungi desa terdaftar.
+    *   Otomatis memicu pembersihan cache `SipatService::invalidateDashboardCache()` pada mutasi kecamatan agar statistik sebaran wilayah pada dashboard SIPAT langsung tersinkronisasi.
 *   **Integrasi Pengaturan Dokumen Cetak E-RANDIS (`reports/settings`)**:
     *   Tabel `report_letterheads` dan `report_signatories` diselaraskan ke instansi resmi Pemerintah Kabupaten Donggala (BPKAD) dan pejabat pengesah Banawa.
     *   Otomasi dua arah di `ReportSettingController`: setiap pembaruan Kop Surat atau Pejabat otomatis menyelaraskan `letterhead_id` dan `signatory_id` di seluruh `report_export_settings`.
     *   Submenu **"Pengaturan Cetak Laporan"** telah ditambahkan di sidebar navigasi E-RANDIS (`MANAJEMEN KENDARAAN`) serta menu master utama **"PENGATURAN SISTEM"** (`/settings/reports`).
     *   Halaman **Pengaturan Konten & Web** (`/settings`) kini dilengkapi tombol navigasi langsung ke pengaturan dokumen cetak (Kop & TTD).
     *   Breadcrumbs dan navigasi atas pada halaman pengaturan cetak memungkinkan kembali ke Pengaturan Sistem ataupun ke Laporan Kendaraan dengan mulus.
+
+*   **Penguatan Otorisasi & Hak Akses Berbasis Role (`HasMiddleware` - Nomor 1)**:
+    *   Menerapkan interface Laravel 12 standard `HasMiddleware` dengan `new Middleware('role:superadmin,admin')` pada seluruh Master Data Controller SIPAT:
+        *   `StatusProsesController`: Proteksi penuh konfigurasi alur status proses BPN hanya untuk Superadmin & Admin.
+        *   `MasterSipatOpdController`: Proteksi pengelolaan daftar unit/instansi SIPAT.
+        *   `MasterDataWilayahController`: Proteksi data kecamatan, desa, camat, kepala desa, pemohon, dan judul laporan.
+        *   `KopSettingsController`: Proteksi KOP surat resmi dan spesimen tanda tangan pejabat.
+        *   `AuditLogsController`: Proteksi audit trail aktivitas pengguna SIPAT.
+    *   Membatasi aksi mutasi data kritis khusus Superadmin dan Admin pada operasional SIPAT:
+        *   `AsetTanahController@destroy`: Mencegah pengguna ber-role OPD menghapus aset tanah.
+        *   `TargetSertifikatController`: Pembatasan aksi `store`, `update`, dan `destroy` (OPD hanya berstatus *read-only* melihat capaian target).
+        *   `TanahTakTercatatController@updateNibar`: Pembatasan validasi promosi NIBAR resmi BPKAD.
+        *   `PetaController@importPoligon`: Pembatasan unggah dan penimpaan massal data spasial GIS.
+        *   `SuratController@deleteSkpt`: Pembatasan penghapusan berkas surat keterangan pendaftaran tanah.
+    *   Menyembunyikan tombol aksi hapus, penetapan target baru, dan update NIBAR pada template Blade (`aset.index`, `tanah_tak_tercatat.index`, dan `target_sertifikat.index`) dari tampilan pengguna ber-role OPD.
+
+*   **Proteksi Cascade Delete & Guard Integritas Data Master (`StatusProses`, `OpdSipat`, & `Wilayah` - Nomor 2)**:
+    *   `StatusProsesController@destroy`: Menambahkan guard dependensi `ProsesAset::where('id_status', $id)->count()`. Mencegah terjadinya *cascade delete* database yang dapat melenyapkan riwayat proses pengurusan BPN pada ratusan bidang tanah secara tidak sengaja ketika suatu status master dihapus.
+    *   `MasterSipatOpdController@destroy`: Menambahkan guard dependensi pada `AsetTanah::where('opd_id', $id)`, `opd_mappings`, dan `elabel_sertifikat_tanah`. Mencegah penghapusan master OPD yang masih menaungi aset tanah aktif atau terhubung pada pemetaan terpadu.
+    *   `MasterDataWilayahController`: Menambahkan guard dependensi relasi dokumen SKPT dan struktur pemerintahan:
+        *   `kecamatanDestroy`: Memvalidasi keberadaan `Camat` aktif sebelum menghapus kecamatan.
+        *   `desaDestroy`: Memvalidasi keterkaitan pada `surat_skpt` dan `KepalaDesa` sebelum menghapus desa.
+        *   `kadesDestroy`: Memvalidasi penggunaan pejabat kepala desa pada dokumen `surat_skpt`.
+        *   `camatDestroy`: Memvalidasi penggunaan pejabat camat pada dokumen `surat_skpt`.
+        *   `pemohonDestroy`: Memvalidasi penggunaan pemohon pada dokumen `surat_skpt`.
+    *   `AsetTanahService::deleteAset`: Memastikan pembersihan relasi anak (`dokumen_aset`, `proses_aset`, `pengamanan_aset`, dan `sipat_target_sertifikat`) dilakukan secara eksplisit dan atomik di dalam `DB::transaction()` sebelum entitas utama dihapus.
 
 ---
 
