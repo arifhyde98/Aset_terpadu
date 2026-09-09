@@ -15,11 +15,18 @@ return new class extends Migration
             });
         }
 
-        DB::statement('
-            UPDATE aset_tanah a
-            LEFT JOIN opd o ON TRIM(LOWER(a.opd)) = TRIM(LOWER(o.nama))
-            SET a.opd_id = o.id
-        ');
+        if (DB::getDriverName() === 'mysql') {
+            DB::statement('
+                UPDATE aset_tanah a
+                LEFT JOIN opd o ON TRIM(LOWER(a.opd)) = TRIM(LOWER(o.nama))
+                SET a.opd_id = o.id
+            ');
+        } else {
+            $opds = DB::table('opd')->get();
+            foreach ($opds as $opd) {
+                DB::table('aset_tanah')->whereRaw('TRIM(LOWER(opd)) = ?', [trim(strtolower($opd->nama))])->update(['opd_id' => $opd->id]);
+            }
+        }
 
         try {
             Schema::table('aset_tanah', function (Blueprint $table) {

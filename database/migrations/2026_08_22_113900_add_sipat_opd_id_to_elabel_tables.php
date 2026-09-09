@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         // 1. elabel_bpkb
-        if (Schema::hasTable('elabel_bpkb')) {
+        if (Schema::hasTable('elabel_bpkb') && !Schema::hasColumn('elabel_bpkb', 'sipat_opd_id')) {
             Schema::table('elabel_bpkb', function (Blueprint $table) {
                 $table->unsignedInteger('sipat_opd_id')->nullable()->after('pdf_path');
                 $table->foreign('sipat_opd_id')->references('id')->on('opd')->onDelete('set null');
@@ -20,7 +20,7 @@ return new class extends Migration
         }
 
         // 2. elabel_bpkb_deletes
-        if (Schema::hasTable('elabel_bpkb_deletes')) {
+        if (Schema::hasTable('elabel_bpkb_deletes') && !Schema::hasColumn('elabel_bpkb_deletes', 'sipat_opd_id')) {
             Schema::table('elabel_bpkb_deletes', function (Blueprint $table) {
                 $table->unsignedInteger('sipat_opd_id')->nullable()->after('pdf_path');
                 $table->foreign('sipat_opd_id')->references('id')->on('opd')->onDelete('set null');
@@ -28,7 +28,7 @@ return new class extends Migration
         }
 
         // 3. elabel_sertifikat_tanah
-        if (Schema::hasTable('elabel_sertifikat_tanah')) {
+        if (Schema::hasTable('elabel_sertifikat_tanah') && !Schema::hasColumn('elabel_sertifikat_tanah', 'sipat_opd_id')) {
             Schema::table('elabel_sertifikat_tanah', function (Blueprint $table) {
                 $table->unsignedInteger('sipat_opd_id')->nullable()->after('pdf_path');
                 $table->foreign('sipat_opd_id')->references('id')->on('opd')->onDelete('set null');
@@ -36,7 +36,7 @@ return new class extends Migration
         }
 
         // 4. elabel_surat_penyerahan
-        if (Schema::hasTable('elabel_surat_penyerahan')) {
+        if (Schema::hasTable('elabel_surat_penyerahan') && !Schema::hasColumn('elabel_surat_penyerahan', 'sipat_opd_id')) {
             Schema::table('elabel_surat_penyerahan', function (Blueprint $table) {
                 $table->unsignedInteger('sipat_opd_id')->nullable()->after('pdf_path');
                 $table->foreign('sipat_opd_id')->references('id')->on('opd')->onDelete('set null');
@@ -44,7 +44,7 @@ return new class extends Migration
         }
 
         // 5. elabel_loans
-        if (Schema::hasTable('elabel_loans')) {
+        if (Schema::hasTable('elabel_loans') && !Schema::hasColumn('elabel_loans', 'sipat_opd_id')) {
             Schema::table('elabel_loans', function (Blueprint $table) {
                 $table->unsignedInteger('sipat_opd_id')->nullable()->after('requester_org');
                 $table->foreign('sipat_opd_id', 'elabel_loans_sipat_opd_id_foreign')->references('id')->on('opd')->onDelete('set null');
@@ -58,7 +58,7 @@ return new class extends Migration
     public function down(): void
     {
         // 5. elabel_loans
-        if (Schema::hasTable('elabel_loans')) {
+        if (Schema::hasTable('elabel_loans') && Schema::hasColumn('elabel_loans', 'sipat_opd_id')) {
             Schema::table('elabel_loans', function (Blueprint $table) {
                 $table->dropForeign('elabel_loans_sipat_opd_id_foreign');
                 $table->dropColumn('sipat_opd_id');
@@ -66,7 +66,7 @@ return new class extends Migration
         }
 
         // 4. elabel_surat_penyerahan
-        if (Schema::hasTable('elabel_surat_penyerahan')) {
+        if (Schema::hasTable('elabel_surat_penyerahan') && Schema::hasColumn('elabel_surat_penyerahan', 'sipat_opd_id')) {
             Schema::table('elabel_surat_penyerahan', function (Blueprint $table) {
                 $table->dropForeign(['sipat_opd_id']);
                 $table->dropColumn('sipat_opd_id');
@@ -74,7 +74,7 @@ return new class extends Migration
         }
 
         // 3. elabel_sertifikat_tanah
-        if (Schema::hasTable('elabel_sertifikat_tanah')) {
+        if (Schema::hasTable('elabel_sertifikat_tanah') && Schema::hasColumn('elabel_sertifikat_tanah', 'sipat_opd_id')) {
             Schema::table('elabel_sertifikat_tanah', function (Blueprint $table) {
                 $table->dropForeign(['sipat_opd_id']);
                 $table->dropColumn('sipat_opd_id');
@@ -82,7 +82,7 @@ return new class extends Migration
         }
 
         // 2. elabel_bpkb_deletes
-        if (Schema::hasTable('elabel_bpkb_deletes')) {
+        if (Schema::hasTable('elabel_bpkb_deletes') && Schema::hasColumn('elabel_bpkb_deletes', 'sipat_opd_id')) {
             Schema::table('elabel_bpkb_deletes', function (Blueprint $table) {
                 $table->dropForeign(['sipat_opd_id']);
                 $table->dropColumn('sipat_opd_id');
@@ -90,7 +90,7 @@ return new class extends Migration
         }
 
         // 1. elabel_bpkb
-        if (Schema::hasTable('elabel_bpkb')) {
+        if (Schema::hasTable('elabel_bpkb') && Schema::hasColumn('elabel_bpkb', 'sipat_opd_id')) {
             Schema::table('elabel_bpkb', function (Blueprint $table) {
                 $table->dropForeign(['sipat_opd_id']);
                 $table->dropColumn('sipat_opd_id');

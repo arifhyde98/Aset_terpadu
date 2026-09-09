@@ -11,11 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('opds', function (Blueprint $table) {
-            $table->id();
-            $table->string('nama')->unique();
-            $table->string('singkatan')->nullable();
-            $table->text('alamat')->nullable();
+        // SIPAT Master OPD
+        Schema::create('opd', function (Blueprint $table) {
+            $table->increments('id');
+            $table->string('nama', 150)->unique('opd_nama_unique');
             $table->boolean('aktif')->default(true);
             $table->timestamps();
         });
@@ -26,6 +25,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('opds');
+        Schema::dropIfExists('opd');
     }
 };
+

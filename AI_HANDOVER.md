@@ -10,7 +10,7 @@ Dokumen ini merupakan sumber kebenaran tunggal (*Single Source of Truth*) mengen
 
 ## 1. 🛠️ Environment & Technology Stack
 - **Framework Core:** Laravel 12 / PHP 8.2+
-- **Database:** MySQL / MariaDB (Teroptimasi dengan skema B-tree Indexing)
+- **Database:** MySQL / MariaDB / PostgreSQL (Supabase Compatible) — Seluruh 54 tabel dilengkapi migrasi Laravel Blueprint murni (`database/migrations/`) yang 100% database-agnostic dan siap dieksekusi via `php artisan migrate`.
 - **Timezone:** Dikonfigurasi secara terpusat melalui variabel lingkungan `APP_TIMEZONE` di `.env` & `config/app.php`.
 - **Frontend / Assets:** 
   - **Bundler:** Vite

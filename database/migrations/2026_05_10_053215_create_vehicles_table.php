@@ -16,15 +16,15 @@ return new class extends Migration
             $table->string('no_polisi')->unique();
             $table->string('merk');
             $table->string('tipe');
-            $table->enum('jenis', ['Mobil', 'Motor', 'Bus', 'Truck'])->default('Mobil');
+            $table->string('jenis');
             $table->integer('tahun_pembuatan')->nullable();
             $table->string('no_rangka')->nullable();
             $table->string('no_mesin')->nullable();
             $table->string('warna')->nullable();
             $table->date('tgl_stnk')->nullable();
-            $table->string('opd'); // Dinas / Instansi
-            $table->string('pemegang'); // Nama Pemegang
-            $table->enum('status', ['Tersedia', 'Digunakan', 'Rusak', 'Dilelang'])->default('Tersedia');
+            $table->string('opd')->nullable(); // Dinas / Instansi
+            $table->string('pemegang')->nullable(); // Nama Pemegang
+            $table->string('status')->default('Tersedia');
             $table->text('keterangan')->nullable();
             $table->foreignId('user_id')->nullable()->constrained()->onDelete('set null'); // Relasi ke tabel users (opsional)
             $table->timestamps();
