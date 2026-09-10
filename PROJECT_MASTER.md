@@ -130,7 +130,7 @@ Berikut adalah status fitur yang telah diimplementasikan penuh pada platform SIP
 | **SIPAT** | Import Aset Tanah & Status | DONE | Pengunggahan massal data sertifikat & status proses tanah. |
 | **SIPAT** | Distribusi Aset per OPD (Breakdown) | DONE | Widget sebaran 5 OPD terbanyak, chart donat 100%, multi-segment bar, breakdown status (Bersertifikat, Proses, Belum), dan link filter. |
 | **SIPAT** | Tabel Sebaran Aset per OPD | DONE | Tabel master rekapitulasi 54 OPD di atas sebaran kecamatan, live search, luas m², progres bar sertifikat, dan link aksi filter. |
-| **SIPAT** | Pusat Laporan & Ekspor 11 Kolom | DONE | Laporan KIB A standar Pemda Donggala 11 kolom (NO, Kode/NIBAR, Nama Barang, Lokasi, Bidang, Luas, Nilai, Tgl Perolehan, Cara Perolehan, Status proses BPN, Keterangan asli), pratinjau web, PDF mPDF & Excel. |
+| **SIPAT** | Pusat Laporan & Ekspor 11/12 Kolom | DONE | Laporan KIB A standar Pemda Donggala 11 kolom standar dan 12 kolom dinamis khusus laporan aset bersertifikat (menyisipkan sub-kolom `No. Sertifikat` di antara `Bidang` & `Luas`), mesin judul dinamis multi-filter (OPD, status, kecamatan, tahun), 3 mode judul (auto/master/manual), pratinjau web responsif, PDF mPDF Landscape A4-L & Excel .xlsx streaming. |
 | **eLABEL** | Katalog BPKB (R4 / R2) | DONE | Penyimpanan BPKB, import template, & cetak status BPKB. |
 | **eLABEL** | Manajemen Box Arsip BPKB | DONE | Penggabungan box BPKB dan pencetakan label barcode box. |
 | **eLABEL** | Sertifikat & Box Sertifikat | DONE | Penyimpanan sertifikat tanah fisik, tanggal sertifikat, split/merge box sertifikat, ekspor/impor Excel, & integrasi SIPAT. |

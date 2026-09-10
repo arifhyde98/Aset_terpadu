@@ -55,6 +55,8 @@ class LaporanController extends Controller implements HasMiddleware
         $query = $this->laporanService->buildQuery($filters);
         $rows = $query->get();
         $summary = $this->laporanService->buildSummary($rows, $filters);
+        $titleLines = $this->laporanService->resolveReportTitleLines($filters);
+        $selectedTitle = implode(' ', $titleLines);
 
         $queryString = http_build_query(array_filter($filters));
         $exportQueryString = $queryString ? '?' . $queryString : '';
@@ -69,6 +71,8 @@ class LaporanController extends Controller implements HasMiddleware
             'reportTitles',
             'rows',
             'summary',
+            'selectedTitle',
+            'titleLines',
             'exportQueryString'
         ));
     }
@@ -108,9 +112,10 @@ class LaporanController extends Controller implements HasMiddleware
         $rows = $this->laporanService->buildQuery($filters)->get();
         $summary = $this->laporanService->buildSummary($rows, $filters);
         $kop = $this->laporanService->getKopSettings();
-        $selectedTitle = $this->laporanService->resolveReportTitle($filters);
+        $titleLines = $this->laporanService->resolveReportTitleLines($filters);
+        $selectedTitle = implode(' ', $titleLines);
 
-        $pdfView = view('sipat.laporan.print_pdf', compact('rows', 'filters', 'summary', 'kop', 'selectedTitle'))->render();
+        $pdfView = view('sipat.laporan.print_pdf', compact('rows', 'filters', 'summary', 'kop', 'selectedTitle', 'titleLines'))->render();
         
         if (!class_exists(\Mpdf\Mpdf::class)) {
             // Fallback to HTML if mPDF is not installed

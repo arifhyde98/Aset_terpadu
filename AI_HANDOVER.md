@@ -113,7 +113,23 @@ Dokumen ini merupakan sumber kebenaran tunggal (*Single Source of Truth*) mengen
         *   `kadesDestroy`: Memvalidasi penggunaan pejabat kepala desa pada dokumen `surat_skpt`.
         *   `camatDestroy`: Memvalidasi penggunaan pejabat camat pada dokumen `surat_skpt`.
         *   `pemohonDestroy`: Memvalidasi penggunaan pemohon pada dokumen `surat_skpt`.
-    *   `AsetTanahService::deleteAset`: Memastikan pembersihan relasi anak (`dokumen_aset`, `proses_aset`, `pengamanan_aset`, dan `sipat_target_sertifikat`) dilakukan secara eksplisit dan atomik di dalam `DB::transaction()` sebelum entitas utama dihapus.
+*   **Standardisasi 11/12 Kolom Laporan Aset Tanah & Mesin Judul Dinamis Berbasis Filter (`LaporanService`, `print_pdf`, `index`)**:
+    *   **11 Kolom Standar Resmi**: Diselaraskan persis dengan format cetak Pemkab Donggala: `NO.`, `Kode Aset / NIBAR`, `Nama Barang` (`nama_aset`), `Lokasi` (`alamat`), `Bidang` (`peruntukan`), `Luas (m²)` (`luas`), `Nilai (Rp)` (`harga_perolehan`), `Tanggal Perolehan` (`tanggal_perolehan`), `Cara Perolehan` (`dasar_perolehan`), `Status` (`latestProses.statusProses.nama_status`), dan `Keterangan` (murni catatan catatan `$row->keterangan`, dilarang keras fallback ke nama barang).
+    *   **Dukungan Dinamis 12 Kolom Sub-Kolom `No. Sertifikat` Khusus Aset Bersertifikat**:
+        - Ketika filter `kategori_status === 'sudah_bersertifikat'` aktif, tabel secara otomatis berekspansi menjadi 12 kolom dengan menyisipkan sub-kolom `No. Sertifikat` di bawah header `Aset Sudah Bersertifikat` persis di antara sub-kolom `Bidang` dan `Luas(m2)`:
+          `Bidang` | `No. Sertifikat` | `Luas(m2)` | `Nilai(Rp)`
+        - Data nomor sertifikat diambil secara efisien melalui eager loading relasi `sertifikatElabel` (`$row->sertifikatElabel?->no_sertipikat ?? '-'`) yang menghubungkan kode aset / NIBAR langsung ke tabel `elabel_sertifikat_tanah`.
+        - Konsistensi 100% pada 3 kanal utama:
+          1. **Pratinjau Web (`sipat/laporan/index.blade.php`)**: Menampilkan badge `Mode Aset Bersertifikat (12 Kolom)`, sub-kolom `NO. SERTIFIKAT` dengan badge font monospace, dan colspan footer 6 kolom.
+          2. **Cetak / Unduh PDF (`sipat/laporan/print_pdf.blade.php`)**: Sub-kolom `No. Sertifikat` dengan `colspan="4"` di grup header, total baris `colspan="6"`, serta proporsi lebar kolom yang terkalibrasi persis 100%.
+          3. **Ekspor Excel (`LaporanService::exportExcel`)**: Kolom A s.d. L (12 kolom), KOP A:L, sub-kolom `Bidang` (E), `No. Sertifikat` (F), `Luas(m2)` (G), `Nilai(Rp)` (H), merge total `A:F`, dan tanda tangan pada kolom `J:L`.
+        - **Proteksi Integritas Laporan Lainnya**: Untuk seluruh kategori laporan lainnya (Semua/Rekapitulasi Umum, Belum Diproses, Dalam Proses, Bermasalah/Sengketa), struktur 11 kolom standar (`Bidang` | `Luas(m2)` | `Nilai(Rp)`) tetap aktif dan tidak berubah sedikitpun.
+    *   **Mesin Judul Laporan Dinamis 3 Baris (`LaporanService::resolveReportTitleLines`)**: Judul laporan pada KOP PDF dan Excel tersusun secara berjenjang rapi (*Tata Naskah Dinas* resmi Pemkab Donggala):
+        - Baris 1: Kategori / Status Laporan (contoh: `LAPORAN ASET TANAH SUDAH BERSERTIFIKAT`).
+        - Baris 2: Nama Instansi OPD (contoh: `DINAS PENDIDIKAN DAN KEBUDAYAAN`), atau fallback `PEMERINTAH KABUPATEN DONGGALA` jika memilih semua OPD.
+        - Baris 3: Lokasi Wilayah & Tahun (contoh: `KECAMATAN BANAWA 2026` atau `TAHUN 2026`).
+        Format ini mengeliminasi tahun mengambang sendirian (*orphan year*), mencegah pembungkusan teks sembarangan (*bad word wrap*), dan menghapus duplikasi subtitle instansi di bawah judul.
+    *   **Fleksibilitas 3 Mode Judul**: Pengguna dapat memilih mode judul via filter: `auto` (Otomatis sesuai filter - default), `master` (Pilih dari master judul tersimpan), atau `manual` (Ketik judul kustom bebas). Panel filter web dilengkapi badge pratinjau interaktif judul yang sedang aktif.
 
 ---
 

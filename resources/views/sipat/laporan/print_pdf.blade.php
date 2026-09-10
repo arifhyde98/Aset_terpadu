@@ -38,21 +38,26 @@
             color: #334155;
         }
         .report-title {
-            margin: 14px 0 16px;
+            margin: 12px 0 16px;
             text-align: center;
         }
-        .report-title h2 {
-            margin: 0;
+        .report-title .title-main {
             font-size: 13pt;
             font-weight: bold;
             letter-spacing: .5px;
             text-transform: uppercase;
+            color: #000000;
+            line-height: 1.3;
+            margin-bottom: 3px;
         }
-        .report-title .subtitle {
-            margin-top: 4px;
+        .report-title .title-sub {
             font-size: 11pt;
             font-weight: bold;
+            letter-spacing: .3px;
             text-transform: uppercase;
+            color: #000000;
+            line-height: 1.3;
+            margin-bottom: 2px;
         }
         .table-report {
             width: 100%;
@@ -127,9 +132,10 @@
     @php
         $year = date('Y');
         $kat = $filters['kategori_status'] ?? '';
+        $isBersertifikat = ($kat === 'sudah_bersertifikat');
         $groupHeader = 'Aset Tanah';
-        if ($kat === 'sudah_bersertifikat') {
-            $groupHeader = 'Aset Sudah Sertifikat';
+        if ($isBersertifikat) {
+            $groupHeader = 'Aset Sudah Bersertifikat';
         } elseif ($kat === 'belum_diproses') {
             $groupHeader = 'Aset Belum Diproses';
         } elseif ($kat === 'dalam_proses') {
@@ -140,9 +146,10 @@
             $groupHeader = 'Aset Belum Bersertifikat';
         }
 
-        $fullTitle = strtoupper($selectedTitle ?? 'LAPORAN REKAPITULASI ASET TANAH');
-        if (!str_contains($fullTitle, $year)) {
-            $fullTitle .= ' ' . $year;
+        $titleLines = $titleLines ?? null;
+        if (!$titleLines) {
+            $service = app(\App\Services\LaporanService::class);
+            $titleLines = $service->resolveReportTitleLines($filters);
         }
     @endphp
 
@@ -161,30 +168,34 @@
         </table>
     </div>
 
-    <!-- JUDUL LAPORAN KATEGORI -->
+    <!-- JUDUL LAPORAN RESMI (TATA NASKAH DINAS PEMKAB DONGGALA) -->
     <div class="report-title">
-        <h2>{{ $fullTitle }}</h2>
-        <div class="subtitle">{{ $kop['kop_nama_instansi'] ?? 'PEMERINTAH KABUPATEN DONGGALA' }}</div>
+        @foreach($titleLines as $idx => $line)
+            <div class="{{ $idx === 0 ? 'title-main' : 'title-sub' }}">{{ $line }}</div>
+        @endforeach
     </div>
 
-    <!-- TABEL DENGAN 11 KOLOM RESMI (NO., KODE ASET/NIBAR, NAMA BARANG, LOKASI, BIDANG, LUAS, NILAI, TANGGAL PEROLEHAN, CARA PEROLEHAN, STATUS, KETERANGAN) -->
+    <!-- TABEL DENGAN 11/12 KOLOM RESMI (NO., KODE ASET/NIBAR, NAMA BARANG, LOKASI, [BIDANG, (NO. SERTIFIKAT), LUAS, NILAI], TANGGAL PEROLEHAN, CARA PEROLEHAN, STATUS, KETERANGAN) -->
     <table class="table-report">
         <thead>
             <tr>
                 <th rowspan="2" width="3%" style="vertical-align: middle; text-align: center;">NO.</th>
-                <th rowspan="2" width="13%" style="vertical-align: middle; text-align: center;">Kode Aset / NIBAR</th>
+                <th rowspan="2" width="{{ $isBersertifikat ? '12%' : '13%' }}" style="vertical-align: middle; text-align: center;">Kode Aset / NIBAR</th>
                 <th rowspan="2" width="11%" style="vertical-align: middle; text-align: center;">Nama Barang</th>
-                <th rowspan="2" width="12%" style="vertical-align: middle; text-align: center;">Lokasi</th>
-                <th colspan="3" style="text-align: center;">{{ $groupHeader }}</th>
-                <th rowspan="2" width="8%" style="vertical-align: middle; text-align: center;">Tanggal Perolehan</th>
+                <th rowspan="2" width="{{ $isBersertifikat ? '11%' : '12%' }}" style="vertical-align: middle; text-align: center;">Lokasi</th>
+                <th colspan="{{ $isBersertifikat ? '4' : '3' }}" style="text-align: center;">{{ $groupHeader }}</th>
+                <th rowspan="2" width="{{ $isBersertifikat ? '7%' : '8%' }}" style="vertical-align: middle; text-align: center;">Tanggal Perolehan</th>
                 <th rowspan="2" width="7%" style="vertical-align: middle; text-align: center;">Cara Perolehan</th>
-                <th rowspan="2" width="8%" style="vertical-align: middle; text-align: center;">Status</th>
-                <th rowspan="2" width="10%" style="vertical-align: middle; text-align: center;">Keterangan</th>
+                <th rowspan="2" width="{{ $isBersertifikat ? '7%' : '8%' }}" style="vertical-align: middle; text-align: center;">Status</th>
+                <th rowspan="2" width="{{ $isBersertifikat ? '8%' : '10%' }}" style="vertical-align: middle; text-align: center;">Keterangan</th>
             </tr>
             <tr>
-                <th width="12%">Bidang</th>
-                <th width="7%" style="text-align: right;">Luas(m2)</th>
-                <th width="9%" style="text-align: right;">Nilai(Rp)</th>
+                <th width="{{ $isBersertifikat ? '10%' : '12%' }}">Bidang</th>
+                @if($isBersertifikat)
+                    <th width="10%" style="text-align: center;">No. Sertifikat</th>
+                @endif
+                <th width="{{ $isBersertifikat ? '6%' : '7%' }}" style="text-align: right;">Luas(m2)</th>
+                <th width="{{ $isBersertifikat ? '8%' : '9%' }}" style="text-align: right;">Nilai(Rp)</th>
             </tr>
         </thead>
         <tbody>
@@ -203,6 +214,7 @@
                     $namaBarangText = $row->nama_aset ?? '-';
                     $lokasiText = $row->alamat ?? '-';
                     $bidangText = $row->peruntukan ?? $row->nama_aset ?? '-';
+                    $noSertifikatText = !empty($row->sertifikatElabel?->no_sertipikat) ? trim($row->sertifikatElabel->no_sertipikat) : '-';
                     $tglPerolehanText = !empty($row->tanggal_perolehan) ? \Carbon\Carbon::parse($row->tanggal_perolehan)->format('d/m/Y') : '-';
                     $caraPerolehanText = $row->dasar_perolehan ?? '-';
                     // Status proses pensertifikatan tanah
@@ -216,6 +228,9 @@
                     <td>{{ $namaBarangText }}</td>
                     <td>{{ $lokasiText }}</td>
                     <td>{{ $bidangText }}</td>
+                    @if($isBersertifikat)
+                        <td class="text-center" style="font-family: monospace; font-size: 8pt;">{{ $noSertifikatText }}</td>
+                    @endif
                     <td class="text-right">{{ number_format($luasVal, 2, ',', '.') }}</td>
                     <td class="text-right">{{ $nilaiVal > 0 ? number_format($nilaiVal, 2, ',', '.') : '0,00' }}</td>
                     <td class="text-center">{{ $tglPerolehanText }}</td>
@@ -225,13 +240,13 @@
                 </tr>
             @empty
                 <tr>
-                    <td colspan="11" class="text-center">Tidak ada data aset tanah untuk ditampilkan.</td>
+                    <td colspan="{{ $isBersertifikat ? '12' : '11' }}" class="text-center">Tidak ada data aset tanah untuk ditampilkan.</td>
                 </tr>
             @endforelse
         </tbody>
         <tfoot>
             <tr>
-                <td colspan="5" class="text-center">JUMLAH / TOTAL</td>
+                <td colspan="{{ $isBersertifikat ? '6' : '5' }}" class="text-center">JUMLAH / TOTAL</td>
                 <td class="text-right">{{ number_format($totalLuas, 2, ',', '.') }}</td>
                 <td class="text-right">{{ number_format($totalNilai, 2, ',', '.') }}</td>
                 <td colspan="4"></td>

@@ -201,23 +201,46 @@
                             </div>
 
                             <div class="col-12 mt-3 pt-3 border-top">
-                                <label class="form-label small fw-bold text-body mb-2"><i class="bi bi-type me-1"></i> Judul Laporan Cetak (KOP PDF)</label>
-                                <div class="row g-2">
-                                    <div class="col-md-6">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <label class="form-label small fw-bold text-body mb-0"><i class="bi bi-type me-1"></i> Judul Laporan Cetak (KOP PDF & Excel)</label>
+                                    <span class="badge bg-light text-primary border border-primary-subtle fw-normal">Dinamis & Fleksibel</span>
+                                </div>
+                                <div class="row g-2 mb-2">
+                                    <div class="col-12 col-md-4">
                                         <div class="form-check">
-                                            <input class="form-check-input" type="radio" name="title_mode" id="titleMaster" value="master" {{ request('title_mode', 'master') !== 'manual' ? 'checked' : '' }} onchange="toggleTitleMode(true)">
-                                            <label class="form-check-label small fw-semibold text-body" for="titleMaster">Pilih dari Master Judul</label>
+                                            <input class="form-check-input" type="radio" name="title_mode" id="titleAuto" value="auto" {{ request('title_mode', 'auto') === 'auto' ? 'checked' : '' }} onchange="toggleTitleMode(true)">
+                                            <label class="form-check-label small fw-semibold text-body" for="titleAuto">
+                                                <i class="bi bi-magic me-1 text-primary"></i> Otomatis (Filter)
+                                            </label>
                                         </div>
                                     </div>
-                                    <div class="col-md-6">
+                                    <div class="col-12 col-md-4">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" name="title_mode" id="titleMaster" value="master" {{ request('title_mode') === 'master' ? 'checked' : '' }} onchange="toggleTitleMode(true)">
+                                            <label class="form-check-label small fw-semibold text-body" for="titleMaster">
+                                                <i class="bi bi-list-check me-1 text-secondary"></i> Master Judul
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div class="col-12 col-md-4">
                                         <div class="form-check">
                                             <input class="form-check-input" type="radio" name="title_mode" id="titleManual" value="manual" {{ request('title_mode') === 'manual' ? 'checked' : '' }} onchange="toggleTitleMode(false)">
-                                            <label class="form-check-label small fw-semibold text-body" for="titleManual">Ketik Judul Kustom</label>
+                                            <label class="form-check-label small fw-semibold text-body" for="titleManual">
+                                                <i class="bi bi-pencil-square me-1 text-secondary"></i> Judul Kustom
+                                            </label>
                                         </div>
                                     </div>
                                 </div>
 
-                                <div id="boxTitleMaster" class="mt-2">
+                                <div id="boxTitleAuto" class="mt-2 p-2.5 px-3 rounded-3 bg-light border border-primary-subtle d-flex align-items-center gap-2">
+                                    <i class="bi bi-info-circle-fill text-primary flex-shrink-0 fs-5"></i>
+                                    <div class="overflow-hidden">
+                                        <div class="text-muted" style="font-size: 0.72rem; font-weight: 600; text-transform: uppercase;">Judul Otomatis Aktif:</div>
+                                        <div class="small fw-bold text-dark text-truncate" title="{{ $selectedTitle }}">{{ $selectedTitle }}</div>
+                                    </div>
+                                </div>
+
+                                <div id="boxTitleMaster" class="mt-2" style="display: none;">
                                     <select name="report_title_id" class="form-select">
                                         @foreach($reportTitles as $rt)
                                             <option value="{{ $rt->id }}" {{ request('report_title_id') == $rt->id ? 'selected' : '' }}>{{ $rt->judul }}</option>
@@ -335,7 +358,24 @@
         </div>
     </div>
 
-    <!-- Kartu Pratinjau Tabel Laporan Aset Tanah (10 Kolom Resmi) -->
+    @php
+        $kat = $filters['kategori_status'] ?? '';
+        $isBersertifikat = ($kat === 'sudah_bersertifikat');
+        $groupHeader = 'ASET TANAH';
+        if ($isBersertifikat) {
+            $groupHeader = 'ASET SUDAH BERSERTIFIKAT';
+        } elseif ($kat === 'belum_diproses') {
+            $groupHeader = 'ASET BELUM DIPROSES';
+        } elseif ($kat === 'dalam_proses') {
+            $groupHeader = 'ASET DALAM PROSES';
+        } elseif ($kat === 'bermasalah') {
+            $groupHeader = 'ASET BERMASALAH / SENGKETA';
+        } elseif ($kat === 'belum_bersertifikat') {
+            $groupHeader = 'ASET BELUM BERSERTIFIKAT';
+        }
+    @endphp
+
+    <!-- Kartu Pratinjau Tabel Laporan Aset Tanah (11 / 12 Kolom Resmi) -->
     <div class="card clean-card report-card mt-4 mb-4">
         <div class="report-card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
             <div class="d-flex align-items-center gap-2">
@@ -344,10 +384,15 @@
                 </div>
                 <div>
                     <h5 class="fw-bold mb-0 text-body">Pratinjau Tabel Laporan Rekapitulasi Aset Tanah</h5>
-                    <small class="text-secondary">Struktur 10 Kolom Resmi Format Laporan & Ekspor Pemda Kabupaten Donggala</small>
+                    <small class="text-secondary">Struktur {{ $isBersertifikat ? '12 Kolom Khusus Aset Bersertifikat' : '11 Kolom Standar' }} Format Laporan & Ekspor Pemda Kabupaten Donggala</small>
                 </div>
             </div>
             <div class="d-flex align-items-center gap-2">
+                @if($isBersertifikat)
+                    <span class="badge bg-success-subtle text-success border border-success-subtle fw-semibold px-2.5 py-1 rounded-pill">
+                        <i class="bi bi-patch-check-fill me-1"></i> Mode Aset Bersertifikat (12 Kolom)
+                    </span>
+                @endif
                 <span class="badge bg-primary-subtle text-primary fw-semibold px-2.5 py-1 rounded-pill">
                     {{ count($rows) }} Bidang Tanah
                 </span>
@@ -362,7 +407,7 @@
                             <th rowspan="2" style="min-width: 180px;">KODE ASET / NIBAR</th>
                             <th rowspan="2" style="min-width: 180px;">NAMA BARANG</th>
                             <th rowspan="2" style="min-width: 200px;">LOKASI</th>
-                            <th colspan="3" class="bg-primary-subtle text-primary">ASET TANAH</th>
+                            <th colspan="{{ $isBersertifikat ? '4' : '3' }}" class="bg-primary-subtle text-primary">{{ $groupHeader }}</th>
                             <th rowspan="2" style="min-width: 130px;">TANGGAL PEROLEHAN</th>
                             <th rowspan="2" style="min-width: 130px;">CARA PEROLEHAN</th>
                             <th rowspan="2" style="min-width: 140px;">STATUS</th>
@@ -370,6 +415,9 @@
                         </tr>
                         <tr>
                             <th class="bg-primary-subtle text-primary" style="min-width: 160px;">BIDANG</th>
+                            @if($isBersertifikat)
+                                <th class="bg-primary-subtle text-primary" style="min-width: 160px;">NO. SERTIFIKAT</th>
+                            @endif
                             <th class="bg-primary-subtle text-primary" style="min-width: 100px;">LUAS (M²)</th>
                             <th class="bg-primary-subtle text-primary" style="min-width: 130px;">NILAI (RP)</th>
                         </tr>
@@ -390,6 +438,7 @@
                                 $rNama = $r->nama_aset ?? '-';
                                 $rLokasi = $r->alamat ?? '-';
                                 $rBidang = $r->peruntukan ?? $r->nama_aset ?? '-';
+                                $rNoSertifikat = !empty($r->sertifikatElabel?->no_sertipikat) ? trim($r->sertifikatElabel->no_sertipikat) : '-';
                                 $rTgl = !empty($r->tanggal_perolehan) ? \Carbon\Carbon::parse($r->tanggal_perolehan)->format('d/m/Y') : '-';
                                 $rCara = $r->dasar_perolehan ?? '-';
                                 // Status proses pensertifikatan tanah
@@ -403,6 +452,17 @@
                                 <td class="fw-semibold text-body">{{ $rNama }}</td>
                                 <td class="text-secondary small">{{ $rLokasi }}</td>
                                 <td class="fw-medium text-body">{{ $rBidang }}</td>
+                                @if($isBersertifikat)
+                                    <td class="text-center">
+                                        @if($rNoSertifikat !== '-')
+                                            <span class="badge bg-success-subtle text-success border border-success-subtle font-monospace px-2 py-1" style="font-size: 0.75rem;">
+                                                {{ $rNoSertifikat }}
+                                            </span>
+                                        @else
+                                            <span class="text-muted small">-</span>
+                                        @endif
+                                    </td>
+                                @endif
                                 <td class="text-end font-monospace text-body">{{ number_format($rLuas, 2, ',', '.') }}</td>
                                 <td class="text-end font-monospace text-body">{{ $rNilai > 0 ? number_format($rNilai, 2, ',', '.') : '0,00' }}</td>
                                 <td class="text-center text-secondary small">{{ $rTgl }}</td>
@@ -416,7 +476,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="11" class="text-center py-5 text-secondary">
+                                <td colspan="{{ $isBersertifikat ? '12' : '11' }}" class="text-center py-5 text-secondary">
                                     <i class="bi bi-inbox fs-2 d-block mb-2 text-muted"></i>
                                     Tidak ada data aset tanah yang sesuai dengan kriteria filter saat ini.
                                 </td>
@@ -426,7 +486,7 @@
                     @if(count($rows) > 0)
                         <tfoot class="bg-body-secondary fw-bold">
                             <tr>
-                                <td colspan="5" class="text-center">JUMLAH / TOTAL</td>
+                                <td colspan="{{ $isBersertifikat ? '6' : '5' }}" class="text-center">JUMLAH / TOTAL</td>
                                 <td class="text-end font-monospace">{{ number_format($prevLuas, 2, ',', '.') }}</td>
                                 <td class="text-end font-monospace">{{ number_format($prevNilai, 2, ',', '.') }}</td>
                                 <td colspan="4"></td>
@@ -442,11 +502,18 @@
 @push('scripts')
 <script>
     function toggleTitleMode(autoSubmit = false) {
-        const isManual = document.getElementById('titleManual').checked;
-        document.getElementById('boxTitleMaster').style.display = isManual ? 'none' : 'block';
-        document.getElementById('boxTitleManual').style.display = isManual ? 'block' : 'none';
+        const selectedRadio = document.querySelector('input[name="title_mode"]:checked');
+        const mode = selectedRadio ? selectedRadio.value : 'auto';
 
-        if (autoSubmit && !isManual) {
+        const boxAuto = document.getElementById('boxTitleAuto');
+        const boxMaster = document.getElementById('boxTitleMaster');
+        const boxManual = document.getElementById('boxTitleManual');
+
+        if (boxAuto) boxAuto.style.display = (mode === 'auto') ? 'flex' : 'none';
+        if (boxMaster) boxMaster.style.display = (mode === 'master') ? 'block' : 'none';
+        if (boxManual) boxManual.style.display = (mode === 'manual') ? 'block' : 'none';
+
+        if (autoSubmit && mode !== 'manual') {
             document.getElementById('filterLaporanForm').submit();
         }
     }
