@@ -141,13 +141,14 @@
                     <button
                         type="button"
                         onclick="resetFilterForm()"
-                        class="btn btn-light border bg-white report-icon-btn shadow-sm"
-                        title="Reset filter"
+                        class="btn btn-light border bg-white shadow-sm d-inline-flex align-items-center gap-1.5 px-3 py-2 fw-semibold text-secondary"
+                        title="Reset seluruh kriteria filter"
                         aria-label="Reset filter"
                     >
-                        <i class="bi bi-arrow-clockwise"></i>
+                        <i class="bi bi-arrow-counterclockwise"></i>
+                        <span class="small">Reset</span>
                     </button>
-                    <button type="submit" class="btn btn-primary fw-semibold d-inline-flex align-items-center gap-2 shadow-sm">
+                    <button type="submit" class="btn btn-primary fw-semibold d-inline-flex align-items-center gap-2 shadow-sm px-4 py-2">
                         <i class="bi bi-search"></i>
                         <span>Tampilkan</span>
                     </button>
@@ -342,6 +343,39 @@
         if (dokumenCard) {
             const h2 = dokumenCard.querySelector('h2');
             if (h2) h2.textContent = currentSummary.surat_mati.toLocaleString('id-ID');
+        }
+
+        fetchPreview();
+    }
+
+    /**
+     * Penanganan pergantian Tipe/Jenis Laporan kendaraan.
+     */
+    function handleTypeChange() {
+        // Reset kolom sort saat jenis laporan berubah agar sesuai header baru
+        const sortByInput = document.getElementById('sort_by');
+        const sortOrderInput = document.getElementById('sort_order');
+        if (sortByInput) sortByInput.value = '';
+        if (sortOrderInput) sortOrderInput.value = 'asc';
+
+        fetchPreview();
+    }
+
+    /**
+     * Mengatur pengurutan kolom tabel pratinjau secara interaktif (sortable columns).
+     *
+     * @param {string} field Nama kolom yang akan diurutkan
+     */
+    function sortByField(field) {
+        const sortByInput = document.getElementById('sort_by');
+        const sortOrderInput = document.getElementById('sort_order');
+        if (!sortByInput || !sortOrderInput) return;
+
+        if (sortByInput.value === field) {
+            sortOrderInput.value = (sortOrderInput.value === 'asc') ? 'desc' : 'asc';
+        } else {
+            sortByInput.value = field;
+            sortOrderInput.value = 'asc';
         }
 
         fetchPreview();

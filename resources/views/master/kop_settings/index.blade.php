@@ -94,29 +94,66 @@
                         <input type="text" name="kop_nama_laporan_aset" class="form-control bg-body-tertiary border-0" value="{{ $settings['kop_nama_laporan_aset'] ?? $defaults['kop_nama_laporan_aset'] }}">
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label small fw-semibold text-secondary mb-1">Kota Tempat TTD</label>
-                        <input type="text" name="kop_kota_ttd" class="form-control bg-body-tertiary border-0" value="{{ $settings['kop_kota_ttd'] ?? $defaults['kop_kota_ttd'] }}">
-                    </div>
-
-                    <div class="col-md-6">
-                        <label class="form-label small fw-semibold text-secondary mb-1">Jabatan Pejabat TTD</label>
-                        <input type="text" name="kop_pejabat_jabatan" class="form-control bg-body-tertiary border-0" value="{{ $settings['kop_pejabat_jabatan'] ?? $defaults['kop_pejabat_jabatan'] }}">
-                    </div>
-                    <div class="col-md-6">
-                        <label class="form-label small fw-semibold text-secondary mb-1">Nama Pejabat Penandatangan</label>
-                        <input type="text" name="kop_pejabat_nama" class="form-control bg-body-tertiary border-0" value="{{ $settings['kop_pejabat_nama'] ?? $defaults['kop_pejabat_nama'] }}">
-                    </div>
-                    <div class="col-md-6">
-                        <label class="form-label small fw-semibold text-secondary mb-1">NIP Pejabat Penandatangan</label>
-                        <input type="text" name="kop_pejabat_nip" class="form-control bg-body-tertiary border-0" value="{{ $settings['kop_pejabat_nip'] ?? $defaults['kop_pejabat_nip'] }}">
-                    </div>
-                    <div class="col-md-6">
                         <label class="form-label small fw-semibold text-secondary mb-1">Upload Logo KOP (PNG/JPG)</label>
                         <input type="file" name="kop_logo" class="form-control bg-body-tertiary border-0">
                     </div>
                     <div class="col-12">
                         <label class="form-label small fw-semibold text-secondary mb-1">Footer Dokumen PDF</label>
                         <input type="text" name="kop_footer" class="form-control bg-body-tertiary border-0" value="{{ $settings['kop_footer'] ?? $defaults['kop_footer'] }}">
+                    </div>
+
+                    <div class="col-12"><hr class="text-secondary opacity-25 my-2"></div>
+
+                    <!-- PENANDA TANGAN 1 (SISI KIRI) -->
+                    <div class="col-12">
+                        <div class="p-3 rounded-3 border bg-body-secondary bg-opacity-25">
+                            <div class="d-flex align-items-center gap-2 mb-3">
+                                <span class="badge bg-primary text-white rounded-pill px-2 py-1 small">1</span>
+                                <h6 class="fw-bold mb-0 text-primary"><i class="bi bi-person-badge me-1"></i> Penanda Tangan 1 (Sisi Kiri - Bidang / Teknis)</h6>
+                            </div>
+                            <div class="row g-2">
+                                <div class="col-md-12">
+                                    <label class="form-label small fw-semibold text-secondary mb-1">Jabatan Pejabat 1</label>
+                                    <input type="text" name="kop_pejabat1_jabatan" class="form-control bg-white border" placeholder="Contoh: KEPALA BIDANG ASET DAERAH" value="{{ $settings['kop_pejabat1_jabatan'] ?? ($defaults['kop_pejabat1_jabatan'] ?? '') }}">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label small fw-semibold text-secondary mb-1">Nama Pejabat 1 (Beserta Gelar)</label>
+                                    <input type="text" name="kop_pejabat1_nama" class="form-control bg-white border" placeholder="Nama Pejabat" value="{{ $settings['kop_pejabat1_nama'] ?? ($defaults['kop_pejabat1_nama'] ?? '') }}">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label small fw-semibold text-secondary mb-1">NIP Pejabat 1</label>
+                                    <input type="text" name="kop_pejabat1_nip" class="form-control bg-white border" placeholder="NIP. ..." value="{{ $settings['kop_pejabat1_nip'] ?? ($defaults['kop_pejabat1_nip'] ?? '') }}">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- PENANDA TANGAN 2 (SISI KANAN) -->
+                    <div class="col-12">
+                        <div class="p-3 rounded-3 border bg-body-secondary bg-opacity-25">
+                            <div class="d-flex align-items-center gap-2 mb-3">
+                                <span class="badge bg-success text-white rounded-pill px-2 py-1 small">2</span>
+                                <h6 class="fw-bold mb-0 text-success"><i class="bi bi-person-check-fill me-1"></i> Penanda Tangan 2 (Sisi Kanan - Kepala Badan / Pengesah)</h6>
+                            </div>
+                            <div class="row g-2">
+                                <div class="col-md-4">
+                                    <label class="form-label small fw-semibold text-secondary mb-1">Kota Tempat TTD</label>
+                                    <input type="text" name="kop_kota_ttd" class="form-control bg-white border" placeholder="Banawa" value="{{ $settings['kop_kota_ttd'] ?? $defaults['kop_kota_ttd'] }}">
+                                </div>
+                                <div class="col-md-8">
+                                    <label class="form-label small fw-semibold text-secondary mb-1">Jabatan Pejabat 2</label>
+                                    <input type="text" name="kop_pejabat2_jabatan" class="form-control bg-white border" placeholder="Contoh: KEPALA BADAN PENGELOLAAN KEUANGAN DAN ASET DAERAH" value="{{ $settings['kop_pejabat2_jabatan'] ?? ($settings['kop_pejabat_jabatan'] ?? ($defaults['kop_pejabat2_jabatan'] ?? '')) }}">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label small fw-semibold text-secondary mb-1">Nama Pejabat 2 (Beserta Gelar)</label>
+                                    <input type="text" name="kop_pejabat2_nama" class="form-control bg-white border" placeholder="Nama Pejabat" value="{{ $settings['kop_pejabat2_nama'] ?? ($settings['kop_pejabat_nama'] ?? ($defaults['kop_pejabat2_nama'] ?? '')) }}">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label small fw-semibold text-secondary mb-1">NIP Pejabat 2</label>
+                                    <input type="text" name="kop_pejabat2_nip" class="form-control bg-white border" placeholder="NIP. ..." value="{{ $settings['kop_pejabat2_nip'] ?? ($settings['kop_pejabat_nip'] ?? ($defaults['kop_pejabat2_nip'] ?? '')) }}">
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -154,11 +191,22 @@
                         <div class="fw-bold text-decoration-underline text-body fs-6">{{ $settings['kop_nama_laporan_aset'] ?? $defaults['kop_nama_laporan_aset'] }}</div>
                     </div>
 
-                    <div class="text-end mt-4 pt-3 small text-body border-top">
-                        <div>{{ $settings['kop_kota_ttd'] ?? 'Banawa' }}, {{ date('d M Y') }}</div>
-                        <div class="fw-bold">{{ $settings['kop_pejabat_jabatan'] ?? 'Kepala Bidang' }}</div>
-                        <div class="mt-4 fw-bold text-decoration-underline">{{ $settings['kop_pejabat_nama'] ?? 'Nama Pejabat' }}</div>
-                        <div>{{ $settings['kop_pejabat_nip'] ?? 'NIP' }}</div>
+                    <!-- Dual Signatories Preview -->
+                    <div class="mt-4 pt-3 border-top" style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; text-align: center; font-size: 0.75rem; line-height: 1.3;">
+                        <div>
+                            <div class="text-muted" style="visibility: hidden;">&nbsp;</div>
+                            <div class="fw-bold text-uppercase text-body">{{ $settings['kop_pejabat1_jabatan'] ?? ($defaults['kop_pejabat1_jabatan'] ?? 'KEPALA BIDANG ASET DAERAH') }}</div>
+                            <div style="height: 60px;"></div>
+                            <div class="fw-bold text-decoration-underline text-body">{{ $settings['kop_pejabat1_nama'] ?? ($defaults['kop_pejabat1_nama'] ?? 'YENI SJ AMIR, SH.MSi') }}</div>
+                            <div class="text-secondary">{{ $settings['kop_pejabat1_nip'] ?? ($defaults['kop_pejabat1_nip'] ?? 'NIP.') }}</div>
+                        </div>
+                        <div>
+                            <div class="text-secondary">{{ $settings['kop_kota_ttd'] ?? 'Banawa' }}, {{ date('d-m-Y') }}</div>
+                            <div class="fw-bold text-uppercase text-body">{{ $settings['kop_pejabat2_jabatan'] ?? ($settings['kop_pejabat_jabatan'] ?? ($defaults['kop_pejabat2_jabatan'] ?? 'KEPALA BADAN PENGELOLAAN KEUANGAN DAN ASET DAERAH')) }}</div>
+                            <div style="height: 60px;"></div>
+                            <div class="fw-bold text-decoration-underline text-body">{{ $settings['kop_pejabat2_nama'] ?? ($settings['kop_pejabat_nama'] ?? ($defaults['kop_pejabat2_nama'] ?? 'YENI SJ AMIR, SH.MSi')) }}</div>
+                            <div class="text-secondary">{{ $settings['kop_pejabat2_nip'] ?? ($settings['kop_pejabat_nip'] ?? ($defaults['kop_pejabat2_nip'] ?? 'NIP.')) }}</div>
+                        </div>
                     </div>
                 </div>
             </div>

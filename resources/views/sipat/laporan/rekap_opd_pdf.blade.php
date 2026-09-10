@@ -121,10 +121,21 @@
             margin-top: 18px;
             page-break-inside: avoid;
         }
-        .ttd-box {
-            width: 250px;
-            float: right;
+        .ttd-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: none;
+        }
+        .ttd-table td {
+            border: none;
+            padding: 0;
+            vertical-align: top;
             text-align: center;
+        }
+        .ttd-space-row td {
+            height: 75px;
+            line-height: 75px;
+            vertical-align: middle;
         }
 
         /* Print View Tools */
@@ -161,17 +172,22 @@
         </div>
     @endif
 
+    @php
+        $service = $service ?? app(\App\Services\LaporanService::class);
+        $logoPath = $logoPath ?? $service->resolveLogoPath($kop);
+    @endphp
+
     <!-- KOP SURAT PEMDA -->
     <table class="kop-table">
         <tr>
-            <td style="width: 10%; text-align: center;">
-                @if(!empty($kop['kop_logo']))
-                    <img src="{{ public_path('uploads/report/' . $kop['kop_logo']) }}" style="max-height: 55px; max-width: 55px;" alt="Logo">
-                @else
-                    <img src="{{ public_path('images/logo-donggala.png') }}" style="max-height: 55px; max-width: 55px;" alt="Logo" onerror="this.style.display='none'">
-                @endif
-            </td>
-            <td style="width: 90%; text-align: center;">
+            @if(!empty($logoPath) && file_exists($logoPath))
+                <td style="width: 10%; text-align: center; vertical-align: middle;">
+                    <img src="{{ $logoPath }}" style="max-height: 60px; max-width: 60px;" alt="Logo">
+                </td>
+                <td style="width: 90%; text-align: center;">
+            @else
+                <td style="width: 100%; text-align: center;">
+            @endif
                 <div class="kop-instansi">{{ $kop['kop_nama_instansi'] ?? 'PEMERINTAH KABUPATEN DONGGALA' }}</div>
                 <div class="kop-unit">{{ $kop['kop_nama_unit'] ?? 'BADAN PENGELOLAAN KEUANGAN DAN ASET DAERAH' }}</div>
                 <div class="kop-sub">{{ $kop['kop_alamat'] ?? 'Jl. Trans Sulawesi, Banawa, Kabupaten Donggala' }} | {{ $kop['kop_kontak'] ?? 'sipat.donggalakab.go.id' }}</div>
@@ -286,16 +302,58 @@
         </tfoot>
     </table>
 
-    <!-- LEMBAR PENGESAHAN TANDA TANGAN -->
+    @php
+        $formatNip = function (?string $nip): string {
+            $nip = trim((string)$nip);
+            if ($nip === '' || $nip === '-') {
+                return 'NIP. -';
+            }
+            if (str_starts_with(strtoupper($nip), 'NIP')) {
+                return $nip;
+            }
+            return 'NIP. ' . $nip;
+        };
+
+        $pejabat1Jabatan = $kop['kop_pejabat1_jabatan'] ?? ($kop['kop_pejabat_jabatan'] ?? 'KEPALA BIDANG ASET DAERAH');
+        $pejabat1Nama = $kop['kop_pejabat1_nama'] ?? ($kop['kop_pejabat_nama'] ?? 'YENI SJ AMIR, SH.MSi');
+        $pejabat1Nip = $formatNip($kop['kop_pejabat1_nip'] ?? '');
+
+        $pejabat2Jabatan = $kop['kop_pejabat2_jabatan'] ?? ($kop['kop_pejabat_jabatan'] ?? 'KEPALA BADAN PENGELOLAAN KEUANGAN DAN ASET DAERAH');
+        $pejabat2Nama = $kop['kop_pejabat2_nama'] ?? ($kop['kop_pejabat_nama'] ?? 'YENI SJ AMIR, SH.MSi');
+        $pejabat2Nip = $formatNip($kop['kop_pejabat2_nip'] ?? '');
+    @endphp
+
+    <!-- LEMBAR PENGESAHAN TANDA TANGAN (DUA SISI) -->
     <div class="ttd-container">
-        <div class="ttd-box">
-            <div>{{ $kop['kop_kota_ttd'] ?? 'Banawa' }}, {{ date('d F Y') }}</div>
-            <div style="font-weight: bold; margin-top: 3px;">{{ $kop['kop_pejabat_jabatan'] ?? 'Kepala Bidang Pengelolaan Aset Daerah' }}</div>
-            <div style="height: 50px;"></div>
-            <div style="font-weight: bold; text-decoration: underline;">{{ $kop['kop_pejabat_nama'] ?? 'H. MUHAMMAD NATSIR, S.E., M.Si.' }}</div>
-            <div>NIP. {{ $kop['kop_pejabat_nip'] ?? '-' }}</div>
-        </div>
-        <div style="clear: both;"></div>
+        <table class="ttd-table">
+            <tr>
+                <td style="width: 44%;">
+                    <div style="color: transparent;">&nbsp;</div>
+                    <div style="font-weight: bold; margin-top: 3px; text-transform: uppercase;">{{ $pejabat1Jabatan }}</div>
+                </td>
+                <td style="width: 12%;"></td>
+                <td style="width: 44%;">
+                    <div>{{ $kop['kop_kota_ttd'] ?? 'Banawa' }}, {{ date('d F Y') }}</div>
+                    <div style="font-weight: bold; margin-top: 3px; text-transform: uppercase;">{{ $pejabat2Jabatan }}</div>
+                </td>
+            </tr>
+            <tr class="ttd-space-row">
+                <td style="height: 75px;">&nbsp;</td>
+                <td></td>
+                <td style="height: 75px;">&nbsp;</td>
+            </tr>
+            <tr>
+                <td>
+                    <div style="font-weight: bold; text-decoration: underline;">{{ $pejabat1Nama }}</div>
+                    <div>{{ $pejabat1Nip }}</div>
+                </td>
+                <td></td>
+                <td>
+                    <div style="font-weight: bold; text-decoration: underline;">{{ $pejabat2Nama }}</div>
+                    <div>{{ $pejabat2Nip }}</div>
+                </td>
+            </tr>
+        </table>
     </div>
 
     @if($isPrintView ?? false)

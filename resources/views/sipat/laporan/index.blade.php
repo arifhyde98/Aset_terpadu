@@ -101,6 +101,12 @@
         border-bottom-color: #1e40af;
         background: transparent;
     }
+    .table-report-preview thead th {
+        background-color: var(--bs-tertiary-bg, #f1f5f9) !important;
+        position: sticky;
+        top: 0;
+        z-index: 2;
+    }
 </style>
 
 <div class="container-fluid px-0">
@@ -117,9 +123,16 @@
             <h2 class="fw-bold mb-1">Pusat Laporan Aset Tanah</h2>
             <p class="text-secondary mb-0 small">Atur kriteria filter dan cetak laporan resmi ber-KOP Pemda Kabupaten Donggala dalam berbagai format</p>
         </div>
-        <a href="{{ route('sipat.aset.index') }}" class="btn btn-outline-secondary rounded-pill px-4">
-            <i class="bi bi-arrow-left me-1"></i> Data Aset Tanah
-        </a>
+        <div class="d-flex align-items-center gap-2">
+            @if(auth()->user()?->role !== \App\Enums\UserRole::OPD)
+                <a href="{{ route('master.kop-settings.index') }}" class="btn btn-outline-primary rounded-pill px-3.5" title="Atur KOP Surat & Data Pejabat Penandatangan">
+                    <i class="bi bi-file-earmark-pdf me-1"></i> Atur KOP & TTD
+                </a>
+            @endif
+            <a href="{{ route('sipat.aset.index') }}" class="btn btn-outline-secondary rounded-pill px-4">
+                <i class="bi bi-arrow-left me-1"></i> Data Aset Tanah
+            </a>
+        </div>
     </div>
 
     <!-- Navigasi Tab Laporan -->
@@ -373,6 +386,13 @@
         } elseif ($kat === 'belum_bersertifikat') {
             $groupHeader = 'ASET BELUM BERSERTIFIKAT';
         }
+
+        // Optimasi Performa DOM: Batasi 100 baris pertama untuk pratinjau instan di browser
+        $totalDataCount = count($rows);
+        $showAll = (request('show_all') === '1');
+        $previewRows = ($showAll || $totalDataCount <= 100) ? $rows : $rows->take(100);
+        $allLuas = $rows->sum('luas');
+        $allNilai = $rows->sum('harga_perolehan');
     @endphp
 
     <!-- Kartu Pratinjau Tabel Laporan Aset Tanah (11 / 12 Kolom Resmi) -->
@@ -387,20 +407,43 @@
                     <small class="text-secondary">Struktur {{ $isBersertifikat ? '12 Kolom Khusus Aset Bersertifikat' : '11 Kolom Standar' }} Format Laporan & Ekspor Pemda Kabupaten Donggala</small>
                 </div>
             </div>
-            <div class="d-flex align-items-center gap-2">
+            <div class="d-flex align-items-center gap-2 flex-wrap">
                 @if($isBersertifikat)
                     <span class="badge bg-success-subtle text-success border border-success-subtle fw-semibold px-2.5 py-1 rounded-pill">
                         <i class="bi bi-patch-check-fill me-1"></i> Mode Aset Bersertifikat (12 Kolom)
                     </span>
                 @endif
                 <span class="badge bg-primary-subtle text-primary fw-semibold px-2.5 py-1 rounded-pill">
-                    {{ count($rows) }} Bidang Tanah
+                    {{ number_format($totalDataCount) }} Bidang Tanah Tersaring
                 </span>
             </div>
         </div>
+
+        @if($totalDataCount > 100 && !$showAll)
+            <div class="px-4 py-2.5 bg-light border-bottom d-flex align-items-center justify-content-between flex-wrap gap-2">
+                <div class="small text-secondary d-flex align-items-center gap-2">
+                    <i class="bi bi-speedometer2 text-primary fs-6"></i>
+                    <span>Menampilkan <strong>100</strong> data pratinjau pertama untuk performa browsing cepat. Seluruh <strong>{{ number_format($totalDataCount) }}</strong> bidang tanah akan diekspor lengkap dan utuh pada file PDF & Excel.</span>
+                </div>
+                <a href="{{ request()->fullUrlWithQuery(['show_all' => 1]) }}" class="btn btn-xs btn-outline-primary rounded-pill px-3 py-1 fw-semibold small" style="font-size: 0.78rem;">
+                    <i class="bi bi-arrows-expand me-1"></i> Tampilkan Semua ({{ number_format($totalDataCount) }})
+                </a>
+            </div>
+        @elseif($showAll && $totalDataCount > 100)
+            <div class="px-4 py-2.5 bg-primary-subtle text-primary border-bottom d-flex align-items-center justify-content-between flex-wrap gap-2">
+                <div class="small fw-semibold d-flex align-items-center gap-2">
+                    <i class="bi bi-check-circle-fill text-primary"></i>
+                    <span>Menampilkan seluruh <strong>{{ number_format($totalDataCount) }}</strong> baris data di browser.</span>
+                </div>
+                <a href="{{ request()->fullUrlWithQuery(['show_all' => null]) }}" class="btn btn-xs btn-outline-secondary rounded-pill px-3 py-1 small" style="font-size: 0.78rem;">
+                    <i class="bi bi-arrows-collapse me-1"></i> Batasi Pratinjau (100 Data)
+                </a>
+            </div>
+        @endif
+
         <div class="card-body p-0">
             <div class="table-responsive" style="max-height: 600px; overflow-y: auto;">
-                <table class="table table-hover table-bordered align-middle mb-0" style="font-size: 0.82rem;">
+                <table class="table table-hover table-bordered align-middle mb-0 table-report-preview" style="font-size: 0.82rem;">
                     <thead class="bg-body-tertiary text-secondary sticky-top border-bottom text-center align-middle" style="z-index: 10;">
                         <tr>
                             <th rowspan="2" style="width: 45px;">NO.</th>
@@ -423,16 +466,10 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @php
-                            $prevLuas = 0;
-                            $prevNilai = 0;
-                        @endphp
-                        @forelse($rows as $idx => $r)
+                        @forelse($previewRows as $idx => $r)
                             @php
                                 $rLuas = (float) ($r->luas ?? 0);
                                 $rNilai = (float) ($r->harga_perolehan ?? 0);
-                                $prevLuas += $rLuas;
-                                $prevNilai += $rNilai;
 
                                 $rKode = $r->kode_aset ?? '-';
                                 $rNama = $r->nama_aset ?? '-';
@@ -483,12 +520,17 @@
                             </tr>
                         @endforelse
                     </tbody>
-                    @if(count($rows) > 0)
-                        <tfoot class="bg-body-secondary fw-bold">
+                    @if($totalDataCount > 0)
+                        <tfoot class="bg-body-secondary fw-bold" style="border-top: 2px solid var(--border-color, #cbd5e1);">
                             <tr>
-                                <td colspan="{{ $isBersertifikat ? '6' : '5' }}" class="text-center">JUMLAH / TOTAL</td>
-                                <td class="text-end font-monospace">{{ number_format($prevLuas, 2, ',', '.') }}</td>
-                                <td class="text-end font-monospace">{{ number_format($prevNilai, 2, ',', '.') }}</td>
+                                <td colspan="{{ $isBersertifikat ? '6' : '5' }}" class="text-center py-2.5">
+                                    <span>JUMLAH / TOTAL KESELURUHAN ({{ number_format($totalDataCount) }} BIDANG)</span>
+                                    @if($totalDataCount > 100 && !$showAll)
+                                        <div class="small fw-normal text-muted" style="font-size: 0.72rem;">* Akumulasi total dari seluruh {{ number_format($totalDataCount) }} data hasil filter</div>
+                                    @endif
+                                </td>
+                                <td class="text-end font-monospace py-2.5">{{ number_format($allLuas, 2, ',', '.') }}</td>
+                                <td class="text-end font-monospace py-2.5">{{ number_format($allNilai, 2, ',', '.') }}</td>
                                 <td colspan="4"></td>
                             </tr>
                         </tfoot>
@@ -532,32 +574,16 @@
             });
         });
 
-        // Auto-submit saat input pencarian teks (q) dengan debounce 600ms
-        const searchInput = filterForm.querySelector('input[name="q"]');
-        if (searchInput) {
-            let debounceTimer;
-            searchInput.addEventListener('input', function() {
-                clearTimeout(debounceTimer);
-                debounceTimer = setTimeout(() => {
+        // Submit form saat pengguna menekan tombol Enter pada input teks (pencarian q atau judul manual)
+        const textInputs = filterForm.querySelectorAll('input[type="text"]');
+        textInputs.forEach(input => {
+            input.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
                     filterForm.submit();
-                }, 600);
+                }
             });
-        }
-
-        // Auto-submit saat input judul manual dengan debounce 800ms atau saat blur/change
-        const manualTitleInput = filterForm.querySelector('input[name="manual_title"]');
-        if (manualTitleInput) {
-            let debounceTimer;
-            manualTitleInput.addEventListener('input', function() {
-                clearTimeout(debounceTimer);
-                debounceTimer = setTimeout(() => {
-                    filterForm.submit();
-                }, 800);
-            });
-            manualTitleInput.addEventListener('change', function() {
-                filterForm.submit();
-            });
-        }
+        });
     });
 </script>
 @endpush

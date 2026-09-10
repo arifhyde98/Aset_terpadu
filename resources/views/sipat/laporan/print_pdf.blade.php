@@ -90,12 +90,20 @@
         .text-center {
             text-align: center;
         }
-        .signature-wrap {
+        .signature-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: none;
             margin-top: 25px;
-            width: 320px;
-            margin-left: auto;
-            text-align: center;
             page-break-inside: avoid;
+        }
+        .signature-table td {
+            border: none;
+            padding: 0;
+            vertical-align: top;
+        }
+        .signature-col {
+            text-align: center;
         }
         .signature-city {
             font-size: 9pt;
@@ -106,9 +114,12 @@
             font-size: 9.5pt;
             color: #0f172a;
             font-weight: bold;
+            text-transform: uppercase;
         }
-        .signature-space {
-            height: 52px;
+        .signature-space-row td {
+            height: 75px;
+            line-height: 75px;
+            vertical-align: middle;
         }
         .signature-name {
             font-size: 10pt;
@@ -146,24 +157,29 @@
             $groupHeader = 'Aset Belum Bersertifikat';
         }
 
-        $titleLines = $titleLines ?? null;
-        if (!$titleLines) {
-            $service = app(\App\Services\LaporanService::class);
-            $titleLines = $service->resolveReportTitleLines($filters);
-        }
+        $service = $service ?? app(\App\Services\LaporanService::class);
+        $titleLines = $titleLines ?? $service->resolveReportTitleLines($filters);
+        $logoPath = $logoPath ?? $service->resolveLogoPath($kop);
     @endphp
 
     <!-- KOP SURAT RESMI -->
     <div class="header">
         <table class="header-table">
             <tr>
-                <td class="header-main">
-                    <div class="instansi">{{ $kop['kop_nama_instansi'] ?? 'PEMERINTAH KABUPATEN DONGGALA' }}</div>
-                    <div class="unit">{{ $kop['kop_nama_unit'] ?? 'BADAN PENGELOLAAN KEUANGAN DAN ASET DAERAH' }}</div>
-                    <div class="subunit">{{ $kop['kop_subunit'] ?? 'Bidang Pengelolaan Aset Daerah' }}</div>
-                    <div class="meta-line">{{ $kop['kop_alamat'] ?? '' }}</div>
-                    <div class="meta-line">{{ $kop['kop_kontak'] ?? '' }}</div>
-                </td>
+                @if(!empty($logoPath) && file_exists($logoPath))
+                    <td style="width: 10%; text-align: center; vertical-align: middle;">
+                        <img src="{{ $logoPath }}" style="max-height: 65px; max-width: 65px;" alt="Logo">
+                    </td>
+                    <td class="header-main" style="width: 90%; text-align: center;">
+                @else
+                    <td class="header-main" style="width: 100%; text-align: center;">
+                @endif
+                        <div class="instansi">{{ $kop['kop_nama_instansi'] ?? 'PEMERINTAH KABUPATEN DONGGALA' }}</div>
+                        <div class="unit">{{ $kop['kop_nama_unit'] ?? 'BADAN PENGELOLAAN KEUANGAN DAN ASET DAERAH' }}</div>
+                        <div class="subunit">{{ $kop['kop_subunit'] ?? 'Bidang Pengelolaan Aset Daerah' }}</div>
+                        <div class="meta-line">{{ $kop['kop_alamat'] ?? '' }}</div>
+                        <div class="meta-line">{{ $kop['kop_kontak'] ?? '' }}</div>
+                    </td>
             </tr>
         </table>
     </div>
@@ -254,14 +270,57 @@
         </tfoot>
     </table>
 
-    <!-- LEMBAR PENGESAHAN (TTD) -->
-    <div class="signature-wrap">
-        <div class="signature-city">{{ $kop['kop_kota_ttd'] ?? 'Banawa' }}, {{ date('d-m-Y') }}</div>
-        <div class="signature-job">{{ $kop['kop_pejabat_jabatan'] ?? 'Kepala Bidang Pengelolaan Aset Daerah' }}</div>
-        <div class="signature-space"></div>
-        <div class="signature-name">{{ $kop['kop_pejabat_nama'] ?? 'H. MUHAMMAD NATSIR, S.E., M.Si.' }}</div>
-        <div class="signature-nip">NIP. {{ $kop['kop_pejabat_nip'] ?? '19780512 200501 1 008' }}</div>
-    </div>
+    @php
+        $formatNip = function (?string $nip): string {
+            $nip = trim((string)$nip);
+            if ($nip === '' || $nip === '-') {
+                return 'NIP. -';
+            }
+            if (str_starts_with(strtoupper($nip), 'NIP')) {
+                return $nip;
+            }
+            return 'NIP. ' . $nip;
+        };
+
+        $pejabat1Jabatan = $kop['kop_pejabat1_jabatan'] ?? ($kop['kop_pejabat_jabatan'] ?? 'KEPALA BIDANG ASET DAERAH');
+        $pejabat1Nama = $kop['kop_pejabat1_nama'] ?? ($kop['kop_pejabat_nama'] ?? 'YENI SJ AMIR, SH.MSi');
+        $pejabat1Nip = $formatNip($kop['kop_pejabat1_nip'] ?? '');
+
+        $pejabat2Jabatan = $kop['kop_pejabat2_jabatan'] ?? ($kop['kop_pejabat_jabatan'] ?? 'KEPALA BADAN PENGELOLAAN KEUANGAN DAN ASET DAERAH');
+        $pejabat2Nama = $kop['kop_pejabat2_nama'] ?? ($kop['kop_pejabat_nama'] ?? 'YENI SJ AMIR, SH.MSi');
+        $pejabat2Nip = $formatNip($kop['kop_pejabat2_nip'] ?? '');
+    @endphp
+
+    <!-- LEMBAR PENGESAHAN (TTD DUA SISI) -->
+    <table class="signature-table">
+        <tr>
+            <td style="width: 44%;" class="signature-col">
+                <div class="signature-city" style="color: transparent;">&nbsp;</div>
+                <div class="signature-job">{{ $pejabat1Jabatan }}</div>
+            </td>
+            <td style="width: 12%;"></td>
+            <td style="width: 44%;" class="signature-col">
+                <div class="signature-city">{{ $kop['kop_kota_ttd'] ?? 'Banawa' }}, {{ date('d-m-Y') }}</div>
+                <div class="signature-job">{{ $pejabat2Jabatan }}</div>
+            </td>
+        </tr>
+        <tr class="signature-space-row">
+            <td style="height: 75px;">&nbsp;</td>
+            <td></td>
+            <td style="height: 75px;">&nbsp;</td>
+        </tr>
+        <tr>
+            <td class="signature-col">
+                <div class="signature-name">{{ $pejabat1Nama }}</div>
+                <div class="signature-nip">{{ $pejabat1Nip }}</div>
+            </td>
+            <td></td>
+            <td class="signature-col">
+                <div class="signature-name">{{ $pejabat2Nama }}</div>
+                <div class="signature-nip">{{ $pejabat2Nip }}</div>
+            </td>
+        </tr>
+    </table>
 
     <div class="footer">
         {{ $kop['kop_footer'] ?? '' }}

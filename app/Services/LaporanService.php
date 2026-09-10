@@ -305,9 +305,18 @@ class LaporanService
             'kop_nama_laporan_aset' => 'LAPORAN REKAPITULASI ASET TANAH',
             'kop_footer' => 'Dokumen ini dihasilkan secara resmi oleh Aplikasi SIPAT Terpadu Kabupaten Donggala.',
             'kop_kota_ttd' => 'Banawa',
-            'kop_pejabat_jabatan' => 'Kepala Bidang Pengelolaan Aset Daerah',
-            'kop_pejabat_nama' => 'H. MUHAMMAD NATSIR, S.E., M.Si.',
-            'kop_pejabat_nip' => '19780512 200501 1 008',
+            // Penanda Tangan 1 (Kiri - Pejabat Bidang)
+            'kop_pejabat1_jabatan' => 'KEPALA BIDANG ASET DAERAH',
+            'kop_pejabat1_nama' => 'YENI SJ AMIR, SH.MSi',
+            'kop_pejabat1_nip' => 'NIP.',
+            // Penanda Tangan 2 (Kanan - Kepala Badan)
+            'kop_pejabat2_jabatan' => 'KEPALA BADAN PENGELOLAAN KEUANGAN DAN ASET DAERAH',
+            'kop_pejabat2_nama' => 'YENI SJ AMIR, SH.MSi',
+            'kop_pejabat2_nip' => 'NIP.',
+            // Legacy Fallback
+            'kop_pejabat_jabatan' => 'KEPALA BADAN PENGELOLAAN KEUANGAN DAN ASET DAERAH',
+            'kop_pejabat_nama' => 'YENI SJ AMIR, SH.MSi',
+            'kop_pejabat_nip' => 'NIP.',
         ];
 
         if (Schema::hasTable('settings')) {
@@ -320,7 +329,63 @@ class LaporanService
             }
         }
 
+        // Backward compatibility fallback
+        if (empty($defaults['kop_pejabat2_jabatan']) && !empty($defaults['kop_pejabat_jabatan'])) {
+            $defaults['kop_pejabat2_jabatan'] = $defaults['kop_pejabat_jabatan'];
+        }
+        if (empty($defaults['kop_pejabat2_nama']) && !empty($defaults['kop_pejabat_nama'])) {
+            $defaults['kop_pejabat2_nama'] = $defaults['kop_pejabat_nama'];
+        }
+        if (empty($defaults['kop_pejabat2_nip']) && !empty($defaults['kop_pejabat_nip'])) {
+            $defaults['kop_pejabat2_nip'] = $defaults['kop_pejabat_nip'];
+        }
+
         return $defaults;
+    }
+
+    /**
+     * Memformat string NIP agar rapi dan tidak duplikat dengan awalan NIP.
+     */
+    public function formatNip(?string $nip): string
+    {
+        $nip = trim((string)$nip);
+        if ($nip === '' || $nip === '-') {
+            return 'NIP. -';
+        }
+        if (str_starts_with(strtoupper($nip), 'NIP')) {
+            return $nip;
+        }
+        return 'NIP. ' . $nip;
+    }
+
+    /**
+     * Menyelesaikan absolute file path logo KOP surat Pemda yang valid.
+     */
+    public function resolveLogoPath(array $kop): ?string
+    {
+        if (!empty($kop['kop_logo'])) {
+            $storagePublic = public_path('storage/' . $kop['kop_logo']);
+            if (file_exists($storagePublic)) {
+                return $storagePublic;
+            }
+            $storageApp = storage_path('app/public/' . $kop['kop_logo']);
+            if (file_exists($storageApp)) {
+                return $storageApp;
+            }
+            $reportUpload = public_path('uploads/report/' . $kop['kop_logo']);
+            if (file_exists($reportUpload)) {
+                return $reportUpload;
+            }
+        }
+
+        if (file_exists(public_path('images/logo.png'))) {
+            return public_path('images/logo.png');
+        }
+        if (file_exists(public_path('assets/logo.png'))) {
+            return public_path('assets/logo.png');
+        }
+
+        return null;
     }
 
     /**
@@ -364,6 +429,19 @@ class LaporanService
         $sheet->setCellValue('A1', strtoupper($kop['kop_nama_instansi'] ?? 'PEMERINTAH KABUPATEN DONGGALA'));
         $sheet->setCellValue('A2', strtoupper($kop['kop_nama_unit'] ?? 'BADAN PENGELOLAAN KEUANGAN DAN ASET DAERAH'));
         $sheet->setCellValue('A3', strtoupper($kop['kop_subunit'] ?? 'Bidang Pengelolaan Aset Daerah'));
+
+        $logoPath = $this->resolveLogoPath($kop);
+        if ($logoPath && file_exists($logoPath)) {
+            $drawing = new \PhpOffice\PhpSpreadsheet\Worksheet\Drawing();
+            $drawing->setName('Logo KOP');
+            $drawing->setDescription('Logo KOP Pemda');
+            $drawing->setPath($logoPath);
+            $drawing->setHeight(52);
+            $drawing->setCoordinates('A1');
+            $drawing->setOffsetX(10);
+            $drawing->setOffsetY(4);
+            $drawing->setWorksheet($sheet);
+        }
 
         // --- 2. JUDUL LAPORAN KATEGORI (BERJENJANG TATA NASKAH DINAS) ---
         $curRow = 5;
@@ -499,18 +577,43 @@ class LaporanService
             $sheet->setCellValue('G' . $totalRow, $totalNilai);
         }
 
-        // --- 6. LEMBAR PENGESAHAN (TTD RESMI) ---
+        // --- 6. LEMBAR PENGESAHAN (TTD RESMI DUA SISI) ---
         $ttdStartRow = $totalRow + 3;
-        $ttdColStart = $isBersertifikat ? 'J' : 'I';
-        $sheet->mergeCells($ttdColStart . $ttdStartRow . ':' . $lastCol . $ttdStartRow);
-        $sheet->mergeCells($ttdColStart . ($ttdStartRow + 1) . ':' . $lastCol . ($ttdStartRow + 1));
-        $sheet->mergeCells($ttdColStart . ($ttdStartRow + 4) . ':' . $lastCol . ($ttdStartRow + 4));
-        $sheet->mergeCells($ttdColStart . ($ttdStartRow + 5) . ':' . $lastCol . ($ttdStartRow + 5));
 
-        $sheet->setCellValue($ttdColStart . $ttdStartRow, ($kop['kop_kota_ttd'] ?? 'Banawa') . ', ' . date('d-m-Y'));
-        $sheet->setCellValue($ttdColStart . ($ttdStartRow + 1), $kop['kop_pejabat_jabatan'] ?? 'Kepala Bidang Pengelolaan Aset Daerah');
-        $sheet->setCellValue($ttdColStart . ($ttdStartRow + 4), $kop['kop_pejabat_nama'] ?? 'H. MUHAMMAD NATSIR, S.E., M.Si.');
-        $sheet->setCellValue($ttdColStart . ($ttdStartRow + 5), 'NIP. ' . ($kop['kop_pejabat_nip'] ?? '19780512 200501 1 008'));
+        $pejabat1Jabatan = $kop['kop_pejabat1_jabatan'] ?? ($kop['kop_pejabat_jabatan'] ?? 'KEPALA BIDANG ASET DAERAH');
+        $pejabat1Nama = $kop['kop_pejabat1_nama'] ?? ($kop['kop_pejabat_nama'] ?? 'YENI SJ AMIR, SH.MSi');
+        $pejabat1Nip = $this->formatNip($kop['kop_pejabat1_nip'] ?? '');
+
+        $pejabat2Jabatan = $kop['kop_pejabat2_jabatan'] ?? ($kop['kop_pejabat_jabatan'] ?? 'KEPALA BADAN PENGELOLAAN KEUANGAN DAN ASET DAERAH');
+        $pejabat2Nama = $kop['kop_pejabat2_nama'] ?? ($kop['kop_pejabat_nama'] ?? 'YENI SJ AMIR, SH.MSi');
+        $pejabat2Nip = $this->formatNip($kop['kop_pejabat2_nip'] ?? '');
+
+        $ttdRightColStart = $isBersertifikat ? 'I' : 'H';
+
+        // Berikan ruang tanda tangan fisik yang lapang (4 baris kosong)
+        for ($r = $ttdStartRow + 2; $r <= $ttdStartRow + 5; $r++) {
+            $sheet->getRowDimension($r)->setRowHeight(16);
+        }
+
+        // 1. Sisi Kiri: Penanda Tangan 1 (B:E)
+        $sheet->mergeCells('B' . ($ttdStartRow + 1) . ':E' . ($ttdStartRow + 1));
+        $sheet->mergeCells('B' . ($ttdStartRow + 6) . ':E' . ($ttdStartRow + 6));
+        $sheet->mergeCells('B' . ($ttdStartRow + 7) . ':E' . ($ttdStartRow + 7));
+
+        $sheet->setCellValue('B' . ($ttdStartRow + 1), $pejabat1Jabatan);
+        $sheet->setCellValue('B' . ($ttdStartRow + 6), $pejabat1Nama);
+        $sheet->setCellValue('B' . ($ttdStartRow + 7), $pejabat1Nip);
+
+        // 2. Sisi Kanan: Penanda Tangan 2 ($ttdRightColStart:$lastCol)
+        $sheet->mergeCells($ttdRightColStart . $ttdStartRow . ':' . $lastCol . $ttdStartRow);
+        $sheet->mergeCells($ttdRightColStart . ($ttdStartRow + 1) . ':' . $lastCol . ($ttdStartRow + 1));
+        $sheet->mergeCells($ttdRightColStart . ($ttdStartRow + 6) . ':' . $lastCol . ($ttdStartRow + 6));
+        $sheet->mergeCells($ttdRightColStart . ($ttdStartRow + 7) . ':' . $lastCol . ($ttdStartRow + 7));
+
+        $sheet->setCellValue($ttdRightColStart . $ttdStartRow, ($kop['kop_kota_ttd'] ?? 'Banawa') . ', ' . date('d-m-Y'));
+        $sheet->setCellValue($ttdRightColStart . ($ttdStartRow + 1), $pejabat2Jabatan);
+        $sheet->setCellValue($ttdRightColStart . ($ttdStartRow + 6), $pejabat2Nama);
+        $sheet->setCellValue($ttdRightColStart . ($ttdStartRow + 7), $pejabat2Nip);
 
         // --- 7. STYLING ---
         // KOP Styling
@@ -582,13 +685,21 @@ class LaporanService
             $sheet->getStyle('G' . $dataStartRow . ':G' . $totalRow)->getNumberFormat()->setFormatCode('#,##0.00');
         }
 
-        // TTD Styling
-        $sheet->getStyle($ttdColStart . $ttdStartRow . ':' . $lastCol . ($ttdStartRow + 5))->applyFromArray([
+        // TTD Styling Sisi Kiri (Penanda Tangan 1)
+        $sheet->getStyle('B' . ($ttdStartRow + 1) . ':E' . ($ttdStartRow + 7))->applyFromArray([
             'font' => ['size' => 10, 'name' => 'Arial'],
             'alignment' => ['horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER],
         ]);
-        $sheet->getStyle($ttdColStart . ($ttdStartRow + 1))->getFont()->setBold(true);
-        $sheet->getStyle($ttdColStart . ($ttdStartRow + 4))->getFont()->setBold(true)->setUnderline(true);
+        $sheet->getStyle('B' . ($ttdStartRow + 1))->getFont()->setBold(true);
+        $sheet->getStyle('B' . ($ttdStartRow + 6))->getFont()->setBold(true)->setUnderline(true);
+
+        // TTD Styling Sisi Kanan (Penanda Tangan 2)
+        $sheet->getStyle($ttdRightColStart . $ttdStartRow . ':' . $lastCol . ($ttdStartRow + 7))->applyFromArray([
+            'font' => ['size' => 10, 'name' => 'Arial'],
+            'alignment' => ['horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER],
+        ]);
+        $sheet->getStyle($ttdRightColStart . ($ttdStartRow + 1))->getFont()->setBold(true);
+        $sheet->getStyle($ttdRightColStart . ($ttdStartRow + 6))->getFont()->setBold(true)->setUnderline(true);
 
         $sheet->getColumnDimension('A')->setWidth(6);
         $sheet->getColumnDimension('B')->setWidth(24);
@@ -767,6 +878,19 @@ class LaporanService
         $sheet->mergeCells('A3:L3');
         $sheet->mergeCells('A4:L4');
 
+        $logoPath = $this->resolveLogoPath($kop);
+        if ($logoPath && file_exists($logoPath)) {
+            $drawing = new \PhpOffice\PhpSpreadsheet\Worksheet\Drawing();
+            $drawing->setName('Logo KOP');
+            $drawing->setDescription('Logo KOP Pemda');
+            $drawing->setPath($logoPath);
+            $drawing->setHeight(52);
+            $drawing->setCoordinates('A1');
+            $drawing->setOffsetX(10);
+            $drawing->setOffsetY(4);
+            $drawing->setWorksheet($sheet);
+        }
+
         $sheet->getStyle('A1:L4')->applyFromArray([
             'font' => ['bold' => true, 'name' => 'Arial', 'size' => 11],
             'alignment' => ['horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER],
@@ -906,23 +1030,55 @@ class LaporanService
         $sheet->getStyle('K11:K' . $totalRow)->getNumberFormat()->setFormatCode('#,##0');
 
         // TTD Row
+        // TTD Row (Dua Sisi)
         $ttdRow = $totalRow + 3;
+
+        $pejabat1Jabatan = $kop['kop_pejabat1_jabatan'] ?? ($kop['kop_pejabat_jabatan'] ?? 'KEPALA BIDANG ASET DAERAH');
+        $pejabat1Nama = $kop['kop_pejabat1_nama'] ?? ($kop['kop_pejabat_nama'] ?? 'YENI SJ AMIR, SH.MSi');
+        $pejabat1Nip = $this->formatNip($kop['kop_pejabat1_nip'] ?? '');
+
+        $pejabat2Jabatan = $kop['kop_pejabat2_jabatan'] ?? ($kop['kop_pejabat_jabatan'] ?? 'KEPALA BADAN PENGELOLAAN KEUANGAN DAN ASET DAERAH');
+        $pejabat2Nama = $kop['kop_pejabat2_nama'] ?? ($kop['kop_pejabat_nama'] ?? 'YENI SJ AMIR, SH.MSi');
+        $pejabat2Nip = $this->formatNip($kop['kop_pejabat2_nip'] ?? '');
+
+        // Berikan ruang tanda tangan fisik yang lapang (4 baris kosong)
+        for ($r = $ttdRow + 2; $r <= $ttdRow + 5; $r++) {
+            $sheet->getRowDimension($r)->setRowHeight(16);
+        }
+
+        // Sisi Kiri: Penanda Tangan 1 (B:D)
+        $sheet->setCellValue('B' . ($ttdRow + 1), $pejabat1Jabatan);
+        $sheet->setCellValue('B' . ($ttdRow + 6), $pejabat1Nama);
+        $sheet->setCellValue('B' . ($ttdRow + 7), $pejabat1Nip);
+
+        $sheet->mergeCells('B' . ($ttdRow + 1) . ':D' . ($ttdRow + 1));
+        $sheet->mergeCells('B' . ($ttdRow + 6) . ':D' . ($ttdRow + 6));
+        $sheet->mergeCells('B' . ($ttdRow + 7) . ':D' . ($ttdRow + 7));
+
+        $sheet->getStyle('B' . ($ttdRow + 1) . ':D' . ($ttdRow + 7))->applyFromArray([
+            'font' => ['size' => 9, 'name' => 'Arial'],
+            'alignment' => ['horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER],
+        ]);
+        $sheet->getStyle('B' . ($ttdRow + 1))->getFont()->setBold(true);
+        $sheet->getStyle('B' . ($ttdRow + 6))->getFont()->setBold(true)->setUnderline(true);
+
+        // Sisi Kanan: Penanda Tangan 2 (I:L)
         $sheet->setCellValue('I' . $ttdRow, ($kop['kop_kota_ttd'] ?? 'Banawa') . ', ' . date('d F Y'));
-        $sheet->setCellValue('I' . ($ttdRow + 1), $kop['kop_pejabat_jabatan'] ?? 'Kepala Bidang Pengelolaan Aset Daerah');
-        $sheet->setCellValue('I' . ($ttdRow + 5), $kop['kop_pejabat_nama'] ?? 'H. MUHAMMAD NATSIR, S.E., M.Si.');
-        $sheet->setCellValue('I' . ($ttdRow + 6), 'NIP. ' . ($kop['kop_pejabat_nip'] ?? '-'));
+        $sheet->setCellValue('I' . ($ttdRow + 1), $pejabat2Jabatan);
+        $sheet->setCellValue('I' . ($ttdRow + 6), $pejabat2Nama);
+        $sheet->setCellValue('I' . ($ttdRow + 7), $pejabat2Nip);
 
         $sheet->mergeCells('I' . $ttdRow . ':L' . $ttdRow);
         $sheet->mergeCells('I' . ($ttdRow + 1) . ':L' . ($ttdRow + 1));
-        $sheet->mergeCells('I' . ($ttdRow + 5) . ':L' . ($ttdRow + 5));
         $sheet->mergeCells('I' . ($ttdRow + 6) . ':L' . ($ttdRow + 6));
+        $sheet->mergeCells('I' . ($ttdRow + 7) . ':L' . ($ttdRow + 7));
 
-        $sheet->getStyle('I' . $ttdRow . ':L' . ($ttdRow + 6))->applyFromArray([
+        $sheet->getStyle('I' . $ttdRow . ':L' . ($ttdRow + 7))->applyFromArray([
             'font' => ['size' => 9, 'name' => 'Arial'],
             'alignment' => ['horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER],
         ]);
         $sheet->getStyle('I' . ($ttdRow + 1))->getFont()->setBold(true);
-        $sheet->getStyle('I' . ($ttdRow + 5))->getFont()->setBold(true)->setUnderline(true);
+        $sheet->getStyle('I' . ($ttdRow + 6))->getFont()->setBold(true)->setUnderline(true);
 
         // Column Widths
         $sheet->getColumnDimension('A')->setWidth(6);

@@ -105,17 +105,19 @@ class LaporanController extends Controller implements HasMiddleware
 
     private function renderReportPdf(Request $request, bool $download)
     {
-        ini_set('memory_limit', '512M');
+        ini_set('memory_limit', '1024M');
         ini_set('max_execution_time', '300');
+        ini_set('pcre.backtrack_limit', '15000000');
 
         $filters = $this->laporanService->getFilters($request->all());
         $rows = $this->laporanService->buildQuery($filters)->get();
         $summary = $this->laporanService->buildSummary($rows, $filters);
         $kop = $this->laporanService->getKopSettings();
+        $logoPath = $this->laporanService->resolveLogoPath($kop);
         $titleLines = $this->laporanService->resolveReportTitleLines($filters);
         $selectedTitle = implode(' ', $titleLines);
 
-        $pdfView = view('sipat.laporan.print_pdf', compact('rows', 'filters', 'summary', 'kop', 'selectedTitle', 'titleLines'))->render();
+        $pdfView = view('sipat.laporan.print_pdf', compact('rows', 'filters', 'summary', 'kop', 'selectedTitle', 'titleLines', 'logoPath'))->render();
         
         if (!class_exists(\Mpdf\Mpdf::class)) {
             // Fallback to HTML if mPDF is not installed
@@ -190,15 +192,17 @@ class LaporanController extends Controller implements HasMiddleware
      */
     public function downloadRekapOpdPdf(Request $request)
     {
-        ini_set('memory_limit', '512M');
+        ini_set('memory_limit', '1024M');
         ini_set('max_execution_time', '300');
+        ini_set('pcre.backtrack_limit', '15000000');
 
         $filters = ['q' => trim((string) $request->input('q', ''))];
         $rekapData = $this->laporanService->getRekapPerOpd($filters);
         $kop = $this->laporanService->getKopSettings();
+        $logoPath = $this->laporanService->resolveLogoPath($kop);
         $title = 'LAPORAN REKAPITULASI PENSERTIFIKATAN ASET TANAH PER ORGANISASI PERANGKAT DAERAH (OPD)';
 
-        $pdfView = view('sipat.laporan.rekap_opd_pdf', compact('rekapData', 'filters', 'kop', 'title'))->render();
+        $pdfView = view('sipat.laporan.rekap_opd_pdf', compact('rekapData', 'filters', 'kop', 'title', 'logoPath'))->render();
 
         if (!class_exists(\Mpdf\Mpdf::class)) {
             return response($pdfView)
@@ -240,12 +244,14 @@ class LaporanController extends Controller implements HasMiddleware
         $filters = ['q' => trim((string) $request->input('q', ''))];
         $rekapData = $this->laporanService->getRekapPerOpd($filters);
         $kop = $this->laporanService->getKopSettings();
+        $logoPath = $this->laporanService->resolveLogoPath($kop);
         $title = 'LAPORAN REKAPITULASI PENSERTIFIKATAN ASET TANAH PER ORGANISASI PERANGKAT DAERAH (OPD)';
 
         return view('sipat.laporan.rekap_opd_pdf', [
             'rekapData'   => $rekapData,
             'filters'     => $filters,
             'kop'         => $kop,
+            'logoPath'    => $logoPath,
             'title'       => $title,
             'isPrintView' => true,
         ]);
