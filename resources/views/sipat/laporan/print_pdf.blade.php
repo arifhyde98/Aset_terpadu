@@ -167,19 +167,24 @@
         <div class="subtitle">{{ $kop['kop_nama_instansi'] ?? 'PEMERINTAH KABUPATEN DONGGALA' }}</div>
     </div>
 
-    <!-- TABEL DENGAN KODE ASET / NIBAR (NO., KODE ASET/NIBAR, BIDANG, LUAS, NILAI, KETERANGAN) -->
+    <!-- TABEL DENGAN 11 KOLOM RESMI (NO., KODE ASET/NIBAR, NAMA BARANG, LOKASI, BIDANG, LUAS, NILAI, TANGGAL PEROLEHAN, CARA PEROLEHAN, STATUS, KETERANGAN) -->
     <table class="table-report">
         <thead>
             <tr>
-                <th rowspan="2" width="5%" style="vertical-align: middle; text-align: center;">NO.</th>
-                <th rowspan="2" width="18%" style="vertical-align: middle; text-align: center;">Kode Aset / NIBAR</th>
+                <th rowspan="2" width="3%" style="vertical-align: middle; text-align: center;">NO.</th>
+                <th rowspan="2" width="13%" style="vertical-align: middle; text-align: center;">Kode Aset / NIBAR</th>
+                <th rowspan="2" width="11%" style="vertical-align: middle; text-align: center;">Nama Barang</th>
+                <th rowspan="2" width="12%" style="vertical-align: middle; text-align: center;">Lokasi</th>
                 <th colspan="3" style="text-align: center;">{{ $groupHeader }}</th>
-                <th rowspan="2" width="22%" style="vertical-align: middle; text-align: center;">Keterangan</th>
+                <th rowspan="2" width="8%" style="vertical-align: middle; text-align: center;">Tanggal Perolehan</th>
+                <th rowspan="2" width="7%" style="vertical-align: middle; text-align: center;">Cara Perolehan</th>
+                <th rowspan="2" width="8%" style="vertical-align: middle; text-align: center;">Status</th>
+                <th rowspan="2" width="10%" style="vertical-align: middle; text-align: center;">Keterangan</th>
             </tr>
             <tr>
-                <th width="27%">Bidang</th>
-                <th width="13%" style="text-align: right;">Luas(m2)</th>
-                <th width="15%" style="text-align: right;">Nilai(Rp)</th>
+                <th width="12%">Bidang</th>
+                <th width="7%" style="text-align: right;">Luas(m2)</th>
+                <th width="9%" style="text-align: right;">Nilai(Rp)</th>
             </tr>
         </thead>
         <tbody>
@@ -195,29 +200,41 @@
                     $totalNilai += $nilaiVal;
 
                     $kodeAsetText = $row->kode_aset ?? '-';
+                    $namaBarangText = $row->nama_aset ?? '-';
+                    $lokasiText = $row->alamat ?? '-';
                     $bidangText = $row->peruntukan ?? $row->nama_aset ?? '-';
-                    $keteranganText = $row->keterangan ?? $row->opdSipat->nama ?? $row->opd ?? '-';
+                    $tglPerolehanText = !empty($row->tanggal_perolehan) ? \Carbon\Carbon::parse($row->tanggal_perolehan)->format('d/m/Y') : '-';
+                    $caraPerolehanText = $row->dasar_perolehan ?? '-';
+                    // Status proses pensertifikatan tanah
+                    $statusProsesText = $row->latestProses?->statusProses?->nama_status ?? 'Belum Diproses';
+                    // Kolom keterangan murni berisi catatan keterangan, BUKAN nama barang
+                    $keteranganText = !empty(trim((string) ($row->keterangan ?? ''))) ? trim((string) $row->keterangan) : '-';
                 @endphp
                 <tr>
                     <td class="text-center">{{ $index + 1 }}</td>
-                    <td style="font-family: monospace; font-size: 8.5pt;">{{ $kodeAsetText }}</td>
+                    <td style="font-family: monospace; font-size: 8pt; word-break: break-all;">{{ $kodeAsetText }}</td>
+                    <td>{{ $namaBarangText }}</td>
+                    <td>{{ $lokasiText }}</td>
                     <td>{{ $bidangText }}</td>
                     <td class="text-right">{{ number_format($luasVal, 2, ',', '.') }}</td>
-                    <td class="text-right">{{ $nilaiVal > 0 ? number_format($nilaiVal, 2, ',', '.') : '-' }}</td>
+                    <td class="text-right">{{ $nilaiVal > 0 ? number_format($nilaiVal, 2, ',', '.') : '0,00' }}</td>
+                    <td class="text-center">{{ $tglPerolehanText }}</td>
+                    <td class="text-center">{{ $caraPerolehanText }}</td>
+                    <td class="text-center" style="font-size: 8.5pt;">{{ $statusProsesText }}</td>
                     <td>{{ $keteranganText }}</td>
                 </tr>
             @empty
                 <tr>
-                    <td colspan="6" class="text-center">Tidak ada data aset tanah untuk ditampilkan.</td>
+                    <td colspan="11" class="text-center">Tidak ada data aset tanah untuk ditampilkan.</td>
                 </tr>
             @endforelse
         </tbody>
         <tfoot>
             <tr>
-                <td colspan="3" class="text-center">JUMLAH / TOTAL</td>
+                <td colspan="5" class="text-center">JUMLAH / TOTAL</td>
                 <td class="text-right">{{ number_format($totalLuas, 2, ',', '.') }}</td>
                 <td class="text-right">{{ number_format($totalNilai, 2, ',', '.') }}</td>
-                <td></td>
+                <td colspan="4"></td>
             </tr>
         </tfoot>
     </table>

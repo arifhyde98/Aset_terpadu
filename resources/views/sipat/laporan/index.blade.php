@@ -334,6 +334,109 @@
             </div>
         </div>
     </div>
+
+    <!-- Kartu Pratinjau Tabel Laporan Aset Tanah (10 Kolom Resmi) -->
+    <div class="card clean-card report-card mt-4 mb-4">
+        <div class="report-card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <div class="d-flex align-items-center gap-2">
+                <div class="header-icon bg-success">
+                    <i class="bi bi-table"></i>
+                </div>
+                <div>
+                    <h5 class="fw-bold mb-0 text-body">Pratinjau Tabel Laporan Rekapitulasi Aset Tanah</h5>
+                    <small class="text-secondary">Struktur 10 Kolom Resmi Format Laporan & Ekspor Pemda Kabupaten Donggala</small>
+                </div>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+                <span class="badge bg-primary-subtle text-primary fw-semibold px-2.5 py-1 rounded-pill">
+                    {{ count($rows) }} Bidang Tanah
+                </span>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive" style="max-height: 600px; overflow-y: auto;">
+                <table class="table table-hover table-bordered align-middle mb-0" style="font-size: 0.82rem;">
+                    <thead class="bg-body-tertiary text-secondary sticky-top border-bottom text-center align-middle" style="z-index: 10;">
+                        <tr>
+                            <th rowspan="2" style="width: 45px;">NO.</th>
+                            <th rowspan="2" style="min-width: 180px;">KODE ASET / NIBAR</th>
+                            <th rowspan="2" style="min-width: 180px;">NAMA BARANG</th>
+                            <th rowspan="2" style="min-width: 200px;">LOKASI</th>
+                            <th colspan="3" class="bg-primary-subtle text-primary">ASET TANAH</th>
+                            <th rowspan="2" style="min-width: 130px;">TANGGAL PEROLEHAN</th>
+                            <th rowspan="2" style="min-width: 130px;">CARA PEROLEHAN</th>
+                            <th rowspan="2" style="min-width: 140px;">STATUS</th>
+                            <th rowspan="2" style="min-width: 180px;">KETERANGAN</th>
+                        </tr>
+                        <tr>
+                            <th class="bg-primary-subtle text-primary" style="min-width: 160px;">BIDANG</th>
+                            <th class="bg-primary-subtle text-primary" style="min-width: 100px;">LUAS (M²)</th>
+                            <th class="bg-primary-subtle text-primary" style="min-width: 130px;">NILAI (RP)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @php
+                            $prevLuas = 0;
+                            $prevNilai = 0;
+                        @endphp
+                        @forelse($rows as $idx => $r)
+                            @php
+                                $rLuas = (float) ($r->luas ?? 0);
+                                $rNilai = (float) ($r->harga_perolehan ?? 0);
+                                $prevLuas += $rLuas;
+                                $prevNilai += $rNilai;
+
+                                $rKode = $r->kode_aset ?? '-';
+                                $rNama = $r->nama_aset ?? '-';
+                                $rLokasi = $r->alamat ?? '-';
+                                $rBidang = $r->peruntukan ?? $r->nama_aset ?? '-';
+                                $rTgl = !empty($r->tanggal_perolehan) ? \Carbon\Carbon::parse($r->tanggal_perolehan)->format('d/m/Y') : '-';
+                                $rCara = $r->dasar_perolehan ?? '-';
+                                // Status proses pensertifikatan tanah
+                                $rStatus = $r->latestProses?->statusProses?->nama_status ?? 'Belum Diproses';
+                                // Kolom keterangan harus berisi keterangan riil, bukan nama barang
+                                $rKet = !empty(trim((string) ($r->keterangan ?? ''))) ? trim((string) $r->keterangan) : '-';
+                            @endphp
+                            <tr>
+                                <td class="text-center fw-medium text-secondary">{{ $idx + 1 }}</td>
+                                <td class="font-monospace text-body-secondary" style="font-size: 0.76rem;">{{ $rKode }}</td>
+                                <td class="fw-semibold text-body">{{ $rNama }}</td>
+                                <td class="text-secondary small">{{ $rLokasi }}</td>
+                                <td class="fw-medium text-body">{{ $rBidang }}</td>
+                                <td class="text-end font-monospace text-body">{{ number_format($rLuas, 2, ',', '.') }}</td>
+                                <td class="text-end font-monospace text-body">{{ $rNilai > 0 ? number_format($rNilai, 2, ',', '.') : '0,00' }}</td>
+                                <td class="text-center text-secondary small">{{ $rTgl }}</td>
+                                <td class="text-center text-secondary small">{{ $rCara }}</td>
+                                <td class="text-center">
+                                    <span class="badge bg-secondary-subtle text-body border px-2 py-1" style="font-size: 0.74rem;">
+                                        {{ $rStatus }}
+                                    </span>
+                                </td>
+                                <td class="text-body-secondary small">{{ $rKet }}</td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="11" class="text-center py-5 text-secondary">
+                                    <i class="bi bi-inbox fs-2 d-block mb-2 text-muted"></i>
+                                    Tidak ada data aset tanah yang sesuai dengan kriteria filter saat ini.
+                                </td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                    @if(count($rows) > 0)
+                        <tfoot class="bg-body-secondary fw-bold">
+                            <tr>
+                                <td colspan="5" class="text-center">JUMLAH / TOTAL</td>
+                                <td class="text-end font-monospace">{{ number_format($prevLuas, 2, ',', '.') }}</td>
+                                <td class="text-end font-monospace">{{ number_format($prevNilai, 2, ',', '.') }}</td>
+                                <td colspan="4"></td>
+                            </tr>
+                        </tfoot>
+                    @endif
+                </table>
+            </div>
+        </div>
+    </div>
 </div>
 
 @push('scripts')
