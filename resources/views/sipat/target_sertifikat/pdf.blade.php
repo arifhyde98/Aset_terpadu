@@ -139,19 +139,23 @@
 
     <table class="summary-grid">
         <tr>
-            <td width="25%" class="summary-box">
-                <div class="summary-label">Total Target Bidang</div>
+            <td width="20%" class="summary-box">
+                <div class="summary-label">Total Target</div>
                 <div class="summary-value">{{ number_format($totalTarget) }}</div>
             </td>
-            <td width="25%" class="summary-box">
+            <td width="20%" class="summary-box">
+                <div class="summary-label" style="color: #475569;">Belum Diproses</div>
+                <div class="summary-value" style="color: #475569;">{{ number_format($totalBelumProses ?? 0) }}</div>
+            </td>
+            <td width="20%" class="summary-box">
+                <div class="summary-label" style="color: #b45309;">Sedang Proses</div>
+                <div class="summary-value" style="color: #b45309;">{{ number_format($totalProses) }}</div>
+            </td>
+            <td width="20%" class="summary-box">
                 <div class="summary-label" style="color: #15803d;">Realisasi (Terbit)</div>
                 <div class="summary-value" style="color: #15803d;">{{ number_format($totalRealisasi) }}</div>
             </td>
-            <td width="25%" class="summary-box">
-                <div class="summary-label" style="color: #b45309;">Dalam Pengurusan</div>
-                <div class="summary-value" style="color: #b45309;">{{ number_format($totalProses) }}</div>
-            </td>
-            <td width="25%" class="summary-box">
+            <td width="20%" class="summary-box">
                 <div class="summary-label">Persentase Capaian</div>
                 <div class="summary-value">{{ $persentaseCapaian }}%</div>
             </td>
@@ -190,8 +194,10 @@
                     <td class="text-center">
                         @if($t->is_achieved)
                             <span class="badge-achieved">TERCAPAI</span>
+                        @elseif($t->is_belum_proses)
+                            <span style="color: #64748b; font-weight: bold;">Belum Diproses</span>
                         @else
-                            <span class="badge-process">Dalam Proses</span>
+                            <span class="badge-process">Sedang Proses</span>
                         @endif
                     </td>
                     <td>{{ $t->keterangan ?? '-' }}</td>

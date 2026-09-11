@@ -111,8 +111,8 @@
                     <select name="status_capaian" class="form-select form-select-sm" onchange="this.form.submit()">
                         <option value="">-- Semua Status Capaian --</option>
                         <option value="tercapai" {{ $statusCapaian === 'tercapai' ? 'selected' : '' }}>Sertifikat Terbit (Tercapai)</option>
-                        <option value="proses" {{ $statusCapaian === 'proses' ? 'selected' : '' }}>Dalam Proses Pengurusan</option>
-                        <option value="belum_diurus" {{ $statusCapaian === 'belum_diurus' ? 'selected' : '' }}>Belum Diurus</option>
+                        <option value="proses" {{ $statusCapaian === 'proses' ? 'selected' : '' }}>Sedang Proses Pengurusan</option>
+                        <option value="belum_diproses" {{ ($statusCapaian === 'belum_diproses' || $statusCapaian === 'belum_diurus') ? 'selected' : '' }}>Belum Diproses</option>
                     </select>
                 </div>
 
@@ -136,33 +136,41 @@
     </div>
 
     <!-- Summary Cards & Progress Bar -->
-    <div class="row g-3 mb-4">
-        <div class="col-lg-3 col-sm-6">
-            <div class="metric-box">
+    <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-xl-5 g-3 mb-4">
+        <div class="col">
+            <div class="metric-box h-100" style="border-left: 4px solid #3b82f6;">
                 <div class="text-secondary small fw-bold text-uppercase">Total Target Bidang</div>
                 <div class="fs-2 fw-extrabold text-dark font-monospace mt-1">{{ number_format($totalTarget) }}</div>
                 <div class="text-secondary small">Tahun Anggaran {{ $tahun }}</div>
             </div>
         </div>
 
-        <div class="col-lg-3 col-sm-6">
-            <div class="metric-box" style="border-left: 4px solid #10b981;">
+        <div class="col">
+            <div class="metric-box h-100" style="border-left: 4px solid #64748b;">
+                <div class="text-secondary small fw-bold text-uppercase">Belum Diproses</div>
+                <div class="fs-2 fw-extrabold text-secondary font-monospace mt-1">{{ number_format($totalBelumProses) }}</div>
+                <div class="text-secondary small">Belum Ada Pengurusan</div>
+            </div>
+        </div>
+
+        <div class="col">
+            <div class="metric-box h-100" style="border-left: 4px solid #f59e0b;">
+                <div class="text-warning small fw-bold text-uppercase">Sedang Proses</div>
+                <div class="fs-2 fw-extrabold text-warning font-monospace mt-1">{{ number_format($totalProses) }}</div>
+                <div class="text-secondary small">Pengurusan di BPN</div>
+            </div>
+        </div>
+
+        <div class="col">
+            <div class="metric-box h-100" style="border-left: 4px solid #10b981;">
                 <div class="text-success small fw-bold text-uppercase">Realisasi (Tercapai)</div>
                 <div class="fs-2 fw-extrabold text-success font-monospace mt-1">{{ number_format($totalRealisasi) }}</div>
                 <div class="text-secondary small">Sertifikat Terbit BPN</div>
             </div>
         </div>
 
-        <div class="col-lg-3 col-sm-6">
-            <div class="metric-box" style="border-left: 4px solid #f59e0b;">
-                <div class="text-warning small fw-bold text-uppercase">Dalam Proses</div>
-                <div class="fs-2 fw-extrabold text-warning font-monospace mt-1">{{ number_format($totalProses) }}</div>
-                <div class="text-secondary small">Pengurusan / Belum Selesai</div>
-            </div>
-        </div>
-
-        <div class="col-lg-3 col-sm-6">
-            <div class="metric-box" style="border-left: 4px solid var(--bs-{{ $progressColor }});">
+        <div class="col">
+            <div class="metric-box h-100" style="border-left: 4px solid var(--bs-{{ $progressColor }});">
                 <div class="text-{{ $progressColor }} small fw-bold text-uppercase">Capaian Target Pemda</div>
                 <div class="fs-2 fw-extrabold text-{{ $progressColor }} font-monospace mt-1">{{ $persentaseCapaian }}%</div>
                 <span class="badge bg-{{ $progressColor }}-subtle text-{{ $progressColor }} fw-bold px-2 py-0.5 rounded-pill" style="font-size: 0.7rem;">
@@ -258,11 +266,13 @@
                                             </span>
                                         </td>
                                         <td>
-                                            @if($item->computed_status_name === 'Belum Diurus')
-                                                <span class="badge bg-secondary-subtle text-secondary px-2.5 py-1">Belum Diurus</span>
-                                            @elseif($item->is_achieved)
+                                            @if($item->is_achieved)
                                                 <span class="badge bg-success-subtle text-success border border-success-subtle px-2.5 py-1">
                                                     <i class="bi bi-check-circle-fill me-1"></i> {{ $item->computed_status_name }}
+                                                </span>
+                                            @elseif($item->is_belum_proses)
+                                                <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle px-2.5 py-1">
+                                                    <i class="bi bi-dash-circle me-1"></i> {{ $item->computed_status_name }}
                                                 </span>
                                             @else
                                                 <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle px-2.5 py-1">
@@ -275,9 +285,13 @@
                                                 <span class="badge bg-success px-2.5 py-1 rounded-pill">
                                                     <i class="bi bi-check-lg me-1"></i> TERCAPAI
                                                 </span>
+                                            @elseif($item->is_belum_proses)
+                                                <span class="badge bg-secondary px-2.5 py-1 rounded-pill">
+                                                    <i class="bi bi-pause-circle me-1"></i> Belum Diproses
+                                                </span>
                                             @else
                                                 <span class="badge bg-warning text-dark px-2.5 py-1 rounded-pill">
-                                                    <i class="bi bi-clock me-1"></i> Dalam Proses
+                                                    <i class="bi bi-clock-history me-1"></i> Sedang Proses
                                                 </span>
                                             @endif
                                         </td>
@@ -308,7 +322,7 @@
                                                 </form>
                                             </div>
                                             @else
-                                            <span class="text-secondary small fst-italic">Read-only</span>
+                                             <span class="text-secondary small fst-italic">Read-only</span>
                                             @endif
                                         </td>
                                     </tr>
@@ -347,7 +361,8 @@
                                     <th>NAMA OPD / PENGELOLA ASET</th>
                                     <th class="text-center">TOTAL TARGET BIDANG</th>
                                     <th class="text-center">REALISASI (TERBIT SERTIFIKAT)</th>
-                                    <th class="text-center">DALAM PENGURUSAN</th>
+                                    <th class="text-center">SEDANG PROSES</th>
+                                    <th class="text-center">BELUM DIPROSES</th>
                                     <th class="text-center">PERSENTASE CAPAIAN</th>
                                     <th class="text-center pe-4">STATUS KINERJA</th>
                                 </tr>
@@ -360,6 +375,7 @@
                                         <td class="text-center font-monospace fw-bold">{{ $opdSum['total'] }}</td>
                                         <td class="text-center font-monospace text-success fw-bold">{{ $opdSum['realisasi'] }}</td>
                                         <td class="text-center font-monospace text-warning fw-bold">{{ $opdSum['proses'] }}</td>
+                                        <td class="text-center font-monospace text-secondary fw-bold">{{ $opdSum['belum_proses'] ?? 0 }}</td>
                                         <td class="text-center">
                                             <div class="d-flex align-items-center justify-content-center gap-2">
                                                 <div class="progress flex-grow-1" style="height: 8px; max-width: 100px;">
@@ -376,7 +392,7 @@
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="7" class="text-center py-4 text-secondary">
+                                        <td colspan="8" class="text-center py-4 text-secondary">
                                             Belum ada data rekapitulasi target per OPD.
                                         </td>
                                     </tr>

@@ -77,30 +77,42 @@ class TargetSertifikatController extends Controller implements HasMiddleware
         $totalTarget = $targets->count();
         $totalRealisasi = 0;
         $totalProses = 0;
+        $totalBelumProses = 0;
 
-        $mappedItems = $targets->map(function ($t) use (&$totalRealisasi, &$totalProses) {
+        $mappedItems = $targets->map(function ($t) use (&$totalRealisasi, &$totalProses, &$totalBelumProses) {
             $aset = $t->asetTanah;
             $latestStatus = $aset?->latestProses?->statusProses;
             $statusName = $latestStatus?->nama_status ?? 'Belum Diurus';
             $category = strtolower(trim($latestStatus?->kategori ?? ''));
+            $statusNameNorm = strtolower(trim($statusName));
 
             if (empty($category)) {
-                $norm = strtolower($statusName);
-                if (str_contains($norm, 'terbit') || str_contains($norm, 'selesai') || ($statusName !== 'Belum Diurus' && str_contains($norm, 'sertifikat') && !str_contains($norm, 'proses'))) {
+                if (str_contains($statusNameNorm, 'terbit') || str_contains($statusNameNorm, 'selesai') || ($statusName !== 'Belum Diurus' && str_contains($statusNameNorm, 'sertifikat') && !str_contains($statusNameNorm, 'proses'))) {
                     $category = 'bersertifikat';
+                } elseif (str_contains($statusNameNorm, 'belum') || $statusNameNorm === 'belum diproses' || $statusNameNorm === 'belum diurus') {
+                    $category = 'belum_diurus';
                 }
             }
 
-            $isAchieved = ($category === 'bersertifikat');
+            $isAchieved = (str_contains($category, 'bersertifikat'));
+            $isBelumProses = (!$latestStatus || str_contains($category, 'belum_diurus') || $statusNameNorm === 'belum diurus' || $statusNameNorm === 'belum diproses');
+
             if ($isAchieved) {
+                $capaianStatus = 'tercapai';
                 $totalRealisasi++;
+            } elseif ($isBelumProses) {
+                $capaianStatus = 'belum_diproses';
+                $totalBelumProses++;
             } else {
+                $capaianStatus = 'proses';
                 $totalProses++;
             }
 
             $t->computed_status_name = $statusName;
             $t->computed_category = $category;
+            $t->capaian_status = $capaianStatus;
             $t->is_achieved = $isAchieved;
+            $t->is_belum_proses = $isBelumProses;
 
             return $t;
         });
@@ -109,9 +121,9 @@ class TargetSertifikatController extends Controller implements HasMiddleware
         if ($statusCapaian === 'tercapai') {
             $targetItems = $mappedItems->filter(fn($t) => $t->is_achieved)->values();
         } elseif ($statusCapaian === 'proses') {
-            $targetItems = $mappedItems->filter(fn($t) => !$t->is_achieved)->values();
-        } elseif ($statusCapaian === 'belum_diurus') {
-            $targetItems = $mappedItems->filter(fn($t) => $t->computed_status_name === 'Belum Diurus')->values();
+            $targetItems = $mappedItems->filter(fn($t) => $t->capaian_status === 'proses')->values();
+        } elseif ($statusCapaian === 'belum_diproses' || $statusCapaian === 'belum_diurus') {
+            $targetItems = $mappedItems->filter(fn($t) => $t->is_belum_proses)->values();
         } else {
             $targetItems = $mappedItems;
         }
@@ -141,11 +153,14 @@ class TargetSertifikatController extends Controller implements HasMiddleware
                     'total' => 0,
                     'realisasi' => 0,
                     'proses' => 0,
+                    'belum_proses' => 0,
                 ];
             }
             $opdSummaries[$opdNama]['total']++;
             if ($t->is_achieved) {
                 $opdSummaries[$opdNama]['realisasi']++;
+            } elseif ($t->is_belum_proses) {
+                $opdSummaries[$opdNama]['belum_proses']++;
             } else {
                 $opdSummaries[$opdNama]['proses']++;
             }
@@ -189,6 +204,7 @@ class TargetSertifikatController extends Controller implements HasMiddleware
             'totalTarget',
             'totalRealisasi',
             'totalProses',
+            'totalBelumProses',
             'persentaseCapaian',
             'progressColor',
             'progressBadge',
@@ -358,29 +374,42 @@ class TargetSertifikatController extends Controller implements HasMiddleware
         $totalTarget = $targets->count();
         $totalRealisasi = 0;
         $totalProses = 0;
+        $totalBelumProses = 0;
 
-        $mappedItems = $targets->map(function ($t) use (&$totalRealisasi, &$totalProses) {
+        $mappedItems = $targets->map(function ($t) use (&$totalRealisasi, &$totalProses, &$totalBelumProses) {
             $aset = $t->asetTanah;
             $latestStatus = $aset?->latestProses?->statusProses;
             $statusName = $latestStatus?->nama_status ?? 'Belum Diurus';
             $category = strtolower(trim($latestStatus?->kategori ?? ''));
+            $statusNameNorm = strtolower(trim($statusName));
 
             if (empty($category)) {
-                $norm = strtolower($statusName);
-                if (str_contains($norm, 'terbit') || str_contains($norm, 'selesai') || ($statusName !== 'Belum Diurus' && str_contains($norm, 'sertifikat') && !str_contains($norm, 'proses'))) {
+                if (str_contains($statusNameNorm, 'terbit') || str_contains($statusNameNorm, 'selesai') || ($statusName !== 'Belum Diurus' && str_contains($statusNameNorm, 'sertifikat') && !str_contains($statusNameNorm, 'proses'))) {
                     $category = 'bersertifikat';
+                } elseif (str_contains($statusNameNorm, 'belum') || $statusNameNorm === 'belum diproses' || $statusNameNorm === 'belum diurus') {
+                    $category = 'belum_diurus';
                 }
             }
 
-            $isAchieved = ($category === 'bersertifikat');
+            $isAchieved = (str_contains($category, 'bersertifikat'));
+            $isBelumProses = (!$latestStatus || str_contains($category, 'belum_diurus') || $statusNameNorm === 'belum diurus' || $statusNameNorm === 'belum diproses');
+
             if ($isAchieved) {
+                $capaianStatus = 'tercapai';
                 $totalRealisasi++;
+            } elseif ($isBelumProses) {
+                $capaianStatus = 'belum_diproses';
+                $totalBelumProses++;
             } else {
+                $capaianStatus = 'proses';
                 $totalProses++;
             }
 
             $t->computed_status_name = $statusName;
+            $t->computed_category = $category;
+            $t->capaian_status = $capaianStatus;
             $t->is_achieved = $isAchieved;
+            $t->is_belum_proses = $isBelumProses;
 
             return $t;
         });
@@ -388,9 +417,9 @@ class TargetSertifikatController extends Controller implements HasMiddleware
         if ($statusCapaian === 'tercapai') {
             $targetItems = $mappedItems->filter(fn($t) => $t->is_achieved)->values();
         } elseif ($statusCapaian === 'proses') {
-            $targetItems = $mappedItems->filter(fn($t) => !$t->is_achieved)->values();
-        } elseif ($statusCapaian === 'belum_diurus') {
-            $targetItems = $mappedItems->filter(fn($t) => $t->computed_status_name === 'Belum Diurus')->values();
+            $targetItems = $mappedItems->filter(fn($t) => $t->capaian_status === 'proses')->values();
+        } elseif ($statusCapaian === 'belum_diproses' || $statusCapaian === 'belum_diurus') {
+            $targetItems = $mappedItems->filter(fn($t) => $t->is_belum_proses)->values();
         } else {
             $targetItems = $mappedItems;
         }
@@ -407,6 +436,7 @@ class TargetSertifikatController extends Controller implements HasMiddleware
             'totalTarget',
             'totalRealisasi',
             'totalProses',
+            'totalBelumProses',
             'persentaseCapaian'
         ))->render();
 

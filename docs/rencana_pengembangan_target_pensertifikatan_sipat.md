@@ -43,15 +43,19 @@ Untuk menjaga kebersihan database dan menyimpan riwayat target multi-tahun, dibu
 graph TD
     A["Tentukan Bidang Tanah Target Tahun 2026"] --> B["Tersimpan di sipat_target_sertifikat"]
     B --> C{"Cek Status Legalisasi Aset Tanah / Riwayat Proses"}
-    C -- "Sertifikat Terbit / Status Selesai" --> D["Dihitung sebagai TERCAPAI (Realized)"]
-    C -- "Masih Proses BPN / Belum Selesai" --> E["Dihitung sebagai DALAM PROSES"]
-    D --> F["Tampilkan di Widget Progress Bar Dashboard SIPAT"]
-    E --> F
+    C -- "Sertifikat Terbit / Kategori Bersertifikat" --> D["Dihitung sebagai REALISASI (TERCAPAI)"]
+    C -- "Belum Ada Pengurusan / Belum Diproses / Belum Diurus" --> E["Dihitung sebagai BELUM DIPROSES"]
+    C -- "Sedang Pengurusan BPN (Pengukuran, PERTEK, KKPR, dll)" --> F["Dihitung sebagai SEDANG PROSES"]
+    D --> G["Tampilkan di Widget Metric Cards & Progress Bar"]
+    E --> G
+    F --> G
 ```
 
 ### Formulas Perhitungan:
 * **Total Target (Tahun N)** = Jumlah data di `sipat_target_sertifikat` pada `tahun = N`.
-* **Total Realisasi (Tercapai)** = Jumlah tanah target yang status legalitasnya sudah *Bersertifikat* atau proses BPN-nya bernilai *Selesai*.
+* **Belum Diproses** = Jumlah tanah target yang belum memiliki riwayat proses atau statusnya masih `Belum Diproses` / `Belum Diurus`.
+* **Sedang Proses** = Jumlah tanah target yang aktif dalam tahapan pengurusan BPN (selain sertifikat terbit dan belum diproses).
+* **Total Realisasi (Tercapai)** = Jumlah tanah target yang status legalitasnya sudah *Bersertifikat*.
 * **Persentase Capaian** = `(Total Realisasi / Total Target) * 100%`.
 
 ---
@@ -62,15 +66,18 @@ graph TD
 Lokasi: Navigasi Utama `Modul SIPAT` $\rightarrow$ `Master Aset Tanah` $\rightarrow$ **`Target Pensertifikatan`** (`/sipat/target-pensertifikatan`).
 
 ### B. Halaman Dashboard Kinerja Target (`index.blade.php`)
-1. **Header Filter**: Pilihan Filter Tahun (2024, 2025, 2026, 2027) & Filter OPD.
-2. **Card Summary & Progress Bar**:
-   - Total Target Tahun Anggaran.
-   - Realisasi Sertifikat Terbit.
+1. **Header Filter**: Pilihan Filter Tahun (2024, 2025, 2026, 2027), Filter OPD, dan Filter Status Capaian (*Semua*, *Tercapai*, *Sedang Proses*, *Belum Diproses*).
+2. **5 Kotak Metrik Ringkasan & Progress Bar**:
+   - Total Target Tahun Anggaran (Aksen Biru).
+   - Belum Diproses (Aksen Abu-abu/Slate).
+   - Sedang Proses (Aksen Kuning/Warning).
+   - Realisasi Sertifikat Terbit (Aksen Hijau/Success).
+   - Capaian Target Pemda (%) beserta badge status kinerja.
    - Progress Bar Visual (Warna Hijau jika $\ge 80\%$, Kuning jika $50\% - 79\%$, Merah jika $< 50\%$).
 3. **Tabel Ringkasan Target per OPD**:
-   - Kolom: Nama OPD, Total Target Bidang, Realisasi, Persentase Capaian, Status Kinerja.
+   - Kolom: Nama OPD, Total Target Bidang, Realisasi, Sedang Proses, Belum Diproses, Persentase Capaian, Status Kinerja.
 4. **Tabel Daftar Bidang Tanah Target**:
-   - Kolom: Nama Aset/Lokasi Tanah KIB A, Nibar, OPD Pengguna, Status Proses BPN Terakhir, Indikator Capaian (Tercapai / Dalam Proses).
+   - Kolom: Nama Aset/Lokasi Tanah KIB A, Nibar, OPD Pengguna, Status Proses BPN Terakhir, Indikator Capaian (Tercapai / Sedang Proses / Belum Diproses).
 5. **Modal Edit & Hapus Target**: Memungkinkan pembaruan data target dan keterangan secara interaktif.
 6. **Integrasi GIS Leaflet Map**: Visualisasi pemetaan interaktif lokasi aset tanah target menggunakan Leaflet JS, GeoJSON, dan Shapefile.
 

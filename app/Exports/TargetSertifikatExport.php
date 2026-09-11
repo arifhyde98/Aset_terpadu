@@ -60,22 +60,25 @@ class TargetSertifikatExport implements FromCollection, WithHeadings, WithMappin
                 $latestStatus = $aset?->latestProses?->statusProses;
                 $statusName = $latestStatus?->nama_status ?? 'Belum Diurus';
                 $category = strtolower(trim($latestStatus?->kategori ?? ''));
+                $statusNameNorm = strtolower(trim($statusName));
 
                 if (empty($category)) {
-                    $norm = strtolower($statusName);
-                    if (str_contains($norm, 'terbit') || str_contains($norm, 'selesai') || ($statusName !== 'Belum Diurus' && str_contains($norm, 'sertifikat') && !str_contains($norm, 'proses'))) {
+                    if (str_contains($statusNameNorm, 'terbit') || str_contains($statusNameNorm, 'selesai') || ($statusName !== 'Belum Diurus' && str_contains($statusNameNorm, 'sertifikat') && !str_contains($statusNameNorm, 'proses'))) {
                         $category = 'bersertifikat';
+                    } elseif (str_contains($statusNameNorm, 'belum') || $statusNameNorm === 'belum diproses' || $statusNameNorm === 'belum diurus') {
+                        $category = 'belum_diurus';
                     }
                 }
 
-                $isAchieved = ($category === 'bersertifikat');
+                $isAchieved = (str_contains($category, 'bersertifikat'));
+                $isBelumProses = (!$latestStatus || str_contains($category, 'belum_diurus') || $statusNameNorm === 'belum diurus' || $statusNameNorm === 'belum diproses');
 
                 if ($this->statusCapaian === 'tercapai') {
                     return $isAchieved;
                 } elseif ($this->statusCapaian === 'proses') {
-                    return !$isAchieved;
-                } elseif ($this->statusCapaian === 'belum_diurus') {
-                    return $statusName === 'Belum Diurus';
+                    return (!$isAchieved && !$isBelumProses);
+                } elseif ($this->statusCapaian === 'belum_diproses' || $this->statusCapaian === 'belum_diurus') {
+                    return $isBelumProses;
                 }
 
                 return true;
@@ -109,16 +112,26 @@ class TargetSertifikatExport implements FromCollection, WithHeadings, WithMappin
         $latestStatus = $aset?->latestProses?->statusProses;
         $statusName = $latestStatus?->nama_status ?? 'Belum Diurus';
         $category = strtolower(trim($latestStatus?->kategori ?? ''));
+        $statusNameNorm = strtolower(trim($statusName));
 
         if (empty($category)) {
-            $norm = strtolower($statusName);
-            if (str_contains($norm, 'terbit') || str_contains($norm, 'selesai') || ($statusName !== 'Belum Diurus' && str_contains($norm, 'sertifikat') && !str_contains($norm, 'proses'))) {
+            if (str_contains($statusNameNorm, 'terbit') || str_contains($statusNameNorm, 'selesai') || ($statusName !== 'Belum Diurus' && str_contains($statusNameNorm, 'sertifikat') && !str_contains($statusNameNorm, 'proses'))) {
                 $category = 'bersertifikat';
+            } elseif (str_contains($statusNameNorm, 'belum') || $statusNameNorm === 'belum diproses' || $statusNameNorm === 'belum diurus') {
+                $category = 'belum_diurus';
             }
         }
 
-        $isAchieved = ($category === 'bersertifikat');
-        $capaianText = $isAchieved ? 'TERCAPAI (Sertifikat Terbit)' : 'DALAM PROSES / BELUM';
+        $isAchieved = (str_contains($category, 'bersertifikat'));
+        $isBelumProses = (!$latestStatus || str_contains($category, 'belum_diurus') || $statusNameNorm === 'belum diurus' || $statusNameNorm === 'belum diproses');
+
+        if ($isAchieved) {
+            $capaianText = 'TERCAPAI (Sertifikat Terbit)';
+        } elseif ($isBelumProses) {
+            $capaianText = 'BELUM DIPROSES';
+        } else {
+            $capaianText = 'SEDANG PROSES';
+        }
 
         return [
             $this->rowNum,
