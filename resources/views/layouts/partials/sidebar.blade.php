@@ -445,34 +445,80 @@
                         </div>
                     </div>
 
-                    <!-- Nested Submenu 4: Universal Dynamic Archive Engine -->
+                    <!-- Loop Otomatis: Menu & Submenu Mandiri per Kategori Arsip Dinamis (seperti BPKB & Sertifikat) -->
+                    @if(!empty($sidebarDynamicArchiveTypes) && $sidebarDynamicArchiveTypes->isNotEmpty())
+                        @foreach($sidebarDynamicArchiveTypes as $type)
+                            @php
+                                $currentTypeId = request('type_id') ?? (isset($item) && $item instanceof \App\Models\Elabel\Dynamic\ArchiveItem ? $item->archive_type_id : (isset($box) && $box instanceof \App\Models\Elabel\Dynamic\ArchiveBox ? $box->archive_type_id : null));
+                                $typeCollapseId = 'elabelSubDynamicType_' . $type->id;
+                                $isThisTypeActive = (Request::is('elabel/dynamic/items*') && $currentTypeId == $type->id)
+                                                 || (Request::is('elabel/dynamic/boxes*') && $currentTypeId == $type->id);
+                                $badgeColor = in_array($type->warna_badge, ['primary', 'secondary', 'success', 'danger', 'warning', 'info', 'dark']) ? $type->warna_badge : 'primary';
+                                $iconClass = !empty($type->icon) ? $type->icon : 'bi-folder2';
+                            @endphp
+                            <div class="nested-group">
+                                <a class="nested-header {{ $isThisTypeActive ? '' : 'collapsed' }}"
+                                   data-bs-toggle="collapse"
+                                   href="#{{ $typeCollapseId }}"
+                                   role="button"
+                                   aria-expanded="{{ $isThisTypeActive ? 'true' : 'false' }}">
+                                    <span><i class="bi {{ $iconClass }} me-1 text-{{ $badgeColor }}"></i> {{ strtoupper($type->nama) }}</span>
+                                    <i class="bi bi-chevron-down nested-chevron"></i>
+                                </a>
+                                <div id="{{ $typeCollapseId }}" class="collapse {{ $isThisTypeActive ? 'show' : '' }}">
+                                    <ul class="submenu-list">
+                                        <li class="{{ Request::is('elabel/dynamic/items*') && $currentTypeId == $type->id ? 'active' : '' }}">
+                                            <a href="{{ route('elabel.dynamic.items.index', ['type_id' => $type->id]) }}" data-bs-toggle="tooltip" data-bs-placement="right" title="Katalog Berkas {{ $type->nama }}">
+                                                <i class="bi bi-folder2-open"></i>
+                                                <span>Katalog {{ $type->kode ?: 'Berkas' }}</span>
+                                            </a>
+                                        </li>
+                                        <li class="{{ Request::is('elabel/dynamic/boxes*') && $currentTypeId == $type->id ? 'active' : '' }}">
+                                            <a href="{{ route('elabel.dynamic.boxes.index', ['type_id' => $type->id]) }}" data-bs-toggle="tooltip" data-bs-placement="right" title="Box Arsip {{ $type->nama }}">
+                                                <i class="bi bi-box-seam"></i>
+                                                <span>Box {{ $type->kode ?: 'Arsip' }}</span>
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                        @endforeach
+                    @endif
+
+                    <!-- Nested Submenu Khusus Pengaturan: ARSIP DINAMIS -->
+                    @php
+                        $isDynamicSettingsActive = Request::is('elabel/dynamic/types*') 
+                            || Request::is('elabel/dynamic/loans*') 
+                            || (Request::is('elabel/dynamic/items*') && !request()->filled('type_id') && empty($currentTypeId))
+                            || (Request::is('elabel/dynamic/boxes*') && !request()->filled('type_id') && empty($currentTypeId));
+                    @endphp
                     <div class="nested-group">
-                        <a class="nested-header {{ Request::is('elabel/dynamic*') ? '' : 'collapsed' }}"
+                        <a class="nested-header {{ $isDynamicSettingsActive ? '' : 'collapsed' }}"
                            data-bs-toggle="collapse"
-                           href="#elabelSubDynamic"
+                           href="#elabelSubDynamicConfig"
                            role="button"
-                           aria-expanded="{{ Request::is('elabel/dynamic*') ? 'true' : 'false' }}">
-                            <span><i class="bi bi-collection-play me-1 text-info"></i> ARSIP DINAMIS</span>
+                           aria-expanded="{{ $isDynamicSettingsActive ? 'true' : 'false' }}">
+                            <span><i class="bi bi-sliders me-1 text-secondary"></i> ARSIP DINAMIS</span>
                             <i class="bi bi-chevron-down nested-chevron"></i>
                         </a>
-                        <div id="elabelSubDynamic" class="collapse {{ Request::is('elabel/dynamic*') ? 'show' : '' }}">
+                        <div id="elabelSubDynamicConfig" class="collapse {{ $isDynamicSettingsActive ? 'show' : '' }}">
                             <ul class="submenu-list">
-                                <li class="{{ Request::is('elabel/dynamic/items*') ? 'active' : '' }}">
-                                    <a href="{{ route('elabel.dynamic.items.index') }}" data-bs-toggle="tooltip" data-bs-placement="right" title="Katalog Berkas Arsip Dinamis">
-                                        <i class="bi bi-folder2-open text-primary"></i>
-                                        <span>Katalog Berkas</span>
-                                    </a>
-                                </li>
-                                <li class="{{ Request::is('elabel/dynamic/boxes*') ? 'active' : '' }}">
-                                    <a href="{{ route('elabel.dynamic.boxes.index') }}" data-bs-toggle="tooltip" data-bs-placement="right" title="Manajemen Box Fisik Arsip Dinamis">
-                                        <i class="bi bi-box-seam text-warning"></i>
-                                        <span>Manajemen Box</span>
-                                    </a>
-                                </li>
                                 <li class="{{ Request::is('elabel/dynamic/types*') ? 'active' : '' }}">
-                                    <a href="{{ route('elabel.dynamic.types.index') }}" data-bs-toggle="tooltip" data-bs-placement="right" title="Master Jenis & Form Builder">
+                                    <a href="{{ route('elabel.dynamic.types.index') }}" data-bs-toggle="tooltip" data-bs-placement="right" title="Master Kategori & Form Builder">
                                         <i class="bi bi-sliders text-success"></i>
                                         <span>Master Kategori & Form</span>
+                                    </a>
+                                </li>
+                                <li class="{{ Request::is('elabel/dynamic/items*') && !request()->filled('type_id') && empty($currentTypeId) ? 'active' : '' }}">
+                                    <a href="{{ route('elabel.dynamic.items.index') }}" data-bs-toggle="tooltip" data-bs-placement="right" title="Semua Berkas Arsip Dinamis">
+                                        <i class="bi bi-folder2-open text-primary"></i>
+                                        <span>Semua Berkas</span>
+                                    </a>
+                                </li>
+                                <li class="{{ Request::is('elabel/dynamic/boxes*') && !request()->filled('type_id') && empty($currentTypeId) ? 'active' : '' }}">
+                                    <a href="{{ route('elabel.dynamic.boxes.index') }}" data-bs-toggle="tooltip" data-bs-placement="right" title="Manajemen Seluruh Box Arsip Dinamis">
+                                        <i class="bi bi-box-seam text-warning"></i>
+                                        <span>Manajemen Box</span>
                                     </a>
                                 </li>
                                 <li class="{{ Request::is('elabel/dynamic/loans*') ? 'active' : '' }}">

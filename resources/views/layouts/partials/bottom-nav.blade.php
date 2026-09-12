@@ -289,6 +289,40 @@
                             <a href="{{ route('elabel.peminjaman.index') }}" class="list-group-item list-group-item-action border-0 py-2 rounded-2 {{ Request::is('elabel/peminjaman*') ? 'active-sub-elabel' : '' }}">
                                 <i class="bi bi-clock-history me-2 text-info"></i> Request Scan & Pinjam
                             </a>
+
+                            @if(!empty($sidebarDynamicArchiveTypes) && $sidebarDynamicArchiveTypes->isNotEmpty())
+                                @foreach($sidebarDynamicArchiveTypes as $type)
+                                    @php
+                                        $currentTypeId = request('type_id') ?? (isset($item) && $item instanceof \App\Models\Elabel\Dynamic\ArchiveItem ? $item->archive_type_id : (isset($box) && $box instanceof \App\Models\Elabel\Dynamic\ArchiveBox ? $box->archive_type_id : null));
+                                        $isThisTypeActive = (Request::is('elabel/dynamic/items*') && $currentTypeId == $type->id)
+                                                         || (Request::is('elabel/dynamic/boxes*') && $currentTypeId == $type->id);
+                                        $badgeColor = in_array($type->warna_badge, ['primary', 'secondary', 'success', 'danger', 'warning', 'info', 'dark']) ? $type->warna_badge : 'primary';
+                                        $iconClass = !empty($type->icon) ? $type->icon : 'bi-folder2';
+                                    @endphp
+                                    <div class="text-muted fw-bold px-2 pt-2 pb-1" style="font-size: 0.65rem; text-transform: uppercase;">{{ $type->nama }}</div>
+                                    <a href="{{ route('elabel.dynamic.items.index', ['type_id' => $type->id]) }}" class="list-group-item list-group-item-action border-0 py-2 rounded-2 {{ Request::is('elabel/dynamic/items*') && $currentTypeId == $type->id ? 'active-sub-elabel' : '' }}">
+                                        <i class="bi {{ $iconClass }} me-2 text-{{ $badgeColor }}"></i> Katalog {{ $type->kode ?: 'Berkas' }}
+                                    </a>
+                                    <a href="{{ route('elabel.dynamic.boxes.index', ['type_id' => $type->id]) }}" class="list-group-item list-group-item-action border-0 py-2 rounded-2 {{ Request::is('elabel/dynamic/boxes*') && $currentTypeId == $type->id ? 'active-sub-elabel' : '' }}">
+                                        <i class="bi bi-box-seam me-2 text-{{ $badgeColor }}"></i> Box {{ $type->kode ?: 'Arsip' }}
+                                    </a>
+                                @endforeach
+                            @endif
+
+                            <!-- Pengaturan Arsip Dinamis -->
+                            <div class="text-muted fw-bold px-2 pt-2 pb-1" style="font-size: 0.65rem; text-transform: uppercase;">Pengaturan Arsip Dinamis</div>
+                            <a href="{{ route('elabel.dynamic.types.index') }}" class="list-group-item list-group-item-action border-0 py-2 rounded-2 {{ Request::is('elabel/dynamic/types*') ? 'active-sub-elabel' : '' }}">
+                                <i class="bi bi-sliders me-2 text-success"></i> Master Kategori & Form
+                            </a>
+                            <a href="{{ route('elabel.dynamic.items.index') }}" class="list-group-item list-group-item-action border-0 py-2 rounded-2 {{ Request::is('elabel/dynamic/items*') && !request()->filled('type_id') && empty($currentTypeId) ? 'active-sub-elabel' : '' }}">
+                                <i class="bi bi-folder2-open me-2 text-primary"></i> Semua Berkas
+                            </a>
+                            <a href="{{ route('elabel.dynamic.boxes.index') }}" class="list-group-item list-group-item-action border-0 py-2 rounded-2 {{ Request::is('elabel/dynamic/boxes*') && !request()->filled('type_id') && empty($currentTypeId) ? 'active-sub-elabel' : '' }}">
+                                <i class="bi bi-box-seam me-2 text-warning"></i> Manajemen Box
+                            </a>
+                            <a href="{{ route('elabel.dynamic.loans.index') }}" class="list-group-item list-group-item-action border-0 py-2 rounded-2 {{ Request::is('elabel/dynamic/loans*') ? 'active-sub-elabel' : '' }}">
+                                <i class="bi bi-arrow-left-right me-2 text-info"></i> Layanan Peminjaman
+                            </a>
                         </div>
                     </div>
                 </div>

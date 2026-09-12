@@ -52,11 +52,13 @@ class ArchiveBoxController extends Controller implements HasMiddleware
         }
 
         $boxes = $builder->paginate(20)->withQueryString();
+        $currentType = !empty($typeId) ? ArchiveType::find($typeId) : null;
 
         return view('elabel.dynamic.boxes.index', [
             'boxes'       => $boxes,
             'types'       => $types,
             'selectedType'=> $typeId,
+            'currentType' => $currentType,
             'searchQuery' => $query,
             'activeMenu'  => 'dynamic_boxes',
         ]);

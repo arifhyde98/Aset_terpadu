@@ -110,12 +110,33 @@ Seluruh tanah bersertifikat di tabel `aset_tanah` **wajib sama persis** dengan l
   php artisan sipat:sync-luas-sertifikat
   ```
 
-### 3.2 Penyelarasan Relasi Sertifikat Kanonikal & Deteksi Duplikasi BPN (`AsetTanahService`)
+### 3.2 Aturan Integritas Kepemilikan OPD Sertifikat Tanah (SIPAT ↔ e-LABEL)
+Sertifikat tanah di tabel `elabel_sertifikat_tanah` yang memiliki NIBAR di `aset_tanah` (KIB A) **wajib 100% mengacu pada OPD pemilik aset tanah di SIPAT** (`aset_tanah.opd_id` & `opd.nama`). Aturan kepemilikan instansi ini dikunci dan disinkronkan secara dua arah:
+- `AsetTanahObserver::saved()`: Setiap kali data aset tanah KIB A disimpan atau diperbarui OPD-nya, sistem otomatis menyinkronkan kolom `sipat_opd_id` dan nama `dinas` pada sertifikat di e-Label yang memiliki NIBAR identik (`nibar = kode_aset`). Sinkronisasi dijalankan di dalam blok `\App\Models\Elabel\ElabelSertifikat::withoutEvents(...)` guna mencegah *circular observer trigger*.
+- `ElabelSertifikatObserver::saving()`: Ketika berkas sertifikat di e-Label hendak disimpan/diperbarui, jika sertifikat memiliki NIBAR yang terdaftar pada katalog `AsetTanah`, nilai `sipat_opd_id` dan teks `dinas` otomatis dipaksa mengikuti instansi OPD pemilik di Aset Tanah SIPAT.
+- **Relasi Eloquent Model:** Model `ElabelSertifikat` terhubung langsung ke `AsetTanah` melalui relasi kanonikal NIBAR:
+  ```php
+  public function asetTanah(): BelongsTo
+  {
+      return $this->belongsTo(\App\Models\AsetTanah::class, 'nibar', 'kode_aset');
+  }
+  ```
+- **Proteksi Form Antarmuka (`resources/views/elabel/sertifikat/edit.blade.php`):** Pada formulir edit sertifikat, jika berkas terhubung ke NIBAR KIB A ber-OPD, pilihan dropdown OPD dikunci otomatis (`<input type="hidden" name="sipat_opd_id">` + input text disabled dengan badge `<i class="bi bi-lock-fill"></i> Mengacu KIB A` dan teks informasi `<i class="bi bi-shield-check"></i> Terkunci sesuai Master Aset Tanah`).
+- **Artisan Command Audit Kepemilikan OPD:**
+  ```bash
+  php artisan sipat:sync-opd-sertifikat {--dry-run}
+  ```
+  - Memeriksa selisih OPD antara sertifikat e-Label (`sipat_opd_id`) dan aset tanah KIB A (`aset_tanah.opd_id`).
+  - Menampilkan tabel verifikasi selisih: ID Sertifikat, NIBAR, No. Sertifikat, OPD Sertifikat (Saat Ini), dan OPD Aset Tanah (Tujuan).
+  - Opsi `--dry-run` digunakan untuk audit tanpa menyimpan perubahan.
+  - Mode eksekusi langsung memperbarui seluruh selisih via query SQL JOIN massal serta memicu pembersihan cache `SipatService::invalidateDashboardCache()`.
+
+### 3.3 Penyelarasan Relasi Sertifikat Kanonikal & Deteksi Duplikasi BPN (`AsetTanahService`)
 - **Penghapusan Dead Code:** Menghapus pemanggilan properti palsu `$aset->no_sertifikat` langsung pada model `AsetTanah` (kolom ini tersimpan di tabel `elabel_sertifikat_tanah` sebagai `no_sertipikat`).
 - **Kunci Kanonikal Resmi NIBAR (`getAsetDetailsForModal`):** Menghubungkan aset tanah ke arsip sertifikat e-Label **hanya** melalui kunci kanonikal resmi NIBAR (`nibar = kode_aset`). Menghilangkan pencarian kabur (*fuzzy match* `LIKE %nama_aset%` ke `nama_pemilik`) guna mengeliminasi risiko *false positive* (salah menghubungkan sertifikat tanah milik aset lain).
 - **Deteksi Duplikasi BPN (`getDuplicateAsetList`):** Mengaktifkan deteksi duplikasi nomor sertifikat BPN dengan mengambil data `no_sertipikat` dari tabel `elabel_sertifikat_tanah` yang terhubung dengan `aset_tanah.kode_aset`.
 
-### 3.3 Proteksi Dependensi Data Master & Guard Cascade Delete
+### 3.4 Proteksi Dependensi Data Master & Guard Cascade Delete
 Mencegah terjadinya *cascade delete* database yang dapat melenyapkan data historis secara tidak sengaja:
 - **Master Status Proses (`StatusProsesController@destroy`):** Memeriksa dependensi `ProsesAset::where('id_status', $id)->count()`. Menolak penghapusan jika status masih digunakan oleh catatan aset tanah aktif.
 - **Master OPD SIPAT (`MasterSipatOpdController@destroy`):** Memeriksa dependensi pada `AsetTanah::where('opd_id', $id)`, `opd_mappings`, dan `elabel_sertifikat_tanah`. Menolak penghapusan jika OPD masih menaungi aset aktif.
@@ -129,12 +150,12 @@ Mencegah terjadinya *cascade delete* database yang dapat melenyapkan data histor
     - `pemohonDestroy`: Memvalidasi penggunaan pemohon pada dokumen `surat_skpt`.
   - Otomatis memicu pembersihan cache `SipatService::invalidateDashboardCache()` pada setiap mutasi data kecamatan.
 
-### 3.4 Atomisitas Transaksi & Pembersihan Berkas Fisik
+### 3.5 Atomisitas Transaksi & Pembersihan Berkas Fisik
 - **Transaksi Aset Baru (`AsetTanahService::storeAset`):** Dibungkus penuh dalam `DB::transaction()` untuk menjamin atomisitas pembuatan aset tanah baru dan riwayat status BPN awal (*All-or-Nothing*).
 - **Penghapusan Bersih (`AsetTanahService::deleteAset`):** Dibungkus dalam `DB::transaction()` dan secara otomatis mendeteksi serta menghapus berkas fisik lampiran dari disk (`Storage::disk('public')->delete(...)`) sebelum baris database dihapus, mencegah terjadinya penumpukan berkas sampah yatim (*orphaned files*).
 - **Pendaftaran Tanah Belum Tercatat (`TanahTakTercatatController`):** Pembuatan aset tanah usulan dan status awal dibungkus dalam `DB::transaction()`. Memanggil `ProsesAset::create()` dengan key kolom resmi: `id_status`, `tanggal_proses`, dan `tgl_mulai` untuk mencegah galat database field default value.
 
-### 3.5 Normalisasi Otomatis Master Wilayah Kecamatan (`PopulateAsetTanahKecamatanCommand`)
+### 3.6 Normalisasi Otomatis Master Wilayah Kecamatan (`PopulateAsetTanahKecamatanCommand`)
 - **Artisan Command:**
   ```bash
   php artisan sipat:populate-kecamatan {--dry-run} {--sync-legacy}
@@ -148,7 +169,7 @@ Mencegah terjadinya *cascade delete* database yang dapat melenyapkan data histor
   - Negative lookahead pada `Labuan` (mengecualikan kelurahan `Labuan Bajo`).
 - Memicu invalidasi cache `SipatService::invalidateDashboardCache()` agar statistik dashboard wilayah langsung terbarukan.
 
-### 3.6 Aturan Integritas Skema Relasi Fisik
+### 3.7 Aturan Integritas Skema Relasi Fisik
 - `onDelete('cascade')`: Pada relasi foreign key `opd_id` di tabel `users` (penghapusan instansi menghapus user terkait).
 - `onDelete('set null')`: Pada kolom foreign key `user_id` di tabel `activities` untuk menjaga keutuhan riwayat audit trail meskipun akun pengguna yang bersangkutan dihapus dari sistem.
 - `UserObserver::deleting`: Secara otomatis menghapus berkas fisik `avatar` dari storage disk saat akun pengguna dihapus.
@@ -263,7 +284,7 @@ Untuk mencegah penurunan performa akibat kueri agregasi berat berulang, data sta
   - `elabel_bpkb`: Katalog fisik berkas BPKB (`id`, `box_id`, `plate_number`, `no_bpkb`, `nibar`, `vehicle_type`, `status`, `sipat_opd_id`, `pdf_path`).
   - `elabel_bpkb_deletes`: Riwayat penyerahan/penghapusan BPKB keluar (*soft deleted*).
   - `elabel_sertifikat_boxes`: Box penyimpanan fisik berkas sertifikat tanah.
-  - `elabel_sertifikat_tanah`: Katalog sertifikat tanah resmi (`id`, `no_sertipikat`, `tanggal_sertifikat`, `nibar`, `status_penggunaan`, `spesifikasi`, `luas`, `tanggal_perolehan`, `nilai_perolehan`, `nama_pemilik`, `cara_perolehan`, `alamat`, `lokasi`, `dinas`, `box_id`, `pdf_path`, `sipat_opd_id`).
+  - `elabel_sertifikat_tanah`: Katalog sertifikat tanah resmi (`id`, `no_sertipikat`, `tanggal_sertifikat`, `nibar`, `status_penggunaan`, `spesifikasi`, `luas`, `tanggal_perolehan`, `nilai_perolehan`, `nama_pemilik`, `cara_perolehan`, `alamat`, `lokasi`, `dinas`, `box_id`, `pdf_path`, `sipat_opd_id`). Model `ElabelSertifikat` memiliki relasi kanonikal `asetTanah()` (`belongsTo(AsetTanah::class, 'nibar', 'kode_aset')`) dan relasi `box()`.
   - `elabel_surat_penyerahan_boxes`: Box fisik penyimpanan berkas surat penyerahan.
   - `elabel_surat_penyerahan`: Berita acara penyerahan berkas fisik aset.
   - `elabel_loans`: Riwayat peminjaman berkas atau pengajuan scan berkas BPKB legacy.
@@ -289,7 +310,8 @@ Seluruh logika kalkulasi dan query bisnis wajib dienkapsulasi di dalam kelas Ser
   - Kueri Master Aset Tanah diurutkan menggunakan `CASE` SQL agar aset ber-NIBAR resmi selalu di urutan paling atas dan usulan draft (`DRAFT-`, `BELUM-`, null, `-`) di paling bawah.
   - Menggunakan **Eloquent Query Scopes** pada Model `AsetTanah` (`scopeSudahBersertifikat`, `scopeDalamProses`, `scopeBermasalah`, `scopeBelumBersertifikat`, dan `scopeFilterKategoriStatus`) sebagai *Single Source of Truth (SSOT)* filter status pertanahan.
   - Menghubungkan modal detail aset ke arsip `elabel_sertifikat_tanah` via relasi kanonikal `nibar = kode_aset` serta mendeteksi duplikasi nomor sertifikat BPN.
-- `DynamicArchiveService` (`app/Services/Elabel/DynamicArchiveService.php`): Service layer inti **Universal Dynamic Archive Engine** untuk validasi skema form dinamis, penanganan berkas scan PDF utama & lampiran pendukung, penomoran kode box otomatis (`BOX-{KODE}-{NUM}`), serta audit trail aktivitas arsip dinamis.
+- `DynamicArchiveService` (`app/Services/Elabel/DynamicArchiveService.php`): Service layer inti **Universal Dynamic Archive Engine** untuk validasi skema form dinamis, penanganan berkas scan PDF utama & lampiran pendukung, penomoran kode box otomatis (`BOX-{KODE}-{NUM}`), audit trail aktivitas arsip dinamis, serta penyedia data menu otomatis sidebar (`getActiveTypesForSidebar`) dengan sistem caching terversi yang dilindungi `try-catch` dan *graceful database fallback*.
+- **Dynamic Archive Observer (`ArchiveTypeObserver`):** Menjamin pembaruan otomatis menu navigasi sidebar & offcanvas mobile (`invalidateSidebarCache`) secara atomik tanpa memicu `Cache::flush()` global saat jenis arsip baru ditambahkan, diubah, atau dihapus. Dokumen arsip (`ArchiveItem`) tidak memicu invalidasi cache sidebar untuk menjaga performa simpan/upload berkas yang tinggi.
 - `ElabelSmartBpkbExtractorController`: Modul isolasi pembacaan isi dokumen PDF BPKB otomatis (*Smart PDF Extractor & OCR*) pada rute `/elabel/bpkb-smart-extractor` dengan verifikasi 4 aturan presisi (Pencocokan Nopol 100% Persis, Proteksi Berkas Ganda, dan Dry-Run Audit Preview).
 - `GeminiAiService` (`app/Services/GeminiAiService.php`): Integrasi Google Gemini Cloud AI via `GEMINI_API_KEY` (dengan fallback `OllamaService`) untuk melayani endpoint asisten cerdas `/ai/ask` dan `/ai/generate-summary`.
 
@@ -414,6 +436,10 @@ Seluruh peningkatan visual kustom diisolasi pada file [`resources/sass/component
 - **Sticky Table Header Solid:** Header tabel pratinjau diberi warna latar belakang solid (`--bs-tertiary-bg`) sehingga teks data di bawahnya tidak terlihat tembus pandang saat tabel digulir ke bawah.
 - **Interaktivitas AJAX Laporan Kendaraan:** Fungsi JS `sortByField(field)` untuk pengurutan kolom tabel AJAX dan `handleTypeChange()` untuk pergantian jenis laporan berjalan mulus tanpa memicu error console peramban.
 
+### 9.4 Optimasi Layout Dashboard & Formulir Proteksi Instansi
+- **Proporsi Card Breakdown Dashboard (`resources/views/home.blade.php`):** Rincian metrik pada kartu e-RANDIS, eLABEL, dan Layanan Aktif distandarkan menggunakan tipografi `0.81rem`, utility class `text-nowrap`, serta padding adaptif `p-3 p-xxl-4` guna mencegah pemotongan teks atau pembungkusan baris (*unwanted text wrapping*) pada resolusi layar kerja.
+- **Formulir Edit Terproteksi (`resources/views/elabel/sertifikat/edit.blade.php`):** Pilihan dropdown instansi OPD secara visual bertransformasi menjadi field terkunci (*read-only / disabled*) berlabel badge `<i class="bi bi-lock-fill"></i> Mengacu KIB A` serta hidden input ketika dokumen sertifikat terhubung dengan NIBAR aset tanah KIB A.
+
 ---
 
 ## 10. 📦 Peta Fitur Penuh (Full Feature Stack)
@@ -469,7 +495,8 @@ Seluruh peningkatan visual kustom diisolasi pada file [`resources/sass/component
   - Pratinjau PDF tab baru dan verifikasi hasil sebelum disimpan.
 - **Sertifikat Tanah Fisik & Box (`/elabel/sertifikat`, `/elabel/sertifikat-boxes`):**
   - Penyimpanan fisik sertifikat tanah, penataan box fisik khusus sertifikat, operasi split/merge box, dan impor Excel.
-  - Sinkronisasi otomatis luas tanah dua arah dengan modul SIPAT.
+  - Sinkronisasi otomatis dua arah untuk luas fisik tanah dan instansi kepemilikan OPD dengan modul SIPAT (dilengkapi command audit terminal `php artisan sipat:sync-opd-sertifikat {--dry-run}`).
+  - Proteksi form edit sertifikat dengan penguncian dropdown OPD otomatis dan badge `Mengacu KIB A` untuk berkas yang terhubung dengan NIBAR aset tanah KIB A.
 - **Surat Penyerahan & Box Penyerahan (`/elabel/surat-penyerahan`, `/elabel/surat-penyerahan-boxes`):**
   - Administrasi berita acara penyerahan fisik berkas aset dan penataan box fisik surat penyerahan.
 - **Alur Peminjaman Dokumen (`/elabel/peminjaman`):**
@@ -479,6 +506,8 @@ Seluruh peningkatan visual kustom diisolasi pada file [`resources/sass/component
   - **Manajemen Box Universal (`/elabel/dynamic/boxes`):** Penataan box fisik dengan penomoran otomatis (`BOX-{KODE}-{NUM}`), barcode, rak, dan tahun.
   - **Katalog Berkas Dinamis (`/elabel/dynamic/items`):** Pengarsipan dokumen dinamis multi-lampiran dengan pencarian metadata JSON dan viewer PDF terintegrasi.
   - **Layanan Peminjaman Dokumen (`/elabel/dynamic/loans`):** Alur permohonan pinjam berkas fisik atau request scan dokumen oleh operator OPD dengan persetujuan admin.
+  - **Menu & Submenu Sidebar Otomatis (Grup Mandiri per Kategori):** Setiap kategori arsip dinamis aktif otomatis dibuatkan grup menu collapsible mandiri (seperti halnya Dokumen BPKB dan Sertifikat Tanah) lengkap dengan icon kustom, warna tema, submenu Katalog Dokumen (`/elabel/dynamic/items?type_id={id}`), dan submenu Box Arsip (`/elabel/dynamic/boxes?type_id={id}`). Sedangkan menu **ARSIP DINAMIS** difokuskan khusus untuk pengaturan sistem (*Master Kategori & Form*, *Semua Berkas*, *Manajemen Box*, dan *Layanan Peminjaman*).
+  - **Antarmuka Terkontekstualisasi Penuh Sesuai Kategori yang Dibuka:** Saat pengguna mengakses menu kategori spesifik (contoh: *SK Penghapusan* via `type_id={id}`), seluruh elemen antarmuka otomatis menyesuaikan diri: judul halaman, breadcrumb, banner kategori dengan statistik, tombol toolbar (`Input {kode} Baru` & `Box {kode}`), pencarian & filter dengan hidden `type_id`, tombol reset yang mempertahankan kategori aktif, serta kolom tabel "Kategori" yang otomatis disembunyikan karena sudah tersaring secara spesifik. Modal buat box (`#createBoxModal`) dan formulir tambah/edit berkas juga mengunci kategori aktif.
 
 ### 10.4 Modul Administrasi, Asisten AI & Manajemen Pengguna
 - **Asisten Pintar AI (Google Gemini Cloud AI Integration):**

@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Katalog Berkas Arsip Dinamis - eLABEL')
+@section('title', ($currentType ? 'Katalog ' . $currentType->nama : 'Semua Berkas Arsip Dinamis') . ' - eLABEL')
 
 @section('content')
 <div class="container-fluid px-0">
@@ -12,53 +12,69 @@
                 <ol class="breadcrumb mb-1 small">
                     <li class="breadcrumb-item"><a href="{{ route('home') }}" class="text-decoration-none text-secondary">Dashboard</a></li>
                     <li class="breadcrumb-item"><a href="{{ route('elabel.dashboard') }}" class="text-decoration-none text-secondary">eLABEL</a></li>
-                    <li class="breadcrumb-item active text-navy fw-medium" aria-current="page">Katalog Arsip Dinamis</li>
+                    @if($currentType)
+                        <li class="breadcrumb-item text-secondary">{{ $currentType->nama }}</li>
+                        <li class="breadcrumb-item active text-navy fw-medium" aria-current="page">Katalog Berkas</li>
+                    @else
+                        <li class="breadcrumb-item text-secondary">Arsip Dinamis</li>
+                        <li class="breadcrumb-item active text-navy fw-medium" aria-current="page">Semua Berkas</li>
+                    @endif
                 </ol>
             </nav>
             <h4 class="fw-bold text-navy mb-0 d-flex align-items-center gap-2">
-                <i class="bi bi-folder2-open text-primary"></i> Katalog Berkas Arsip Dinamis
+                @if($currentType)
+                    <i class="bi {{ $currentType->icon ?: 'bi-folder2-open' }} text-{{ $currentType->warna_badge ?: 'primary' }}"></i>
+                    <span>Katalog Berkas: {{ $currentType->nama }}</span>
+                    <span class="badge bg-{{ $currentType->warna_badge ?: 'primary' }}-subtle text-{{ $currentType->warna_badge ?: 'primary' }} border border-{{ $currentType->warna_badge ?: 'primary' }}-subtle fs-6 font-monospace">{{ $currentType->kode }}</span>
+                @else
+                    <i class="bi bi-folder2-open text-primary"></i>
+                    <span>Semua Berkas Arsip Dinamis</span>
+                @endif
             </h4>
+            @if($currentType)
+                <p class="text-muted small mb-0 mt-1">
+                    @if($currentType->deskripsi && $currentType->deskripsi !== '-') {{ $currentType->deskripsi }} &bull; @endif
+                    Total: <strong>{{ $items->total() }}</strong> berkas terarsip
+                </p>
+            @endif
         </div>
         <div class="action-toolbar d-flex flex-wrap gap-2">
             <a href="{{ route('elabel.dynamic.items.export', request()->query()) }}" class="btn btn-outline-success shadow-sm fw-medium d-flex align-items-center gap-2">
                 <i class="bi bi-file-earmark-excel"></i> Export Excel
             </a>
-            <a href="{{ route('elabel.dynamic.types.index') }}" class="btn btn-outline-secondary shadow-sm fw-medium d-flex align-items-center gap-2">
-                <i class="bi bi-sliders"></i> Master Kategori
-            </a>
-            <a href="{{ route('elabel.dynamic.items.create', ['type_id' => $selectedType]) }}" class="btn btn-primary shadow-sm fw-medium d-flex align-items-center gap-2">
-                <i class="bi bi-plus-circle"></i> Input Arsip Baru
-            </a>
+            @if($currentType)
+                <a href="{{ route('elabel.dynamic.boxes.index', ['type_id' => $currentType->id]) }}" class="btn btn-outline-warning text-dark shadow-sm fw-medium d-flex align-items-center gap-2">
+                    <i class="bi bi-box-seam"></i> Box {{ $currentType->kode ?: 'Arsip' }}
+                </a>
+                <a href="{{ route('elabel.dynamic.items.create', ['type_id' => $currentType->id]) }}" class="btn btn-primary shadow-sm fw-medium d-flex align-items-center gap-2">
+                    <i class="bi bi-plus-circle"></i> Input {{ $currentType->kode ?: 'Dokumen' }} Baru
+                </a>
+            @else
+                <a href="{{ route('elabel.dynamic.types.index') }}" class="btn btn-outline-secondary shadow-sm fw-medium d-flex align-items-center gap-2">
+                    <i class="bi bi-sliders"></i> Master Kategori
+                </a>
+                <a href="{{ route('elabel.dynamic.items.create') }}" class="btn btn-primary shadow-sm fw-medium d-flex align-items-center gap-2">
+                    <i class="bi bi-plus-circle"></i> Input Arsip Baru
+                </a>
+            @endif
         </div>
     </div>
 
-    @if(session('success'))
-        <div class="alert alert-success alert-dismissible fade show border-0 shadow-sm rounded-3 mb-4" role="alert">
-            <i class="bi bi-check-circle-fill me-2"></i> {{ session('success') }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-    @endif
-
-    @if(session('error'))
-        <div class="alert alert-danger alert-dismissible fade show border-0 shadow-sm rounded-3 mb-4" role="alert">
-            <i class="bi bi-exclamation-triangle-fill me-2"></i> {{ session('error') }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-    @endif
-
-    <!-- Category Pills Quick Filter -->
-    <div class="d-flex align-items-center gap-2 overflow-x-auto pb-2 mb-3">
-        <a href="{{ route('elabel.dynamic.items.index', request()->except('type_id', 'page')) }}" 
-           class="btn btn-sm {{ empty($selectedType) ? 'btn-primary' : 'btn-light border bg-white text-secondary' }} rounded-pill px-3 text-nowrap fw-medium">
-            <i class="bi bi-grid me-1"></i> Semua Kategori
-        </a>
-        @foreach($types as $t)
-            <a href="{{ route('elabel.dynamic.items.index', array_merge(request()->except('page'), ['type_id' => $t->id])) }}" 
-               class="btn btn-sm {{ $selectedType == $t->id ? 'btn-' . ($t->warna_badge ?: 'primary') : 'btn-light border bg-white text-secondary' }} rounded-pill px-3 text-nowrap fw-medium">
-                <i class="bi {{ $t->icon ?: 'bi-folder' }} me-1"></i> {{ $t->nama }}
+    @if(!$currentType)
+        <!-- Category Pills Quick Filter (Hanya tampil pada mode Semua Berkas) -->
+        <div class="d-flex align-items-center gap-2 overflow-x-auto pb-2 mb-3">
+            <a href="{{ route('elabel.dynamic.items.index', request()->except('type_id', 'page')) }}" 
+               class="btn btn-sm btn-primary rounded-pill px-3 text-nowrap fw-medium">
+                <i class="bi bi-grid me-1"></i> Semua Kategori
             </a>
-        @endforeach
-    </div>
+            @foreach($types as $t)
+                <a href="{{ route('elabel.dynamic.items.index', array_merge(request()->except('page'), ['type_id' => $t->id])) }}" 
+                   class="btn btn-sm btn-light border bg-white text-secondary rounded-pill px-3 text-nowrap fw-medium">
+                    <i class="bi {{ $t->icon ?: 'bi-folder' }} me-1"></i> {{ $t->nama }}
+                </a>
+            @endforeach
+        </div>
+    @endif
 
     <!-- Filter & Search Bar -->
     <div class="card border-0 shadow-sm rounded-4 mb-4">
@@ -94,7 +110,7 @@
                 </div>
                 <div class="col-md-2 d-flex gap-2">
                     <button type="submit" class="btn btn-primary w-100 fw-medium">Filter</button>
-                    <a href="{{ route('elabel.dynamic.items.index') }}" class="btn btn-light border bg-white" title="Reset"><i class="bi bi-arrow-clockwise"></i></a>
+                    <a href="{{ route('elabel.dynamic.items.index', !empty($selectedType) ? ['type_id' => $selectedType] : []) }}" class="btn btn-light border bg-white" title="Reset"><i class="bi bi-arrow-clockwise"></i></a>
                 </div>
             </form>
         </div>
@@ -106,7 +122,9 @@
                         <th class="py-3 px-4 text-center" style="width: 50px;">No.</th>
                         <th class="py-3">Nomor Dokumen</th>
                         <th class="py-3">Nama / Uraian Berkas</th>
-                        <th class="py-3">Kategori</th>
+                        @if(empty($selectedType))
+                            <th class="py-3">Kategori</th>
+                        @endif
                         <th class="py-3">OPD Pengolah</th>
                         <th class="py-3 text-center">Box & Lokasi</th>
                         <th class="py-3 text-center">Status</th>
@@ -128,7 +146,7 @@
                                     <div class="text-xs text-muted mt-1">
                                         @php $shownMeta = 0; @endphp
                                         @foreach($item->metadata as $mKey => $mVal)
-                                            @if($mVal && $shownMeta < 2)
+                                            @if($mVal && $shownMeta < 3)
                                                 <span class="badge bg-light text-secondary border me-1 font-monospace">{{ $mKey }}: {{ is_array($mVal) ? json_encode($mVal) : Str::limit($mVal, 20) }}</span>
                                                 @php $shownMeta++; @endphp
                                             @endif
@@ -136,11 +154,13 @@
                                     </div>
                                 @endif
                             </td>
-                            <td>
-                                <span class="badge bg-{{ $item->archiveType->warna_badge ?? 'primary' }}-subtle text-{{ $item->archiveType->warna_badge ?? 'primary' }} border">
-                                    <i class="bi {{ $item->archiveType->icon ?? 'bi-folder' }} me-1"></i> {{ $item->archiveType->nama ?? '-' }}
-                                </span>
-                            </td>
+                            @if(empty($selectedType))
+                                <td>
+                                    <span class="badge bg-{{ $item->archiveType->warna_badge ?? 'primary' }}-subtle text-{{ $item->archiveType->warna_badge ?? 'primary' }} border">
+                                        <i class="bi {{ $item->archiveType->icon ?? 'bi-folder' }} me-1"></i> {{ $item->archiveType->nama ?? '-' }}
+                                    </span>
+                                </td>
+                            @endif
                             <td>
                                 <span class="text-secondary small">{{ $item->opd->nama ?? '-' }}</span>
                             </td>
@@ -194,9 +214,16 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="9" class="text-center py-5 text-secondary">
-                                <i class="bi bi-folder-x fs-1 d-block mb-2"></i>
-                                Belum ada berkas arsip yang sesuai dengan kriteria pencarian.
+                            <td colspan="{{ empty($selectedType) ? 9 : 8 }}" class="text-center py-5 text-secondary">
+                                <i class="bi bi-folder-x fs-1 d-block mb-2 text-muted"></i>
+                                @if($currentType)
+                                    <div class="fw-medium">Belum ada berkas arsip <strong>{{ $currentType->nama }}</strong> yang tersimpan atau sesuai kriteria pencarian.</div>
+                                    <a href="{{ route('elabel.dynamic.items.create', ['type_id' => $currentType->id]) }}" class="btn btn-sm btn-primary rounded-pill mt-3 px-3">
+                                        <i class="bi bi-plus-circle me-1"></i> Input {{ $currentType->kode ?: 'Berkas' }} Baru
+                                    </a>
+                                @else
+                                    <div class="fw-medium">Belum ada berkas arsip yang sesuai dengan kriteria pencarian.</div>
+                                @endif
                             </td>
                         </tr>
                     @endforelse

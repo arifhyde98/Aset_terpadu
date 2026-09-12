@@ -27,18 +27,6 @@
         </div>
     </div>
 
-    @if($errors->any())
-        <div class="alert alert-danger alert-dismissible fade show border-0 shadow-sm rounded-3 mb-4" role="alert">
-            <i class="bi bi-exclamation-triangle-fill me-2"></i> <strong>Periksa kembali inputan Anda:</strong>
-            <ul class="mb-0 mt-2 small">
-                @foreach($errors->all() as $err)
-                    <li>{{ $err }}</li>
-                @endforeach
-            </ul>
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-    @endif
-
     <form action="{{ route('elabel.dynamic.types.store') }}" method="POST" id="typeForm">
         @csrf
 

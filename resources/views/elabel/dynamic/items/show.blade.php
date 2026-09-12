@@ -12,7 +12,7 @@
                 <ol class="breadcrumb mb-1 small">
                     <li class="breadcrumb-item"><a href="{{ route('home') }}" class="text-decoration-none text-secondary">Dashboard</a></li>
                     <li class="breadcrumb-item"><a href="{{ route('elabel.dashboard') }}" class="text-decoration-none text-secondary">eLABEL</a></li>
-                    <li class="breadcrumb-item"><a href="{{ route('elabel.dynamic.items.index') }}" class="text-decoration-none text-secondary">Katalog Arsip</a></li>
+                    <li class="breadcrumb-item"><a href="{{ route('elabel.dynamic.items.index', ['type_id' => $item->archive_type_id]) }}" class="text-decoration-none text-secondary">Katalog {{ $item->archiveType->nama ?? 'Arsip' }}</a></li>
                     <li class="breadcrumb-item active text-navy fw-medium" aria-current="page">{{ $item->nomor_dokumen }}</li>
                 </ol>
             </nav>
@@ -38,18 +38,11 @@
             <a href="{{ route('elabel.dynamic.items.edit', $item->id) }}" class="btn btn-warning text-dark shadow-sm fw-semibold d-flex align-items-center gap-2">
                 <i class="bi bi-pencil-square"></i> Edit
             </a>
-            <a href="{{ route('elabel.dynamic.items.index') }}" class="btn btn-light border shadow-sm fw-medium d-flex align-items-center gap-2">
-                <i class="bi bi-arrow-left"></i> Kembali
+            <a href="{{ route('elabel.dynamic.items.index', ['type_id' => $item->archive_type_id]) }}" class="btn btn-light border shadow-sm fw-medium d-flex align-items-center gap-2">
+                <i class="bi bi-arrow-left"></i> Kembali ke Katalog {{ $item->archiveType->kode ?? '' }}
             </a>
         </div>
     </div>
-
-    @if(session('success'))
-        <div class="alert alert-success alert-dismissible fade show border-0 shadow-sm rounded-3 mb-4" role="alert">
-            <i class="bi bi-check-circle-fill me-2"></i> {{ session('success') }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-    @endif
 
     <div class="row g-4">
         <!-- Kolom Kiri: Metadata & Detail Dokumen -->

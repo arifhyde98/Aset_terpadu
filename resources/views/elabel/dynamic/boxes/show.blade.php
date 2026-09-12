@@ -12,15 +12,19 @@
                 <ol class="breadcrumb mb-1 small">
                     <li class="breadcrumb-item"><a href="{{ route('home') }}" class="text-decoration-none text-secondary">Dashboard</a></li>
                     <li class="breadcrumb-item"><a href="{{ route('elabel.dashboard') }}" class="text-decoration-none text-secondary">eLABEL</a></li>
-                    <li class="breadcrumb-item"><a href="{{ route('elabel.dynamic.boxes.index') }}" class="text-decoration-none text-secondary">Manajemen Box</a></li>
+                    <li class="breadcrumb-item"><a href="{{ route('elabel.dynamic.boxes.index', ['type_id' => $box->archive_type_id]) }}" class="text-decoration-none text-secondary">Box {{ $box->archiveType->nama ?? 'Arsip' }}</a></li>
                     <li class="breadcrumb-item active text-navy fw-medium" aria-current="page">{{ $box->nomor_box }}</li>
                 </ol>
             </nav>
             <h4 class="fw-bold text-navy mb-0 d-flex align-items-center gap-2">
                 <i class="bi bi-box-seam text-warning"></i> Detail Box Fisik: {{ $box->nomor_box }}
+                <span class="badge bg-{{ $box->archiveType->warna_badge ?? 'primary' }}-subtle text-{{ $box->archiveType->warna_badge ?? 'primary' }} border font-monospace fs-6">{{ $box->archiveType->kode ?? '' }}</span>
             </h4>
         </div>
         <div class="action-toolbar d-flex flex-wrap gap-2">
+            <a href="{{ route('elabel.dynamic.boxes.index', ['type_id' => $box->archive_type_id]) }}" class="btn btn-outline-secondary shadow-sm fw-medium d-flex align-items-center gap-2">
+                <i class="bi bi-arrow-left"></i> Kembali ke Box {{ $box->archiveType->kode ?? '' }}
+            </a>
             <a href="{{ route('elabel.dynamic.boxes.label', $box->id) }}" target="_blank" class="btn btn-outline-dark shadow-sm fw-medium d-flex align-items-center gap-2">
                 <i class="bi bi-printer"></i> Cetak Label Stiker
             </a>

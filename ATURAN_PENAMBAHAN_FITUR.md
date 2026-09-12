@@ -150,8 +150,18 @@ Setiap mutasi data penting wajib tercatat di sistem audit log terpadu (`activiti
 - **Integritas Luas Tanah Bersertifikat (SIPAT ↔ eLABEL):**
   - Jika sertifikat tanah telah diterbitkan di eLABEL (`elabel_sertifikat_tanah`), luas tanah pada katalog `aset_tanah` wajib terkunci mengikuti luas sertifikat fisik.
   - Dipantau otomatis oleh `AsetTanahObserver::saving()` dan `ElabelSertifikatObserver::saved()`.
+- **Integritas Kepemilikan OPD Sertifikat Tanah (SIPAT ↔ eLABEL):**
+  - Sertifikat tanah di tabel `elabel_sertifikat_tanah` yang memiliki NIBAR di `aset_tanah` (KIB A) **wajib 100% mengikuti OPD pemilik di Master Aset Tanah** (`aset_tanah.opd_id` & `opd.nama`).
+  - Dijamin dua arah secara otomatis:
+    - `AsetTanahObserver::saved()`: Menyelaraskan `sipat_opd_id` dan teks `dinas` pada `ElabelSertifikat` (via `withoutEvents`) jika NIBAR identik.
+    - `ElabelSertifikatObserver::saving()`: Mengunci dan menyelaraskan `sipat_opd_id` serta `dinas` sertifikat e-Label mengikuti `AsetTanah` jika NIBAR terdaftar di KIB A.
+    - Form edit sertifikat (`resources/views/elabel/sertifikat/edit.blade.php`) wajib mengunci pilihan OPD (`<input type="hidden">` + input text disabled) dengan badge indikator `Mengacu KIB A`.
+  - Dilengkapi audit command:
+    ```bash
+    php artisan sipat:sync-opd-sertifikat {--dry-run}
+    ```
 - **Relasi Kanonikal NIBAR:**
-  - Penautan antara data aset tanah KIB A dengan berkas fisik sertifikat e-Label **hanya boleh** menggunakan kunci kanonikal `nibar = kode_aset`.
+  - Penautan antara data aset tanah KIB A dengan berkas fisik sertifikat e-Label **hanya boleh** menggunakan kunci kanonikal `nibar = kode_aset` (melalui relasi model `ElabelSertifikat::asetTanah()`).
   - 🔴 **DILARANG KERAS** menggunakan pencarian teks kabur (*fuzzy match* `LIKE %nama_aset%` ke nama pemilik) karena berisiko menghubungkan sertifikat ke aset yang salah (*false positive*).
 
 ---

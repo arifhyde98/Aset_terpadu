@@ -12,39 +12,24 @@
                 <ol class="breadcrumb mb-1 small">
                     <li class="breadcrumb-item"><a href="{{ route('home') }}" class="text-decoration-none text-secondary">Dashboard</a></li>
                     <li class="breadcrumb-item"><a href="{{ route('elabel.dashboard') }}" class="text-decoration-none text-secondary">eLABEL</a></li>
-                    <li class="breadcrumb-item"><a href="{{ route('elabel.dynamic.items.index') }}" class="text-decoration-none text-secondary">Katalog Arsip</a></li>
+                    <li class="breadcrumb-item"><a href="{{ route('elabel.dynamic.items.index', ['type_id' => $item->archive_type_id]) }}" class="text-decoration-none text-secondary">Katalog {{ $item->archiveType->nama ?? 'Arsip' }}</a></li>
                     <li class="breadcrumb-item active text-navy fw-medium" aria-current="page">Edit {{ $item->nomor_dokumen }}</li>
                 </ol>
             </nav>
             <h4 class="fw-bold text-navy mb-0 d-flex align-items-center gap-2">
                 <i class="bi bi-pencil-square text-warning"></i> Edit Dokumen: {{ $item->nomor_dokumen }}
+                <span class="badge bg-{{ $item->archiveType->warna_badge ?? 'primary' }}-subtle text-{{ $item->archiveType->warna_badge ?? 'primary' }} border font-monospace fs-6">{{ $item->archiveType->kode ?? '' }}</span>
             </h4>
         </div>
         <div class="action-toolbar d-flex flex-wrap gap-2">
             <a href="{{ route('elabel.dynamic.items.show', $item->id) }}" class="btn btn-outline-secondary shadow-sm fw-medium d-flex align-items-center gap-2">
                 <i class="bi bi-arrow-left"></i> Kembali ke Detail
             </a>
+            <a href="{{ route('elabel.dynamic.items.index', ['type_id' => $item->archive_type_id]) }}" class="btn btn-light border shadow-sm fw-medium d-flex align-items-center gap-2">
+                <i class="bi bi-folder2-open"></i> Katalog {{ $item->archiveType->kode ?? '' }}
+            </a>
         </div>
     </div>
-
-    @if(session('error'))
-        <div class="alert alert-danger alert-dismissible fade show border-0 shadow-sm rounded-3 mb-4" role="alert">
-            <i class="bi bi-exclamation-triangle-fill me-2"></i> {{ session('error') }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-    @endif
-
-    @if($errors->any())
-        <div class="alert alert-danger alert-dismissible fade show border-0 shadow-sm rounded-3 mb-4" role="alert">
-            <i class="bi bi-exclamation-triangle-fill me-2"></i> <strong>Periksa kembali formulir:</strong>
-            <ul class="mb-0 mt-2 small">
-                @foreach($errors->all() as $err)
-                    <li>{{ $err }}</li>
-                @endforeach
-            </ul>
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-    @endif
 
     <form action="{{ route('elabel.dynamic.items.update', $item->id) }}" method="POST" enctype="multipart/form-data">
         @csrf

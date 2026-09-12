@@ -223,6 +223,16 @@
                     display: none;
                 }
 
+                &.sidebar-menu-divider {
+                    margin: 0.4rem 0.5rem 0.3rem 1.8rem;
+                    border-top: 1px dashed rgba(255, 255, 255, 0.15);
+                    height: 0;
+
+                    &::before, &::after {
+                        display: none !important;
+                    }
+                }
+
                 a {
                     display: flex;
                     align-items: center;
@@ -261,6 +271,13 @@
                         overflow: hidden;
                         text-overflow: ellipsis;
                         transition: transform 0.2s ease, color 0.2s ease;
+
+                        &.badge {
+                            overflow: visible;
+                            flex-shrink: 0;
+                            margin-left: auto;
+                            transition: none;
+                        }
                     }
 
                     &:hover {

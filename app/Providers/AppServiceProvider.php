@@ -37,5 +37,17 @@ class AppServiceProvider extends ServiceProvider
 
         // eLABEL Observers (Sinkronisasi Luas Tanah Bersertifikat)
         \App\Models\Elabel\ElabelSertifikat::observe(\App\Observers\ElabelSertifikatObserver::class);
+
+        // eLABEL Dynamic Archive Observer (Sidebar Cache Invalidation)
+        \App\Models\Elabel\Dynamic\ArchiveType::observe(\App\Observers\ArchiveTypeObserver::class);
+
+        // View Composer for Sidebar & Mobile Nav (Universal Dynamic Archive Types)
+        \Illuminate\Support\Facades\View::composer(
+            ['layouts.partials.sidebar', 'layouts.partials.bottom-nav'],
+            function ($view) {
+                $types = app(\App\Services\Elabel\DynamicArchiveService::class)->getActiveTypesForSidebar(auth()->user());
+                $view->with('sidebarDynamicArchiveTypes', $types);
+            }
+        );
     }
 }

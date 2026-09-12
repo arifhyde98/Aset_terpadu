@@ -95,6 +95,9 @@ Dokumen ini merupakan ringkasan eksekutif dan arsitektur tingkat tinggi (*High-L
      - Seluruh controller menggunakan interface `HasMiddleware` dengan deklarasi `new Middleware('auth')` dan `new Middleware('role:superadmin,admin')`.
      - Mendukung integrasi Single Sign-On (SSO) Pemerintah Kabupaten Donggala via `App\Http\Middleware\SsoAuthenticate` (alias `sso`).
      - Superadmin dan Admin memegang otoritas penuh mutasi kritis; pengguna ber-role OPD berstatus *read-only* pada master data dan target penetapan.
+  7. **Bidirectional Cross-Module Integrity (SIPAT ↔ eLABEL):**
+     - Sinkronisasi dua arah otomatis antara data aset tanah KIB A (`AsetTanah`) dan sertifikat fisik e-Label (`ElabelSertifikat`) untuk luas fisik tanah serta instansi kepemilikan OPD via `AsetTanahObserver` dan `ElabelSertifikatObserver`.
+     - Didukung utilitas terminal: `php artisan sipat:sync-luas-sertifikat` dan `php artisan sipat:sync-opd-sertifikat {--dry-run}`.
 
 ---
 
@@ -161,7 +164,7 @@ Aset_terpadu/
   - `proses_aset` mencatat histori langkah pensertifikatan BPN yang menunjuk ke `aset_tanah`.
   - `surat_skpt` mencatat berkas Surat Keterangan Pendaftaran Tanah yang terhubung ke `aset_tanah` serta pejabat pengesah (camat, kepala desa, dan pemohon).
 - **Pengarsipan Berkas Fisik (eLABEL):**
-  - `elabel_bpkb` dan `elabel_sertifikat_tanah` menunjuk ke box arsip fisiknya (`elabel_boxes` / `elabel_sertifikat_boxes`) dan terhubung ke `opd` (`sipat_opd_id`) untuk kepemilikan dokumen.
+  - `elabel_bpkb` dan `elabel_sertifikat_tanah` menunjuk ke box arsip fisiknya (`elabel_boxes` / `elabel_sertifikat_boxes`) dan terhubung ke `opd` (`sipat_opd_id`) untuk kepemilikan dokumen. Khusus `elabel_sertifikat_tanah`, model `ElabelSertifikat` memiliki relasi kanonikal `asetTanah()` (`nibar = kode_aset`) dengan sinkronisasi luas tanah dan kepemilikan OPD dua arah otomatis.
   - `elabel_bpkb_deletes` mencatat histori berkas BPKB keluar (*soft deleted*).
   - `elabel_loans` mengelola peminjaman/request scan berkas fisik oleh OPD dengan persetujuan admin.
 - **Universal Dynamic Archive Engine (e-Arsip Dinamis):**
@@ -244,10 +247,10 @@ Seluruh fitur berikut telah selesai diimplementasikan (**DONE**) dan beroperasi 
 | **Katalog & Box BPKB** | `DONE` | Penyimpanan fisik berkas BPKB ke dalam box arsip, integrasi nopol kendaraan, penggabungan (*merge*) box, dan pencetakan stiker label barcode box. |
 | **Katalog BPKB Keluar (*Soft Deleted*)** | `DONE` | Modul pencatatan arsip BPKB yang keluar/diserahkan dengan bukti tanda terima, ekspor data, dan fitur pemulihan (*restore*) kembali ke katalog aktif (`/elabel/bpkb-deleted`). |
 | **Smart BPKB PDF Extractor & OCR** | `DONE` | Pemindaian otomatis dokumen PDF BPKB pada server/PC lokal dengan pencocokan nopol 100% presisi, proteksi berkas ganda, pratinjau PDF tab baru, dan verifikasi dry-run. |
-| **Sertifikat Tanah Fisik & Box** | `DONE` | Penyimpanan fisik sertifikat tanah, sinkronisasi otomatis luas tanah dua arah dengan modul SIPAT, operasi split/merge box, dan impor Excel. |
+| **Sertifikat Tanah Fisik & Box** | `DONE` | Penyimpanan fisik sertifikat tanah, sinkronisasi otomatis luas tanah dan kepemilikan instansi OPD dua arah dengan modul SIPAT, operasi split/merge box, impor Excel, penguncian OPD form edit sesuai KIB A, serta audit command `sipat:sync-opd-sertifikat`. |
 | **Surat Penyerahan Dokumen & Box** | `DONE` | Administrasi berita acara penyerahan fisik berkas aset dan penataan box arsip terkait (`/elabel/surat-penyerahan`). |
 | **Alur Peminjaman (Scan Request)** | `DONE` | Pengajuan peminjaman fisik atau request scan dokumen BPKB/Sertifikat oleh operator OPD dengan alur persetujuan admin BPKAD. |
-| **Universal Dynamic Archive Engine** | `DONE` | Mesin e-Arsip dinamis multi-kategori dengan form builder kustom berbasis skema JSON, manajemen box universal barcode (`BOX-{KODE}-{NUM}`), viewer scan PDF, multi-lampiran, dan layanan peminjaman berkas dinamis. |
+| **Universal Dynamic Archive Engine** | `DONE` | Mesin e-Arsip dinamis multi-kategori dengan form builder kustom berbasis skema JSON, manajemen box universal barcode (`BOX-{KODE}-{NUM}`), viewer scan PDF, multi-lampiran, layanan peminjaman berkas, serta integrasi menu otomatis sidebar & mobile nav dengan caching terversi tanpa beban database. |
 
 ### 8.4 Portal Terpadu, Asisten AI & Fitur Lintas Modul
 | Fitur | Status | Deskripsi & Implementasi |

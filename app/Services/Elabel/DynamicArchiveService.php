@@ -7,8 +7,11 @@ use App\Models\Elabel\Dynamic\ArchiveBox;
 use App\Models\Elabel\Dynamic\ArchiveItem;
 use App\Models\Elabel\Dynamic\ArchiveType;
 use App\Models\Elabel\ElabelActivityLog;
+use App\Models\User;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 
@@ -215,5 +218,42 @@ class DynamicArchiveService
             'user_agent'     => request()->userAgent(),
             'created_at'     => now(),
         ]);
+    }
+
+    /**
+     * Ambil jenis arsip dinamis yang aktif untuk navigasi sidebar (dengan cache terversi & fallback aman)
+     */
+    public function getActiveTypesForSidebar(?User $user = null): Collection
+    {
+        try {
+            $version = Cache::get('sidebar_dynamic_archive_version', 1);
+            $cacheKey = "sidebar_dynamic_archive_types_{$version}";
+
+            return Cache::remember($cacheKey, 3600, function () {
+                return ArchiveType::active()
+                    ->orderBy('nama', 'asc')
+                    ->get(['id', 'kode', 'nama', 'icon', 'warna_badge', 'is_active']);
+            });
+        } catch (\Throwable $e) {
+            return ArchiveType::active()
+                ->orderBy('nama', 'asc')
+                ->get(['id', 'kode', 'nama', 'icon', 'warna_badge', 'is_active']);
+        }
+    }
+
+    /**
+     * Invalidate cache sidebar arsip dinamis secara instan dan aman
+     */
+    public function invalidateSidebarCache(): void
+    {
+        try {
+            if (Cache::has('sidebar_dynamic_archive_version')) {
+                Cache::increment('sidebar_dynamic_archive_version');
+            } else {
+                Cache::forever('sidebar_dynamic_archive_version', 2);
+            }
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('Gagal memperbarui cache sidebar: ' . $e->getMessage());
+        }
     }
 }
