@@ -1,153 +1,299 @@
-# PROJECT MASTER DOCUMENTATION: SIPAT TERPADU (E-RANDIS, SIPAT, & eLABEL)
+# 📘 PROJECT MASTER DOCUMENTATION: SIPAT TERPADU
+### (E-RANDIS, SIPAT, & eLABEL)
 
-Dokumen ini adalah ringkasan master proyek untuk platform **SIPAT Terpadu**. Untuk rincian implementasi kode, skema database lengkap, dan daftar komponen UI, WAJIB merujuk ke file AI_HANDOVER.md.
+Dokumen ini merupakan ringkasan eksekutif dan arsitektur tingkat tinggi (*High-Level Architecture Master*) untuk platform **SIPAT Terpadu**. 
+
+> **🔗 REFERENSI TEKNIS UTAMA:**
+> - Untuk rincian baris kode, detail controller/service, skema database lengkap per kolom, dan aturan teknis mendalam: **WAJIB merujuk ke [`AI_HANDOVER.md`](file:///home/arifhyde98/Projek/Aset_terpadu/AI_HANDOVER.md)** (*Single Source of Truth*).
+> - Untuk alur dan protokol penambahan fitur baru: **WAJIB membaca [`ATURAN_PENAMBAHAN_FITUR.md`](file:///home/arifhyde98/Projek/Aset_terpadu/ATURAN_PENAMBAHAN_FITUR.md)**.
+
+---
+
+## 📑 Daftar Isi
+1. [Project Overview](#1-project-overview)
+2. [Tech Stack](#2-tech-stack)
+3. [System Architecture & Core Patterns](#3-system-architecture--core-patterns)
+4. [Folder Structure](#4-folder-structure)
+5. [Database Architecture & Relations](#5-database-architecture--relations)
+6. [Coding Conventions & Standards](#6-coding-conventions--standards)
+7. [Frontend Rules & Design System](#7-frontend-rules--design-system)
+8. [Existing Features & Implementation Status](#8-existing-features--implementation-status)
+9. [Deployment & Operations](#9-deployment--operations)
 
 ---
 
 ## 1. Project Overview
-- **Nama Project**: SIPAT Terpadu (Sistem Informasi Pertanahan Aset Tanah, Kendaraan Dinas, dan Labelisasi Dokumen).
-- **Tujuan**: Mengintegrasikan pengelolaan aset tanah (SIPAT), kendaraan dinas (E-RANDIS), serta sistem labelisasi/pengarsipan fisik dokumen aset (eLABEL) dalam satu platform terpadu, real-time, dan akuntabel di lingkungan Pemerintah Provinsi/Daerah.
-- **Modul Utama**:
-  1. **E-RANDIS (Modul Kendaraan Dinas)**: Pendataan, pelacakan kondisi fisik, riwayat penggunaan, audit log, serta import/export data kendaraan dinas lintas OPD.
-  2. **SIPAT (Modul Aset Tanah & Pertanahan)**: Pengelolaan sertifikasi aset tanah, pencatatan progres pensertifikatan, pengelolaan berkas legalitas seperti SKPT (Surat Keterangan Pendaftaran Tanah) dan Surat Pernyataan Batas, visualisasi peta sebaran aset tanah, serta rekapitulasi data pertanahan.
-  3. **eLABEL (Modul Labelisasi & Pengarsipan)**: Digitalisasi dan pengarsipan fisik dokumen berharga (BPKB Kendaraan, Sertifikat Tanah, dan Surat Penyerahan) ke dalam box arsip khusus. Dilengkapi fitur cetak label barcode box, pemisahan/penggabungan isi box, dan alur permohonan peminjaman/scan dokumen (Scan Request) dengan persetujuan admin.
-- **User Target**: 
-  - Superadmin (Developer/Root/Administrator Global)
-  - Admin BMD (Pengelola Aset BPKAD Global)
-  - Admin OPD / Instansi (Pengelola Aset tingkat Dinas/OPD)
-- **Status Project**: Production-Ready (Fase Optimasi & Integrasi Terpadu).
+
+- **Nama Project:** SIPAT Terpadu (Sistem Informasi Pertanahan Aset Tanah, Kendaraan Dinas, dan Labelisasi Dokumen).
+- **Tujuan Utama:** Mengintegrasikan pengelolaan aset tanah (SIPAT), kendaraan dinas (E-RANDIS), serta sistem labelisasi dan pengarsipan fisik dokumen berharga (eLABEL) dalam satu platform terpadu, *real-time*, akuntabel, dan aman di lingkungan Pemerintah Daerah (Pemerintah Kabupaten Donggala).
+- **Modul Utama:**
+  1. **E-RANDIS (Modul Kendaraan Dinas):** Pendataan fisik, riwayat penggunaan/pemegang, pelacakan kondisi, audit trail mutasi, rekonsiliasi berkas BPKB, serta impor/ekspor data kendaraan dinas lintas OPD.
+  2. **SIPAT (Modul Aset Tanah & Pertanahan):** Pengelolaan legalitas sertifikasi aset tanah KIB A, pencatatan histori progres pensertifikatan BPN, penerbitan dokumen resmi SKPT (Surat Keterangan Pendaftaran Tanah), audit rekonsiliasi sertifikat e-Label, peta GIS sebaran spasial, serta pusat pelaporan resmi 11/12 kolom.
+  3. **eLABEL (Modul Labelisasi & Universal Dynamic Archive Engine):** Digitalisasi dan pengarsipan fisik dokumen berharga (BPKB Kendaraan, Sertifikat Tanah, dan Surat Penyerahan) ke dalam box arsip khusus. Dilengkapi cetak barcode label, manajemen BPKB keluar (*soft deleted & restore*), split/merge box, scan request/peminjaman dokumen, OCR/PDF Smart Extractor BPKB, serta mesin arsip dinamis multi-kategori berbasis form builder kustom JSON.
+- **User Target & Tingkatan Akses:**
+  - `Superadmin`: Developer / Administrator Root Global (akses seluruh sistem, sinkronisasi staging DB, dan konfigurasi master).
+  - `Admin`: Pengelola Aset BPKAD / Administrator BMD Daerah (verifikasi target, kontrol data lintas instansi, dan ekspor laporan resmi).
+  - `OPD`: Operator Pengelola Aset tingkat unit kerja instansi/dinas (terisolasi hanya pada aset milik instansinya sendiri).
+- **Status Project:** Production-Ready (Fase Pemeliharaan, Optimasi Performa, & Integrasi Terpadu).
 
 ---
 
 ## 2. Tech Stack
-- **Framework Core**: Laravel 12
-- **PHP Version**: 8.2+
-- **Database**: MySQL / MariaDB (Teroptimasi indeks B-Tree)
-- **Asset Bundler**: Vite
-- **UI Framework**: Bootstrap 5 (Customized via SCSS modular)
-- **Package Penting**: 
-  - `Maatwebsite/Excel` (Laravel Excel untuk Import/Export data massal)
-  - `mPDF` (Render PDF formal server-side untuk dokumen resmi seperti SKPT dan laporan)
-  - `Leaflet.js` & `turf.min.js` / `shp.js` (Rendering peta GIS interaktif, GeoJSON, dan Shapefile spasial)
-  - `SweetAlert2` (Notifikasi interaktif dan konfirmasi CRUD)
-  - `Bootstrap Icons` (Ikonografi antarmuka)
-- **Deployment Target**: Server lokal / VPS Linux (Nginx + PHP-FPM 8.2+ & MySQL/MariaDB).
+
+- **Framework Core:** Laravel 12
+- **PHP Version:** PHP 8.2+
+- **Database Engine:** MySQL / MariaDB (Teroptimasi indeks B-Tree) & PostgreSQL / Supabase Compatible
+  - Seluruh migrasi Laravel Blueprint bersifat idempoten (`Schema::hasTable(...)`).
+  - *Aturan Baku:* Dilarang keras mengeksekusi `migrate:fresh` atau `migrate:reset` pada environment aktif.
+- **Asset Bundler:** Vite
+- **UI Framework:** Bootstrap 5 (Disesuaikan secara terpusat via SCSS modular)
+- **Library & Package Esensial:**
+  - `Maatwebsite/Excel` (Laravel Excel): Pengolahan impor dan ekspor data massal (.xlsx, .csv).
+  - `mPDF`: Render dokumen PDF formal server-side (Laporan KIB A, Laporan Kendaraan, Surat SKPT, dan Laporan Target Sertifikat).
+  - `Leaflet.js`, `turf.min.js`, & `shp.js`: Rendering peta spasial interaktif GIS, batas poligon GeoJSON, dan Shapefile (.shp/.dbf).
+  - `SweetAlert2`: Sistem peringatan interaktif, modal diff, dan konfirmasi aksi CRUD tunggal.
+  - `Bootstrap Icons`: Ikonografi antarmuka terpadu (NPM/Vite lokal).
+  - `@fontsource/plus-jakarta-sans`: Tipografi utama modern.
+- **Artificial Intelligence Engine:**
+  - **Google Gemini Cloud AI (`GeminiAiService`):** Menggunakan API model stabil Google Gemini (seperti `gemini-1.5-flash`) via `GEMINI_API_KEY` untuk asisten cerdas konsultasi BMD, tanya-jawab aset, dan pembuatan ringkasan otomatis pada floating widget interaktif.
+  - **Ollama Engine (`OllamaService`):** Fallback LLM lokal (seperti model `qwen2.5:7b`) untuk lingkungan tanpa koneksi internet langsung.
+- **Deployment Target:** Server Lokal / VPS Linux (Nginx + PHP-FPM 8.2+ & MySQL/MariaDB).
+- **CI/CD Pipeline:** GitHub Actions (`.github/workflows/deploy.yml`) memicu script `deploy.sh` via remote SSH Key pada branch `main`.
 
 ---
 
-## 3. System Architecture
-- **Arsitektur Umum**: Monolith (MVC Laravel) terintegrasi dengan pemisahan rute per modul di folder `routes/` (`erandis.php`, `sipat.php`, `elabel.php`).
-- **Pola Desain & Integrasi Utama**:
-  - **Service Layer**: Logika bisnis kompleks diletakkan di Service (contoh: `VehicleService`, `AsetTanahService`) untuk memisahkan database queries dari Controller.
-  - **OPD Mapping (Inter-Module Bridge)**: Menjembatani perbedaan data instansi antara Modul Pertanahan (`opd` / `OpdSipat`) dan Modul Kendaraan Dinas (`opds` / `Opd`) melalui tabel perantara `opd_mappings` sehingga data aset tetap konsisten dan terisolasi dengan benar.
-  - **Data Isolation (Tenant Isolation)**: Penerapan `TenantScope` (Global Scope) pada modul E-RANDIS dan pembatasan akses data berdasarkan unit kerja OPD pada SIPAT dan eLABEL guna mencegah kebocoran data antar-OPD.
-  - **Observer Pattern & Audit Trail Terpadu**: Automasi sistem pencatatan riwayat (Audit Log) dikendalikan oleh *Eloquent Observers* (`VehicleObserver`, `UserObserver`, `OpdObserver`, dll) yang merekam aktivitas lengkap beserta payload perbandingan data sebelum (`old_data`) dan sesudah (`new_data`) ke tabel `activities`. Modul SIPAT (`AsetTanahService`) dan eLABEL (`ElabelActivityLog`) juga telah distandarisasi untuk merekam data perubahan yang dapat diinspeksi melalui antarmuka Log Aktivitas Terpadu.
-- **Auth & Security Flow**:
-  - Seluruh rute internal dilindungi otorisasi berbasis tipe *Enum* `UserRole`.
-  - Keamanan akses controller pada seluruh modul diperkuat menggunakan interface `HasMiddleware` Laravel 12 dengan sintaks deklarasi eksplisit `new Middleware('auth')` untuk mencegah celah bypass otorisasi.
+## 3. System Architecture & Core Patterns
+
+- **Arsitektur Dasar:** Monolith (MVC Laravel) terintegrasi dengan pemisahan rute per modul di direktori `routes/`:
+  - `routes/web.php` (Landing Page, Portal Publik Terpadu, Auth, User, AI Assistant, Health Check, & System Settings)
+  - `routes/erandis.php` (Kendaraan Dinas, Rekon BPKB, & Laporan E-RANDIS)
+  - `routes/sipat.php` (Aset Tanah, Target Pensertifikatan, Rekonsiliasi, SKPT, Master Wilayah, & Peta GIS)
+  - `routes/elabel.php` (Katalog BPKB, BPKB Keluar, Sertifikat, Box Arsip, Smart Extractor, & Dynamic Archive)
+
+- **Pola Desain & Integrasi Utama:**
+  1. **Service Layer Pattern:** Memisahkan kalkulasi bisnis rumit dan query dari Controller ke kelas Service khusus:
+     - `UnifiedAssetSearchService`: Layanan pencarian portal publik terpadu 3 modul dengan perlindungan privasi data.
+     - `VehicleService`: Bisnis dan cache kendaraan dinas.
+     - `AsetTanahService` (`App\Services\Sipat\`): Query katalog pertanahan (SQL Case NIBAR, query scopes, dan relasi kanonikal e-Label).
+     - `ReportService`: Orkestrasi laporan modular E-RANDIS.
+     - `LaporanService`: Mesin pengolah laporan KIB A resmi, resolusi judul 3 baris dinamis, dan penataan lembar pengesahan tanda tangan ganda.
+     - `DynamicArchiveService` (`App\Services\Elabel\`): Engine formulir dan penyimpanan berkas arsip dinamis multi-lampiran.
+     - `GeminiAiService`: Integrasi Google Gemini Cloud AI untuk floating widget asisten cerdas BMD.
+  2. **Strategy & Registry Pattern (Modul Laporan E-RANDIS):**
+     - Memetakan jenis laporan ke kelas strategi mandiri (`VehicleStatusReport`, `OpdAssetReport`, `DocumentValidityReport`, `DuplicateVehicleReport`) via `ReportRegistry`.
+     - Mendukung pemisahan sumber data riil (`vehicles`) vs data e-BMD (`ebmd_vehicles`).
+  3. **OPD Mapping Hub (Inter-Module Bridge):**
+     - Menjembatani heterogenitas ID instansi antara Modul Pertanahan (`opd` / `OpdSipat`) dan Modul Kendaraan Dinas (`opds` / `Opd`) via tabel jembatan `opd_mappings`.
+  4. **Data Isolation (Tenant Isolation):**
+     - E-RANDIS: Implementasi `TenantScope` (Global Scope) pada model `Vehicle`. Jika `opd_id` bernilai null, sistem mengunci akses (*fail-safe*).
+     - SIPAT & eLABEL: Isolasi data berdasarkan `opd_id` pada `AsetTanah` dan `sipat_opd_id` pada seluruh berkas arsip.
+  5. **Observer Pattern & Audit Trail Terpadu:**
+     - `VehicleObserver`, `UserObserver`, dan `OpdObserver` menangani perekaman snapshot data sebelum (`old_data`) dan sesudah (`new_data`) ke tabel `activities`.
+     - Sanitasi otomatis membersihkan data kredensial (`password`, `plain_password`, `remember_token`).
+     - Modul SIPAT menggunakan helper `Activity::logSipat()`, dan modul eLABEL mencatat ke `elabel_activity_logs`.
+  6. **Auth & Security Flow (Laravel 12 Standard & SSO):**
+     - Seluruh controller menggunakan interface `HasMiddleware` dengan deklarasi `new Middleware('auth')` dan `new Middleware('role:superadmin,admin')`.
+     - Mendukung integrasi Single Sign-On (SSO) Pemerintah Kabupaten Donggala via `App\Http\Middleware\SsoAuthenticate` (alias `sso`).
+     - Superadmin dan Admin memegang otoritas penuh mutasi kritis; pengguna ber-role OPD berstatus *read-only* pada master data dan target penetapan.
 
 ---
 
 ## 4. Folder Structure
-Struktur direktori disesuaikan untuk menampung tiga modul yang saling terintegrasi:
+
+Struktur direktori proyek mengadopsi arsitektur modular yang rapi:
 
 ```text
-app/
- ├── Enums/        # Nilai statis sistem (UserRole, VehicleStatus, VehicleCondition).
- ├── Http/
- │    ├── Controllers/
- │    │    ├── Elabel/ # Controller khusus modul pengarsipan eLABEL.
- │    │    ├── Sipat/  # Controller khusus modul pertanahan SIPAT.
- │    │    └── ...     # Controller E-RANDIS & Administrasi Umum.
- │    └── Requests/    # FormRequests sentralisasi logika validasi input (StoreSuratSkptRequest, dll).
- ├── Models/       # Model Eloquent (AsetTanah, OpdSipat, OpdMapping, dsb).
- │    └── Elabel/  # Model khusus modul eLABEL (ElabelBpkb, ElabelBox, ElabelLoan, dll).
- ├── Observers/    # Trigger otomatis database untuk audit log & sinkronisasi data.
- └── Services/     # Logika bisnis inti dan Helper Cache.
-
-resources/
- ├── css/          # Arsitektur Modular SCSS (7-1 Pattern):
- │    ├── components/# Tombol, Kartu, Tabel, Modal Bouncy, dll.
- │    ├── abstracts/ # Variabel & Mixins SCSS.
- │    └── app.scss   # Titik masuk utama kompilasi CSS.
- ├── js/           # app.js (Inisialisasi Vite & library frontend).
- └── views/
-      ├── elabel/     # Template Blade Modul eLABEL.
-      ├── sipat/      # Template Blade Modul SIPAT.
-      └── ...
+Aset_terpadu/
+├── app/
+│   ├── Enums/            # Nilai enum statis (UserRole, VehicleStatus, VehicleCondition).
+│   ├── Http/
+│   │   ├── Controllers/
+│   │   │   ├── Elabel/   # Controller pengarsipan & Dynamic Archive (Bpkb, Sertifikat, Box, Smart Extractor).
+│   │   │   ├── Sipat/    # Controller pertanahan (AsetTanah, TargetSertifikat, Surat, Laporan, Peta, Rekonsiliasi).
+│   │   │   └── ...       # Controller E-RANDIS, Auth, LandingPage, User, AiAssistant, HealthCheck, dan Backup/Sync.
+│   │   ├── Middleware/   # Middleware aplikasi, CheckRole, dan SsoAuthenticate.
+│   │   └── Requests/     # FormRequest validasi terpusat (StoreVehicleRequest, StoreSuratSkptRequest, dll).
+│   ├── Models/           # Model Eloquent (Vehicle, AsetTanah, Opd, OpdSipat, OpdMapping, SuratSkpt, dsb).
+│   │   ├── Elabel/       # Model khusus eLABEL (ElabelBpkb, ElabelBox, ElabelLoan, dll).
+│   │   └── Dynamic/      # Model Universal Dynamic Archive (ArchiveType, ArchiveBox, ArchiveItem, dll).
+│   ├── Observers/        # Observer database (VehicleObserver, UserObserver, OpdObserver, AsetTanahObserver, dll).
+│   ├── Reports/          # Kelas Strategy, Registry, dan Export Excel laporan E-RANDIS.
+│   └── Services/         # Lapisan logika bisnis inti (VehicleService, SipatService, LaporanService, GeminiAiService, dll).
+│       ├── Elabel/       # Service khusus eLABEL (DynamicArchiveService, ElabelDuplicateService).
+│       └── Sipat/        # Service khusus SIPAT (AsetTanahService).
+│
+├── database/
+│   ├── migrations/       # Skema migrasi idempoten (Schema::hasTable).
+│   └── seeders/          # Database seeders (ReportSettingSeeder, DynamicArchiveSeeder, dll).
+│
+├── resources/
+│   ├── sass/             # SCSS Modular (7-1 Pattern):
+│   │   ├── components/   # Tombol, Kartu, Tabel, Modal Bouncy, & _vanilla-touches.scss.
+│   │   ├── abstracts/    # Variabel warna & mixins.
+│   │   └── app.scss      # Titik masuk utama kompilasi SCSS.
+│   ├── js/               # Inisialisasi Vite, Leaflet, SweetAlert2, dan script interaktif.
+│   └── views/
+│       ├── elabel/       # Template Blade modul pengarsipan dokumen fisik & dinamis.
+│       ├── sipat/        # Template Blade modul pertanahan KIB A, peta, & laporan resmi.
+│       ├── reports/      # Template Blade pratinjau & PDF laporan kendaraan dinas.
+│       ├── layouts/      # Layout bersama & partials (ai-floating-widget, sidebar, footer).
+│       └── ...           # Landing page, dashboard, dan halaman autentikasi.
+│
+├── routes/
+│   ├── web.php           # Portal publik, autentikasi, AI assistant, health-check, dan pengaturan sistem.
+│   ├── erandis.php       # Rute manajemen kendaraan dinas & rekon BPKB.
+│   ├── sipat.php         # Rute manajemen pertanahan SIPAT, rekap OPD, & target sertifikat.
+│   └── elabel.php        # Rute pengarsipan eLABEL & e-Arsip dinamis.
+│
+└── storage/
+    └── app/public/       # Berkas upload fisik (avatar, scan PDF, KOP surat, dan lampiran arsip).
 ```
 
 ---
 
-## 5. Database Architecture
-- **Skema Relasional Modul Terpadu**:
-  - `opd_mappings` menghubungkan tabel `opd` (modul SIPAT) dengan `opds` (modul E-RANDIS).
-  - `aset_tanah` terhubung ke `opd` (SIPAT) via `opd_id` (foreign key) untuk isolasi data instansi pertanahan, serta dilengkapi kolom `geojson` untuk batas poligon peta GIS.
-  - `sipat_target_sertifikat` mencatat penetapan kuota/target pensertifikatan tanah tahunan KIB A terelasi dengan `aset_tanah`.
-  - `proses_aset` mencatat riwayat langkah pensertifikatan yang menunjuk ke `aset_tanah`.
-  - `surat_skpt` mencatat surat keterangan pendaftaran tanah yang terelasi dengan data `aset_tanah`.
-  - `elabel_bpkb` dan `elabel_sertifikat_tanah` menunjuk ke box arsipnya masing-masing (`elabel_boxes` / `elabel_sertifikat_boxes`) dan terelasi ke `opd` (`sipat_opd_id`) untuk isolasi kepemilikan dokumen.
-  - `elabel_loans` mengelola peminjaman/request scan BPKB/Sertifikat oleh user dengan persetujuan admin.
-  - `archive_types`, `archive_boxes`, `archive_items`, `archive_attachments`, `archive_loans` mengelola mesin arsip dinamis (*Universal Dynamic Archive Engine*) dengan form builder kustom JSON.
-  - `users` menyimpan kredensial pengguna, dilengkapi kolom `plain_password` terenkripsi dua arah (AES-256 via cast `encrypted`) untuk pemulihan dan distribusi akun OPD oleh Superadmin.
-- **Indexing Strategy**: B-Tree Index diterapkan pada kolom relasi penting seperti `opd_id`, `sipat_opd_id`, `box_id`, `archive_type_id`, serta kolom status operasional untuk menjamin kecepatan kueri jutaan baris data.
+## 5. Database Architecture & Relations
+
+### 5.1 Skema Relasional Modul Terpadu
+- **Jembatan OPD:** `opd_mappings` menghubungkan `opd` (modul SIPAT/eLABEL) dengan `opds` (modul E-RANDIS) via `sipat_opd_id` dan `erandis_opd_id`.
+- **Pertanahan (SIPAT):**
+  - `aset_tanah` terhubung ke `opd` (SIPAT) via `opd_id`, dilengkapi kolom koordinat GPS (`lat`, `lng`), `geojson` batas poligon, dan relasi wilayah `kecamatan_id` & `desa_id`.
+  - `sipat_target_sertifikat` mencatat target pensertifikatan tahunan yang berelasi dengan `aset_tanah`.
+  - `proses_aset` mencatat histori langkah pensertifikatan BPN yang menunjuk ke `aset_tanah`.
+  - `surat_skpt` mencatat berkas Surat Keterangan Pendaftaran Tanah yang terhubung ke `aset_tanah` serta pejabat pengesah (camat, kepala desa, dan pemohon).
+- **Pengarsipan Berkas Fisik (eLABEL):**
+  - `elabel_bpkb` dan `elabel_sertifikat_tanah` menunjuk ke box arsip fisiknya (`elabel_boxes` / `elabel_sertifikat_boxes`) dan terhubung ke `opd` (`sipat_opd_id`) untuk kepemilikan dokumen.
+  - `elabel_bpkb_deletes` mencatat histori berkas BPKB keluar (*soft deleted*).
+  - `elabel_loans` mengelola peminjaman/request scan berkas fisik oleh OPD dengan persetujuan admin.
+- **Universal Dynamic Archive Engine (e-Arsip Dinamis):**
+  - `archive_types`: Master tipe arsip dengan form builder kustom berbasis skema JSON (`schema_fields`).
+  - `archive_boxes`: Box penyimpanan fisik dinamis universal dengan kode barcode otomatis (`BOX-{KODE}-{NUM}`).
+  - `archive_items`: Data berkas arsip dengan metadata fleksibel (`metadata` JSON) dan berkas scan PDF utama.
+  - `archive_attachments`: Multi-lampiran dokumen pendukung.
+  - `archive_loans`: Alur permohonan pinjam berkas fisik dan scan berkas dinamis.
+- **Akun & Kredensial:**
+  - `users` menyimpan akun pengguna, dilengkapi kolom `plain_password` terenkripsi dua arah (AES-256 via cast `encrypted`) untuk kebutuhan distribusi akun ke OPD oleh Superadmin.
+
+### 5.2 Strategi Pengindeksan (*Indexing Strategy*)
+Indeks B-Tree diterapkan secara presisi pada kolom kunci asing dan filter pencarian: `opd_id`, `sipat_opd_id`, `box_id`, `archive_type_id`, `kecamatan_id`, `kode_aset`, nomor plat polisi, serta kolom status operasional guna menjaga latensi kueri tetap di bawah 100ms pada dataset besar.
 
 ---
 
-## 6. Coding Convention
-- **Implicit Route Model Binding**: Seluruh controller di modul SIPAT (`AsetTanahController`, dsb) dan eLABEL menggunakan Route Model Binding (misal: `AsetTanah $aset`, `SuratSkpt $skpt`) agar kode controller lebih bersih.
-- **Validasi Terpusat**: Seluruh form input wajib divalidasi melalui `FormRequest` khusus (seperti `StoreSuratSkptRequest`). Dilarang menggunakan validasi inline `$request->validate()`.
-- **Return Type Hints**: Semua metode controller dan service wajib mendeklarasikan tipe data parameter dan nilai kembalian secara ketat.
-- **Dokumentasi (PHPDoc)**: Seluruh blok PHPDoc ditulis menggunakan **Bahasa Indonesia** baku untuk menjaga keseragaman tim.
+## 6. Coding Conventions & Standards
+
+1. **Implicit Route Model Binding:** Seluruh controller di modul SIPAT (`AsetTanahController`, dll) dan eLABEL wajib menggunakan Route Model Binding (contoh: `AsetTanah $aset`, `SuratSkpt $skpt`) agar kode controller ringkas dan deklaratif.
+2. **Validasi Terpusat (Form Request):** Seluruh input formulir wajib divalidasi melalui kelas `FormRequest` terpisah (seperti `StoreVehicleRequest`, `StoreSuratSkptRequest`). Dilarang menggunakan validasi *inline* mentah `$request->all()`.
+3. **Strict Type Declarations:** Semua method controller, service, dan repository wajib mendeklarasikan tipe parameter dan *return type* secara eksplisit.
+4. **Bahasa Indonesia Baku (Dokumentasi & UI):** Seluruh blok PHPDoc, label antarmuka, notifikasi SweetAlert2, dan judul tabel ditulis dalam Bahasa Indonesia baku yang profesional.
+5. **Idempoten & Non-Destructive Migrations:** Modifikasi skema tabel selalu menggunakan pengecekan keberadaan tabel/kolom (`Schema::hasTable`, `Schema::hasColumn`).
 
 ---
 
-## 7. Frontend Rules
-- **Design System & Animasi Mikro Premium**:
-  - Warna utama Navy (`#1E40AF`), Putih, dan Gray stabil profesional.
-  - Seluruh visual mewah/animasi mikro kustom diletakkan secara terisolasi di `_vanilla-touches.scss` (Elevasi kartu `.hover-elevate`, dropdown menu smooth, sapuan kilat tombol `.btn-premium-glow`, skeleton shimmer loading, dan modal elastis sekelas aplikasi premium).
-- **Format Akuntansi**: Tampilan nilai uang wajib menggunakan format titik ribuan (`Rp 150.000.000`).
-- **Nomor Dokumen & Plat**: Nomor polisi dan kode box menggunakan kelas monospace (`.plate-number` atau kode khusus) untuk kejelasan visual.
-- **Responsivitas**: Kolom pertama tabel penting dikunci (`position: sticky`) di mode seluler agar tetap dapat dipindai dengan nyaman.
+## 7. Frontend Rules & Design System
+
+- **Palet Warna Formal Instansi:**
+  - Warna Dominan: **Navy (`#1E40AF`)**, Putih Bersih, dan Slate Gray yang stabil dan berwibawa.
+  - Tidak menggunakan warna neon atau skema warna yang merusak citra formal pemerintahan.
+- **Sentuhan Mikro & Animasi Premium ([`_vanilla-touches.scss`](file:///home/arifhyde98/Projek/Aset_terpadu/resources/sass/components/_vanilla-touches.scss)):**
+  1. Elevasi Kartu Halus (`.hover-elevate`): Kartu statistik terangkat `translateY(-5px)` dengan bayangan lembut saat disentuh kursor.
+  2. Dropdown Liquid Smooth (`.dropdown-menu`): Animasi transisi meluncur lembut dari atas (`translateY(12px)`).
+  3. Efek Sapuan Kilat (`.btn-premium-glow`): Sapuan kilatan cahaya metalik halus pada tombol aksi utama.
+  4. Skeleton Shimmer (`.skeleton-shimmer`): Kerangka visual berkilau untuk feedback loading data AJAX.
+  5. Bouncy Liquid Modal (`.modal`): Dialog modal mengembang elastis dengan kurva transisi mewah.
+  6. Glassmorphism Navbar (`#navbar-main`): Panel kaca semi-transparan (`blur(12px)`) saat halaman digulir.
+- **Format Tampilan Data:**
+  - Mata Uang: Format rupiah akuntansi baku (`Rp 150.000.000`).
+  - Identitas Aset: Plat nomor kendaraan, NIBAR, dan kode register menggunakan font monospace (`.plate-number`).
+- **Ergonomi & Aksesibilitas:**
+  - Kolom pertama tabel penting dikunci (`position: sticky`) pada perangkat seluler.
+  - Header tabel laporan menggunakan latar solid (`--bs-tertiary-bg`) agar tidak tembus pandang saat digulir vertikal.
+  - Konfirmasi hapus konsisten menggunakan modal SweetAlert2 tunggal (menghapus konfirmasi bawaan browser ganda).
 
 ---
 
-## 8. Existing Features
-Berikut adalah status fitur yang telah diimplementasikan penuh pada platform SIPAT Terpadu:
+## 8. Existing Features & Implementation Status
 
-| Modul | Fitur | Status | Keterangan |
-|---|---|---|---|
-| **E-RANDIS** | Manajemen Kendaraan (CRUD) | DONE | Mendukung modal CRUD tersentralisasi & plat nomor unik. |
-| **E-RANDIS** | AI Smart Import Excel | DONE | Pemetaan dinamis header Excel berbasis kesamaan semantik. |
-| **E-RANDIS** | Diagnosis & Resolusi Duplikasi | DONE | Merge plat/OPD identik lintas instansi secara atomik. |
-| **E-RANDIS** | Modul Laporan Modular | DONE | Ekspor Excel streaming, cetak browser, dan PDF via mPDF. |
-| **SIPAT** | Master Aset Tanah (CRUD) | DONE | Pengelolaan aset tanah, koordinat GPS, dan detil perolehan. |
-| **SIPAT** | Tanah Belum/Tak Tercatat | DONE | Pengelolaan tanah usulan/baru, penomoran otomatis NIBAR draft, & update NIBAR resmi. |
-| **SIPAT** | Target Pensertifikatan & GIS Map | DONE | Penetapan target pensertifikatan, modal edit, 5 kotak metrik ringkasan (Total, Belum Diproses, Sedang Proses, Realisasi, Capaian), filter capaian, rekapitulasi OPD, & peta GIS Leaflet. |
-| **SIPAT** | Progres Pensertifikatan | DONE | Rekam langkah pensertifikatan tanah dari awal hingga terbit. |
-| **SIPAT** | Modul Surat Tanah (SKPT) | DONE | Pembuatan SKPT, ekspor Word/PDF formal (mPDF), & cetak. |
-| **SIPAT** | Peta Interaktif & Wilayah | DONE | Visualisasi sebaran koordinat aset tanah & master wilayah. |
-| **SIPAT** | Import Aset Tanah & Status | DONE | Pengunggahan massal data sertifikat & status proses tanah. |
-| **SIPAT** | Distribusi Aset per OPD (Breakdown) | DONE | Widget sebaran 5 OPD terbanyak, chart donat 100%, multi-segment bar, breakdown status (Bersertifikat, Proses, Belum), dan link filter. |
-| **SIPAT** | Tabel Sebaran Aset per OPD | DONE | Tabel master rekapitulasi 54 OPD di atas sebaran kecamatan, live search, luas m², progres bar sertifikat, dan link aksi filter. |
-| **SIPAT** | Pusat Laporan & Ekspor 11/12 Kolom | DONE | Laporan KIB A standar Pemda Donggala 11 kolom standar dan 12 kolom dinamis khusus laporan aset bersertifikat (menyisipkan sub-kolom `No. Sertifikat` di antara `Bidang` & `Luas`), mesin judul dinamis multi-filter (OPD, status, kecamatan, tahun), 3 mode judul (auto/master/manual), pratinjau web responsif dengan optimasi DOM 100 baris pertama, sticky header solid, PDF mPDF Landscape A4-L & Excel .xlsx streaming. Didukung format dua penanda tangan berdampingan (*Dual Signatories*) pada lembar pengesahan (Kiri: Pejabat Bidang/Teknis, Kanan: Kepala Badan/Pengesah) yang dapat dikonfigurasi melalui Master KOP Surat Pemda. |
-| **eLABEL** | Katalog BPKB (R4 / R2) | DONE | Penyimpanan BPKB, import template, & cetak status BPKB. |
-| **eLABEL** | Manajemen Box Arsip BPKB | DONE | Penggabungan box BPKB dan pencetakan label barcode box. |
-| **eLABEL** | Sertifikat & Box Sertifikat | DONE | Penyimpanan sertifikat tanah fisik, tanggal sertifikat, split/merge box sertifikat, ekspor/impor Excel, & integrasi SIPAT. |
-| **eLABEL** | Surat Penyerahan & Box | DONE | Pencatatan dokumen penyerahan aset & manajemen box terkait. |
-| **eLABEL** | Alur Peminjaman (Scan Request) | DONE | Pengajuan pinjam/scan BPKB/Sertifikat & approval admin. |
-| **eLABEL** | Universal Dynamic Archive Engine | DONE | e-Arsip dinamis, visual form builder, custom schema, box barcode, PDF viewer, multi-attachment, & loan workflow. |
-| **Terpadu** | Unified Asset Portal & Search | DONE | Mesin pencarian publik 3 modul (Kendaraan, Tanah, Arsip) + statistik live. |
-| **Terpadu** | Landing Sebaran OPD & Kecamatan | DONE | Diagram visual Pie/Donut interaktif di landing page, tabel data hanya muncul di modal saat diklik (54 OPD & 16 Kecamatan). |
-| **Terpadu** | OPD Mapping (Hub) | DONE | Jembatan pemetaan instansi antara E-RANDIS dan SIPAT. |
-| **Terpadu** | Audit Trail / Log Aktivitas | DONE | Log aktivitas terintegrasi E-RANDIS, SIPAT, dan eLABEL. |
-| **System** | Sinkronisasi DB Staging | DONE | Utility sinkronisasi data dari db_sipat_terpadu ke db_sipat_staging. |
-| **System** | Manajemen Pengguna & Kredensial | DONE | Detail akun, lihat password dengan Ikon Mata (AES-256 encrypted), copy password, dan auto reset. |
+Seluruh fitur berikut telah selesai diimplementasikan (**DONE**) dan beroperasi penuh di lingkungan produksi:
+
+### 8.1 Modul E-RANDIS (Kendaraan Dinas)
+| Fitur | Status | Deskripsi & Implementasi |
+|---|:---:|---|
+| **Manajemen Kendaraan (CRUD)** | `DONE` | Pengelolaan data kendaraan dinas, filter status operasional & kondisi fisik, plat nomor unik, modal CRUD tersentralisasi, dan pembatasan isolasi `TenantScope` OPD. |
+| **AI Smart Import Excel** | `DONE` | Impor data massal cerdas via `VehicleImport` dengan pencocokan kesamaan semantik header Excel, pratinjau 3 sampel baris, dan eksekusi aman berbasis `import_token`. |
+| **Diagnosis & Resolusi Duplikasi** | `DONE` | Algoritma deteksi duplikasi presisi 4 tingkat (NIB identik, suffix `(2)`, nomor sertifikat BPN sama, serta kesamaan peruntukan + OPD + luas) dengan aksi konsolidasi/merge data. |
+| **Rekonsiliasi BPKB Kendaraan** | `DONE` | Fitur verifikasi silang kepemilikan berkas fisik BPKB di eLABEL dengan data inventaris fisik kendaraan di E-RANDIS (`/vehicles/rekon-bpkb`). |
+| **Modul Laporan Modular** | `DONE` | Format laporan fleksibel berbasis Strategy Pattern (Status, Distribusi OPD, STNK, Duplikasi), kolom jenis kendaraan terpadu, pratinjau AJAX, cetak browser, dan PDF mPDF ber-chunking. |
+
+### 8.2 Modul SIPAT (Administrasi Pertanahan)
+| Fitur | Status | Deskripsi & Implementasi |
+|---|:---:|---|
+| **Master Aset Tanah (CRUD)** | `DONE` | Pendataan lengkap tanah daerah KIB A, luas m², peruntukan, dasar & harga perolehan, koordinat GPS, serta batas poligon spasial. |
+| **Tanah Belum / Tak Tercatat** | `DONE` | Pengelolaan tanah usulan non-KIB A, generate NIBAR sementara format `DRAFT-YYYYMMDD-XXXX`, dan promosi status ke NIBAR resmi oleh Superadmin/Admin. |
+| **Target Pensertifikatan & GIS Map** | `DONE` | Penetapan KPI target sertifikasi tahunan, 5 kotak metrik ringkasan (Total Target, Belum Diproses, Sedang Proses, Realisasi, Capaian %), filter 3 arah, ekspor Excel & PDF resmi, dan visualisasi spasial Leaflet GIS. |
+| **Rekonsiliasi Sertifikat SIPAT vs eLABEL** | `DONE` | Audit silang pencocokan NIBAR aset tanah bersertifikat di SIPAT dengan fisik berkas sertifikat yang tersimpan di eLABEL (`/sipat/rekonsiliasi`). |
+| **Progres Pensertifikatan BPN** | `DONE` | Pencatatan rekam jejak tahapan pengurusan sertifikat BPN (Pengukuran, PBT, SK, hingga Terbit Sertifikat) dengan dokumen lampiran. |
+| **Modul Surat Tanah (SKPT)** | `DONE` | Pembuatan Surat Keterangan Pendaftaran Tanah resmi dengan integrasi data pejabat pengesah (camat & kepala desa) serta ekspor mPDF, Word (.docx), dan cetak langsung. |
+| **Peta Interaktif Spasial** | `DONE` | Visualisasi interaktif sebaran marker aset tanah dan rendering batas poligon bidang tanah di peta wilayah Kabupaten Donggala. |
+| **Impor Aset Tanah & Status BPN** | `DONE` | Modal impor 2 tab: Unggah aset baru dan pembaruan massal tahapan status proses sertifikasi BPN via template Excel resmi. |
+| **Widget Distribusi OPD (Breakdown)** | `DONE` | Widget dashboard Top 5 OPD dengan doughnut chart representasi 100%, multi-segment progress bar, breakdown status (Bersertifikat, Proses, Belum), dan link filter cepat. |
+| **Tabel Sebaran Aset per OPD & Wilayah** | `DONE` | Rekapitulasi komprehensif seluruh 54 OPD dan 16 Kecamatan di Dashboard SIPAT, dilengkapi live search JavaScript, progres bar sertifikasi, dan footer total akumulasi. |
+| **Pusat Laporan & Ekspor 11/12 Kolom** | `DONE` | Format cetak standar Pemkab Donggala 11 kolom dan 12 kolom dinamis (sub-kolom `No. Sertifikat` terhubung ke e-Label), antarmuka web modern 2-kolom (`.report-shell`) dengan kartu ringkasan dan kartu aksi ekspor, mesin judul dinamis 3 baris (mode auto/master/manual), ekspor Excel streaming, serta pengesahan penanda tangan ganda (*Dual Signatories*) berdampingan yang terintegrasi dengan Master KOP Surat Pemda (`/master-data/kop-surat`). |
+
+### 8.3 Modul eLABEL (Pengarsipan Dokumen & Dynamic Archive)
+| Fitur | Status | Deskripsi & Implementasi |
+|---|:---:|---|
+| **Katalog & Box BPKB** | `DONE` | Penyimpanan fisik berkas BPKB ke dalam box arsip, integrasi nopol kendaraan, penggabungan (*merge*) box, dan pencetakan stiker label barcode box. |
+| **Katalog BPKB Keluar (*Soft Deleted*)** | `DONE` | Modul pencatatan arsip BPKB yang keluar/diserahkan dengan bukti tanda terima, ekspor data, dan fitur pemulihan (*restore*) kembali ke katalog aktif (`/elabel/bpkb-deleted`). |
+| **Smart BPKB PDF Extractor & OCR** | `DONE` | Pemindaian otomatis dokumen PDF BPKB pada server/PC lokal dengan pencocokan nopol 100% presisi, proteksi berkas ganda, pratinjau PDF tab baru, dan verifikasi dry-run. |
+| **Sertifikat Tanah Fisik & Box** | `DONE` | Penyimpanan fisik sertifikat tanah, sinkronisasi otomatis luas tanah dua arah dengan modul SIPAT, operasi split/merge box, dan impor Excel. |
+| **Surat Penyerahan Dokumen & Box** | `DONE` | Administrasi berita acara penyerahan fisik berkas aset dan penataan box arsip terkait (`/elabel/surat-penyerahan`). |
+| **Alur Peminjaman (Scan Request)** | `DONE` | Pengajuan peminjaman fisik atau request scan dokumen BPKB/Sertifikat oleh operator OPD dengan alur persetujuan admin BPKAD. |
+| **Universal Dynamic Archive Engine** | `DONE` | Mesin e-Arsip dinamis multi-kategori dengan form builder kustom berbasis skema JSON, manajemen box universal barcode (`BOX-{KODE}-{NUM}`), viewer scan PDF, multi-lampiran, dan layanan peminjaman berkas dinamis. |
+
+### 8.4 Portal Terpadu, Asisten AI & Fitur Lintas Modul
+| Fitur | Status | Deskripsi & Implementasi |
+|---|:---:|---|
+| **Asisten Pintar AI (Google Gemini Cloud)** | `DONE` | Floating widget interaktif di seluruh halaman internal untuk Q&A seputar regulasi BMD dan pembuatan ringkasan data aset ditenagai oleh `GeminiAiService`. |
+| **Unified Asset Portal & Search** | `DONE` | Portal pencarian publik landing page lintas 3 modul (Kendaraan, Tanah, Arsip) via `UnifiedAssetSearchService`, proteksi data privat, dan statistik live berbasis cache. |
+| **Landing Sebaran OPD & Kecamatan** | `DONE` | Dua diagram Donut interaktif berdampingan di halaman muka dengan modal pop-up interaktif full-featured (tabel 54 OPD & 16 Kecamatan tanpa memenuhi halaman). |
+| **OPD Mapping Hub** | `DONE` | Tabel pemetaan relasi ID instansi antara modul SIPAT/eLABEL dan E-RANDIS guna memastikan konsistensi kepemilikan aset. |
+| **Audit Trail / Log Aktivitas Terpadu** | `DONE` | Konsolidasi rekaman aktivitas 3 modul ke `activities` dengan penyimpanan diff sebelum vs sesudah (`old_data` & `new_data`), sanitasi kredensial, dan modal diff dual-mode. |
+
+### 8.5 Modul Administrasi Sistem & Keamanan
+| Fitur | Status | Deskripsi & Implementasi |
+|---|:---:|---|
+| **Replikasi Staging Real-Time (SSE)** | `DONE` | Utilitas sinkronisasi basis data dari `db_sipat_terpadu` ke `db_sipat_staging` berbasis Server-Sent Events (SSE) streaming per-tabel yang bebas dari batas timeout HTTP. |
+| **Manajemen Pengguna & Kredensial** | `DONE` | Pengelolaan akun pengguna, modal kredensial interaktif dengan tombol mata (`bi-eye`), penyimpanan terenkripsi dua arah (AES-256 via cast `encrypted`), 1-klik salin akun, dan reset password otomatis. |
+| **Master KOP Surat & Pejabat Pemda** | `DONE` | Pengaturan terpusat KOP surat resmi instansi, spesimen nama/NIP dua pejabat penanda tangan, titimangsa, dan logo daerah di `/master-data/kop-surat`. |
+| **Monitoring API & Health Check** | `DONE` | Endpoint pengecekan status server dan kesehatan koneksi basis data di `/api/health-check`. |
 
 ---
 
-## 9. Deployment
-- **Storage Link**: Jalankan `php artisan storage:link` untuk akses foto kendaraan dan pratinjau dokumen eLABEL.
-- **Upload Directories**: Pastikan folder `public/uploads/report/`, `public/uploads/settings/`, dan path file eLABEL (`public/uploads/elabel/`) memiliki izin tulis (writable).
-- **Vite Build**: Jalankan `npm run build` setelah memperbarui berkas SCSS/CSS agar perubahan visual terkompilasi bersih.
-- **Seeder Awal**: Pastikan `ReportSettingSeeder` dan `DynamicArchiveSeeder` dijalankan agar layout default kop surat dan kategori awal e-Arsip terisi di database.
+## 9. Deployment & Operations
+
+1. **Simbolik Tautan Storage:**
+   Jalankan perintah ini setelah instalasi pertama di server baru untuk membuka akses berkas publik:
+   ```bash
+   php artisan storage:link
+   ```
+2. **Izin Tulis Direktori (File Permissions):**
+   Pastikan direktori unggahan berkas memiliki izin tulis (*writable*) oleh user web server (`www-data` / `nginx`):
+   - `storage/app/public/`
+   - `public/uploads/report/`
+   - `public/uploads/settings/`
+   - `public/uploads/elabel/`
+3. **Kompilasi Aset Frontend (Vite):**
+   Setiap kali melakukan pembaruan berkas SCSS di `resources/sass/` atau JS di `resources/js/`, kompilasi bundle produksi:
+   ```bash
+   npm run build
+   ```
+4. **Database Seeder Awal:**
+   Pastikan seeder konfigurasi default dijalankan pada database yang baru disiapkan:
+   ```bash
+   php artisan db:seed --class=ReportSettingSeeder
+   php artisan db:seed --class=DynamicArchiveSeeder
+   ```
+5. **Optimasi Aplikasi Produksi:**
+   Jalankan komando optimasi cache Laravel untuk performa maksimal:
+   ```bash
+   php artisan optimize
+   ```
