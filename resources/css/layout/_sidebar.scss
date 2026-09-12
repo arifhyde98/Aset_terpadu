@@ -9,6 +9,7 @@
     width: 100%;
     align-items: stretch;
     min-height: 100vh;
+    overflow-x: hidden;
 }
 
 #sidebar {
@@ -182,7 +183,7 @@
 
         .submenu-list {
             list-style: none;
-            padding: 0.25rem 0.65rem 0.5rem 0.65rem;
+            padding: 0.25rem 0.5rem 0.5rem 0.5rem;
             margin: 0;
             position: relative;
 
@@ -194,9 +195,9 @@
                 &::before {
                     content: '';
                     position: absolute;
-                    left: 1.15rem;
+                    left: 0.95rem;
                     top: 0;
-                    width: 0.95rem;
+                    width: 0.85rem;
                     height: 50%;
                     border-left: 1.5px solid rgba(255, 255, 255, 0.18);
                     border-bottom: 1.5px solid rgba(255, 255, 255, 0.18);
@@ -209,7 +210,7 @@
                 &::after {
                     content: '';
                     position: absolute;
-                    left: 1.15rem;
+                    left: 0.95rem;
                     top: 50%;
                     bottom: 0;
                     width: 1.5px;
@@ -226,8 +227,8 @@
                     display: flex;
                     align-items: center;
                     position: relative;
-                    padding: 0.48rem 0.85rem 0.48rem 2.6rem;
-                    font-size: 0.835rem;
+                    padding: 0.45rem 0.65rem 0.45rem 2.15rem;
+                    font-size: 0.825rem;
                     color: rgba(248, 250, 252, 0.65);
                     text-decoration: none;
                     border-radius: 1.25rem; /* Rounded pill style */
@@ -238,7 +239,7 @@
                     &::before {
                         content: '';
                         position: absolute;
-                        left: 2.1rem;
+                        left: 1.75rem;
                         top: 50%;
                         width: 5.5px;
                         height: 5.5px;
@@ -507,28 +508,31 @@ html[data-theme="light"] #sidebar {
 /* Content adjustment when compact */
 body.sidebar-compact #content {
     margin-left: var(--sidebar-compact-width) !important;
+    width: calc(100% - var(--sidebar-compact-width)) !important;
+    max-width: calc(100% - var(--sidebar-compact-width)) !important;
 }
 
 #content {
-    width: 100%;
+    width: calc(100% - var(--sidebar-width));
+    max-width: calc(100% - var(--sidebar-width));
     padding: 2rem;
     min-height: 100vh;
-    transition: margin-left 0.25s cubic-bezier(0.4, 0, 0.2, 1), padding 0.25s ease;
+    transition: margin-left 0.25s cubic-bezier(0.4, 0, 0.2, 1), padding 0.25s ease, width 0.25s cubic-bezier(0.4, 0, 0.2, 1), max-width 0.25s cubic-bezier(0.4, 0, 0.2, 1);
     margin-left: var(--sidebar-width);
 }
 
 @media (max-width: 1366px) {
     :root {
-        --sidebar-width: clamp(220px, 15vw, 245px);
+        --sidebar-width: 250px;
     }
     #content {
-        padding: 1.5rem;
+        padding: 1.25rem 1.5rem;
     }
 }
 
 @media (max-width: 1200px) {
     :root {
-        --sidebar-width: clamp(210px, 14vw, 230px);
+        --sidebar-width: 240px;
     }
     #content {
         padding: 1.25rem;
@@ -537,7 +541,7 @@ body.sidebar-compact #content {
 
 @media (max-width: 992px) {
     :root {
-        --sidebar-width: 220px;
+        --sidebar-width: 230px;
     }
     #content {
         padding: 1rem;
@@ -561,7 +565,8 @@ body.sidebar-compact #content {
     #content {
         margin-left: 0 !important;
         padding: 1rem;
-        width: 100%;
+        width: 100% !important;
+        max-width: 100% !important;
     }
     #content.active {
         margin-left: 0 !important;

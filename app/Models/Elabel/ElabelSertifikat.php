@@ -73,4 +73,12 @@ class ElabelSertifikat extends Model
     {
         return $this->belongsTo(ElabelSertifikatBox::class, 'box_id');
     }
+
+    /**
+     * Relasi ke Master Aset Tanah (SIPAT) berdasarkan NIBAR (kode_aset).
+     */
+    public function asetTanah(): BelongsTo
+    {
+        return $this->belongsTo(\App\Models\AsetTanah::class, 'nibar', 'kode_aset');
+    }
 }

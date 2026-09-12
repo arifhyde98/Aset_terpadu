@@ -9,6 +9,25 @@ use App\Services\SipatService;
 class ElabelSertifikatObserver
 {
     /**
+     * Handle the ElabelSertifikat "saving" event.
+     * Aturan Baku: Khusus sertifikat yang NIBAR-nya ada di ASET TANAH,
+     * OPD sertifikat (sipat_opd_id & dinas) wajib mengacu dan mengikuti OPD di Aset Tanah SIPAT.
+     */
+    public function saving(ElabelSertifikat $sertifikat): void
+    {
+        if (!empty($sertifikat->nibar)) {
+            $asetTanah = AsetTanah::with('opdSipat')
+                ->where('kode_aset', $sertifikat->nibar)
+                ->first();
+
+            if ($asetTanah && !empty($asetTanah->opd_id)) {
+                $sertifikat->sipat_opd_id = $asetTanah->opd_id;
+                $sertifikat->dinas = $asetTanah->opdSipat?->nama ?? $asetTanah->opd ?? $sertifikat->dinas;
+            }
+        }
+    }
+
+    /**
      * Handle the ElabelSertifikat "saved" event.
      * Aturan Baku: Setiap kali data sertifikat disimpan atau diperbarui,
      * jika memiliki NIBAR dan luas > 0, otomatis selaraskan luas di aset_tanah SIPAT.

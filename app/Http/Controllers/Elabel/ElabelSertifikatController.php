@@ -222,7 +222,7 @@ class ElabelSertifikatController extends Controller implements HasMiddleware
 
     public function edit(int $id): View|RedirectResponse
     {
-        $item = ElabelSertifikat::with('box')->find($id);
+        $item = ElabelSertifikat::with(['box', 'asetTanah.opdSipat'])->find($id);
         if (!$item) {
             return redirect()->route('elabel.sertifikat.index')->with('error', 'Data sertipikat tidak ditemukan.');
         }

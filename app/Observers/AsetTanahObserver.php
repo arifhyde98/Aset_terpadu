@@ -26,6 +26,29 @@ class AsetTanahObserver
     }
 
     /**
+     * Handle the AsetTanah "saved" event.
+     * Aturan Baku: Jika Aset Tanah disimpan atau diperbarui OPD-nya,
+     * otomatis selaraskan OPD sertifikat di e-Label yang memiliki NIBAR identik.
+     */
+    public function saved(AsetTanah $asetTanah): void
+    {
+        if (!empty($asetTanah->kode_aset) && !empty($asetTanah->opd_id)) {
+            $opdNama = $asetTanah->opdSipat?->nama ?? $asetTanah->opd;
+            if (!$opdNama) {
+                $opdNama = \App\Models\OpdSipat::find($asetTanah->opd_id)?->nama;
+            }
+
+            \App\Models\Elabel\ElabelSertifikat::withoutEvents(function () use ($asetTanah, $opdNama) {
+                \App\Models\Elabel\ElabelSertifikat::where('nibar', $asetTanah->kode_aset)
+                    ->update([
+                        'sipat_opd_id' => $asetTanah->opd_id,
+                        'dinas'        => $opdNama,
+                    ]);
+            });
+        }
+    }
+
+    /**
      * Handle the AsetTanah "created" event.
      */
     public function created(AsetTanah $asetTanah): void

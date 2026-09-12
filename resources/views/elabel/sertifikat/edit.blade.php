@@ -114,15 +114,30 @@
                     </div>
 
                     <div class="col-md-3">
-                        <label class="form-label fw-semibold small">Dinas / OPD (SIPAT)</label>
-                        <select name="sipat_opd_id" class="form-select">
-                            <option value="">-- Pilih Dinas / OPD --</option>
-                            @foreach($opds as $opd)
-                                <option value="{{ $opd->id }}" {{ old('sipat_opd_id', $item->sipat_opd_id) == $opd->id ? 'selected' : '' }}>{{ $opd->nama }}</option>
-                            @endforeach
-                        </select>
-                        @if(!$item->sipat_opd_id && $item->dinas)
-                            <div class="small text-warning mt-1"><i class="bi bi-exclamation-circle"></i> Teks Lama: "{{ $item->dinas }}"</div>
+                        <label class="form-label fw-semibold small d-flex justify-content-between align-items-center">
+                            <span>Dinas / OPD (SIPAT)</span>
+                            @if($item->nibar && $item->asetTanah && $item->asetTanah->opd_id)
+                                <span class="badge bg-primary-subtle text-primary border border-primary-subtle" style="font-size: 0.65rem;" title="Terkunci otomatis mengikuti data Aset Tanah KIB A">
+                                    <i class="bi bi-lock-fill"></i> Mengacu KIB A
+                                </span>
+                            @endif
+                        </label>
+                        @if($item->nibar && $item->asetTanah && $item->asetTanah->opd_id)
+                            <input type="hidden" name="sipat_opd_id" value="{{ $item->asetTanah->opd_id }}">
+                            <input type="text" class="form-control bg-light" value="{{ $item->asetTanah->opdSipat->nama ?? $item->asetTanah->opd ?? '-' }}" readonly disabled>
+                            <div class="small text-primary mt-1" style="font-size: 0.72rem;">
+                                <i class="bi bi-shield-check me-1"></i> Terkunci sesuai Master Aset Tanah ({{ $item->nibar }})
+                            </div>
+                        @else
+                            <select name="sipat_opd_id" class="form-select">
+                                <option value="">-- Pilih Dinas / OPD --</option>
+                                @foreach($opds as $opd)
+                                    <option value="{{ $opd->id }}" {{ old('sipat_opd_id', $item->sipat_opd_id) == $opd->id ? 'selected' : '' }}>{{ $opd->nama }}</option>
+                                @endforeach
+                            </select>
+                            @if(!$item->sipat_opd_id && $item->dinas)
+                                <div class="small text-warning mt-1"><i class="bi bi-exclamation-circle"></i> Teks Lama: "{{ $item->dinas }}"</div>
+                            @endif
                         @endif
                     </div>
 

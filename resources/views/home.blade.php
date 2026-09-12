@@ -17,14 +17,14 @@
             <h3 class="fw-bold text-navy mb-0">Overview Operasional Terpadu</h3>
             <p class="text-secondary mb-0 small">Integrasi data real-time dari modul SIPAT (Aset Tanah), eLABEL (Box & Label Gudang), dan eRANDIS (Kendaraan Dinas).</p>
         </div>
-        <div class="d-flex flex-wrap gap-2">
-            <a href="{{ route('sipat.aset.index') }}" class="btn btn-outline-primary fw-semibold border shadow-sm">
+        <div class="d-flex flex-wrap flex-md-nowrap gap-2 flex-shrink-0">
+            <a href="{{ route('sipat.aset.index') }}" class="btn btn-sm btn-outline-primary fw-semibold border shadow-sm text-nowrap px-2.5 py-1.5">
                 <i class="bi bi-geo-alt me-1"></i> Aset Tanah
             </a>
-            <a href="{{ route('elabel.dashboard') }}" class="btn btn-outline-info fw-semibold border shadow-sm">
+            <a href="{{ route('elabel.dashboard') }}" class="btn btn-sm btn-outline-info fw-semibold border shadow-sm text-nowrap px-2.5 py-1.5">
                 <i class="bi bi-archive me-1"></i> Katalog eLABEL
             </a>
-            <a href="{{ route('erandis.dashboard') }}" class="btn btn-outline-warning fw-semibold text-dark border shadow-sm">
+            <a href="{{ route('erandis.dashboard') }}" class="btn btn-sm btn-outline-warning fw-semibold text-dark border shadow-sm text-nowrap px-2.5 py-1.5">
                 <i class="bi bi-car-front me-1"></i> Kendaraan eRANDIS
             </a>
         </div>
@@ -35,7 +35,7 @@
         <!-- Card 1: SIPAT Aset Tanah (Blue Accent) -->
         <div class="col-sm-6 col-xl-3">
             <div class="card border-0 shadow-sm rounded-4 h-100 border-start border-4 border-primary">
-                <div class="card-body p-4">
+                <div class="card-body p-3 p-xxl-4">
                     <div class="d-flex justify-content-between align-items-center mb-3">
                         <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 px-3 py-1.5 rounded-pill fw-bold">
                             <i class="bi bi-geo-alt-fill me-1"></i> MODUL SIPAT
@@ -51,32 +51,32 @@
                     
                     <div class="p-2 bg-body-tertiary rounded-3 border mb-3">
                         <div class="d-flex justify-content-between align-items-center small mb-1">
-                            <span class="text-secondary"><i class="bi bi-building-check text-primary me-1"></i> Tercatat KIB A:</span>
-                            <strong class="text-primary font-monospace">{{ number_format($sipatTanahTercatat) }}</strong>
+                            <span class="text-secondary text-nowrap"><i class="bi bi-building-check text-primary me-1"></i> Tercatat KIB A:</span>
+                            <strong class="text-primary font-monospace text-nowrap ms-2">{{ number_format($sipatTanahTercatat) }}</strong>
                         </div>
                         <div class="d-flex justify-content-between align-items-center small">
-                            <span class="text-secondary"><i class="bi bi-exclamation-circle text-warning me-1"></i> Belum Tercatat:</span>
-                            <strong class="text-warning-emphasis font-monospace">{{ number_format($sipatTanahTakTercatat) }}</strong>
+                            <span class="text-secondary text-nowrap"><i class="bi bi-exclamation-circle text-warning me-1"></i> Belum Tercatat:</span>
+                            <strong class="text-warning-emphasis font-monospace text-nowrap ms-2">{{ number_format($sipatTanahTakTercatat) }}</strong>
                         </div>
                     </div>
 
                     <!-- Breakdown Rincian Status Pensertifikatan SIPAT -->
-                    <div class="pt-2 border-top">
-                        <a href="{{ route('sipat.aset.index', ['kategori_status' => 'sudah_bersertifikat']) }}" class="d-flex justify-content-between align-items-center text-secondary small mb-1 text-decoration-none py-0.5 px-1 rounded hover-bg-light">
-                            <span><i class="bi bi-patch-check-fill text-success me-1"></i> Sudah Bersertifikat:</span>
-                            <strong class="text-dark">{{ number_format($sipatSertifikatCount) }} Bidang</strong>
+                    <div class="pt-2 border-top" style="font-size: 0.81rem;">
+                        <a href="{{ route('sipat.aset.index', ['kategori_status' => 'sudah_bersertifikat']) }}" class="d-flex justify-content-between align-items-center text-secondary mb-1 text-decoration-none py-0.5 px-1 rounded hover-bg-light">
+                            <span class="text-nowrap"><i class="bi bi-patch-check-fill text-success me-1"></i> Sudah Bersertifikat:</span>
+                            <strong class="text-dark text-nowrap ms-2">{{ number_format($sipatSertifikatCount) }} Bidang</strong>
                         </a>
-                        <a href="{{ route('sipat.aset.index', ['kategori_status' => 'dalam_proses']) }}" class="d-flex justify-content-between align-items-center text-secondary small mb-1 text-decoration-none py-0.5 px-1 rounded hover-bg-light">
-                            <span><i class="bi bi-hourglass-split text-warning me-1"></i> Sedang Diproses BPN:</span>
-                            <strong class="text-dark">{{ number_format($sipatProsesBpnCount) }} Berkas</strong>
+                        <a href="{{ route('sipat.aset.index', ['kategori_status' => 'dalam_proses']) }}" class="d-flex justify-content-between align-items-center text-secondary mb-1 text-decoration-none py-0.5 px-1 rounded hover-bg-light">
+                            <span class="text-nowrap"><i class="bi bi-hourglass-split text-warning me-1"></i> Sedang Diproses BPN:</span>
+                            <strong class="text-dark text-nowrap ms-2">{{ number_format($sipatProsesBpnCount) }} Berkas</strong>
                         </a>
-                        <a href="{{ route('sipat.aset.index', ['kategori_status' => 'bermasalah']) }}" class="d-flex justify-content-between align-items-center text-secondary small mb-1 text-decoration-none py-0.5 px-1 rounded hover-bg-light">
-                            <span><i class="bi bi-exclamation-triangle-fill text-danger me-1"></i> Terkendala / Masalah:</span>
-                            <strong class="text-danger">{{ number_format($sipatKendalaCount) }} Bidang</strong>
+                        <a href="{{ route('sipat.aset.index', ['kategori_status' => 'bermasalah']) }}" class="d-flex justify-content-between align-items-center text-secondary mb-1 text-decoration-none py-0.5 px-1 rounded hover-bg-light">
+                            <span class="text-nowrap"><i class="bi bi-exclamation-triangle-fill text-danger me-1"></i> Terkendala / Masalah:</span>
+                            <strong class="text-danger text-nowrap ms-2">{{ number_format($sipatKendalaCount) }} Bidang</strong>
                         </a>
-                        <a href="{{ route('sipat.aset.index', ['kategori_status' => 'belum_bersertifikat']) }}" class="d-flex justify-content-between align-items-center text-secondary small text-decoration-none py-0.5 px-1 rounded hover-bg-light">
-                            <span><i class="bi bi-dash-circle text-secondary me-1"></i> Belum Bersertifikat:</span>
-                            <strong class="text-secondary">{{ number_format($sipatBelumSertifikatCount) }} Bidang</strong>
+                        <a href="{{ route('sipat.aset.index', ['kategori_status' => 'belum_bersertifikat']) }}" class="d-flex justify-content-between align-items-center text-secondary text-decoration-none py-0.5 px-1 rounded hover-bg-light">
+                            <span class="text-nowrap"><i class="bi bi-dash-circle text-secondary me-1"></i> Belum Bersertifikat:</span>
+                            <strong class="text-secondary text-nowrap ms-2">{{ number_format($sipatBelumSertifikatCount) }} Bidang</strong>
                         </a>
                     </div>
                 </div>
@@ -86,7 +86,7 @@
         <!-- Card 2: eRANDIS Kendaraan Dinas (Yellow/Orange Accent) -->
         <div class="col-sm-6 col-xl-3">
             <div class="card border-0 shadow-sm rounded-4 h-100 border-start border-4 border-warning">
-                <div class="card-body p-4">
+                <div class="card-body p-3 p-xxl-4">
                     <div class="d-flex justify-content-between align-items-center mb-3">
                         <span class="badge bg-warning bg-opacity-10 text-dark border border-warning border-opacity-25 px-3 py-1.5 rounded-pill fw-bold">
                             <i class="bi bi-car-front-fill me-1 text-warning"></i> MODUL ERANDIS
@@ -99,18 +99,18 @@
                     <h2 class="fw-bold text-navy mb-1">{{ number_format($erandisStats['total']) }} <span class="fs-6 text-secondary fw-normal">Unit</span></h2>
                     
                     <!-- Breakdown Rincian Kondisi eRANDIS -->
-                    <div class="mt-2 pt-2 border-top">
-                        <div class="d-flex justify-content-between align-items-center text-secondary small mb-1">
-                            <span><i class="bi bi-check-circle-fill text-success me-1"></i> Kondisi Baik (Layak):</span>
-                            <strong class="text-dark">{{ number_format($erandisStats['baik']) }} Unit</strong>
+                    <div class="mt-2 pt-2 border-top" style="font-size: 0.81rem;">
+                        <div class="d-flex justify-content-between align-items-center text-secondary mb-1">
+                            <span class="text-nowrap"><i class="bi bi-check-circle-fill text-success me-1"></i> Kondisi Baik (Layak):</span>
+                            <strong class="text-dark text-nowrap ms-2">{{ number_format($erandisStats['baik']) }} Unit</strong>
                         </div>
-                        <div class="d-flex justify-content-between align-items-center text-secondary small mb-1">
-                            <span><i class="bi bi-exclamation-triangle-fill text-warning me-1"></i> Kondisi Rusak Ringan:</span>
-                            <strong class="text-dark">{{ number_format($erandisStats['rusak_ringan']) }} Unit</strong>
+                        <div class="d-flex justify-content-between align-items-center text-secondary mb-1">
+                            <span class="text-nowrap"><i class="bi bi-exclamation-triangle-fill text-warning me-1"></i> Kondisi Rusak Ringan:</span>
+                            <strong class="text-dark text-nowrap ms-2">{{ number_format($erandisStats['rusak_ringan']) }} Unit</strong>
                         </div>
-                        <div class="d-flex justify-content-between align-items-center text-secondary small">
-                            <span><i class="bi bi-x-octagon-fill text-danger me-1"></i> Kondisi Rusak Berat:</span>
-                            <strong class="text-danger">{{ number_format($erandisStats['rusak_berat'] + $erandisStats['hilang']) }} Unit</strong>
+                        <div class="d-flex justify-content-between align-items-center text-secondary">
+                            <span class="text-nowrap"><i class="bi bi-x-octagon-fill text-danger me-1"></i> Kondisi Rusak Berat:</span>
+                            <strong class="text-danger text-nowrap ms-2">{{ number_format($erandisStats['rusak_berat'] + $erandisStats['hilang']) }} Unit</strong>
                         </div>
                     </div>
                 </div>
@@ -120,7 +120,7 @@
         <!-- Card 3: eLABEL Box & Digital Arsip (Cyan/Teal Accent) -->
         <div class="col-sm-6 col-xl-3">
             <div class="card border-0 shadow-sm rounded-4 h-100 border-start border-4 border-info">
-                <div class="card-body p-4">
+                <div class="card-body p-3 p-xxl-4">
                     <div class="d-flex justify-content-between align-items-center mb-3">
                         <span class="badge bg-info bg-opacity-10 text-info border border-info border-opacity-25 px-3 py-1.5 rounded-pill fw-bold">
                             <i class="bi bi-box-seam-fill me-1"></i> MODUL ELABEL
@@ -133,18 +133,18 @@
                     <h2 class="fw-bold text-navy mb-1">{{ number_format($elabelTotalBpkb + $elabelTotalSertifikat + $elabelTotalSurat) }} <span class="fs-6 text-secondary fw-normal">Dokumen</span></h2>
                     
                     <!-- Breakdown Rincian Dokumen eLABEL -->
-                    <div class="mt-2 pt-2 border-top">
-                        <div class="d-flex justify-content-between align-items-center text-secondary small mb-1">
-                            <span><i class="bi bi-card-checklist text-primary me-1"></i> BPKB Kendaraan:</span>
-                            <strong class="text-dark">{{ number_format($elabelTotalBpkb) }} Unit</strong>
+                    <div class="mt-2 pt-2 border-top" style="font-size: 0.81rem;">
+                        <div class="d-flex justify-content-between align-items-center text-secondary mb-1">
+                            <span class="text-nowrap"><i class="bi bi-card-checklist text-primary me-1"></i> BPKB Kendaraan:</span>
+                            <strong class="text-dark text-nowrap ms-2">{{ number_format($elabelTotalBpkb) }} Unit</strong>
                         </div>
-                        <div class="d-flex justify-content-between align-items-center text-secondary small mb-1">
-                            <span><i class="bi bi-patch-check text-success me-1"></i> Sertifikat Tanah:</span>
-                            <strong class="text-dark">{{ number_format($elabelTotalSertifikat) }} Berkas</strong>
+                        <div class="d-flex justify-content-between align-items-center text-secondary mb-1">
+                            <span class="text-nowrap"><i class="bi bi-patch-check text-success me-1"></i> Sertifikat Tanah:</span>
+                            <strong class="text-dark text-nowrap ms-2">{{ number_format($elabelTotalSertifikat) }} Berkas</strong>
                         </div>
-                        <div class="d-flex justify-content-between align-items-center text-secondary small">
-                            <span><i class="bi bi-archive text-info me-1"></i> Box Gudang Aktif:</span>
-                            <strong class="text-info">{{ number_format($elabelTotalBoxes) }} Box</strong>
+                        <div class="d-flex justify-content-between align-items-center text-secondary">
+                            <span class="text-nowrap"><i class="bi bi-archive text-info me-1"></i> Box Gudang Aktif:</span>
+                            <strong class="text-info text-nowrap ms-2">{{ number_format($elabelTotalBoxes) }} Box</strong>
                         </div>
                     </div>
                 </div>
@@ -154,7 +154,7 @@
         <!-- Card 4: Status Peminjaman & Layanan Aktif (Purple Accent) -->
         <div class="col-sm-6 col-xl-3">
             <div class="card border-0 shadow-sm rounded-4 h-100 border-start border-4 border-danger">
-                <div class="card-body p-4">
+                <div class="card-body p-3 p-xxl-4">
                     <div class="d-flex justify-content-between align-items-center mb-3">
                         <span class="badge bg-purple bg-opacity-10 text-purple border border-purple border-opacity-25 px-3 py-1.5 rounded-pill fw-bold" style="color: #6b21a8; background: rgba(107, 33, 168, 0.1);">
                             <i class="bi bi-clock-history me-1"></i> LAYANAN AKTIF
@@ -165,9 +165,9 @@
                     </div>
                     <small class="text-secondary fw-semibold text-uppercase d-block mb-1">ARSIP DIPINJAM</small>
                     <h2 class="fw-bold text-navy mb-1">{{ number_format($elabelPeminjamanAktif) }} <span class="fs-6 text-secondary fw-normal">Dipinjam</span></h2>
-                    <div class="d-flex align-items-center justify-content-between text-secondary small mt-3 pt-2 border-top">
-                        <span>Progres BPN: <strong>{{ $sipatProsesBpnCount }} Berkas</strong></span>
-                        <span class="fw-semibold text-danger"><i class="bi bi-arrow-repeat me-1"></i>Aktif</span>
+                    <div class="d-flex align-items-center justify-content-between text-secondary mt-3 pt-2 border-top" style="font-size: 0.81rem;">
+                        <span class="text-nowrap">Progres BPN: <strong class="ms-1">{{ $sipatProsesBpnCount }} Berkas</strong></span>
+                        <span class="fw-semibold text-danger text-nowrap ms-2"><i class="bi bi-arrow-repeat me-1"></i>Aktif</span>
                     </div>
                 </div>
             </div>
