@@ -72,10 +72,16 @@ class ArchiveItemController extends Controller implements HasMiddleware
         // Selected type object for custom columns if filtered by type
         $currentType = !empty($typeId) ? ArchiveType::find($typeId) : null;
 
+        // Boxes available for modal create
+        $boxes = !empty($currentType)
+            ? ArchiveBox::where('archive_type_id', $currentType->id)->orderBy('nomor_box', 'asc')->get()
+            : ArchiveBox::orderBy('nomor_box', 'asc')->get();
+
         return view('elabel.dynamic.items.index', [
             'items'        => $items,
             'types'        => $types,
             'opds'         => $opds,
+            'boxes'        => $boxes,
             'selectedType' => $typeId,
             'selectedOpd'  => $opdId,
             'selectedYear' => $year,

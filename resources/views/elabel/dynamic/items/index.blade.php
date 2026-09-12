@@ -46,16 +46,16 @@
                 <a href="{{ route('elabel.dynamic.boxes.index', ['type_id' => $currentType->id]) }}" class="btn btn-outline-warning text-dark shadow-sm fw-medium d-flex align-items-center gap-2">
                     <i class="bi bi-box-seam"></i> Box {{ $currentType->kode ?: 'Arsip' }}
                 </a>
-                <a href="{{ route('elabel.dynamic.items.create', ['type_id' => $currentType->id]) }}" class="btn btn-primary shadow-sm fw-medium d-flex align-items-center gap-2">
+                <button type="button" class="btn btn-primary shadow-sm fw-medium d-flex align-items-center gap-2" data-bs-toggle="modal" data-bs-target="#createItemModal">
                     <i class="bi bi-plus-circle"></i> Input {{ $currentType->kode ?: 'Dokumen' }} Baru
-                </a>
+                </button>
             @else
                 <a href="{{ route('elabel.dynamic.types.index') }}" class="btn btn-outline-secondary shadow-sm fw-medium d-flex align-items-center gap-2">
                     <i class="bi bi-sliders"></i> Master Kategori
                 </a>
-                <a href="{{ route('elabel.dynamic.items.create') }}" class="btn btn-primary shadow-sm fw-medium d-flex align-items-center gap-2">
+                <button type="button" class="btn btn-primary shadow-sm fw-medium d-flex align-items-center gap-2" data-bs-toggle="modal" data-bs-target="#createItemModal">
                     <i class="bi bi-plus-circle"></i> Input Arsip Baru
-                </a>
+                </button>
             @endif
         </div>
     </div>
@@ -218,11 +218,14 @@
                                 <i class="bi bi-folder-x fs-1 d-block mb-2 text-muted"></i>
                                 @if($currentType)
                                     <div class="fw-medium">Belum ada berkas arsip <strong>{{ $currentType->nama }}</strong> yang tersimpan atau sesuai kriteria pencarian.</div>
-                                    <a href="{{ route('elabel.dynamic.items.create', ['type_id' => $currentType->id]) }}" class="btn btn-sm btn-primary rounded-pill mt-3 px-3">
+                                    <button type="button" class="btn btn-sm btn-primary rounded-pill mt-3 px-3" data-bs-toggle="modal" data-bs-target="#createItemModal">
                                         <i class="bi bi-plus-circle me-1"></i> Input {{ $currentType->kode ?: 'Berkas' }} Baru
-                                    </a>
+                                    </button>
                                 @else
                                     <div class="fw-medium">Belum ada berkas arsip yang sesuai dengan kriteria pencarian.</div>
+                                    <button type="button" class="btn btn-sm btn-primary rounded-pill mt-3 px-3" data-bs-toggle="modal" data-bs-target="#createItemModal">
+                                        <i class="bi bi-plus-circle me-1"></i> Input Arsip Baru
+                                    </button>
                                 @endif
                             </td>
                         </tr>
@@ -238,6 +241,206 @@
         @endif
     </div>
 
+</div>
+
+<!-- Modal Input Berkas Baru -->
+<div class="modal fade" id="createItemModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+            <form action="{{ route('elabel.dynamic.items.store') }}" method="POST" enctype="multipart/form-data" class="d-flex flex-column h-100 overflow-hidden" style="max-height: 88vh;">
+                @csrf
+                <div class="modal-header bg-primary-subtle border-bottom px-4 py-3 flex-shrink-0">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="bg-primary text-white rounded-3 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                            <i class="bi bi-file-earmark-plus fs-5"></i>
+                        </div>
+                        <div>
+                            <h5 class="modal-title fw-bold text-dark mb-0">
+                                @if($currentType)
+                                    Input Berkas: {{ $currentType->nama }}
+                                @else
+                                    Input Berkas Arsip Dinamis Baru
+                                @endif
+                            </h5>
+                            <small class="text-primary fw-medium">
+                                @if($currentType)
+                                    Kategori <span class="font-monospace fw-bold">[{{ $currentType->kode }}]</span> &bull; Pengarsipan Fisik & Digital
+                                @else
+                                    Pilih jenis kategori dan lengkapi data berkas
+                                @endif
+                            </small>
+                        </div>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4 bg-light overflow-y-auto flex-grow-1">
+                    @if($currentType)
+                        <input type="hidden" name="archive_type_id" value="{{ $currentType->id }}">
+                    @else
+                        <div class="card border-0 shadow-sm rounded-4 mb-3 bg-white">
+                            <div class="card-body p-3">
+                                <label class="form-label fw-semibold text-dark">Kategori / Jenis Arsip <span class="text-danger">*</span></label>
+                                <select name="archive_type_id" class="form-select" id="modalCategorySelect" required>
+                                    @foreach($types as $t)
+                                        <option value="{{ $t->id }}" {{ $selectedType == $t->id ? 'selected' : '' }}>
+                                            {{ $t->nama }} ({{ $t->kode }})
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
+                    @endif
+
+                    <div class="row g-3">
+                        <!-- Kolom Kiri: Informasi Utama & Box -->
+                        <div class="col-lg-6">
+                            <div class="card border-0 shadow-sm rounded-4 h-100 bg-white">
+                                <div class="card-header bg-white border-bottom py-3 px-4">
+                                    <h6 class="fw-bold text-navy mb-0 d-flex align-items-center gap-2">
+                                        <i class="bi bi-info-circle text-primary"></i> Data Utama Dokumen
+                                    </h6>
+                                </div>
+                                <div class="card-body p-4">
+                                    <div class="mb-3">
+                                        <label class="form-label fw-semibold text-dark">Nomor Dokumen / Berkas <span class="text-danger">*</span></label>
+                                        <input type="text" name="nomor_dokumen" value="{{ old('nomor_dokumen') }}" class="form-control font-monospace" placeholder="Cth: 503/012/IMB-DPMPTSP/2026" required>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label class="form-label fw-semibold text-dark">Nama / Uraian Berkas <span class="text-danger">*</span></label>
+                                        <input type="text" name="nama_dokumen" value="{{ old('nama_dokumen') }}" class="form-control" placeholder="Cth: Dokumen Berkas Arsip..." required>
+                                    </div>
+
+                                    <div class="row g-2 mb-3">
+                                        <div class="col-6">
+                                            <label class="form-label fw-semibold text-dark">Tahun Dokumen</label>
+                                            <input type="number" name="tahun_dokumen" value="{{ old('tahun_dokumen', date('Y')) }}" class="form-control" min="1900" max="2100">
+                                        </div>
+                                        <div class="col-6">
+                                            <label class="form-label fw-semibold text-dark">Status Berkas</label>
+                                            <select name="status" class="form-select">
+                                                <option value="Tersedia" {{ old('status') == 'Tersedia' ? 'selected' : '' }}>Tersedia</option>
+                                                <option value="Dipinjam" {{ old('status') == 'Dipinjam' ? 'selected' : '' }}>Dipinjam</option>
+                                                <option value="Musnah" {{ old('status') == 'Musnah' ? 'selected' : '' }}>Musnah</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label class="form-label fw-semibold text-dark">OPD / Instansi Pengolah</label>
+                                        <select name="opd_id" class="form-select">
+                                            <option value="">-- Pilih OPD Pengolah --</option>
+                                            @foreach($opds as $o)
+                                                <option value="{{ $o->id }}" {{ old('opd_id') == $o->id ? 'selected' : '' }}>{{ $o->nama }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label class="form-label fw-semibold text-dark">Penyimpanan Box Fisik</label>
+                                        <select name="archive_box_id" class="form-select">
+                                            <option value="">-- Belum Dimasukkan Box (Simpan Tanpa Box) --</option>
+                                            @foreach($boxes as $b)
+                                                <option value="{{ $b->id }}" {{ old('archive_box_id') == $b->id ? 'selected' : '' }}>
+                                                    {{ $b->nomor_box }} - {{ $b->lokasi_rak ?: 'Rak Arsip' }} (Isi: {{ $b->items()->count() }}/{{ $b->kapasitas_maksimal }})
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                        @if($currentType)
+                                            <div class="form-text small">Hanya menampilkan box fisik khusus kategori <strong>{{ $currentType->nama }}</strong>.</div>
+                                        @endif
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label class="form-label fw-semibold text-dark">Unggah Berkas Scan PDF Utama</label>
+                                        <input type="file" name="file_scan_pdf" class="form-control" accept="application/pdf,image/*">
+                                        <div class="form-text small">Format PDF atau gambar maksimal 20 MB.</div>
+                                    </div>
+
+                                    <div class="mb-0">
+                                        <label class="form-label fw-semibold text-dark">Catatan / Keterangan Tambahan</label>
+                                        <textarea name="keterangan" class="form-control" rows="2" placeholder="Catatan fisik dokumen, kondisi berkas, dll...">{{ old('keterangan') }}</textarea>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Kolom Kanan: Atribut Kustom Sesuai Kategori -->
+                        <div class="col-lg-6">
+                            <div class="card border-0 shadow-sm rounded-4 h-100 bg-white">
+                                <div class="card-header bg-white border-bottom py-3 px-4 d-flex justify-content-between align-items-center">
+                                    <h6 class="fw-bold text-navy mb-0 d-flex align-items-center gap-2">
+                                        <i class="bi bi-ui-checks text-success"></i> Atribut Kustom Kategori {{ $currentType ? '(' . count($currentType->schema_fields ?? []) . ' Kolom)' : '' }}
+                                    </h6>
+                                </div>
+                                <div class="card-body p-4">
+                                    @if($currentType && !empty($currentType->schema_fields) && count($currentType->schema_fields) > 0)
+                                        @foreach($currentType->schema_fields as $field)
+                                            @php
+                                                $fName = $field['name'];
+                                                $fLabel = $field['label'];
+                                                $fType = $field['type'] ?? 'text';
+                                                $fReq = !empty($field['required']);
+                                                $fPlace = $field['placeholder'] ?? '';
+                                                $fHelp = $field['help_text'] ?? '';
+                                                $fOpts = $field['options'] ?? [];
+                                                $oldVal = old("meta_{$fName}");
+                                            @endphp
+
+                                            <div class="mb-3">
+                                                <label class="form-label fw-semibold text-dark">
+                                                    {{ $fLabel }}
+                                                    @if($fReq) <span class="text-danger">*</span> @endif
+                                                </label>
+
+                                                @if($fType === 'textarea')
+                                                    <textarea name="meta_{{ $fName }}" class="form-control" rows="3" placeholder="{{ $fPlace }}" {{ $fReq ? 'required' : '' }}>{{ $oldVal }}</textarea>
+                                                @elseif($fType === 'number')
+                                                    <input type="number" step="any" name="meta_{{ $fName }}" value="{{ $oldVal }}" class="form-control" placeholder="{{ $fPlace }}" {{ $fReq ? 'required' : '' }}>
+                                                @elseif($fType === 'date')
+                                                    <input type="date" name="meta_{{ $fName }}" value="{{ $oldVal }}" class="form-control" {{ $fReq ? 'required' : '' }}>
+                                                @elseif($fType === 'select')
+                                                    <select name="meta_{{ $fName }}" class="form-select" {{ $fReq ? 'required' : '' }}>
+                                                        <option value="">-- Pilih {{ $fLabel }} --</option>
+                                                        @foreach($fOpts as $opt)
+                                                            <option value="{{ $opt }}" {{ $oldVal == $opt ? 'selected' : '' }}>{{ $opt }}</option>
+                                                        @endforeach
+                                                    </select>
+                                                @elseif($fType === 'file')
+                                                    <input type="file" name="meta_{{ $fName }}" class="form-control" accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg" {{ $fReq ? 'required' : '' }}>
+                                                @else
+                                                    <input type="text" name="meta_{{ $fName }}" value="{{ $oldVal }}" class="form-control" placeholder="{{ $fPlace }}" {{ $fReq ? 'required' : '' }}>
+                                                @endif
+
+                                                @if($fHelp)
+                                                    <div class="form-text small">{{ $fHelp }}</div>
+                                                @endif
+                                            </div>
+                                        @endforeach
+                                    @else
+                                        <div class="text-center py-5 text-muted">
+                                            <i class="bi bi-info-circle fs-2 d-block mb-2 text-secondary"></i>
+                                            @if($currentType)
+                                                Kategori ini menggunakan atribut dokumen standar. Seluruh berkas scan dan metadata umum akan tersimpan secara otomatis.
+                                            @else
+                                                Silakan pilih kategori arsip untuk menyesuaikan atribut kustom jika tersedia.
+                                            @endif
+                                        </div>
+                                    @endif
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-top py-3 px-4 bg-white flex-shrink-0">
+                    <button type="button" class="btn btn-light border px-4" data-bs-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-primary px-4 fw-semibold">
+                        <i class="bi bi-check-lg me-1"></i> Simpan Dokumen Arsip
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
 </div>
 
 <style>
