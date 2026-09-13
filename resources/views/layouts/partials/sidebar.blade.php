@@ -485,51 +485,53 @@
                         @endforeach
                     @endif
 
-                    <!-- Nested Submenu Khusus Pengaturan: ARSIP DINAMIS -->
-                    @php
-                        $isDynamicSettingsActive = Request::is('elabel/dynamic/types*') 
-                            || Request::is('elabel/dynamic/loans*') 
-                            || (Request::is('elabel/dynamic/items*') && !request()->filled('type_id') && empty($currentTypeId))
-                            || (Request::is('elabel/dynamic/boxes*') && !request()->filled('type_id') && empty($currentTypeId));
-                    @endphp
-                    <div class="nested-group">
-                        <a class="nested-header {{ $isDynamicSettingsActive ? '' : 'collapsed' }}"
-                           data-bs-toggle="collapse"
-                           href="#elabelSubDynamicConfig"
-                           role="button"
-                           aria-expanded="{{ $isDynamicSettingsActive ? 'true' : 'false' }}">
-                            <span><i class="bi bi-sliders me-1 text-secondary"></i> ARSIP DINAMIS</span>
-                            <i class="bi bi-chevron-down nested-chevron"></i>
-                        </a>
-                        <div id="elabelSubDynamicConfig" class="collapse {{ $isDynamicSettingsActive ? 'show' : '' }}">
-                            <ul class="submenu-list">
-                                <li class="{{ Request::is('elabel/dynamic/types*') ? 'active' : '' }}">
-                                    <a href="{{ route('elabel.dynamic.types.index') }}" data-bs-toggle="tooltip" data-bs-placement="right" title="Master Kategori & Form Builder">
-                                        <i class="bi bi-sliders text-success"></i>
-                                        <span>Master Kategori & Form</span>
-                                    </a>
-                                </li>
-                                <li class="{{ Request::is('elabel/dynamic/items*') && !request()->filled('type_id') && empty($currentTypeId) ? 'active' : '' }}">
-                                    <a href="{{ route('elabel.dynamic.items.index') }}" data-bs-toggle="tooltip" data-bs-placement="right" title="Semua Berkas Arsip Dinamis">
-                                        <i class="bi bi-folder2-open text-primary"></i>
-                                        <span>Semua Berkas</span>
-                                    </a>
-                                </li>
-                                <li class="{{ Request::is('elabel/dynamic/boxes*') && !request()->filled('type_id') && empty($currentTypeId) ? 'active' : '' }}">
-                                    <a href="{{ route('elabel.dynamic.boxes.index') }}" data-bs-toggle="tooltip" data-bs-placement="right" title="Manajemen Seluruh Box Arsip Dinamis">
-                                        <i class="bi bi-box-seam text-warning"></i>
-                                        <span>Manajemen Box</span>
-                                    </a>
-                                </li>
-                                <li class="{{ Request::is('elabel/dynamic/loans*') ? 'active' : '' }}">
-                                    <a href="{{ route('elabel.dynamic.loans.index') }}" data-bs-toggle="tooltip" data-bs-placement="right" title="Layanan Peminjaman & Scan Digital">
-                                        <i class="bi bi-arrow-left-right text-info"></i>
-                                        <span>Layanan Peminjaman</span>
-                                    </a>
-                                </li>
-                            </ul>
+                    <!-- Nested Submenu Khusus Pengaturan: ARSIP DINAMIS (Hanya Superadmin) -->
+                    @if(auth()->check() && auth()->user()?->role === \App\Enums\UserRole::SUPERADMIN)
+                        @php
+                            $isDynamicSettingsActive = Request::is('elabel/dynamic/types*') 
+                                || Request::is('elabel/dynamic/loans*') 
+                                || (Request::is('elabel/dynamic/items*') && !request()->filled('type_id') && empty($currentTypeId))
+                                || (Request::is('elabel/dynamic/boxes*') && !request()->filled('type_id') && empty($currentTypeId));
+                        @endphp
+                        <div class="nested-group">
+                            <a class="nested-header {{ $isDynamicSettingsActive ? '' : 'collapsed' }}"
+                               data-bs-toggle="collapse"
+                               href="#elabelSubDynamicConfig"
+                               role="button"
+                               aria-expanded="{{ $isDynamicSettingsActive ? 'true' : 'false' }}">
+                                <span><i class="bi bi-sliders me-1 text-secondary"></i> ARSIP DINAMIS</span>
+                                <i class="bi bi-chevron-down nested-chevron"></i>
+                            </a>
+                            <div id="elabelSubDynamicConfig" class="collapse {{ $isDynamicSettingsActive ? 'show' : '' }}">
+                                <ul class="submenu-list">
+                                    <li class="{{ Request::is('elabel/dynamic/types*') ? 'active' : '' }}">
+                                        <a href="{{ route('elabel.dynamic.types.index') }}" data-bs-toggle="tooltip" data-bs-placement="right" title="Master Kategori & Form Builder">
+                                            <i class="bi bi-sliders text-success"></i>
+                                            <span>Master Kategori & Form</span>
+                                        </a>
+                                    </li>
+                                    <li class="{{ Request::is('elabel/dynamic/items*') && !request()->filled('type_id') && empty($currentTypeId) ? 'active' : '' }}">
+                                        <a href="{{ route('elabel.dynamic.items.index') }}" data-bs-toggle="tooltip" data-bs-placement="right" title="Semua Berkas Arsip Dinamis">
+                                            <i class="bi bi-folder2-open text-primary"></i>
+                                            <span>Semua Berkas</span>
+                                        </a>
+                                    </li>
+                                    <li class="{{ Request::is('elabel/dynamic/boxes*') && !request()->filled('type_id') && empty($currentTypeId) ? 'active' : '' }}">
+                                        <a href="{{ route('elabel.dynamic.boxes.index') }}" data-bs-toggle="tooltip" data-bs-placement="right" title="Manajemen Seluruh Box Arsip Dinamis">
+                                            <i class="bi bi-box-seam text-warning"></i>
+                                            <span>Manajemen Box</span>
+                                        </a>
+                                    </li>
+                                    <li class="{{ Request::is('elabel/dynamic/loans*') ? 'active' : '' }}">
+                                        <a href="{{ route('elabel.dynamic.loans.index') }}" data-bs-toggle="tooltip" data-bs-placement="right" title="Layanan Peminjaman & Scan Digital">
+                                            <i class="bi bi-arrow-left-right text-info"></i>
+                                            <span>Layanan Peminjaman</span>
+                                        </a>
+                                    </li>
+                                </ul>
+                            </div>
                         </div>
-                    </div>
+                    @endif
 
                 </div>
             </div>

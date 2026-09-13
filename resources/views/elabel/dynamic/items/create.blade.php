@@ -128,9 +128,11 @@
                         <h6 class="fw-bold text-navy mb-0 d-flex align-items-center gap-2">
                             <i class="bi bi-ui-checks text-success"></i> Atribut Kustom Kategori ({{ count($selectedType->schema_fields ?? []) }})
                         </h6>
-                        <a href="{{ route('elabel.dynamic.types.edit', $selectedType->id) }}" class="btn btn-sm btn-outline-secondary">
-                            <i class="bi bi-pencil me-1"></i> Sesuaikan Form
-                        </a>
+                        @if(auth()->check() && auth()->user()?->role === \App\Enums\UserRole::SUPERADMIN)
+                            <a href="{{ route('elabel.dynamic.types.edit', $selectedType->id) }}" class="btn btn-sm btn-outline-secondary">
+                                <i class="bi bi-pencil me-1"></i> Sesuaikan Form
+                            </a>
+                        @endif
                     </div>
                     <div class="card-body p-4">
                         @if(!empty($selectedType->schema_fields) && count($selectedType->schema_fields) > 0)

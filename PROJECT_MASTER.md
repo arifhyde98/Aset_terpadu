@@ -250,7 +250,7 @@ Seluruh fitur berikut telah selesai diimplementasikan (**DONE**) dan beroperasi 
 | **Sertifikat Tanah Fisik & Box** | `DONE` | Penyimpanan fisik sertifikat tanah, sinkronisasi otomatis luas tanah dan kepemilikan instansi OPD dua arah dengan modul SIPAT, operasi split/merge box, impor Excel, penguncian OPD form edit sesuai KIB A, serta audit command `sipat:sync-opd-sertifikat`. |
 | **Surat Penyerahan Dokumen & Box** | `DONE` | Administrasi berita acara penyerahan fisik berkas aset dan penataan box arsip terkait (`/elabel/surat-penyerahan`). |
 | **Alur Peminjaman (Scan Request)** | `DONE` | Pengajuan peminjaman fisik atau request scan dokumen BPKB/Sertifikat oleh operator OPD dengan alur persetujuan admin BPKAD. |
-| **Universal Dynamic Archive Engine** | `DONE` | Mesin e-Arsip dinamis multi-kategori dengan form builder kustom berbasis skema JSON, manajemen box universal barcode (`BOX-{KODE}-{NUM}`), viewer scan PDF, multi-lampiran, layanan peminjaman berkas, serta integrasi menu otomatis sidebar & mobile nav dengan caching terversi tanpa beban database. |
+| **Universal Dynamic Archive Engine** | `DONE` | Mesin e-Arsip dinamis multi-kategori dengan form builder kustom berbasis skema JSON, manajemen box universal barcode (`BOX-{KODE}-{NUM}`), viewer scan PDF, multi-lampiran, layanan peminjaman berkas, integrasi menu otomatis sidebar & mobile nav dengan caching terversi tanpa beban database, serta proteksi menu dan form builder terpusat khusus untuk role **Superadmin**. |
 
 ### 8.4 Portal Terpadu, Asisten AI & Fitur Lintas Modul
 | Fitur | Status | Deskripsi & Implementasi |

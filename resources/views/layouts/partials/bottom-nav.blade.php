@@ -309,20 +309,22 @@
                                 @endforeach
                             @endif
 
-                            <!-- Pengaturan Arsip Dinamis -->
-                            <div class="text-muted fw-bold px-2 pt-2 pb-1" style="font-size: 0.65rem; text-transform: uppercase;">Pengaturan Arsip Dinamis</div>
-                            <a href="{{ route('elabel.dynamic.types.index') }}" class="list-group-item list-group-item-action border-0 py-2 rounded-2 {{ Request::is('elabel/dynamic/types*') ? 'active-sub-elabel' : '' }}">
-                                <i class="bi bi-sliders me-2 text-success"></i> Master Kategori & Form
-                            </a>
-                            <a href="{{ route('elabel.dynamic.items.index') }}" class="list-group-item list-group-item-action border-0 py-2 rounded-2 {{ Request::is('elabel/dynamic/items*') && !request()->filled('type_id') && empty($currentTypeId) ? 'active-sub-elabel' : '' }}">
-                                <i class="bi bi-folder2-open me-2 text-primary"></i> Semua Berkas
-                            </a>
-                            <a href="{{ route('elabel.dynamic.boxes.index') }}" class="list-group-item list-group-item-action border-0 py-2 rounded-2 {{ Request::is('elabel/dynamic/boxes*') && !request()->filled('type_id') && empty($currentTypeId) ? 'active-sub-elabel' : '' }}">
-                                <i class="bi bi-box-seam me-2 text-warning"></i> Manajemen Box
-                            </a>
-                            <a href="{{ route('elabel.dynamic.loans.index') }}" class="list-group-item list-group-item-action border-0 py-2 rounded-2 {{ Request::is('elabel/dynamic/loans*') ? 'active-sub-elabel' : '' }}">
-                                <i class="bi bi-arrow-left-right me-2 text-info"></i> Layanan Peminjaman
-                            </a>
+                            <!-- Pengaturan Arsip Dinamis (Hanya Superadmin) -->
+                            @if(auth()->check() && auth()->user()?->role === \App\Enums\UserRole::SUPERADMIN)
+                                <div class="text-muted fw-bold px-2 pt-2 pb-1" style="font-size: 0.65rem; text-transform: uppercase;">Pengaturan Arsip Dinamis</div>
+                                <a href="{{ route('elabel.dynamic.types.index') }}" class="list-group-item list-group-item-action border-0 py-2 rounded-2 {{ Request::is('elabel/dynamic/types*') ? 'active-sub-elabel' : '' }}">
+                                    <i class="bi bi-sliders me-2 text-success"></i> Master Kategori & Form
+                                </a>
+                                <a href="{{ route('elabel.dynamic.items.index') }}" class="list-group-item list-group-item-action border-0 py-2 rounded-2 {{ Request::is('elabel/dynamic/items*') && !request()->filled('type_id') && empty($currentTypeId) ? 'active-sub-elabel' : '' }}">
+                                    <i class="bi bi-folder2-open me-2 text-primary"></i> Semua Berkas
+                                </a>
+                                <a href="{{ route('elabel.dynamic.boxes.index') }}" class="list-group-item list-group-item-action border-0 py-2 rounded-2 {{ Request::is('elabel/dynamic/boxes*') && !request()->filled('type_id') && empty($currentTypeId) ? 'active-sub-elabel' : '' }}">
+                                    <i class="bi bi-box-seam me-2 text-warning"></i> Manajemen Box
+                                </a>
+                                <a href="{{ route('elabel.dynamic.loans.index') }}" class="list-group-item list-group-item-action border-0 py-2 rounded-2 {{ Request::is('elabel/dynamic/loans*') ? 'active-sub-elabel' : '' }}">
+                                    <i class="bi bi-arrow-left-right me-2 text-info"></i> Layanan Peminjaman
+                                </a>
+                            @endif
                         </div>
                     </div>
                 </div>

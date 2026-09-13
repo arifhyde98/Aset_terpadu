@@ -50,9 +50,11 @@
                     <i class="bi bi-plus-circle"></i> Input {{ $currentType->kode ?: 'Dokumen' }} Baru
                 </button>
             @else
-                <a href="{{ route('elabel.dynamic.types.index') }}" class="btn btn-outline-secondary shadow-sm fw-medium d-flex align-items-center gap-2">
-                    <i class="bi bi-sliders"></i> Master Kategori
-                </a>
+                @if(auth()->check() && auth()->user()?->role === \App\Enums\UserRole::SUPERADMIN)
+                    <a href="{{ route('elabel.dynamic.types.index') }}" class="btn btn-outline-secondary shadow-sm fw-medium d-flex align-items-center gap-2">
+                        <i class="bi bi-sliders"></i> Master Kategori
+                    </a>
+                @endif
                 <button type="button" class="btn btn-primary shadow-sm fw-medium d-flex align-items-center gap-2" data-bs-toggle="modal" data-bs-target="#createItemModal">
                     <i class="bi bi-plus-circle"></i> Input Arsip Baru
                 </button>

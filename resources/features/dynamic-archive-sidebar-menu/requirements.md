@@ -18,7 +18,7 @@ Sehingga saya dapat bernavigasi dan mengelola dokumen kategori tertentu secara c
 - [x] Submenu di dalam grup kategori mandiri terdiri dari:
   - `Katalog [Kode/Berkas]` -> filter langsung ke `/elabel/dynamic/items?type_id={id}`
   - `Box [Kode/Arsip]` -> filter langsung ke `/elabel/dynamic/boxes?type_id={id}`
-- [x] Menu **ARSIP DINAMIS** difokuskan khusus untuk pengaturan sistem terpusat:
+- [x] Menu **ARSIP DINAMIS** difokuskan khusus untuk pengaturan sistem terpusat dan **hanya dapat diakses oleh role Superadmin** (tersembunyi dari Admin/OPD pada sidebar & mobile nav, serta dilindungi middleware `role:superadmin` pada controller):
   - `Master Kategori & Form` (`route('elabel.dynamic.types.index')`)
   - `Semua Berkas` (`route('elabel.dynamic.items.index')`)
   - `Manajemen Box` (`route('elabel.dynamic.boxes.index')`)
