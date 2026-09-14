@@ -143,12 +143,12 @@
                 </div>
             </div>
 
-            <!-- Standarisasi Rumah Jabatan / Dinas Permendagri 7/2006 (Jika Ada) -->
+            <!-- Standarisasi Rumah Jabatan / Dinas Permendagri 7/2024 (Jika Ada) -->
             @if(is_object($bangunan->jenis_bangunan) ? $bangunan->jenis_bangunan->value === 'Rumah Dinas / Jabatan' : $bangunan->jenis_bangunan === 'Rumah Dinas / Jabatan')
                 <div class="card border-0 shadow-sm rounded-4 mb-4 border-start border-4 border-primary">
                     <div class="card-header bg-white border-0 pt-4 px-4 pb-0">
                         <h5 class="fw-bold text-primary mb-0 d-flex align-items-center gap-2">
-                            <i class="bi bi-house-door-fill"></i> Standarisasi Rumah Dinas (Permendagri No. 7/2006)
+                            <i class="bi bi-house-door-fill"></i> Standarisasi Rumah Dinas (Permendagri No. 7/2024)
                         </h5>
                     </div>
                     <div class="card-body p-4">

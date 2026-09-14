@@ -3,7 +3,7 @@
 namespace App\Enums;
 
 /**
- * Enum tipe rumah jabatan / rumah dinas sesuai Permendagri No. 7 Tahun 2006.
+ * Enum tipe rumah jabatan / rumah dinas pemerintah daerah.
  */
 enum TipeRumahDinas: string
 {
@@ -15,7 +15,7 @@ enum TipeRumahDinas: string
     case TIPE_E = 'Tipe E';
 
     /**
-     * Deskripsi peruntukan jabatan dan batasan luas standar Permendagri 7/2006.
+     * Deskripsi peruntukan jabatan dan batasan standar luas bangunan & tanah.
      */
     public function description(): string
     {

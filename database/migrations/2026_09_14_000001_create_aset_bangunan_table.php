@@ -29,7 +29,7 @@ return new class extends Migration
                 $table->string('status_tanah_dasar', 100)->nullable();
                 $table->decimal('luas_tanah_dasar', 12, 2)->nullable();
 
-                // Standarisasi Klasifikasi (Permendagri No. 7/2006)
+                // Standarisasi Klasifikasi (Permendagri No. 7/2024)
                 $table->string('jenis_bangunan', 100)->default('Gedung Kantor')->index();
                 $table->string('tipe_rumah_dinas', 50)->nullable();
                 $table->string('nama_penghuni', 255)->nullable();

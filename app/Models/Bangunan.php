@@ -13,7 +13,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
  * Model untuk pengelolaan data Gedung dan Bangunan (KIB C).
- * Sesuai Permendagri No. 19 Tahun 2016 dan Permendagri No. 7 Tahun 2006.
+ * Sesuai Permendagri No. 19 Tahun 2016 jo. Permendagri No. 7 Tahun 2024 tentang Pedoman Pengelolaan Barang Milik Daerah.
  */
 class Bangunan extends Model
 {

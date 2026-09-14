@@ -15,7 +15,7 @@
             <h3 class="fw-bold text-dark mb-0 d-flex align-items-center gap-2">
                 <i class="bi bi-file-earmark-pdf text-danger"></i> Pusat Laporan KIB C (Gedung &amp; Bangunan)
             </h3>
-            <p class="text-muted small mb-0">Format resmi cetak buku inventaris KIB C standar Permendagri No. 19/2016 dan No. 7/2006.</p>
+            <p class="text-muted small mb-0">Format resmi cetak buku inventaris KIB C standar Permendagri No. 19/2016 jo. Permendagri No. 7/2024.</p>
         </div>
 
         <div class="d-flex flex-wrap gap-2">

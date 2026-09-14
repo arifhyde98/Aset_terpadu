@@ -14,7 +14,7 @@
             <h3 class="fw-bold text-dark mb-0 d-flex align-items-center gap-2">
                 <i class="bi bi-building text-primary"></i> Gedung dan Bangunan (KIB C)
             </h3>
-            <p class="text-muted small mb-0">Pengelolaan inventaris gedung pemerintah daerah sesuai Permendagri No. 19/2016 &amp; No. 7/2006.</p>
+            <p class="text-muted small mb-0">Pengelolaan inventaris gedung pemerintah daerah sesuai Permendagri No. 19/2016 jo. Permendagri No. 7/2024.</p>
         </div>
 
         <div class="d-flex flex-wrap align-items-center gap-2">

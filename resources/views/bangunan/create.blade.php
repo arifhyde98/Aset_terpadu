@@ -13,7 +13,7 @@
         <h3 class="fw-bold text-dark mb-0 d-flex align-items-center gap-2">
             <i class="bi bi-plus-circle text-primary"></i> Tambah Gedung dan Bangunan Baru
         </h3>
-        <p class="text-muted small mb-0">Lengkapi formulir pendataan aset KIB C berdasarkan standar Permendagri No. 19/2016 dan No. 7/2006.</p>
+        <p class="text-muted small mb-0">Lengkapi formulir pendataan aset KIB C berdasarkan standar Permendagri No. 19/2016 jo. Permendagri No. 7/2024.</p>
     </div>
 
     @if ($errors->any())
@@ -82,10 +82,10 @@
                                 </select>
                             </div>
 
-                            <!-- Field Dinamis Permendagri 7/2006 (Rumah Dinas) -->
+                            <!-- Field Dinamis Permendagri 7/2024 (Rumah Dinas) -->
                             <div class="col-12 p-3 bg-light rounded-3 d-none" id="groupRumahDinas">
                                 <h6 class="fw-bold text-primary small mb-2 d-flex align-items-center gap-1">
-                                    <i class="bi bi-house-door-fill"></i> Standarisasi Rumah Jabatan / Dinas (Permendagri No. 7/2006)
+                                    <i class="bi bi-house-door-fill"></i> Standarisasi Rumah Jabatan / Dinas (Permendagri No. 7/2024)
                                 </h6>
                                 <div class="row g-2">
                                     <div class="col-12 col-md-6">
