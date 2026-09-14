@@ -4,12 +4,12 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\Erandis\VehicleController;
 use App\Http\Controllers\HomeController;
-use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\MasterDataController;
+use App\Http\Controllers\Admin\ProfileController;
+use App\Http\Controllers\Master\MasterDataController;
 use App\Http\Controllers\Erandis\VehicleTypeController;
-use App\Http\Controllers\SettingController;
-use App\Http\Controllers\UserController;
-use App\Http\Controllers\ActivityController;
+use App\Http\Controllers\Admin\SettingController;
+use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\Admin\ActivityController;
 use App\Http\Controllers\Erandis\ReportController;
 use App\Http\Controllers\HealthCheckController;
 
@@ -61,15 +61,15 @@ Route::get('settings', [SettingController::class, 'index'])->name('settings.inde
 Route::post('settings', [SettingController::class, 'update'])->name('settings.update');
 
 // Manajemen Backup (Spatie Backup)
-Route::get('settings/backups', [\App\Http\Controllers\BackupController::class, 'index'])->name('settings.backups.index');
-Route::post('settings/backups', [\App\Http\Controllers\BackupController::class, 'create'])->name('settings.backups.create');
-Route::get('settings/backups/status', [\App\Http\Controllers\BackupController::class, 'status'])->name('settings.backups.status');
-Route::get('settings/backups/download/{fileName}', [\App\Http\Controllers\BackupController::class, 'download'])->name('settings.backups.download')->where('fileName', '.*');
-Route::delete('settings/backups/{fileName}', [\App\Http\Controllers\BackupController::class, 'destroy'])->name('settings.backups.destroy')->where('fileName', '.*');
-Route::post('settings/backups/sync-db', [\App\Http\Controllers\BackupController::class, 'syncDb'])->name('settings.backups.sync-db');
-Route::get('settings/backups/sync-db-status', [\App\Http\Controllers\BackupController::class, 'syncDbStatus'])->name('settings.backups.sync-db-status');
-Route::get('settings/backups/sync-db-stream', [\App\Http\Controllers\BackupController::class, 'syncDbStream'])->name('settings.backups.sync-db-stream');
-Route::post('settings/backups/restore-sql', [\App\Http\Controllers\BackupController::class, 'restoreSql'])->name('settings.backups.restore-sql');
+Route::get('settings/backups', [\App\Http\Controllers\Admin\BackupController::class, 'index'])->name('settings.backups.index');
+Route::post('settings/backups', [\App\Http\Controllers\Admin\BackupController::class, 'create'])->name('settings.backups.create');
+Route::get('settings/backups/status', [\App\Http\Controllers\Admin\BackupController::class, 'status'])->name('settings.backups.status');
+Route::get('settings/backups/download/{fileName}', [\App\Http\Controllers\Admin\BackupController::class, 'download'])->name('settings.backups.download')->where('fileName', '.*');
+Route::delete('settings/backups/{fileName}', [\App\Http\Controllers\Admin\BackupController::class, 'destroy'])->name('settings.backups.destroy')->where('fileName', '.*');
+Route::post('settings/backups/sync-db', [\App\Http\Controllers\Admin\BackupController::class, 'syncDb'])->name('settings.backups.sync-db');
+Route::get('settings/backups/sync-db-status', [\App\Http\Controllers\Admin\BackupController::class, 'syncDbStatus'])->name('settings.backups.sync-db-status');
+Route::get('settings/backups/sync-db-stream', [\App\Http\Controllers\Admin\BackupController::class, 'syncDbStream'])->name('settings.backups.sync-db-stream');
+Route::post('settings/backups/restore-sql', [\App\Http\Controllers\Admin\BackupController::class, 'restoreSql'])->name('settings.backups.restore-sql');
 
 Route::post('users/generate-opd-accounts', [UserController::class, 'generateAllOpdAccounts'])->name('users.generate-opd-accounts');
 Route::post('users/{user}/reset-password', [UserController::class, 'resetPassword'])->name('users.reset-password');

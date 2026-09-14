@@ -83,15 +83,15 @@ Route::prefix('sipat')->name('sipat.')->group(function () {
 
 // Master Data SIPAT
 Route::prefix('master-data')->group(function () {
-    Route::resource('status-proses', \App\Http\Controllers\StatusProsesController::class)->names('status-proses');
-    Route::resource('opd-sipat', \App\Http\Controllers\MasterSipatOpdController::class)->names('opd-sipat');
-    Route::get('opd-sipat-list', [\App\Http\Controllers\MasterSipatOpdController::class, 'index'])->name('master.opd-sipat.index');
+    Route::resource('status-proses', \App\Http\Controllers\Master\StatusProsesController::class)->names('status-proses');
+    Route::resource('opd-sipat', \App\Http\Controllers\Master\MasterSipatOpdController::class)->names('opd-sipat');
+    Route::get('opd-sipat-list', [\App\Http\Controllers\Master\MasterSipatOpdController::class, 'index'])->name('master.opd-sipat.index');
 
     // Rute dari web.php (kop-surat dan log-aktivitas)
-    Route::get('kop-surat', [\App\Http\Controllers\KopSettingsController::class, 'index'])->name('master.kop-settings.index');
-    Route::post('kop-surat', [\App\Http\Controllers\KopSettingsController::class, 'update'])->name('master.kop-settings.update');
-    Route::get('log-aktivitas', [\App\Http\Controllers\AuditLogsController::class, 'index'])->name('master.logs.index');
-    Route::get('log-aktivitas/{id}', [\App\Http\Controllers\AuditLogsController::class, 'show'])->name('master.logs.show');
+    Route::get('kop-surat', [\App\Http\Controllers\Master\KopSettingsController::class, 'index'])->name('master.kop-settings.index');
+    Route::post('kop-surat', [\App\Http\Controllers\Master\KopSettingsController::class, 'update'])->name('master.kop-settings.update');
+    Route::get('log-aktivitas', [\App\Http\Controllers\Admin\AuditLogsController::class, 'index'])->name('master.logs.index');
+    Route::get('log-aktivitas/{id}', [\App\Http\Controllers\Admin\AuditLogsController::class, 'show'])->name('master.logs.show');
 
     // Import Sertifikat & Status Proses
     Route::prefix('import')->name('master.import.')->group(function () {
@@ -104,30 +104,30 @@ Route::prefix('master-data')->group(function () {
 
     // Wilayah (SIPAT)
     Route::prefix('wilayah')->name('master.')->group(function () {
-        Route::get('/', [\App\Http\Controllers\MasterDataWilayahController::class, 'index'])->name('wilayah.index');
+        Route::get('/', [\App\Http\Controllers\Master\MasterDataWilayahController::class, 'index'])->name('wilayah.index');
         
-        Route::post('kecamatan', [\App\Http\Controllers\MasterDataWilayahController::class, 'kecamatanStore'])->name('kecamatan.store');
-        Route::put('kecamatan/{id}', [\App\Http\Controllers\MasterDataWilayahController::class, 'kecamatanUpdate'])->name('kecamatan.update');
-        Route::delete('kecamatan/{id}', [\App\Http\Controllers\MasterDataWilayahController::class, 'kecamatanDestroy'])->name('kecamatan.destroy');
+        Route::post('kecamatan', [\App\Http\Controllers\Master\MasterDataWilayahController::class, 'kecamatanStore'])->name('kecamatan.store');
+        Route::put('kecamatan/{id}', [\App\Http\Controllers\Master\MasterDataWilayahController::class, 'kecamatanUpdate'])->name('kecamatan.update');
+        Route::delete('kecamatan/{id}', [\App\Http\Controllers\Master\MasterDataWilayahController::class, 'kecamatanDestroy'])->name('kecamatan.destroy');
 
-        Route::post('desa', [\App\Http\Controllers\MasterDataWilayahController::class, 'desaStore'])->name('desa.store');
-        Route::put('desa/{id}', [\App\Http\Controllers\MasterDataWilayahController::class, 'desaUpdate'])->name('desa.update');
-        Route::delete('desa/{id}', [\App\Http\Controllers\MasterDataWilayahController::class, 'desaDestroy'])->name('desa.destroy');
+        Route::post('desa', [\App\Http\Controllers\Master\MasterDataWilayahController::class, 'desaStore'])->name('desa.store');
+        Route::put('desa/{id}', [\App\Http\Controllers\Master\MasterDataWilayahController::class, 'desaUpdate'])->name('desa.update');
+        Route::delete('desa/{id}', [\App\Http\Controllers\Master\MasterDataWilayahController::class, 'desaDestroy'])->name('desa.destroy');
 
-        Route::post('kepala-desa', [\App\Http\Controllers\MasterDataWilayahController::class, 'kadesStore'])->name('kades.store');
-        Route::put('kepala-desa/{id}', [\App\Http\Controllers\MasterDataWilayahController::class, 'kadesUpdate'])->name('kades.update');
-        Route::delete('kepala-desa/{id}', [\App\Http\Controllers\MasterDataWilayahController::class, 'kadesDestroy'])->name('kades.destroy');
+        Route::post('kepala-desa', [\App\Http\Controllers\Master\MasterDataWilayahController::class, 'kadesStore'])->name('kades.store');
+        Route::put('kepala-desa/{id}', [\App\Http\Controllers\Master\MasterDataWilayahController::class, 'kadesUpdate'])->name('kades.update');
+        Route::delete('kepala-desa/{id}', [\App\Http\Controllers\Master\MasterDataWilayahController::class, 'kadesDestroy'])->name('kades.destroy');
 
-        Route::post('camat', [\App\Http\Controllers\MasterDataWilayahController::class, 'camatStore'])->name('camat.store');
-        Route::put('camat/{id}', [\App\Http\Controllers\MasterDataWilayahController::class, 'camatUpdate'])->name('camat.update');
-        Route::delete('camat/{id}', [\App\Http\Controllers\MasterDataWilayahController::class, 'camatDestroy'])->name('camat.destroy');
+        Route::post('camat', [\App\Http\Controllers\Master\MasterDataWilayahController::class, 'camatStore'])->name('camat.store');
+        Route::put('camat/{id}', [\App\Http\Controllers\Master\MasterDataWilayahController::class, 'camatUpdate'])->name('camat.update');
+        Route::delete('camat/{id}', [\App\Http\Controllers\Master\MasterDataWilayahController::class, 'camatDestroy'])->name('camat.destroy');
 
-        Route::post('pemohon', [\App\Http\Controllers\MasterDataWilayahController::class, 'pemohonStore'])->name('pemohon.store');
-        Route::put('pemohon/{id}', [\App\Http\Controllers\MasterDataWilayahController::class, 'pemohonUpdate'])->name('pemohon.update');
-        Route::delete('pemohon/{id}', [\App\Http\Controllers\MasterDataWilayahController::class, 'pemohonDestroy'])->name('pemohon.destroy');
+        Route::post('pemohon', [\App\Http\Controllers\Master\MasterDataWilayahController::class, 'pemohonStore'])->name('pemohon.store');
+        Route::put('pemohon/{id}', [\App\Http\Controllers\Master\MasterDataWilayahController::class, 'pemohonUpdate'])->name('pemohon.update');
+        Route::delete('pemohon/{id}', [\App\Http\Controllers\Master\MasterDataWilayahController::class, 'pemohonDestroy'])->name('pemohon.destroy');
 
-        Route::post('judul-laporan', [\App\Http\Controllers\MasterDataWilayahController::class, 'judulStore'])->name('judul.store');
-        Route::put('judul-laporan/{id}', [\App\Http\Controllers\MasterDataWilayahController::class, 'judulUpdate'])->name('judul.update');
-        Route::delete('judul-laporan/{id}', [\App\Http\Controllers\MasterDataWilayahController::class, 'judulDestroy'])->name('judul.destroy');
+        Route::post('judul-laporan', [\App\Http\Controllers\Master\MasterDataWilayahController::class, 'judulStore'])->name('judul.store');
+        Route::put('judul-laporan/{id}', [\App\Http\Controllers\Master\MasterDataWilayahController::class, 'judulUpdate'])->name('judul.update');
+        Route::delete('judul-laporan/{id}', [\App\Http\Controllers\Master\MasterDataWilayahController::class, 'judulDestroy'])->name('judul.destroy');
     });
 });

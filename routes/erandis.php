@@ -25,8 +25,8 @@ Route::resource('vehicles', VehicleController::class)->except(['create', 'edit',
 
 // Pemetaan OPD Terpadu (SIPAT ↔ E-RANDIS)
 Route::prefix('master-data/opd-mapping')->name('master.opd-mapping.')->group(function () {
-    Route::get('/', [\App\Http\Controllers\MasterOpdMappingController::class, 'index'])->name('index');
-    Route::delete('/{id}', [\App\Http\Controllers\MasterOpdMappingController::class, 'destroy'])->name('destroy');
+    Route::get('/', [\App\Http\Controllers\Master\MasterOpdMappingController::class, 'index'])->name('index');
+    Route::delete('/{id}', [\App\Http\Controllers\Master\MasterOpdMappingController::class, 'destroy'])->name('destroy');
 });
 
 // Jenis Kendaraan

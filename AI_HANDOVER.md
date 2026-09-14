@@ -564,7 +564,7 @@ Seluruh peningkatan visual kustom diisolasi pada file [`resources/sass/component
 | **E-RANDIS** | GET | `/vehicles/check-duplicates` | `Erandis\VehicleController@checkDuplicates` | Auth | Deteksi duplikasi data kendaraan dinas |
 | **E-RANDIS** | POST | `/vehicles/resolve-duplicate-vehicle` | `Erandis\VehicleController@resolveDuplicateVehicle` | Auth | Resolusi / merge plat nomor kendaraan ganda |
 | **E-RANDIS** | POST | `/vehicles/resolve-duplicate-opd` | `Erandis\VehicleController@resolveDuplicateOpd` | Auth | Resolusi duplikasi instansi OPD E-RANDIS |
-| **E-RANDIS** | GET | `/master-data/opd-mapping` | `MasterOpdMappingController@index` | Auth | Hub pemetaan instansi SIPAT ↔ E-RANDIS |
+| **E-RANDIS** | GET | `/master-data/opd-mapping` | `Master\MasterOpdMappingController@index` | Auth | Hub pemetaan instansi SIPAT ↔ E-RANDIS |
 | **E-RANDIS** | Resource | `/vehicle-types` | `Erandis\VehicleTypeController` | Auth | CRUD Master Jenis Kendaraan Dinas |
 | **E-RANDIS** | Resource | `/opds` | `Erandis\OpdController` | Auth | CRUD Master OPD Kendaraan Dinas |
 | **E-RANDIS** | GET | `/reports` | `Erandis\ReportController@index` | Auth | Dashboard Modul Laporan Kendaraan |
@@ -595,13 +595,13 @@ Seluruh peningkatan visual kustom diisolasi pada file [`resources/sass/component
 | **SIPAT** | GET | `/sipat/surat/skpt` | `Sipat\SuratController@skpt` | Auth | Modul Pembuatan Surat SKPT |
 | **SIPAT** | GET | `/sipat/peta` | `Sipat\PetaController@index` | Auth | Peta Interaktif Sebaran Aset Spasial |
 | **SIPAT** | POST | `/sipat/peta/import-poligon` | `Sipat\PetaController@importPoligon` | Auth | Unggah Poligon Spasial GeoJSON/Shapefile |
-| **SIPAT** | Resource | `/master-data/status-proses` | `StatusProsesController` | Auth | CRUD Master Status & Kategori BPN |
-| **SIPAT** | Resource | `/master-data/opd-sipat` | `MasterSipatOpdController` | Auth | CRUD Master OPD Modul SIPAT |
-| **SIPAT** | GET/POST | `/master-data/kop-surat` | `KopSettingsController` | Superadmin, Admin | Pengaturan KOP Surat Resmi & Pejabat Pemda |
-| **SIPAT** | GET | `/master-data/wilayah` | `MasterDataWilayahController@index` | Auth | Master Kecamatan, Desa, Camat, Kades, Pemohon |
+| **SIPAT** | Resource | `/master-data/status-proses` | `Master\StatusProsesController` | Auth | CRUD Master Status & Kategori BPN |
+| **SIPAT** | Resource | `/master-data/opd-sipat` | `Master\MasterSipatOpdController` | Auth | CRUD Master OPD Modul SIPAT |
+| **SIPAT** | GET/POST | `/master-data/kop-surat` | `Master\KopSettingsController` | Superadmin, Admin | Pengaturan KOP Surat Resmi & Pejabat Pemda |
+| **SIPAT** | GET | `/master-data/wilayah` | `Master\MasterDataWilayahController@index` | Auth | Master Kecamatan, Desa, Camat, Kades, Pemohon |
 | **SIPAT** | GET | `/sipat/dashboard` | `Sipat\SipatDashboardController@index` | Auth | Dashboard Utama SIPAT |
 | **SIPAT** | GET | `/master-data/import` | `Sipat\SipatImportController@index` | Auth | Halaman Impor Data Aset & Update Status BPN |
-| **SIPAT** | GET | `/master-data/log-aktivitas` | `AuditLogsController@index` | Auth | Audit Log Riwayat Mutasi Modul SIPAT |
+| **SIPAT** | GET | `/master-data/log-aktivitas` | `Admin\AuditLogsController@index` | Auth | Audit Log Riwayat Mutasi Modul SIPAT |
 | **eLABEL** | GET | `/elabel/dashboard` | `Elabel\ElabelDashboardController@index` | Auth | Dashboard Utama eLABEL |
 | **eLABEL** | GET | `/elabel/bpkb` | `Elabel\ElabelBpkbController@index` | Auth | Katalog Fisik BPKB |
 | **eLABEL** | GET | `/elabel/bpkb-deleted` | `Elabel\ElabelBpkbDeletedController@index` | Auth | Arsip BPKB Keluar (*Soft Deleted*) & Restore |
@@ -621,12 +621,12 @@ Seluruh peningkatan visual kustom diisolasi pada file [`resources/sass/component
 | **eLABEL** | GET | `/elabel/dynamic/items/export` | `Elabel\Dynamic\ArchiveItemController@export` | Auth | Ekspor Excel Katalog Arsip Dinamis |
 | **eLABEL** | GET | `/elabel/dynamic/items/{id}/view-pdf` | `Elabel\Dynamic\ArchiveItemController@viewPdf` | Auth | Viewer Berkas Scan PDF Arsip Dinamis |
 | **eLABEL** | GET/POST | `/elabel/dynamic/loans` | `Elabel\Dynamic\ArchiveLoanController` | Auth | Layanan Peminjaman & Scan Arsip Dinamis |
-| **System** | GET | `/users` | `UserController@index` | Superadmin, Admin | Manajemen Pengguna & Kredensial Akun |
-| **System** | GET | `/activities` | `ActivityController@index` | Superadmin, Admin | Audit Trail Terpadu Tiga Modul |
-| **System** | POST | `/settings/backups/sync-db` | `BackupController@syncDb` | Auth | Trigger background sinkronisasi DB Staging |
-| **System** | GET | `/settings/backups/sync-db-status` | `BackupController@syncDbStatus` | Auth | Polling status sinkronisasi DB Staging |
-| **System** | GET | `/settings/backups/sync-db-stream` | `BackupController@syncDbStream` | Auth | Real-time SSE streaming sinkronisasi DB Staging |
-| **System** | POST | `/settings/backups/restore-sql` | `BackupController@restoreSql` | Auth | Unggah & restore dump database SQL |
+| **System** | GET | `/users` | `Admin\UserController@index` | Superadmin, Admin | Manajemen Pengguna & Kredensial Akun |
+| **System** | GET | `/activities` | `Admin\ActivityController@index` | Superadmin, Admin | Audit Trail Terpadu Tiga Modul |
+| **System** | POST | `/settings/backups/sync-db` | `Admin\BackupController@syncDb` | Auth | Trigger background sinkronisasi DB Staging |
+| **System** | GET | `/settings/backups/sync-db-status` | `Admin\BackupController@syncDbStatus` | Auth | Polling status sinkronisasi DB Staging |
+| **System** | GET | `/settings/backups/sync-db-stream` | `Admin\BackupController@syncDbStream` | Auth | Real-time SSE streaming sinkronisasi DB Staging |
+| **System** | POST | `/settings/backups/restore-sql` | `Admin\BackupController@restoreSql` | Auth | Unggah & restore dump database SQL |
 
 ---
 

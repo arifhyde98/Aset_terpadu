@@ -112,13 +112,15 @@ Aset_terpadu/
 │   ├── Enums/            # Nilai enum statis (UserRole, VehicleStatus, VehicleCondition).
 │   ├── Http/
 │   │   ├── Controllers/
+│   │   │   ├── Admin/    # Controller sistem & administrasi (User, Profile, Setting, Backup, Activity, AuditLogs).
 │   │   │   ├── Bangunan/ # Controller modul bangunan/gedung (KIB C).
 │   │   │   ├── Elabel/   # Controller pengarsipan & Dynamic Archive (Bpkb, Sertifikat, Box, Smart Extractor).
 │   │   │   ├── Erandis/  # Controller kendaraan dinas & laporan (Vehicle, VehicleType, Report, ReportSetting).
+│   │   │   ├── Master/   # Controller data master lintas modul (MasterData, Wilayah, OpdMapping, MasterSipatOpd, StatusProses, KopSettings).
 │   │   │   ├── Sipat/    # Controller pertanahan (AsetTanah, Dashboard, Import, TargetSertifikat, Surat, Laporan, Peta, Rekonsiliasi).
-│   │   │   └── ...       # Controller Auth, LandingPage, User, AiAssistant, MasterData, HealthCheck, dan Backup/Sync.
+│   │   │   └── ...       # Controller root (Auth, LandingPage, AiAssistant, HealthCheck).
 │   │   ├── Middleware/   # Middleware aplikasi, CheckRole, dan SsoAuthenticate.
-│   │   └── Requests/     # FormRequest validasi terpusat (Bangunan/, Elabel/, Erandis/, Sipat/, dan Shared).
+│   │   └── Requests/     # FormRequest validasi terpusat (Admin/, Bangunan/, Elabel/, Erandis/, Sipat/, dan Shared).
 │   ├── Models/           # Model Eloquent (Vehicle, AsetTanah, Opd, OpdSipat, OpdMapping, SuratSkpt, dsb).
 │   │   ├── Elabel/       # Model khusus eLABEL (ElabelBpkb, ElabelBox, ElabelLoan, dll).
 │   │   └── Dynamic/      # Model Universal Dynamic Archive (ArchiveType, ArchiveBox, ArchiveItem, dll).
