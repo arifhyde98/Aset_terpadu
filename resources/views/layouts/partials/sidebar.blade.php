@@ -222,6 +222,41 @@
                     @endif
 
                 </div>
+            <!-- MODUL: BANGUNAN (KIB C) -->
+            <div class="module-group module-bangunan">
+                <a class="module-header {{ Request::is('bangunan*') ? '' : 'collapsed' }}" 
+                   data-bs-toggle="collapse" 
+                   data-bs-target="#moduleBangunan" 
+                   aria-expanded="{{ Request::is('bangunan*') ? 'true' : 'false' }}"
+                   data-bs-toggle-tooltip="tooltip" data-bs-placement="right" title="KIB C BANGUNAN">
+                    <div class="module-header-title">
+                        <i class="bi bi-building-fill module-icon text-info"></i>
+                        <span class="module-name">KIB C (BANGUNAN)</span>
+                    </div>
+                    <i class="bi bi-chevron-down chevron-icon"></i>
+                </a>
+                <div id="moduleBangunan" class="collapse {{ Request::is('bangunan*') ? 'show' : '' }}" data-bs-parent="#moduleAccordion">
+                    <ul class="submenu-list">
+                        <li class="{{ Request::is('bangunan') || (Request::is('bangunan/*') && !Request::is('bangunan/peta*', 'bangunan/laporan*')) ? 'active' : '' }}">
+                            <a href="{{ route('bangunan.index') }}" data-bs-toggle="tooltip" data-bs-placement="right" title="Daftar Gedung & Bangunan">
+                                <i class="bi bi-building"></i>
+                                <span>Data Bangunan</span>
+                            </a>
+                        </li>
+                        <li class="{{ Request::is('bangunan/peta*') ? 'active' : '' }}">
+                            <a href="{{ route('bangunan.peta.index') }}" data-bs-toggle="tooltip" data-bs-placement="right" title="Peta Sebaran Gedung GIS">
+                                <i class="bi bi-geo-alt"></i>
+                                <span>Peta GIS Gedung</span>
+                            </a>
+                        </li>
+                        <li class="{{ Request::is('bangunan/laporan*') ? 'active' : '' }}">
+                            <a href="{{ route('bangunan.laporan.index') }}" data-bs-toggle="tooltip" data-bs-placement="right" title="Laporan KIB C Permendagri">
+                                <i class="bi bi-file-earmark-pdf"></i>
+                                <span>Laporan KIB C</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
             </div>
 
             <!-- MODUL: ERANDIS (Yellow/Orange Accent) -->

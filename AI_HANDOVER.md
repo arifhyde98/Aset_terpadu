@@ -136,6 +136,15 @@ Sertifikat tanah di tabel `elabel_sertifikat_tanah` yang memiliki NIBAR di `aset
 - **Kunci Kanonikal Resmi NIBAR (`getAsetDetailsForModal`):** Menghubungkan aset tanah ke arsip sertifikat e-Label **hanya** melalui kunci kanonikal resmi NIBAR (`nibar = kode_aset`). Menghilangkan pencarian kabur (*fuzzy match* `LIKE %nama_aset%` ke `nama_pemilik`) guna mengeliminasi risiko *false positive* (salah menghubungkan sertifikat tanah milik aset lain).
 - **Deteksi Duplikasi BPN (`getDuplicateAsetList`):** Mengaktifkan deteksi duplikasi nomor sertifikat BPN dengan mengambil data `no_sertipikat` dari tabel `elabel_sertifikat_tanah` yang terhubung dengan `aset_tanah.kode_aset`.
 
+### 3.3 Aturan Arsitektur Modul Gedung & Bangunan (KIB C)
+Modul KIB C mengelola gedung dan bangunan pemerintah daerah sesuai Permendagri No. 19/2016 dan No. 7/2006:
+- **Tabel Basis Data:** `aset_bangunan` (terhubung ke `opd` via `opd_id`, dan ke `aset_tanah` via `aset_tanah_id` nullable).
+- **Pengamanan Hukum:** Bangunan menunjuk ke bidang tanah KIB A tempatnya berdiri via NIBAR/`aset_tanah_id`. Pada model `AsetTanah`, relasi `bangunan()` dideklarasikan sebagai `hasMany(Bangunan::class, 'aset_tanah_id')`.
+- **Standarisasi Permendagri No. 7/2006:** Menangani klasifikasi rumah jabatan/dinas tipe Khusus s/d E dengan batas standar luas bangunan dan tanah, serta pencatatan nama & NIP pejabat penghuni.
+- **AI Smart Semantic Import:** Mengadopsi arsitektur `BangunanImportService` dan `BangunanMultiSheetImport` dengan kamus sinonim semantik teks (`similar_text >= 65%`) untuk impor fleksibel dari file Excel Simda/SIPD/Dinas ke tabel `aset_bangunan`.
+- **Pusat Laporan mPDF:** Render laporan 18 kolom KIB C standar Permendagri dalam format A4-Landscape dengan KOP surat resmi dan lembar pengesahan tanda tangan ganda.
+- **Observer & Audit Log:** `BangunanObserver` mencatat aktivitas perubahan snapshot ke tabel `activities` (`module_id = 4, module_key = 'bangunan'`) serta menginvalidasi cache `bangunan.stats.*`.
+
 ### 3.4 Proteksi Dependensi Data Master & Guard Cascade Delete
 Mencegah terjadinya *cascade delete* database yang dapat melenyapkan data historis secara tidak sengaja:
 - **Master Status Proses (`StatusProsesController@destroy`):** Memeriksa dependensi `ProsesAset::where('id_status', $id)->count()`. Menolak penghapusan jika status masih digunakan oleh catatan aset tanah aktif.

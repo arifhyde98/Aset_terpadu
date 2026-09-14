@@ -92,6 +92,14 @@ class AsetTanah extends Model
     }
 
     /**
+     * Relasi ke Gedung dan Bangunan (KIB C) yang berdiri di atas bidang tanah ini.
+     */
+    public function bangunan(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(\App\Models\Bangunan::class, 'aset_tanah_id');
+    }
+
+    /**
      * Scope: Hanya aset yang sudah bersertifikat resmi.
      */
     public function scopeSudahBersertifikat($query)

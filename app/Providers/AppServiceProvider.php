@@ -41,6 +41,9 @@ class AppServiceProvider extends ServiceProvider
         // eLABEL Dynamic Archive Observer (Sidebar Cache Invalidation)
         \App\Models\Elabel\Dynamic\ArchiveType::observe(\App\Observers\ArchiveTypeObserver::class);
 
+        // Modul Bangunan KIB C Observer
+        \App\Models\Bangunan::observe(\App\Observers\BangunanObserver::class);
+
         // View Composer for Sidebar & Mobile Nav (Universal Dynamic Archive Types)
         \Illuminate\Support\Facades\View::composer(
             ['layouts.partials.sidebar', 'layouts.partials.bottom-nav'],

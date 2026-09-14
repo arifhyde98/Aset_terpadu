@@ -18,6 +18,9 @@ return Application::configure(basePath: dirname(__DIR__))
             
             \Illuminate\Support\Facades\Route::middleware('web')
                 ->group(base_path('routes/erandis.php'));
+
+            \Illuminate\Support\Facades\Route::middleware('web')
+                ->group(base_path('routes/bangunan.php'));
         },
     )
     ->withMiddleware(function (Middleware $middleware) {
