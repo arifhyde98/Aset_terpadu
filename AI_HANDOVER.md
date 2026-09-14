@@ -318,8 +318,8 @@ Seluruh logika kalkulasi dan query bisnis wajib dienkapsulasi di dalam kelas Ser
 - `ReportService` (`app/Services/Erandis/ReportService.php`): Orkestrasi ringkasan data laporan E-RANDIS (mendukung data riil `vehicles` dan data historis e-BMD `ebmd_vehicles`) serta pemanggilan strategy aktif.
 - `ReportGenerationService` (`app/Services/Erandis/ReportGenerationService.php`): Pembuatan berkas ekspor dan PDF laporan kendaraan dinas.
 - `ReportDocumentSettingService` (`app/Services/Erandis/ReportDocumentSettingService.php`): Pengaturan dokumen, kop surat, dan penanda tangan laporan kendaraan.
-- `SipatService` (`app/Services/`): Menyediakan statistik ringkasan pertanahan, agregasi capaian BPN, cache dashboard SIPAT, dan sebaran wilayah kecamatan/OPD.
-- `LaporanService` (`app/Services/`): Mesin pengolah laporan pertanahan resmi: resolusi judul 3 baris dinamis, ekspor Excel 11/12 kolom bersertifikat, dan penataan lembar pengesahan tanda tangan ganda.
+- `SipatService` (`app/Services/Sipat/SipatService.php`): Menyediakan statistik ringkasan pertanahan, agregasi capaian BPN, cache dashboard SIPAT, dan sebaran wilayah kecamatan/OPD.
+- `LaporanService` (`app/Services/Sipat/LaporanService.php`): Mesin pengolah laporan pertanahan resmi: resolusi judul 3 baris dinamis, ekspor Excel 11/12 kolom bersertifikat, dan penataan lembar pengesahan tanda tangan ganda.
 - `AsetTanahService` (`app/Services/Sipat/AsetTanahService.php`):
   - Kueri Master Aset Tanah diurutkan menggunakan `CASE` SQL agar aset ber-NIBAR resmi selalu di urutan paling atas dan usulan draft (`DRAFT-`, `BELUM-`, null, `-`) di paling bawah.
   - Menggunakan **Eloquent Query Scopes** pada Model `AsetTanah` (`scopeSudahBersertifikat`, `scopeDalamProses`, `scopeBermasalah`, `scopeBelumBersertifikat`, dan `scopeFilterKategoriStatus`) sebagai *Single Source of Truth (SSOT)* filter status pertanahan.
@@ -597,7 +597,8 @@ Seluruh peningkatan visual kustom diisolasi pada file [`resources/sass/component
 | **SIPAT** | Resource | `/master-data/opd-sipat` | `MasterSipatOpdController` | Auth | CRUD Master OPD Modul SIPAT |
 | **SIPAT** | GET/POST | `/master-data/kop-surat` | `KopSettingsController` | Superadmin, Admin | Pengaturan KOP Surat Resmi & Pejabat Pemda |
 | **SIPAT** | GET | `/master-data/wilayah` | `MasterDataWilayahController@index` | Auth | Master Kecamatan, Desa, Camat, Kades, Pemohon |
-| **SIPAT** | GET | `/master-data/import` | `SipatImportController@index` | Auth | Halaman Impor Data Aset & Update Status BPN |
+| **SIPAT** | GET | `/sipat/dashboard` | `Sipat\SipatDashboardController@index` | Auth | Dashboard Utama SIPAT |
+| **SIPAT** | GET | `/master-data/import` | `Sipat\SipatImportController@index` | Auth | Halaman Impor Data Aset & Update Status BPN |
 | **SIPAT** | GET | `/master-data/log-aktivitas` | `AuditLogsController@index` | Auth | Audit Log Riwayat Mutasi Modul SIPAT |
 | **eLABEL** | GET | `/elabel/dashboard` | `Elabel\ElabelDashboardController@index` | Auth | Dashboard Utama eLABEL |
 | **eLABEL** | GET | `/elabel/bpkb` | `Elabel\ElabelBpkbController@index` | Auth | Katalog Fisik BPKB |

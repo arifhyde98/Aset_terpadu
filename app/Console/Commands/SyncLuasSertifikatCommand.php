@@ -4,7 +4,7 @@ namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
-use App\Services\SipatService;
+use App\Services\Sipat\SipatService;
 
 class SyncLuasSertifikatCommand extends Command
 {

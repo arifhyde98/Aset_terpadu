@@ -44,7 +44,7 @@ class LandingPageController extends Controller
         ];
 
         // 4. Ambil Statistik Sebaran Aset Pertanahan (OPD & Kecamatan)
-        $sipatService = app(\App\Services\SipatService::class);
+        $sipatService = app(\App\Services\Sipat\SipatService::class);
         $sipatStats = $sipatService->getDashboardStats();
         $opdTableStats = $sipatStats['opdTableStats'] ?? [];
         $kecamatanStats = $sipatStats['kecamatanStats'] ?? [];

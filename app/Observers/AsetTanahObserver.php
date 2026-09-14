@@ -3,7 +3,7 @@
 namespace App\Observers;
 
 use App\Models\AsetTanah;
-use App\Services\SipatService;
+use App\Services\Sipat\SipatService;
 
 class AsetTanahObserver
 {

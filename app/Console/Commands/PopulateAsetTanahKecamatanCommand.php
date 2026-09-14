@@ -6,7 +6,7 @@ use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use App\Models\AsetTanah;
 use App\Models\Kecamatan;
-use App\Services\SipatService;
+use App\Services\Sipat\SipatService;
 
 class PopulateAsetTanahKecamatanCommand extends Command
 {

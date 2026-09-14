@@ -39,7 +39,7 @@ class UnifiedAssetSearchService
             $totalAset = $totalKendaraan + $totalTanah;
 
             // Integrasikan langsung dengan Rekap Resmi SIPAT Dashboard agar 100% identik & real-time
-            $sipatService = app(\App\Services\SipatService::class);
+            $sipatService = app(\App\Services\Sipat\SipatService::class);
             $sipatStats = $sipatService->getDashboardStats();
 
             $bersertifikat = (int) ($sipatStats['asetBersertifikat'] ?? 396);

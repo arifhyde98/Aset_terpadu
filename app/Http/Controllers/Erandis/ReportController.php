@@ -79,7 +79,7 @@ class ReportController extends Controller implements HasMiddleware
     /**
      * Menampilkan pratinjau (preview) laporan secara dinamis (mengembalikan parsial HTML via AJAX).
      *
-     * @param \App\Http\Requests\ReportFilterRequest $request
+     * @param \App\Http\Requests\Erandis\ReportFilterRequest $request
      * @return \Illuminate\View\View|\Illuminate\Http\Response
      */
     public function preview(ReportFilterRequest $request)
@@ -93,7 +93,7 @@ class ReportController extends Controller implements HasMiddleware
     /**
      * Mengekspor laporan dinamis ke format Excel (.xlsx).
      *
-     * @param \App\Http\Requests\ReportFilterRequest $request
+     * @param \App\Http\Requests\Erandis\ReportFilterRequest $request
      * @return \Symfony\Component\HttpFoundation\BinaryFileResponse
      */
     public function export(ReportFilterRequest $request)
@@ -104,7 +104,7 @@ class ReportController extends Controller implements HasMiddleware
     /**
      * Membuka halaman pratinjau bersih khusus cetak printer / ekspor PDF ramah browser.
      *
-     * @param \App\Http\Requests\ReportFilterRequest $request
+     * @param \App\Http\Requests\Erandis\ReportFilterRequest $request
      * @return \Illuminate\View\View
      */
     public function print(ReportFilterRequest $request)
@@ -117,7 +117,7 @@ class ReportController extends Controller implements HasMiddleware
     /**
      * Mengunduh berkas laporan dalam format PDF menggunakan mPDF (Server-Side).
      *
-     * @param \App\Http\Requests\ReportFilterRequest $request
+     * @param \App\Http\Requests\Erandis\ReportFilterRequest $request
      * @return \Symfony\Component\HttpFoundation\Response|\Illuminate\Http\RedirectResponse
      */
     public function pdf(ReportFilterRequest $request)

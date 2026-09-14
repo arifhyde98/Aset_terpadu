@@ -95,11 +95,11 @@ Route::prefix('master-data')->group(function () {
 
     // Import Sertifikat & Status Proses
     Route::prefix('import')->name('master.import.')->group(function () {
-        Route::get('/', [\App\Http\Controllers\SipatImportController::class, 'index'])->name('index');
-        Route::post('/data', [\App\Http\Controllers\SipatImportController::class, 'importData'])->name('data');
-        Route::post('/update', [\App\Http\Controllers\SipatImportController::class, 'importUpdate'])->name('update');
-        Route::get('/template-status', [\App\Http\Controllers\SipatImportController::class, 'downloadTemplateStatus'])->name('template-status');
-        Route::get('/template-data', [\App\Http\Controllers\SipatImportController::class, 'downloadTemplateData'])->name('template-data');
+        Route::get('/', [\App\Http\Controllers\Sipat\SipatImportController::class, 'index'])->name('index');
+        Route::post('/data', [\App\Http\Controllers\Sipat\SipatImportController::class, 'importData'])->name('data');
+        Route::post('/update', [\App\Http\Controllers\Sipat\SipatImportController::class, 'importUpdate'])->name('update');
+        Route::get('/template-status', [\App\Http\Controllers\Sipat\SipatImportController::class, 'downloadTemplateStatus'])->name('template-status');
+        Route::get('/template-data', [\App\Http\Controllers\Sipat\SipatImportController::class, 'downloadTemplateData'])->name('template-data');
     });
 
     // Wilayah (SIPAT)

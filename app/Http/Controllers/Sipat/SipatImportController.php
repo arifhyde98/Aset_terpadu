@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Sipat;
 
+use App\Http\Controllers\Controller;
 use App\Imports\SipatDataImport;
 use App\Imports\SipatUpdateImport;
 use App\Models\Activity;

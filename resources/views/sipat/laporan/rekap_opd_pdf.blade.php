@@ -173,7 +173,7 @@
     @endif
 
     @php
-        $service = $service ?? app(\App\Services\LaporanService::class);
+        $service = $service ?? app(\App\Services\Sipat\LaporanService::class);
         $logoPath = $logoPath ?? $service->resolveLogoPath($kop);
     @endphp
 

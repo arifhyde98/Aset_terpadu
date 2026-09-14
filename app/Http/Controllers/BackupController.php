@@ -419,8 +419,8 @@ class BackupController extends Controller implements HasMiddleware
             }
 
             // Invalidate cache dashboard
-            if (class_exists('\App\Services\SipatService')) {
-                app(\App\Services\SipatService::class)->invalidateDashboardCache();
+            if (class_exists('\App\Services\Sipat\SipatService')) {
+                app(\App\Services\Sipat\SipatService::class)->invalidateDashboardCache();
             }
 
             if (class_exists('\App\Models\Activity')) {

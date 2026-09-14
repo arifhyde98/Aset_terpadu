@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Sipat;
 use App\Http\Controllers\Controller;
 use App\Models\OpdSipat;
 use App\Models\StatusProses;
-use App\Services\LaporanService;
+use App\Services\Sipat\LaporanService;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;

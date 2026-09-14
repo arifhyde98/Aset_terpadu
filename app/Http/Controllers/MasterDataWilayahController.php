@@ -42,7 +42,7 @@ class MasterDataWilayahController extends Controller implements HasMiddleware
     {
         $validated = $request->validate(['nama' => 'required|string|max:150']);
         Kecamatan::create($validated);
-        app(\App\Services\SipatService::class)->invalidateDashboardCache();
+        app(\App\Services\Sipat\SipatService::class)->invalidateDashboardCache();
         return redirect()->route('master.wilayah.index')->with('success', 'Kecamatan berhasil ditambahkan.')->with('active_tab', 'kecamatan');
     }
 
@@ -51,7 +51,7 @@ class MasterDataWilayahController extends Controller implements HasMiddleware
         $validated = $request->validate(['nama' => 'required|string|max:150']);
         $row = Kecamatan::findOrFail($id);
         $row->update($validated);
-        app(\App\Services\SipatService::class)->invalidateDashboardCache();
+        app(\App\Services\Sipat\SipatService::class)->invalidateDashboardCache();
         return redirect()->route('master.wilayah.index')->with('success', 'Kecamatan berhasil diperbarui.')->with('active_tab', 'kecamatan');
     }
 
@@ -68,7 +68,7 @@ class MasterDataWilayahController extends Controller implements HasMiddleware
             return redirect()->route('master.wilayah.index')->with('error', 'Kecamatan tidak dapat dihapus karena memiliki data Camat terkait.')->with('active_tab', 'kecamatan');
         }
         $row->delete();
-        app(\App\Services\SipatService::class)->invalidateDashboardCache();
+        app(\App\Services\Sipat\SipatService::class)->invalidateDashboardCache();
         return redirect()->route('master.wilayah.index')->with('success', 'Kecamatan berhasil dihapus.')->with('active_tab', 'kecamatan');
     }
 

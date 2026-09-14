@@ -115,7 +115,7 @@ Aset_terpadu/
 │   │   │   ├── Bangunan/ # Controller modul bangunan/gedung (KIB C).
 │   │   │   ├── Elabel/   # Controller pengarsipan & Dynamic Archive (Bpkb, Sertifikat, Box, Smart Extractor).
 │   │   │   ├── Erandis/  # Controller kendaraan dinas & laporan (Vehicle, VehicleType, Report, ReportSetting).
-│   │   │   ├── Sipat/    # Controller pertanahan (AsetTanah, TargetSertifikat, Surat, Laporan, Peta, Rekonsiliasi).
+│   │   │   ├── Sipat/    # Controller pertanahan (AsetTanah, Dashboard, Import, TargetSertifikat, Surat, Laporan, Peta, Rekonsiliasi).
 │   │   │   └── ...       # Controller Auth, LandingPage, User, AiAssistant, MasterData, HealthCheck, dan Backup/Sync.
 │   │   ├── Middleware/   # Middleware aplikasi, CheckRole, dan SsoAuthenticate.
 │   │   └── Requests/     # FormRequest validasi terpusat (Bangunan/, Erandis/, Sipat/, dan Shared).
@@ -128,7 +128,7 @@ Aset_terpadu/
 │       ├── Bangunan/     # Service khusus Bangunan KIB C.
 │       ├── Elabel/       # Service khusus eLABEL (DynamicArchiveService, ElabelDuplicateService).
 │       ├── Erandis/      # Service khusus E-RANDIS (VehicleService, VehicleImport, VehicleQuery, ReportService, dll).
-│       ├── Sipat/        # Service khusus SIPAT (AsetTanahService).
+│       ├── Sipat/        # Service khusus SIPAT (AsetTanahService, SipatService, LaporanService).
 │       └── ...           # Shared Service (UnifiedAssetSearchService, GeminiAiService, OllamaService).
 │
 ├── database/

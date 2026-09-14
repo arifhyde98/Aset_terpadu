@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Services;
+namespace App\Services\Sipat;
 
 use App\Models\AsetTanah;
 use App\Models\OpdSipat;

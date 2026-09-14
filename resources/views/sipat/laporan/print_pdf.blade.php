@@ -157,7 +157,7 @@
             $groupHeader = 'Aset Belum Bersertifikat';
         }
 
-        $service = $service ?? app(\App\Services\LaporanService::class);
+        $service = $service ?? app(\App\Services\Sipat\LaporanService::class);
         $titleLines = $titleLines ?? $service->resolveReportTitleLines($filters);
         $logoPath = $logoPath ?? $service->resolveLogoPath($kop);
     @endphp

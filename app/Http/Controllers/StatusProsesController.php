@@ -173,7 +173,7 @@ class StatusProsesController extends Controller implements HasMiddleware
         }
 
         Cache::forget('sipat_dashboard_stats');
-        app(\App\Services\SipatService::class)->invalidateDashboardCache();
+        app(\App\Services\Sipat\SipatService::class)->invalidateDashboardCache();
 
         return redirect()->route('status-proses.index')->with('success', "Status Proses '{$namaStatus}' berhasil dihapus.");
     }

@@ -106,7 +106,7 @@ class MasterSipatOpdController extends Controller implements HasMiddleware
         $opd->delete();
 
         $this->logAudit('delete', 'opd', $id, $oldData, []);
-        app(\App\Services\SipatService::class)->invalidateDashboardCache();
+        app(\App\Services\Sipat\SipatService::class)->invalidateDashboardCache();
 
         return redirect()->route('opd-sipat.index')->with('success', "Master OPD SIPAT '{$namaOpd}' berhasil dihapus.");
     }

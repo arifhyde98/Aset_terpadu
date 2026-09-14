@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\AsetTanah;
 use App\Models\OpdSipat;
 use App\Models\StatusProses;
-use App\Services\SipatService;
+use App\Services\Sipat\SipatService;
 use App\Services\Sipat\AsetTanahService;
 use App\Http\Requests\Sipat\StoreAsetTanahRequest;
 use App\Http\Requests\Sipat\UpdateAsetTanahRequest;
@@ -75,7 +75,7 @@ class AsetTanahController extends Controller implements HasMiddleware
 
         if ($request->has('export')) {
             $exportType = strtolower($request->input('export'));
-            $laporanService = app(\App\Services\LaporanService::class);
+            $laporanService = app(\App\Services\Sipat\LaporanService::class);
             
             $filters = $request->all();
             if (isset($filters['opd_id']) && !empty($filters['opd_id'])) {

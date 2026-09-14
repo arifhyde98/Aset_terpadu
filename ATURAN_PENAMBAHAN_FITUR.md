@@ -121,11 +121,11 @@ SIPAT Terpadu memanfaatkan caching terpusat untuk menjaga respon aplikasi tetap 
 **Aturan Invalidation:**
 - [ ] Jika fitur memodifikasi data kendaraan atau instansi E-RANDIS:
   ```php
-  app(\App\Services\VehicleService::class)->invalidateDashboardStats();
+  app(\App\Services\Erandis\VehicleService::class)->invalidateDashboardStats();
   ```
 - [ ] Jika fitur memodifikasi data tanah KIB A, status proses BPN, target sertifikat, atau wilayah:
   ```php
-  app(\App\Services\SipatService::class)->invalidateDashboardCache();
+  app(\App\Services\Sipat\SipatService::class)->invalidateDashboardCache();
   ```
 - [ ] 🔴 **DILARANG KERAS** memanggil `Cache::flush()` global karena akan menghapus cache pengaturan sistem (`setting.{key}`) dan sesi pengguna lain!
 

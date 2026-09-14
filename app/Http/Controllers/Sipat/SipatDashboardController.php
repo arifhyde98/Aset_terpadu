@@ -1,9 +1,10 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Sipat;
 
+use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use App\Services\SipatService;
+use App\Services\Sipat\SipatService;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
 
