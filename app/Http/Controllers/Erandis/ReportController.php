@@ -1,12 +1,13 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Erandis;
 
+use App\Http\Controllers\Controller;
 use App\Models\Opd;
 use App\Reports\ReportRegistry;
-use App\Services\ReportService;
-use App\Services\ReportGenerationService;
-use App\Http\Requests\ReportFilterRequest;
+use App\Services\Erandis\ReportService;
+use App\Services\Erandis\ReportGenerationService;
+use App\Http\Requests\Erandis\ReportFilterRequest;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
 use Illuminate\Http\Request;

@@ -1,8 +1,8 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\VehicleController;
-use App\Http\Controllers\VehicleTypeController;
+use App\Http\Controllers\Erandis\VehicleController;
+use App\Http\Controllers\Erandis\VehicleTypeController;
 use App\Http\Controllers\OpdController;
 
 // Manajemen Kendaraan

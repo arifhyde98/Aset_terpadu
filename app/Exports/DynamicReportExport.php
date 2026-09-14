@@ -65,7 +65,7 @@ abstract class DynamicReportExport implements WithHeadings, WithMapping, ShouldA
 
         // Sediakan fallback jika $docSettings tidak dilewatkan
         if (empty($docSettings)) {
-            $docSettings = app(\App\Services\ReportDocumentSettingService::class)->getSettingsForReportType('status');
+            $docSettings = app(\App\Services\Erandis\ReportDocumentSettingService::class)->getSettingsForReportType('status');
         }
         $this->docSettings = $docSettings;
         self::$rowNumber = 0;

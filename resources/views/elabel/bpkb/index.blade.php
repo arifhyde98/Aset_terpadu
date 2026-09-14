@@ -51,19 +51,30 @@
     <!-- SEARCH & TABLE CARD -->
     <div class="card border-0 shadow-sm rounded-4">
         <div class="card-header bg-white border-0 py-3 px-4">
-            <form action="{{ route('elabel.bpkb.index') }}" method="GET" class="row g-2 align-items-center">
+            <form action="{{ route('elabel.bpkb.index') }}" method="GET" class="row g-2 align-items-center" id="filterForm">
                 @if(request('type'))
                     <input type="hidden" name="type" value="{{ request('type') }}">
                 @endif
-                <div class="col-md-8">
+                <div class="col-6 col-md-2">
+                    <div class="input-group">
+                        <span class="input-group-text bg-white small text-secondary">Tampil</span>
+                        <select name="per_page" class="form-select px-2" onchange="document.getElementById('filterForm').submit()">
+                            <option value="15" {{ request('per_page', 15) == '15' ? 'selected' : '' }}>15</option>
+                            <option value="50" {{ request('per_page') == '50' ? 'selected' : '' }}>50</option>
+                            <option value="100" {{ request('per_page') == '100' ? 'selected' : '' }}>100</option>
+                            <option value="all" {{ request('per_page') == 'all' ? 'selected' : '' }}>Semua</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-12 col-md-7">
                     <div class="input-group">
                         <span class="input-group-text bg-white border-end-0"><i class="bi bi-search text-secondary"></i></span>
                         <input type="text" name="q" value="{{ request('q') }}" class="form-control border-start-0 shadow-none" placeholder="Cari nomor polisi, nomor BPKB, NIBAR, rangka, mesin, atau kode box...">
                     </div>
                 </div>
-                <div class="col-md-4 d-flex gap-2">
+                <div class="col-6 col-md-3 d-flex gap-2">
                     <button type="submit" class="btn btn-primary w-100 fw-medium">Cari</button>
-                    <a href="{{ route('elabel.bpkb.index', ['type' => request('type')]) }}" class="btn btn-light border bg-white" title="Reset"><i class="bi bi-arrow-clockwise"></i></a>
+                    <a href="{{ route('elabel.bpkb.index', array_filter(['type' => request('type')])) }}" class="btn btn-light border bg-white" title="Reset"><i class="bi bi-arrow-clockwise"></i></a>
                 </div>
             </form>
         </div>
@@ -85,7 +96,7 @@
                 <tbody>
                     @forelse($items as $item)
                         <tr>
-                            <td class="px-4 text-center fw-medium text-secondary">{{ $loop->iteration }}</td>
+                            <td class="px-4 text-center fw-medium text-secondary">{{ $items->firstItem() ? ($items->firstItem() + $loop->index) : $loop->iteration }}</td>
                             <td>
                                 <span class="badge bg-light text-dark border px-3 py-2 fs-6 rounded-3 fw-bold">{{ $item->plate_number }}</span>
                                 <div class="small text-secondary mt-1"><i class="bi bi-calendar3 me-1"></i> Tahun {{ $item->year ?: '-' }}</div>
@@ -194,6 +205,19 @@
                 </tbody>
             </table>
         </div>
+
+        @if($items->total() > 0)
+            <div class="card-footer bg-transparent border-top border-light-subtle p-3 d-flex flex-column flex-md-row align-items-center justify-content-between gap-2">
+                <span class="small text-secondary">
+                    Menampilkan <strong>{{ $items->firstItem() }}</strong> sampai <strong>{{ $items->lastItem() }}</strong> dari total <strong>{{ $items->total() }}</strong> berkas BPKB
+                </span>
+                @if($items->hasPages())
+                    <div>
+                        {{ $items->links() }}
+                    </div>
+                @endif
+            </div>
+        @endif
     </div>
 
 </div>

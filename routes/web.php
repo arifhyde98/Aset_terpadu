@@ -2,16 +2,16 @@
 
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
-use App\Http\Controllers\VehicleController;
+use App\Http\Controllers\Erandis\VehicleController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\MasterDataController;
-use App\Http\Controllers\VehicleTypeController;
+use App\Http\Controllers\Erandis\VehicleTypeController;
 use App\Http\Controllers\OpdController;
 use App\Http\Controllers\SettingController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\ActivityController;
-use App\Http\Controllers\ReportController;
+use App\Http\Controllers\Erandis\ReportController;
 use App\Http\Controllers\HealthCheckController;
 
 use App\Http\Controllers\LandingPageController;
@@ -88,11 +88,11 @@ Route::get('reports/print', [ReportController::class, 'print'])->name('reports.p
 Route::get('reports/pdf', [ReportController::class, 'pdf'])->name('reports.pdf');
 
 // Pengaturan Cetak & Dokumen Laporan (Kop & TTD)
-Route::get('reports/settings', [\App\Http\Controllers\ReportSettingController::class, 'index'])->name('reports.settings.index');
-Route::get('settings/reports', [\App\Http\Controllers\ReportSettingController::class, 'index'])->name('settings.reports.index');
-Route::post('reports/settings/letterhead', [\App\Http\Controllers\ReportSettingController::class, 'updateLetterhead'])->name('reports.settings.letterhead');
-Route::post('reports/settings/signatory', [\App\Http\Controllers\ReportSettingController::class, 'updateSignatory'])->name('reports.settings.signatory');
-Route::post('reports/settings/export', [\App\Http\Controllers\ReportSettingController::class, 'updateExportSetting'])->name('reports.settings.export');
+Route::get('reports/settings', [\App\Http\Controllers\Erandis\ReportSettingController::class, 'index'])->name('reports.settings.index');
+Route::get('settings/reports', [\App\Http\Controllers\Erandis\ReportSettingController::class, 'index'])->name('settings.reports.index');
+Route::post('reports/settings/letterhead', [\App\Http\Controllers\Erandis\ReportSettingController::class, 'updateLetterhead'])->name('reports.settings.letterhead');
+Route::post('reports/settings/signatory', [\App\Http\Controllers\Erandis\ReportSettingController::class, 'updateSignatory'])->name('reports.settings.signatory');
+Route::post('reports/settings/export', [\App\Http\Controllers\Erandis\ReportSettingController::class, 'updateExportSetting'])->name('reports.settings.export');
 
 // Modul Maintenance Placeholder (Akan Datang)
 Route::get('maintenance', function () {

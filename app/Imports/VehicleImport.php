@@ -206,7 +206,7 @@ class VehicleImport implements ToModel, WithStartRow, WithBatchInserts, WithChun
         }
 
         // 1. Identifikasi Nomor Polisi (Dinamis)
-        $vehicleService = app(\App\Services\VehicleService::class);
+        $vehicleService = app(\App\Services\Erandis\VehicleService::class);
         $no_polisi = $vehicleService->formatPlateNumber($raw_no_polisi);
 
         // ATURAN TEMPLATE: Jika plat kosong, buatkan identitas urut

@@ -1,10 +1,8 @@
 <?php
 
-namespace App\Services;
+namespace App\Services\Erandis;
 
 use App\Reports\ReportRegistry;
-use App\Services\ReportService;
-use App\Services\ReportDocumentSettingService;
 use App\Exports\DynamicQueryReportExport;
 use App\Exports\DynamicCollectionReportExport;
 use App\Reports\Contracts\PostProcessesReportRows;

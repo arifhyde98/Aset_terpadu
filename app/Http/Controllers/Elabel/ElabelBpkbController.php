@@ -42,7 +42,7 @@ class ElabelBpkbController extends Controller implements HasMiddleware
         $vehicleLabel = $this->vehicleLabel($vehicleType);
         $query = trim((string) $request->get('q'));
 
-        $builder = ElabelBpkb::with(['box', 'inputUser'])
+        $builder = ElabelBpkb::with(['box', 'inputUser', 'opdSipat'])
             ->where('status', '!=', 'Dihapus');
 
         if ($vehicleType !== null) {
@@ -71,9 +71,16 @@ class ElabelBpkbController extends Controller implements HasMiddleware
             });
         }
 
-        $items = $builder->orderBy('year', 'desc')
-            ->orderBy('plate_number', 'asc')
-            ->get();
+        $perPage = $request->input('per_page', 15);
+        $orderQuery = $builder->orderBy('year', 'desc')
+            ->orderBy('plate_number', 'asc');
+
+        if ($perPage === 'all') {
+            $items = $orderQuery->paginate(1000)->withQueryString();
+        } else {
+            $perPageInt = in_array((int)$perPage, [10, 15, 25, 50, 100], true) ? (int)$perPage : 15;
+            $items = $orderQuery->paginate($perPageInt)->withQueryString();
+        }
 
         $yearsBuilder = ElabelBoxYear::select('elabel_box_years.year')
             ->distinct()
@@ -97,6 +104,7 @@ class ElabelBpkbController extends Controller implements HasMiddleware
             'vehicleRoute' => $vehicleType ? $this->routeSegment($vehicleType) : null,
             'activeMenu'   => $vehicleType === 'R2' ? 'bpkb_motor' : ($vehicleType === 'R4' ? 'bpkb_mobil' : 'bpkb'),
             'searchQuery'  => $query,
+            'perPage'      => $perPage,
         ]);
     }
 

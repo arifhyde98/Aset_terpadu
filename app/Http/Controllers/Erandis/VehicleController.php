@@ -1,21 +1,22 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Erandis;
 
+use App\Http\Controllers\Controller;
 use App\Models\Vehicle;
 use App\Models\User;
 use App\Models\VehicleType;
 use App\Models\Op;
 use App\Models\Opd;
 use Illuminate\Http\Request;
-use App\Http\Requests\StoreVehicleRequest;
-use App\Http\Requests\UpdateVehicleRequest;
+use App\Http\Requests\Erandis\StoreVehicleRequest;
+use App\Http\Requests\Erandis\UpdateVehicleRequest;
 use App\Exports\VehicleExport;
 use App\Exports\VehicleTemplateExport;
-use App\Http\Requests\ImportVehicleRequest;
-use App\Http\Requests\ExecuteSmartImportRequest;
-use App\Http\Requests\ResolveDuplicateVehicleRequest;
-use App\Http\Requests\ResolveDuplicateOpdRequest;
+use App\Http\Requests\Erandis\ImportVehicleRequest;
+use App\Http\Requests\Erandis\ExecuteSmartImportRequest;
+use App\Http\Requests\Erandis\ResolveDuplicateVehicleRequest;
+use App\Http\Requests\Erandis\ResolveDuplicateOpdRequest;
 use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\View\View;
 use Illuminate\Http\JsonResponse;
@@ -24,9 +25,9 @@ use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
 
-use App\Services\VehicleService;
-use App\Services\VehicleQueryService;
-use App\Services\VehicleImportService;
+use App\Services\Erandis\VehicleService;
+use App\Services\Erandis\VehicleQueryService;
+use App\Services\Erandis\VehicleImportService;
 
 /**
  * Controller untuk Manajemen Data Kendaraan

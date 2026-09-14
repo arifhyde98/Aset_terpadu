@@ -1,10 +1,11 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Erandis;
 
+use App\Http\Controllers\Controller;
 use App\Models\VehicleType;
-use App\Http\Requests\StoreVehicleTypeRequest;
-use App\Http\Requests\UpdateVehicleTypeRequest;
+use App\Http\Requests\Erandis\StoreVehicleTypeRequest;
+use App\Http\Requests\Erandis\UpdateVehicleTypeRequest;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;

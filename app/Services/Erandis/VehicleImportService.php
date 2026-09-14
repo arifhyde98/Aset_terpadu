@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Services;
+namespace App\Services\Erandis;
 
 use App\Models\Vehicle;
 use App\Models\EbmdVehicle;

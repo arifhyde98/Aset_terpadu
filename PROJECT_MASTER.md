@@ -112,19 +112,24 @@ Aset_terpadu/
 │   ├── Enums/            # Nilai enum statis (UserRole, VehicleStatus, VehicleCondition).
 │   ├── Http/
 │   │   ├── Controllers/
+│   │   │   ├── Bangunan/ # Controller modul bangunan/gedung (KIB C).
 │   │   │   ├── Elabel/   # Controller pengarsipan & Dynamic Archive (Bpkb, Sertifikat, Box, Smart Extractor).
+│   │   │   ├── Erandis/  # Controller kendaraan dinas & laporan (Vehicle, VehicleType, Report, ReportSetting).
 │   │   │   ├── Sipat/    # Controller pertanahan (AsetTanah, TargetSertifikat, Surat, Laporan, Peta, Rekonsiliasi).
-│   │   │   └── ...       # Controller E-RANDIS, Auth, LandingPage, User, AiAssistant, HealthCheck, dan Backup/Sync.
+│   │   │   └── ...       # Controller Auth, LandingPage, User, AiAssistant, MasterData, HealthCheck, dan Backup/Sync.
 │   │   ├── Middleware/   # Middleware aplikasi, CheckRole, dan SsoAuthenticate.
-│   │   └── Requests/     # FormRequest validasi terpusat (StoreVehicleRequest, StoreSuratSkptRequest, dll).
+│   │   └── Requests/     # FormRequest validasi terpusat (Bangunan/, Erandis/, Sipat/, dan Shared).
 │   ├── Models/           # Model Eloquent (Vehicle, AsetTanah, Opd, OpdSipat, OpdMapping, SuratSkpt, dsb).
 │   │   ├── Elabel/       # Model khusus eLABEL (ElabelBpkb, ElabelBox, ElabelLoan, dll).
 │   │   └── Dynamic/      # Model Universal Dynamic Archive (ArchiveType, ArchiveBox, ArchiveItem, dll).
 │   ├── Observers/        # Observer database (VehicleObserver, UserObserver, OpdObserver, AsetTanahObserver, dll).
 │   ├── Reports/          # Kelas Strategy, Registry, dan Export Excel laporan E-RANDIS.
-│   └── Services/         # Lapisan logika bisnis inti (VehicleService, SipatService, LaporanService, GeminiAiService, dll).
+│   └── Services/         # Lapisan logika bisnis inti.
+│       ├── Bangunan/     # Service khusus Bangunan KIB C.
 │       ├── Elabel/       # Service khusus eLABEL (DynamicArchiveService, ElabelDuplicateService).
-│       └── Sipat/        # Service khusus SIPAT (AsetTanahService).
+│       ├── Erandis/      # Service khusus E-RANDIS (VehicleService, VehicleImport, VehicleQuery, ReportService, dll).
+│       ├── Sipat/        # Service khusus SIPAT (AsetTanahService).
+│       └── ...           # Shared Service (UnifiedAssetSearchService, GeminiAiService, OllamaService).
 │
 ├── database/
 │   ├── migrations/       # Skema migrasi idempoten (Schema::hasTable).
@@ -245,7 +250,7 @@ Seluruh fitur berikut telah selesai diimplementasikan (**DONE**) dan beroperasi 
 ### 8.3 Modul eLABEL (Pengarsipan Dokumen & Dynamic Archive)
 | Fitur | Status | Deskripsi & Implementasi |
 |---|:---:|---|
-| **Katalog & Box BPKB** | `DONE` | Penyimpanan fisik berkas BPKB ke dalam box arsip, integrasi nopol kendaraan, penggabungan (*merge*) box, dan pencetakan stiker label barcode box. |
+| **Katalog & Box BPKB** | `DONE` | Penyimpanan fisik berkas BPKB ke dalam box arsip, paginasi dinamis & optimasi query N+1 (eager loading `opdSipat`, kontrol `per_page`: 15, 50, 100, Semua, dan pagination bar mirip modul SIPAT), integrasi nopol kendaraan, penggabungan (*merge*) box, dan pencetakan stiker label barcode box. |
 | **Katalog BPKB Keluar (*Soft Deleted*)** | `DONE` | Modul pencatatan arsip BPKB yang keluar/diserahkan dengan bukti tanda terima, ekspor data, dan fitur pemulihan (*restore*) kembali ke katalog aktif (`/elabel/bpkb-deleted`). |
 | **Smart BPKB PDF Extractor & OCR** | `DONE` | Pemindaian otomatis dokumen PDF BPKB pada server/PC lokal dengan pencocokan nopol 100% presisi, proteksi berkas ganda, pratinjau PDF tab baru, dan verifikasi dry-run. |
 | **Sertifikat Tanah Fisik & Box** | `DONE` | Penyimpanan fisik sertifikat tanah, sinkronisasi otomatis luas tanah dan kepemilikan instansi OPD dua arah dengan modul SIPAT, operasi split/merge box, impor Excel, penguncian OPD form edit sesuai KIB A, serta audit command `sipat:sync-opd-sertifikat`. |

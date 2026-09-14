@@ -1,14 +1,14 @@
 <?php
 
-namespace App\Http\Requests;
+namespace App\Http\Requests\Erandis;
 
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 
 /**
- * Form Request untuk Validasi Penambahan Kendaraan Baru
+ * Form Request untuk Validasi Pembaruan Data Kendaraan
  */
-class StoreVehicleRequest extends FormRequest
+class UpdateVehicleRequest extends FormRequest
 {
     /**
      * Menentukan apakah user diizinkan untuk membuat request ini.
@@ -44,11 +44,17 @@ class StoreVehicleRequest extends FormRequest
 
     /**
      * Mendapatkan aturan validasi yang berlaku untuk request ini.
+     * 
+     * Memastikan keunikan nomor polisi dikecualikan untuk ID kendaraan yang sedang diperbarui.
      *
      * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
      */
     public function rules(): array
     {
+        // Karena implicit binding dihilangkan untuk mendukung tab ebmd, parameter 'vehicle' berupa string ID
+        $vehicleParam = $this->route('vehicle');
+        $vehicleId = is_object($vehicleParam) ? $vehicleParam->id : $vehicleParam;
+        
         $rules = [
             'no_polisi' => 'required',
             'nomor_register' => 'nullable|string|max:255',
@@ -78,11 +84,11 @@ class StoreVehicleRequest extends FormRequest
 
         if ($this->input('target_table') === 'ebmd') {
             $rules['tgl_perolehan'] = 'required|date';
-            $rules['no_polisi'] = 'required|unique:ebmd_vehicles,no_polisi';
-            $rules['nomor_register'] = 'nullable|string|max:255|unique:ebmd_vehicles,nomor_register';
+            $rules['no_polisi'] = 'required|unique:ebmd_vehicles,no_polisi,' . $vehicleId;
+            $rules['nomor_register'] = 'nullable|string|max:255|unique:ebmd_vehicles,nomor_register,' . $vehicleId;
         } else {
-            $rules['no_polisi'] = 'required|unique:vehicles,no_polisi';
-            $rules['nomor_register'] = 'nullable|string|max:255|unique:vehicles,nomor_register';
+            $rules['no_polisi'] = 'required|unique:vehicles,no_polisi,' . $vehicleId;
+            $rules['nomor_register'] = 'nullable|string|max:255|unique:vehicles,nomor_register,' . $vehicleId;
         }
 
         return $rules;
@@ -115,4 +121,3 @@ class StoreVehicleRequest extends FormRequest
         ];
     }
 }
-

@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Erandis;
 
+use App\Http\Controllers\Controller;
 use App\Models\ReportLetterhead;
 use App\Models\ReportSignatory;
 use App\Models\ReportExportSetting;

@@ -6,7 +6,7 @@ use App\Models\Opd;
 use App\Http\Requests\StoreOpdRequest;
 use App\Http\Requests\UpdateOpdRequest;
 use Illuminate\Http\Request;
-use App\Services\VehicleService;
+use App\Services\Erandis\VehicleService;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
 

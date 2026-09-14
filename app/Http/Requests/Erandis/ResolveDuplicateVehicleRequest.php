@@ -1,9 +1,9 @@
 <?php
 
-namespace App\Http\Requests;
+namespace App\Http\Requests\Erandis;
 
 use Illuminate\Foundation\Http\FormRequest;
-use App\Services\VehicleService;
+use App\Services\Erandis\VehicleService;
 
 /**
  * Request untuk validasi resolusi kendaraan ganda.

@@ -6,7 +6,7 @@ use App\Models\User;
 use App\Models\Opd;
 use App\Models\Vehicle;
 use App\Enums\UserRole;
-use App\Services\VehicleService;
+use App\Services\Erandis\VehicleService;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Tests\TestCase;
 

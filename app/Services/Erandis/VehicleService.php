@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Services;
+namespace App\Services\Erandis;
 
 use App\Models\Vehicle;
 use Illuminate\Support\Facades\DB;
@@ -157,7 +157,7 @@ class VehicleService
 
         // 5. Selaraskan invalidasi cache summary laporan secara otomatis
         try {
-            app(\App\Services\ReportService::class)->invalidateSummaryCache($opdId, $oldOpdId, $invalidateAllOpd);
+            app(\App\Services\Erandis\ReportService::class)->invalidateSummaryCache($opdId, $oldOpdId, $invalidateAllOpd);
         } catch (\Throwable $e) {
             // Safety fallback jika Service Container belum terikat sempurna, sertakan logging agar masalah terdeteksi
             \Illuminate\Support\Facades\Log::warning('Gagal menghapus cache summary laporan.', [

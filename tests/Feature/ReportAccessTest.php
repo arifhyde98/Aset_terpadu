@@ -298,12 +298,12 @@ class ReportAccessTest extends TestCase
 
         // 1. Request summary sebagai Admin (harus global, 1 unit)
         $this->actingAs($admin);
-        $summaryAdmin = app(\App\Services\ReportService::class)->getQuickSummary();
+        $summaryAdmin = app(\App\Services\Erandis\ReportService::class)->getQuickSummary();
         $this->assertEquals(1, $summaryAdmin['total_unit']);
 
         // 2. Request summary sebagai OPD User A (harus tersaring ke OPD A saja, 1 unit)
         $summaryOpdA = $this->actingAs($userOpdA);
-        $summaryOpdAData = app(\App\Services\ReportService::class)->getQuickSummary($opdA->id);
+        $summaryOpdAData = app(\App\Services\Erandis\ReportService::class)->getQuickSummary($opdA->id);
         $this->assertEquals(1, $summaryOpdAData['total_unit']);
 
         // 3. Simulasikan user OPD dengan null opd_id (tidak boleh mencemari global admin summary cache)
@@ -314,7 +314,7 @@ class ReportAccessTest extends TestCase
         
         $summaryOpdNullData = $this->actingAs($userOpdNull);
         // Panggil summary untuk null OPD - harusnya mengembalikan 0 karena di-lock
-        $summaryNullData = app(\App\Services\ReportService::class)->getQuickSummary(null);
+        $summaryNullData = app(\App\Services\Erandis\ReportService::class)->getQuickSummary(null);
         $this->assertEquals(
             0,
             $summaryNullData['total_unit'],
@@ -323,7 +323,7 @@ class ReportAccessTest extends TestCase
         
         // Reset sesi kembali ke Admin untuk memastikan cache Admin global tidak tercemar dan tetap aman
         $this->actingAs($admin);
-        $summaryAdminRetry = app(\App\Services\ReportService::class)->getQuickSummary();
+        $summaryAdminRetry = app(\App\Services\Erandis\ReportService::class)->getQuickSummary();
         $this->assertEquals(1, $summaryAdminRetry['total_unit'], 'Bug Pencemaran Cache Terjadi! Summary Admin global tertimpa oleh summary OPD null.');
     }
 
@@ -341,7 +341,7 @@ class ReportAccessTest extends TestCase
 
         // Cek summary awal (harus 0)
         $this->actingAs($admin);
-        $summaryInitial = app(\App\Services\ReportService::class)->getQuickSummary();
+        $summaryInitial = app(\App\Services\Erandis\ReportService::class)->getQuickSummary();
         $this->assertEquals(0, $summaryInitial['total_unit']);
 
         // Tambah kendaraan dinas baru via endpoint POST nyata untuk memicu invalidasi cache otomatis di Controller
@@ -363,7 +363,7 @@ class ReportAccessTest extends TestCase
 
         // Ambil summary baru (harus ter-update menjadi 1 karena cache berhasil dibersihkan secara real-time via Store controller event)
         $this->actingAs($admin);
-        $summaryNew = app(\App\Services\ReportService::class)->getQuickSummary();
+        $summaryNew = app(\App\Services\Erandis\ReportService::class)->getQuickSummary();
         $this->assertEquals(1, $summaryNew['total_unit'], 'Gagal meng-invalidasi cache summary laporan setelah data kendaraan bertambah via POST request.');
     }
 
@@ -389,7 +389,7 @@ class ReportAccessTest extends TestCase
 
         // Cek summary awal (total = 1, layak_jalan = 1)
         $this->actingAs($admin);
-        $summaryInitial = app(\App\Services\ReportService::class)->getQuickSummary();
+        $summaryInitial = app(\App\Services\Erandis\ReportService::class)->getQuickSummary();
         $this->assertEquals(1, $summaryInitial['total_unit']);
         $this->assertEquals(1, $summaryInitial['layak_jalan']);
 
@@ -412,7 +412,7 @@ class ReportAccessTest extends TestCase
 
         // Cek summary baru (layak_jalan harusnya berkurang menjadi 0 karena cache ter-invalidasi)
         $this->actingAs($admin);
-        $summaryNew = app(\App\Services\ReportService::class)->getQuickSummary();
+        $summaryNew = app(\App\Services\Erandis\ReportService::class)->getQuickSummary();
         $this->assertEquals(1, $summaryNew['total_unit']);
         $this->assertEquals(0, $summaryNew['layak_jalan'], 'Gagal meng-invalidasi cache summary laporan setelah data kendaraan diperbarui via PUT request.');
     }
@@ -439,7 +439,7 @@ class ReportAccessTest extends TestCase
 
         // Cek summary awal (total = 1)
         $this->actingAs($admin);
-        $summaryInitial = app(\App\Services\ReportService::class)->getQuickSummary();
+        $summaryInitial = app(\App\Services\Erandis\ReportService::class)->getQuickSummary();
         $this->assertEquals(1, $summaryInitial['total_unit']);
 
         // Hapus kendaraan dinas via DELETE request
@@ -448,7 +448,7 @@ class ReportAccessTest extends TestCase
 
         // Cek summary baru (total harusnya kembali menjadi 0 karena cache ter-invalidasi)
         $this->actingAs($admin);
-        $summaryNew = app(\App\Services\ReportService::class)->getQuickSummary();
+        $summaryNew = app(\App\Services\Erandis\ReportService::class)->getQuickSummary();
         $this->assertEquals(0, $summaryNew['total_unit'], 'Gagal meng-invalidasi cache summary laporan setelah data kendaraan dihapus via DELETE request.');
     }
 
@@ -597,7 +597,7 @@ class ReportAccessTest extends TestCase
         $oldDuplicate = $this->createVehicle(['no_polisi' => 'DN 7100 AA (2)']);
 
         $this->actingAs($admin);
-        $firstPreview = app(\App\Services\ReportService::class)->generatePreview([
+        $firstPreview = app(\App\Services\Erandis\ReportService::class)->generatePreview([
             'type' => 'duplicate',
         ]);
 
@@ -610,7 +610,7 @@ class ReportAccessTest extends TestCase
         $this->createVehicle(['no_polisi' => 'DN 7200 BB']);
         $this->createVehicle(['no_polisi' => 'DN 7200 BB (2)']);
 
-        $secondPreview = app(\App\Services\ReportService::class)->generatePreview([
+        $secondPreview = app(\App\Services\Erandis\ReportService::class)->generatePreview([
             'type' => 'duplicate',
         ]);
 
@@ -645,7 +645,7 @@ class ReportAccessTest extends TestCase
 
         $this->actingAs($admin);
 
-        $preview = app(\App\Services\ReportService::class)->generatePreview([
+        $preview = app(\App\Services\Erandis\ReportService::class)->generatePreview([
             'type'   => 'duplicate',
             'opd_id' => $opdA->id,
         ]);

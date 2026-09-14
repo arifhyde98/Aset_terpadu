@@ -312,7 +312,12 @@ Untuk mencegah penurunan performa akibat kueri agregasi berat berulang, data sta
 Seluruh logika kalkulasi dan query bisnis wajib dienkapsulasi di dalam kelas Service:
 - `UnifiedAssetSearchService` (`app/Services/`): Layanan pencarian publik terpadu (*Unified Asset Search*) untuk Landing Page lintas 3 modul (Kendaraan Dinas, Sertifikat Tanah, dan Arsip Dokumen) dengan proteksi data privat (*Public Data Privacy*), deteksi relasi multi-modul, serta kalkulasi statistik live berbasis cache.
 - `VehicleService` (`app/Services/`): Kalkulasi statistik dashboard kendaraan, manajemen cache kendaraan, helper penomoran plat nomor, validasi registrasi unik global, dan aturan mutasi kendaraan.
-- `ReportService` (`app/Services/`): Orkestrasi ringkasan data laporan E-RANDIS (mendukung data riil `vehicles` dan data historis e-BMD `ebmd_vehicles`) serta pemanggilan strategy aktif.
+- `VehicleService` (`app/Services/Erandis/VehicleService.php`): Bisnis, format nopol, cache statistik dashboard, dan sinkronisasi data kendaraan dinas.
+- `VehicleImportService` (`app/Services/Erandis/VehicleImportService.php`): Eksekusi pemetaan dan impor AI Smart Import Excel.
+- `VehicleQueryService` (`app/Services/Erandis/VehicleQueryService.php`): Query builder terpaginasi dan penyaringan kendaraan dinas.
+- `ReportService` (`app/Services/Erandis/ReportService.php`): Orkestrasi ringkasan data laporan E-RANDIS (mendukung data riil `vehicles` dan data historis e-BMD `ebmd_vehicles`) serta pemanggilan strategy aktif.
+- `ReportGenerationService` (`app/Services/Erandis/ReportGenerationService.php`): Pembuatan berkas ekspor dan PDF laporan kendaraan dinas.
+- `ReportDocumentSettingService` (`app/Services/Erandis/ReportDocumentSettingService.php`): Pengaturan dokumen, kop surat, dan penanda tangan laporan kendaraan.
 - `SipatService` (`app/Services/`): Menyediakan statistik ringkasan pertanahan, agregasi capaian BPN, cache dashboard SIPAT, dan sebaran wilayah kecamatan/OPD.
 - `LaporanService` (`app/Services/`): Mesin pengolah laporan pertanahan resmi: resolusi judul 3 baris dinamis, ekspor Excel 11/12 kolom bersertifikat, dan penataan lembar pengesahan tanda tangan ganda.
 - `AsetTanahService` (`app/Services/Sipat/AsetTanahService.php`):
@@ -326,20 +331,20 @@ Seluruh logika kalkulasi dan query bisnis wajib dienkapsulasi di dalam kelas Ser
 
 ### 7.2 Arsitektur Modul Laporan E-RANDIS (*Strategy & Registry Pattern*)
 Dibangun secara modular dan fleksibel:
-- `ReportController`: Menangani HTTP request halaman laporan, preview AJAX, ekspor Excel, dan cetak browser.
+- `Erandis\ReportController`: Menangani HTTP request halaman laporan, preview AJAX, ekspor Excel, dan cetak browser.
 - `ReportRegistry`: Registry terpusat yang memetakan identifier tipe laporan ke kelas Strategy yang sesuai.
 - `ReportStrategy`: Kontrak *interface/abstract* bersama untuk seluruh strategi laporan kendaraan, mendukung `referenceQuery` lintas tenant dan pemilihan model dinamis (`Vehicle` vs `EbmdVehicle`).
 - **Kelas Strategi Laporan:** `VehicleStatusReport`, `OpdAssetReport`, `DocumentValidityReport`, dan `DuplicateVehicleReport`.
 - `DynamicReportExport`: Kelas induk abstrak ekspor Excel (menyertakan informasi filter dan sumber data pada header).
 - `DynamicQueryReportExport` & `DynamicCollectionReportExport`: Subclass pembeda antara streaming kueri hemat memori (`FromQuery`) untuk laporan standar dan ekspor berbasis koleksi (`FromCollection`) untuk laporan dengan pengayaan data.
-- `ReportDocumentSettingService`: Mengelola relasi konfigurasi dokumen cetak (`report_export_settings`, `report_letterheads`, `report_signatories`) dengan fallback terprogram agar ekspor PDF tidak pernah gagal saat konfigurasi database kosong.
+- `Erandis\ReportDocumentSettingService`: Mengelola relasi konfigurasi dokumen cetak (`report_export_settings`, `report_letterheads`, `report_signatories`) dengan fallback terprogram agar ekspor PDF tidak pernah gagal saat konfigurasi database kosong.
 
 ### 7.3 Validasi Kelas Permintaan (*Form Request Validation*)
 Penyimpanan dan pembaruan data wajib menggunakan kelas Form Request:
-- `StoreVehicleRequest` / `UpdateVehicleRequest`: Validasi data fisik kendaraan dan isolasi otomatis `opd_id` untuk pengguna ber-role OPD.
+- `Erandis\StoreVehicleRequest` / `Erandis\UpdateVehicleRequest`: Validasi data fisik kendaraan dan isolasi otomatis `opd_id` untuk pengguna ber-role OPD.
 - `StoreUserRequest` / `UpdateUserRequest`: Validasi manajemen akun pengguna, role, dan enkripsi password.
 - `StoreSuratSkptRequest`: Validasi pembuatan berkas SKPT dengan integritas relasi pejabat (camat, kepala desa, dan pemohon).
-- `ReportFilterRequest`: Validasi filter laporan kendaraan (sumber data `real`/`ebmd`, status, OPD, tahun) serta mengunci `opd_id` akun OPD agar tidak dapat disusupi via parameter URL.
+- `Erandis\ReportFilterRequest`: Validasi filter laporan kendaraan (sumber data `real`/`ebmd`, status, OPD, tahun) serta mengunci `opd_id` akun OPD agar tidak dapat disusupi via parameter URL.
 
 ### 7.4 Konvensi Middleware & Akses Rute (Laravel 12 Standard)
 Semua Controller wajib mengimplementasikan interface `HasMiddleware` dengan sintaks statis `middleware()`:
@@ -495,6 +500,7 @@ Seluruh peningkatan visual kustom diisolasi pada file [`resources/sass/component
 ### 10.3 Modul eLABEL (Pengarsipan & Universal Dynamic Archive)
 - **Katalog & Box Berkas Fisik BPKB:**
   - Pengarsipan fisik dokumen BPKB Kendaraan ke dalam box arsip berlabel barcode.
+  - Paginasi dinamis dan optimasi performa query (eager loading `box`, `inputUser`, `opdSipat`, kontrol `per_page`: 15, 50, 100, Semua, serta pagination bar mirip modul SIPAT) pada rute `/elabel/bpkb`.
   - Fitur pemecahan (*split*) dan penggabungan (*merge*) box arsip.
   - Cetak label stiker barcode box fisik (`/elabel/boxes/{id}/label`).
 - **Katalog BPKB Keluar / Soft-Deleted (`/elabel/bpkb-deleted`):**
@@ -549,22 +555,22 @@ Seluruh peningkatan visual kustom diisolasi pada file [`resources/sass/component
 | **AI** | POST | `/ai/ask` | `AiAssistantController@ask` | Auth | Tanya-jawab asistensi data aset cerdas AI |
 | **AI** | POST | `/ai/generate-summary` | `AiAssistantController@generateSummary` | Auth | Generate ringkasan cerdas data aset |
 | **System** | GET | `/api/health-check` | `HealthCheckController@check` | Publik | Endpoint monitoring status & koneksi aplikasi |
-| **E-RANDIS** | Resource | `/vehicles` | `VehicleController` | Auth | CRUD Kendaraan Dinas |
-| **E-RANDIS** | POST | `/vehicles/import` | `VehicleController@import` | Auth | Eksekusi AI Smart Import Excel |
-| **E-RANDIS** | GET | `/vehicles/export` | `VehicleController@export` | Auth | Ekspor data inventaris kendaraan ke Excel |
-| **E-RANDIS** | GET | `/vehicles/rekon-bpkb` | `VehicleController@rekonBpkb` | Auth | Halaman Rekonsiliasi BPKB E-RANDIS vs eLABEL |
-| **E-RANDIS** | GET | `/vehicles/check-duplicates` | `VehicleController@checkDuplicates` | Auth | Deteksi duplikasi data kendaraan dinas |
-| **E-RANDIS** | POST | `/vehicles/resolve-duplicate-vehicle` | `VehicleController@resolveDuplicateVehicle` | Auth | Resolusi / merge plat nomor kendaraan ganda |
-| **E-RANDIS** | POST | `/vehicles/resolve-duplicate-opd` | `VehicleController@resolveDuplicateOpd` | Auth | Resolusi duplikasi instansi OPD E-RANDIS |
+| **E-RANDIS** | Resource | `/vehicles` | `Erandis\VehicleController` | Auth | CRUD Kendaraan Dinas |
+| **E-RANDIS** | POST | `/vehicles/import` | `Erandis\VehicleController@import` | Auth | Eksekusi AI Smart Import Excel |
+| **E-RANDIS** | GET | `/vehicles/export` | `Erandis\VehicleController@export` | Auth | Ekspor data inventaris kendaraan ke Excel |
+| **E-RANDIS** | GET | `/vehicles/rekon-bpkb` | `Erandis\VehicleController@rekonBpkb` | Auth | Halaman Rekonsiliasi BPKB E-RANDIS vs eLABEL |
+| **E-RANDIS** | GET | `/vehicles/check-duplicates` | `Erandis\VehicleController@checkDuplicates` | Auth | Deteksi duplikasi data kendaraan dinas |
+| **E-RANDIS** | POST | `/vehicles/resolve-duplicate-vehicle` | `Erandis\VehicleController@resolveDuplicateVehicle` | Auth | Resolusi / merge plat nomor kendaraan ganda |
+| **E-RANDIS** | POST | `/vehicles/resolve-duplicate-opd` | `Erandis\VehicleController@resolveDuplicateOpd` | Auth | Resolusi duplikasi instansi OPD E-RANDIS |
 | **E-RANDIS** | GET | `/master-data/opd-mapping` | `MasterOpdMappingController@index` | Auth | Hub pemetaan instansi SIPAT ↔ E-RANDIS |
-| **E-RANDIS** | Resource | `/vehicle-types` | `VehicleTypeController` | Auth | CRUD Master Jenis Kendaraan Dinas |
+| **E-RANDIS** | Resource | `/vehicle-types` | `Erandis\VehicleTypeController` | Auth | CRUD Master Jenis Kendaraan Dinas |
 | **E-RANDIS** | Resource | `/opds` | `OpdController` | Auth | CRUD Master OPD Kendaraan Dinas |
-| **E-RANDIS** | GET | `/reports` | `ReportController@index` | Auth | Dashboard Modul Laporan Kendaraan |
-| **E-RANDIS** | GET | `/reports/preview` | `ReportController@preview` | Auth | Pratinjau AJAX Laporan Kendaraan |
-| **E-RANDIS** | GET | `/reports/export` | `ReportController@export` | Auth | Ekspor Excel Laporan Kendaraan |
-| **E-RANDIS** | GET | `/reports/print` | `ReportController@print` | Auth | Cetak Browser Laporan Kendaraan |
-| **E-RANDIS** | GET | `/reports/pdf` | `ReportController@pdf` | Auth | Unduh PDF formal laporan mPDF |
-| **E-RANDIS** | GET | `/reports/settings` | `ReportSettingController@index` | Superadmin | Pengaturan KOP, TTD, & Ekspor Laporan |
+| **E-RANDIS** | GET | `/reports` | `Erandis\ReportController@index` | Auth | Dashboard Modul Laporan Kendaraan |
+| **E-RANDIS** | GET | `/reports/preview` | `Erandis\ReportController@preview` | Auth | Pratinjau AJAX Laporan Kendaraan |
+| **E-RANDIS** | GET | `/reports/export` | `Erandis\ReportController@export` | Auth | Ekspor Excel Laporan Kendaraan |
+| **E-RANDIS** | GET | `/reports/print` | `Erandis\ReportController@print` | Auth | Cetak Browser Laporan Kendaraan |
+| **E-RANDIS** | GET | `/reports/pdf` | `Erandis\ReportController@pdf` | Auth | Unduh PDF formal laporan mPDF |
+| **E-RANDIS** | GET | `/reports/settings` | `Erandis\ReportSettingController@index` | Superadmin | Pengaturan KOP, TTD, & Ekspor Laporan |
 | **SIPAT** | GET | `/sipat/aset` | `Sipat\AsetTanahController@index` | Auth | Daftar Master Aset Tanah KIB A |
 | **SIPAT** | POST | `/sipat/aset/bulk-proses` | `Sipat\AsetTanahController@bulkStoreProses` | Auth | Pembaruan status proses BPN massal |
 | **SIPAT** | GET | `/sipat/aset/check-duplicates` | `Sipat\AsetTanahController@checkDuplicates` | Auth | Diagnosis duplikasi data aset tanah |

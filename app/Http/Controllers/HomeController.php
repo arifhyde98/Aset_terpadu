@@ -28,7 +28,7 @@ class HomeController extends Controller implements HasMiddleware
     /**
      * Create a new controller instance.
      */
-    public function __construct(\App\Services\VehicleService $vehicleService, \App\Services\SipatService $sipatService)
+    public function __construct(\App\Services\Erandis\VehicleService $vehicleService, \App\Services\SipatService $sipatService)
     {
         $this->vehicleService = $vehicleService;
         $this->sipatService = $sipatService;
