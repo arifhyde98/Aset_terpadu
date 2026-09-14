@@ -3,7 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Erandis\VehicleController;
 use App\Http\Controllers\Erandis\VehicleTypeController;
-use App\Http\Controllers\OpdController;
+use App\Http\Controllers\Erandis\OpdController;
 
 // Manajemen Kendaraan
 Route::prefix('vehicles')->name('vehicles.')->group(function () {

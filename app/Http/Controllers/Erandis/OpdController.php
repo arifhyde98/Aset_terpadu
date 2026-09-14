@@ -1,10 +1,11 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Erandis;
 
+use App\Http\Controllers\Controller;
 use App\Models\Opd;
-use App\Http\Requests\StoreOpdRequest;
-use App\Http\Requests\UpdateOpdRequest;
+use App\Http\Requests\Erandis\StoreOpdRequest;
+use App\Http\Requests\Erandis\UpdateOpdRequest;
 use Illuminate\Http\Request;
 use App\Services\Erandis\VehicleService;
 use Illuminate\Routing\Controllers\HasMiddleware;

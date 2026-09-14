@@ -7,7 +7,6 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\MasterDataController;
 use App\Http\Controllers\Erandis\VehicleTypeController;
-use App\Http\Controllers\OpdController;
 use App\Http\Controllers\SettingController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\ActivityController;

@@ -566,7 +566,7 @@ Seluruh peningkatan visual kustom diisolasi pada file [`resources/sass/component
 | **E-RANDIS** | POST | `/vehicles/resolve-duplicate-opd` | `Erandis\VehicleController@resolveDuplicateOpd` | Auth | Resolusi duplikasi instansi OPD E-RANDIS |
 | **E-RANDIS** | GET | `/master-data/opd-mapping` | `MasterOpdMappingController@index` | Auth | Hub pemetaan instansi SIPAT ↔ E-RANDIS |
 | **E-RANDIS** | Resource | `/vehicle-types` | `Erandis\VehicleTypeController` | Auth | CRUD Master Jenis Kendaraan Dinas |
-| **E-RANDIS** | Resource | `/opds` | `OpdController` | Auth | CRUD Master OPD Kendaraan Dinas |
+| **E-RANDIS** | Resource | `/opds` | `Erandis\OpdController` | Auth | CRUD Master OPD Kendaraan Dinas |
 | **E-RANDIS** | GET | `/reports` | `Erandis\ReportController@index` | Auth | Dashboard Modul Laporan Kendaraan |
 | **E-RANDIS** | GET | `/reports/preview` | `Erandis\ReportController@preview` | Auth | Pratinjau AJAX Laporan Kendaraan |
 | **E-RANDIS** | GET | `/reports/export` | `Erandis\ReportController@export` | Auth | Ekspor Excel Laporan Kendaraan |
