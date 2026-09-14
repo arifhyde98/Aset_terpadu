@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\Elabel;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\StoreElabelSuratPenyerahanRequest;
-use App\Http\Requests\UpdateElabelSuratPenyerahanRequest;
+use App\Http\Requests\Elabel\StoreElabelSuratPenyerahanRequest;
+use App\Http\Requests\Elabel\UpdateElabelSuratPenyerahanRequest;
 use App\Models\Elabel\ElabelActivityLog;
 use App\Models\Elabel\ElabelSuratPenyerahan;
 use App\Models\Elabel\ElabelSuratPenyerahanBox;

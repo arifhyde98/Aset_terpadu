@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\Elabel;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\StoreElabelSertifikatRequest;
-use App\Http\Requests\UpdateElabelSertifikatRequest;
+use App\Http\Requests\Elabel\StoreElabelSertifikatRequest;
+use App\Http\Requests\Elabel\UpdateElabelSertifikatRequest;
 use App\Models\Elabel\ElabelActivityLog;
 use App\Models\Elabel\ElabelSertifikat;
 use App\Models\Elabel\ElabelSertifikatBox;

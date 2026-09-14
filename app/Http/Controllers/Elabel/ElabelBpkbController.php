@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\Elabel;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\StoreElabelBpkbRequest;
-use App\Http\Requests\UpdateElabelBpkbRequest;
+use App\Http\Requests\Elabel\StoreElabelBpkbRequest;
+use App\Http\Requests\Elabel\UpdateElabelBpkbRequest;
 use App\Models\Elabel\ElabelActivityLog;
 use App\Models\Elabel\ElabelBox;
 use App\Models\Elabel\ElabelBoxYear;

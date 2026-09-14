@@ -118,7 +118,7 @@ Aset_terpadu/
 │   │   │   ├── Sipat/    # Controller pertanahan (AsetTanah, Dashboard, Import, TargetSertifikat, Surat, Laporan, Peta, Rekonsiliasi).
 │   │   │   └── ...       # Controller Auth, LandingPage, User, AiAssistant, MasterData, HealthCheck, dan Backup/Sync.
 │   │   ├── Middleware/   # Middleware aplikasi, CheckRole, dan SsoAuthenticate.
-│   │   └── Requests/     # FormRequest validasi terpusat (Bangunan/, Erandis/, Sipat/, dan Shared).
+│   │   └── Requests/     # FormRequest validasi terpusat (Bangunan/, Elabel/, Erandis/, Sipat/, dan Shared).
 │   ├── Models/           # Model Eloquent (Vehicle, AsetTanah, Opd, OpdSipat, OpdMapping, SuratSkpt, dsb).
 │   │   ├── Elabel/       # Model khusus eLABEL (ElabelBpkb, ElabelBox, ElabelLoan, dll).
 │   │   └── Dynamic/      # Model Universal Dynamic Archive (ArchiveType, ArchiveBox, ArchiveItem, dll).
