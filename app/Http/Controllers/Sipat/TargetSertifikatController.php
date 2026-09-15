@@ -45,6 +45,11 @@ class TargetSertifikatController extends Controller implements HasMiddleware
         $statusCapaian = $request->input('status_capaian', '');
         $search = trim((string) $request->input('search', ''));
 
+        $dbYears = SipatTargetSertifikat::distinct()->pluck('tahun')->toArray();
+        $rangeYears = range((int) date('Y') - 2, (int) date('Y') + 4);
+        $availableYears = array_unique(array_merge($rangeYears, $dbYears, [$tahun]));
+        sort($availableYears);
+
         $user = auth()->user();
         if ($user && in_array($user->role, [UserRole::OPD, UserRole::KPB])) {
             $opdId = (int) $user->opd_id;
