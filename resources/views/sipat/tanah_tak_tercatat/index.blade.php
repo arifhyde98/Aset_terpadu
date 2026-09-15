@@ -104,12 +104,17 @@
             <form method="GET" action="{{ route('sipat.tanah-tak-tercatat.index') }}" class="row g-2 align-items-center">
                 <div class="col-md-4 col-sm-6">
                     <label class="form-label small fw-bold text-secondary mb-1"><i class="bi bi-building me-1"></i> OPD Pengelola</label>
+                    @if(in_array(auth()->user()?->role, [\App\Enums\UserRole::SUPERADMIN, \App\Enums\UserRole::ADMIN]))
                     <select name="opd_id" class="form-select form-select-sm" onchange="this.form.submit()">
                         <option value="">-- Semua OPD Pengelola --</option>
                         @foreach($opdList as $opd)
                             <option value="{{ $opd->id }}" {{ (string)$opdId === (string)$opd->id ? 'selected' : '' }}>{{ $opd->nama }}</option>
                         @endforeach
                     </select>
+                    @else
+                    <input type="text" class="form-control form-control-sm bg-light" value="{{ auth()->user()->opdRelation?->nama ?? auth()->user()->opd ?? 'OPD Anda' }}" readonly disabled>
+                    <input type="hidden" name="opd_id" value="{{ auth()->user()->opd_id }}">
+                    @endif
                 </div>
 
                 <div class="col-md-5 col-sm-6">
@@ -389,12 +394,20 @@
                     <div class="row g-3 mb-3">
                         <div class="col-md-6">
                             <label class="form-label small fw-bold text-body">OPD Pengelola / Pemegang Hak</label>
+                            @if(in_array(auth()->user()?->role, [\App\Enums\UserRole::SUPERADMIN, \App\Enums\UserRole::ADMIN]))
                             <select name="opd_id" class="form-select">
                                 <option value="">-- Pilih OPD Pengelola --</option>
                                 @foreach($opdList as $opd)
                                     <option value="{{ $opd->id }}">{{ $opd->nama }}</option>
                                 @endforeach
                             </select>
+                            @else
+                            <div class="form-control bg-light text-body fw-medium py-2 d-flex align-items-center justify-content-between">
+                                <span><i class="bi bi-building me-1.5 text-secondary"></i> {{ auth()->user()->opdRelation?->nama ?? auth()->user()->opd ?? 'OPD Anda' }}</span>
+                                <span class="badge bg-secondary-subtle text-secondary border">Terkunci</span>
+                            </div>
+                            <input type="hidden" name="opd_id" value="{{ auth()->user()->opd_id }}">
+                            @endif
                         </div>
                         <div class="col-md-6">
                             <label class="form-label small fw-bold text-body">Peruntukan Tanah</label>

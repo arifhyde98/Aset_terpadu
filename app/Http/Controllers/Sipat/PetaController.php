@@ -7,6 +7,7 @@ use App\Models\AsetTanah;
 use App\Models\Opd;
 use App\Models\StatusProses;
 use App\Models\Activity;
+use App\Enums\UserRole;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Routing\Controllers\HasMiddleware;
@@ -38,7 +39,12 @@ class PetaController extends Controller implements HasMiddleware
             });
         })->count();
 
-        $opdList = Opd::where('aktif', 1)->orderBy('nama', 'asc')->get();
+        $user = auth()->user();
+        if ($user && in_array($user->role, [UserRole::OPD, UserRole::KPB])) {
+            $opdList = Opd::where('id', $user->opd_id)->get();
+        } else {
+            $opdList = Opd::where('aktif', 1)->orderBy('nama', 'asc')->get();
+        }
         $statusList = StatusProses::orderBy('urutan', 'asc')->get();
         $allAsetNibar = AsetTanah::select('id_aset', 'kode_aset', 'nama_aset')->orderBy('kode_aset', 'asc')->get();
 
@@ -69,7 +75,7 @@ class PetaController extends Controller implements HasMiddleware
                 }
             )
             ->leftJoin('status_proses as sp', 'sp.id_status', '=', 'p.id_status')
-            ->leftJoin('opd', 'opd.id', '=', 'aset_tanah.opd_id')
+            ->leftJoin('opds', 'opds.id', '=', 'aset_tanah.opd_id')
             ->select(
                 'aset_tanah.id_aset as id',
                 'aset_tanah.kode_aset',
@@ -82,7 +88,7 @@ class PetaController extends Controller implements HasMiddleware
                 'aset_tanah.geojson',
                 'aset_tanah.opd_id',
                 'aset_tanah.opd as legacy_opd',
-                'opd.nama as nama_opd',
+                'opds.nama as nama_opd',
                 'sp.id_status',
                 'sp.nama_status',
                 'sp.kategori',

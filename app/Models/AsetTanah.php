@@ -13,6 +13,14 @@ class AsetTanah extends Model
     protected $table = 'aset_tanah';
     protected $primaryKey = 'id_aset';
 
+    /**
+     * Bootstrap the model and its traits.
+     */
+    protected static function booted(): void
+    {
+        static::addGlobalScope(new \App\Models\Scopes\TenantScope);
+    }
+
     protected $fillable = [
         'kode_aset',
         'status_pencatatan',

@@ -17,6 +17,7 @@ use App\Http\Requests\Sipat\StorePengamananFisikRequest;
 use App\Http\Requests\Sipat\StoreResolveDuplicateAset;
 use App\Http\Requests\Sipat\StoreResolveDuplicateOpdSipat;
 use App\Models\Activity;
+use App\Enums\UserRole;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -78,8 +79,13 @@ class AsetTanahController extends Controller implements HasMiddleware
             $laporanService = app(\App\Services\Sipat\LaporanService::class);
             
             $filters = $request->all();
-            if (isset($filters['opd_id']) && !empty($filters['opd_id'])) {
-                $filters['opd'] = $filters['opd_id'];
+            if (auth()->check() && in_array(auth()->user()->role, [UserRole::OPD, UserRole::KPB])) {
+                $filters['opd_id'] = auth()->user()->opd_id;
+                $filters['opd'] = auth()->user()->opd_id;
+            } else {
+                if (isset($filters['opd_id']) && !empty($filters['opd_id'])) {
+                    $filters['opd'] = $filters['opd_id'];
+                }
             }
             if (isset($filters['status']) && !empty($filters['status'])) {
                 $filters['status_proses_id'] = $filters['status'];
@@ -193,9 +199,51 @@ class AsetTanahController extends Controller implements HasMiddleware
      *
      * @return View
      */
+    /**
+     * Memeriksa hak otorisasi pengguna terhadap aset tanah tertentu.
+     */
+    private function checkAsetOwnership(AsetTanah $aset): void
+    {
+        $user = auth()->user();
+        if (!$user) {
+            abort(401);
+        }
+
+        if (in_array($user->role, [UserRole::SUPERADMIN, UserRole::ADMIN])) {
+            return;
+        }
+
+        if ($user->role === UserRole::OPD) {
+            if ((int)$aset->opd_id !== (int)$user->opd_id) {
+                abort(403, 'Akses ditolak: Anda tidak memiliki izin untuk mengelola aset instansi lain.');
+            }
+            return;
+        }
+
+        if ($user->role === UserRole::KPB) {
+            if ((int)$aset->sub_opd_id !== (int)$user->sub_opd_id) {
+                abort(403, 'Akses ditolak: Anda tidak memiliki izin untuk mengelola aset unit kerja lain.');
+            }
+            return;
+        }
+
+        abort(403, 'Akses ditolak.');
+    }
+
+    /**
+     * Menampilkan form pendaftaran aset baru.
+     *
+     * @return View
+     */
     public function create(): View
     {
-        $opdList = Opd::where('aktif', 1)->orderBy('nama', 'asc')->get();
+        $user = auth()->user();
+        if ($user && in_array($user->role, [UserRole::OPD, UserRole::KPB])) {
+            $opdList = Opd::where('id', $user->opd_id)->get();
+        } else {
+            $opdList = Opd::where('aktif', 1)->orderBy('nama', 'asc')->get();
+        }
+
         $statusList = StatusProses::orderBy('urutan', 'asc')->get();
         $kecamatanList = \App\Models\Kecamatan::orderBy('nama', 'asc')->get();
         $desaList = \App\Models\Desa::orderBy('nama', 'asc')->get();
@@ -226,6 +274,7 @@ class AsetTanahController extends Controller implements HasMiddleware
      */
     public function show(AsetTanah $aset): JsonResponse
     {
+        $this->checkAsetOwnership($aset);
         return response()->json($aset->load(['prosesAset.statusProses', 'latestProses.statusProses', 'wilayahKecamatan', 'wilayahDesa']));
     }
 
@@ -257,8 +306,16 @@ class AsetTanahController extends Controller implements HasMiddleware
      */
     public function edit(AsetTanah $aset): View
     {
+        $this->checkAsetOwnership($aset);
         $aset->load(['targetSertifikat', 'sertifikatElabel']);
-        $opdList = Opd::where('aktif', 1)->orderBy('nama', 'asc')->get();
+
+        $user = auth()->user();
+        if ($user && in_array($user->role, [UserRole::OPD, UserRole::KPB])) {
+            $opdList = Opd::where('id', $user->opd_id)->get();
+        } else {
+            $opdList = Opd::where('aktif', 1)->orderBy('nama', 'asc')->get();
+        }
+
         $statusList = StatusProses::orderBy('urutan', 'asc')->get();
         $kecamatanList = \App\Models\Kecamatan::orderBy('nama', 'asc')->get();
         $desaList = \App\Models\Desa::orderBy('nama', 'asc')->get();
@@ -275,6 +332,7 @@ class AsetTanahController extends Controller implements HasMiddleware
      */
     public function update(UpdateAsetTanahRequest $request, AsetTanah $aset): RedirectResponse
     {
+        $this->checkAsetOwnership($aset);
         $this->asetTanahService->updateAset($aset->id_aset, $request->validated());
 
         return $this->redirectWithFilters('Data Aset Tanah berhasil diperbarui.');
@@ -288,6 +346,12 @@ class AsetTanahController extends Controller implements HasMiddleware
      */
     public function destroy(AsetTanah $aset): RedirectResponse
     {
+        $user = auth()->user();
+        if (!$user || !in_array($user->role, [UserRole::SUPERADMIN, UserRole::ADMIN])) {
+            abort(403, 'Akses ditolak: Hanya Administrator yang dapat menghapus aset tanah.');
+        }
+
+        $this->checkAsetOwnership($aset);
         $this->asetTanahService->deleteAset($aset->id_aset);
 
         return $this->redirectWithFilters('Data Aset Tanah berhasil dihapus.');
@@ -302,6 +366,7 @@ class AsetTanahController extends Controller implements HasMiddleware
      */
     public function storeProses(StoreProsesAsetRequest $request, AsetTanah $aset): RedirectResponse
     {
+        $this->checkAsetOwnership($aset);
         $this->asetTanahService->addProsesBpn($aset->id_aset, $request->validated());
 
         return $this->redirectWithFilters('Riwayat Proses BPN berhasil ditambahkan.');
@@ -316,6 +381,31 @@ class AsetTanahController extends Controller implements HasMiddleware
     public function bulkStoreProses(BulkStoreProsesRequest $request): RedirectResponse
     {
         $validated = $request->validated();
+        $user = auth()->user();
+
+        if ($user && $user->role === UserRole::OPD) {
+            $asetIds = $validated['aset_ids'] ?? [];
+            if (!empty($asetIds)) {
+                $hasForbidden = AsetTanah::withoutGlobalScopes()
+                    ->whereIn('id_aset', $asetIds)
+                    ->where('opd_id', '!=', $user->opd_id)
+                    ->exists();
+                if ($hasForbidden) {
+                    abort(403, 'Akses ditolak: Sebagian atau seluruh aset yang dipilih bukan milik instansi Anda.');
+                }
+            }
+        } elseif ($user && $user->role === UserRole::KPB) {
+            $asetIds = $validated['aset_ids'] ?? [];
+            if (!empty($asetIds)) {
+                $hasForbidden = AsetTanah::withoutGlobalScopes()
+                    ->whereIn('id_aset', $asetIds)
+                    ->where('sub_opd_id', '!=', $user->sub_opd_id)
+                    ->exists();
+                if ($hasForbidden) {
+                    abort(403, 'Akses ditolak: Sebagian atau seluruh aset yang dipilih bukan milik unit kerja Anda.');
+                }
+            }
+        }
         
         $insertedCount = $this->sipatService->bulkUpdateStatus(
             $validated['aset_ids'] ?? [],
@@ -346,6 +436,7 @@ class AsetTanahController extends Controller implements HasMiddleware
      */
     public function storePengamanan(StorePengamananFisikRequest $request, AsetTanah $aset): RedirectResponse
     {
+        $this->checkAsetOwnership($aset);
         $this->asetTanahService->savePengamananFisik($aset->id_aset, $request->validated());
 
         return $this->redirectWithFilters('Status pengamanan fisik aset berhasil diperbarui.');
@@ -360,6 +451,7 @@ class AsetTanahController extends Controller implements HasMiddleware
      */
     public function storeDokumen(StoreDokumenAsetRequest $request, AsetTanah $aset): RedirectResponse
     {
+        $this->checkAsetOwnership($aset);
         $this->asetTanahService->saveDokumenAset(
             $aset->id_aset, 
             $request->validated(), 

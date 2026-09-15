@@ -30,7 +30,7 @@ class UnifiedAssetSearchService
     {
         return Cache::remember('sipat_landing_portal_stats', 300, function () {
             $totalKendaraan = Vehicle::withoutGlobalScopes()->count();
-            $totalTanah = AsetTanah::count();
+            $totalTanah = AsetTanah::withoutGlobalScopes()->count();
             $totalBpkb = ElabelBpkb::count();
             $totalSertifikat = ElabelSertifikat::count();
             $totalPenyerahan = ElabelSuratPenyerahan::count();
@@ -274,7 +274,7 @@ class UnifiedAssetSearchService
             ];
         }
 
-        $builder = AsetTanah::with(['opdSipat', 'latestProses.statusProses']);
+        $builder = AsetTanah::withoutGlobalScopes()->with(['opdSipat', 'latestProses.statusProses']);
 
         if ($query !== '') {
             if ($searchBy === 'nibar') {

@@ -7,7 +7,7 @@ use App\Models\AsetTanah;
 use App\Models\Opd;
 use App\Models\StatusProses;
 use App\Models\ProsesAset;
-use App\Models\Activity;
+use App\Enums\UserRole;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Routing\Controllers\HasMiddleware;
@@ -34,7 +34,13 @@ class TanahTakTercatatController extends Controller implements HasMiddleware
         $opdId = $request->filled('opd_id') ? (int) $request->input('opd_id') : null;
         $search = trim((string) $request->input('search', ''));
 
-        $opdList = Opd::where('aktif', 1)->orderBy('nama', 'asc')->get();
+        $user = auth()->user();
+        if ($user && in_array($user->role, [UserRole::OPD, UserRole::KPB])) {
+            $opdId = (int) $user->opd_id;
+            $opdList = Opd::where('id', $user->opd_id)->get();
+        } else {
+            $opdList = Opd::where('aktif', 1)->orderBy('nama', 'asc')->get();
+        }
         $statusList = StatusProses::orderBy('urutan', 'asc')->get();
 
         $query = AsetTanah::with(['opdSipat', 'latestProses.statusProses'])
@@ -106,6 +112,11 @@ class TanahTakTercatatController extends Controller implements HasMiddleware
                 $counter++;
             } while ($exists);
             $kodeAset = $candidateCode;
+        }
+
+        $user = auth()->user();
+        if ($user && in_array($user->role, [UserRole::OPD, UserRole::KPB])) {
+            $validated['opd_id'] = $user->opd_id;
         }
 
         $opdObj = !empty($validated['opd_id']) ? Opd::find($validated['opd_id']) : null;

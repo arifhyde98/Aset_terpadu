@@ -31,7 +31,7 @@ class TenantScope implements Scope
                     // Fail-safe: Jika opd_id hilang, kunci total akses (tidak boleh lihat data apa pun)
                     $builder->whereRaw('1 = 0');
                 } else {
-                    $builder->where('opd_id', $user->opd_id);
+                    $builder->where($model->getTable() . '.opd_id', $user->opd_id);
                 }
             } elseif ($user->role === UserRole::KPB) {
                 // Jika role adalah KPB (Kuasa Pengguna Barang), batasi HANYA ke unit kerjanya
@@ -39,7 +39,7 @@ class TenantScope implements Scope
                     // Fail-safe: Jika sub_opd_id belum diatur, kunci akses
                     $builder->whereRaw('1 = 0');
                 } else {
-                    $builder->where('sub_opd_id', $user->sub_opd_id);
+                    $builder->where($model->getTable() . '.sub_opd_id', $user->sub_opd_id);
                 }
             }
         }

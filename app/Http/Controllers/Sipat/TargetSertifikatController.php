@@ -15,6 +15,7 @@ use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
 use Illuminate\View\View;
 use Illuminate\Validation\Rule;
+use App\Enums\UserRole;
 use Maatwebsite\Excel\Facades\Excel;
 
 class TargetSertifikatController extends Controller implements HasMiddleware
@@ -44,8 +45,13 @@ class TargetSertifikatController extends Controller implements HasMiddleware
         $statusCapaian = $request->input('status_capaian', '');
         $search = trim((string) $request->input('search', ''));
 
-        $availableYears = range(date('Y') - 2, date('Y') + 4);
-        $opdList = Opd::where('aktif', 1)->orderBy('nama', 'asc')->get();
+        $user = auth()->user();
+        if ($user && in_array($user->role, [UserRole::OPD, UserRole::KPB])) {
+            $opdId = (int) $user->opd_id;
+            $opdList = Opd::where('id', $user->opd_id)->get();
+        } else {
+            $opdList = Opd::where('aktif', 1)->orderBy('nama', 'asc')->get();
+        }
 
         // Query Target Tahunan
         $targetQuery = SipatTargetSertifikat::with([
@@ -325,6 +331,11 @@ class TargetSertifikatController extends Controller implements HasMiddleware
     {
         $tahun = (int) $request->input('tahun', date('Y'));
         $opdId = $request->filled('opd_id') ? (int) $request->input('opd_id') : null;
+        $user = auth()->user();
+        if ($user && in_array($user->role, [UserRole::OPD, UserRole::KPB])) {
+            $opdId = (int) $user->opd_id;
+        }
+
         $statusCapaian = (string) $request->input('status_capaian', '');
         $search = (string) $request->input('search', '');
 
@@ -342,6 +353,11 @@ class TargetSertifikatController extends Controller implements HasMiddleware
 
         $tahun = (int) $request->input('tahun', date('Y'));
         $opdId = $request->filled('opd_id') ? (int) $request->input('opd_id') : null;
+        $user = auth()->user();
+        if ($user && in_array($user->role, [UserRole::OPD, UserRole::KPB])) {
+            $opdId = (int) $user->opd_id;
+        }
+
         $statusCapaian = $request->input('status_capaian', '');
         $search = trim((string) $request->input('search', ''));
 

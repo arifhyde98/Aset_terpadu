@@ -98,12 +98,17 @@
 
                 <div class="col-md-3 col-sm-6">
                     <label class="form-label small fw-bold text-secondary mb-1"><i class="bi bi-building me-1"></i> OPD Pengelola</label>
+                    @if(in_array(auth()->user()?->role, [\App\Enums\UserRole::SUPERADMIN, \App\Enums\UserRole::ADMIN]))
                     <select name="opd_id" class="form-select form-select-sm" onchange="this.form.submit()">
                         <option value="">-- Semua OPD Pengelola --</option>
                         @foreach($opdList as $opd)
                             <option value="{{ $opd->id }}" {{ (string)$opdId === (string)$opd->id ? 'selected' : '' }}>{{ $opd->nama }}</option>
                         @endforeach
                     </select>
+                    @else
+                    <input type="text" class="form-control form-control-sm bg-light" value="{{ auth()->user()->opdRelation?->nama ?? auth()->user()->opd ?? 'OPD Anda' }}" readonly disabled>
+                    <input type="hidden" name="opd_id" value="{{ auth()->user()->opd_id }}">
+                    @endif
                 </div>
 
                 <div class="col-md-3 col-sm-6">

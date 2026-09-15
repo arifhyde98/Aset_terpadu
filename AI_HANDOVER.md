@@ -67,6 +67,16 @@ Dokumen ini merupakan sumber kebenaran tunggal (*Single Source of Truth*) mengen
   - Admin OPD secara otomatis dibatasi aksesnya hanya pada catatan berelasi `opd_id` miliknya (dapat melihat kendaraan induk dan seluruh Sub-OPD di bawahnya).
   - Operator KPB dibatasi secara ketat hanya pada catatan dengan `sub_opd_id` miliknya sendiri.
   - *Fail-Safe:* Jika `opd_id` (untuk role OPD) atau `sub_opd_id` (untuk role KPB) bernilai `null`, sistem otomatis mengunci akses (`whereRaw('1 = 0')`) dan **bukan** membuka akses global.
+- **SIPAT (Aset Tanah KIB A & Sub-OPD Multi-Tenancy Sesuai Blueprint E-RANDIS):**
+  - Menerapkan `App\Models\Scopes\TenantScope` secara global pada model `AsetTanah`.
+  - Menggunakan kualifikasi nama tabel (`$model->getTable() . '.opd_id'`) pada scope query untuk mencegah error ambiguitas MySQL saat melakukan join antar-tabel.
+  - Operator OPD dibatasi hanya dapat melihat dan mengelola bidang tanah milik instansinya (`opd_id`). Operator KPB dibatasi ketat pada unit kerjanya (`sub_opd_id`).
+  - *Pertahanan Berlapis (Double Defense):*
+    1. **Layer Global Scope:** Route model binding otomatis menghasilkan `404 Not Found` jika akun OPD mencoba mengakses aset instansi lain lewat URL.
+    2. **Layer Controller Authorization (`checkAsetOwnership()`):** Memeriksa kepemilikan aset secara eksplisit pada aksi `show()`, `edit()`, `update()`, `destroy()`, `storeProses()`, `bulkStoreProses()`, `storePengamanan()`, dan `storeDokumen()`, melempar `403 Forbidden` jika ada indikasi pelanggaran akses.
+    3. **Layer Form Request (`prepareForValidation` & `authorize`):** Pada `StoreAsetTanahRequest` dan `UpdateAsetTanahRequest`, field `opd_id` dan `sub_opd_id` otomatis dipaksa (*locked*) ke identitas akun `auth()->user()`, menggagalkan upaya manipulasi/spoofing parameter request. Pada `BulkStoreProsesRequest`, sistem memverifikasi seluruh `aset_ids` terpilih berasal dari instansi pengguna.
+    4. **Layer UI Blade:** Pada formulir penambahan dan pengeditan aset tanah (`create.blade.php`, `edit.blade.php`, `tanah_tak_tercatat/index.blade.php`), dropdown instansi digantikan dengan kotak informasi *read-only* berlatar abu-abu terang dengan badge *"Terkunci (Sesuai Akun)"* dan `<input type="hidden" name="opd_id">`. Tombol aksi mutasi pada modal aset (`modal.blade.php`) otomatis disembunyikan/dinonaktifkan jika aset bukan milik instansi yang bersangkutan.
+  - *Query Agregat Publik/Sistem:* Seluruh kalkulasi dashboard global dan mesin pencarian portal publik (`UnifiedAssetSearchService`, `SipatService::computeDashboardStats`) secara eksplisit membungkus query dengan `AsetTanah::withoutGlobalScopes()` agar statistik kabupaten tetap akurat 100%.
 - **Master OPD Tunggal Terpadu (`opds`):**
   - Seluruh modul (SIPAT, E-RANDIS, Bangunan, eLABEL, dan Arsip Dinamis) kini menggunakan **tabel tunggal `opds`** sebagai *single source of truth*.
   - Menghapus ketergantungan pada tabel jembatan `opd_mappings` dan mempensiunkan tabel `opd` lama (dialihkan aman ke `opd_legacy_backup` dan `opd_mappings_legacy_backup`).

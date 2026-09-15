@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Sipat;
 use App\Http\Controllers\Controller;
 use App\Models\Opd;
 use App\Models\StatusProses;
+use App\Enums\UserRole;
 use App\Services\Sipat\LaporanService;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
@@ -19,6 +20,7 @@ class LaporanController extends Controller implements HasMiddleware
     {
         return [
             new Middleware('auth'),
+            new Middleware('role:superadmin,admin', only: ['rekapOpd', 'exportRekapOpdXlsx', 'downloadRekapOpdPdf', 'printRekapOpd']),
         ];
     }
 
@@ -30,7 +32,13 @@ class LaporanController extends Controller implements HasMiddleware
     public function index(Request $request)
     {
         $filters = $this->laporanService->getFilters($request->all());
-        $opdList = Opd::where('aktif', 1)->orderBy('nama', 'asc')->get();
+        $user = auth()->user();
+        if ($user && in_array($user->role, [UserRole::OPD, UserRole::KPB])) {
+            $filters['opd_id'] = $user->opd_id;
+            $opdList = Opd::where('id', $user->opd_id)->get();
+        } else {
+            $opdList = Opd::where('aktif', 1)->orderBy('nama', 'asc')->get();
+        }
         $statusList = StatusProses::orderBy('urutan', 'asc')->get();
 
         $reportTitles = collect();
@@ -85,6 +93,11 @@ class LaporanController extends Controller implements HasMiddleware
     public function exportXlsx(Request $request)
     {
         $filters = $this->laporanService->getFilters($request->all());
+        $user = auth()->user();
+        if ($user && in_array($user->role, [UserRole::OPD, UserRole::KPB])) {
+            $filters['opd_id'] = $user->opd_id;
+        }
+
         $rows = $this->laporanService->buildQuery($filters)->get();
         $summary = $this->laporanService->buildSummary($rows, $filters);
         $kop = $this->laporanService->getKopSettings();
@@ -110,6 +123,11 @@ class LaporanController extends Controller implements HasMiddleware
         ini_set('pcre.backtrack_limit', '15000000');
 
         $filters = $this->laporanService->getFilters($request->all());
+        $user = auth()->user();
+        if ($user && in_array($user->role, [UserRole::OPD, UserRole::KPB])) {
+            $filters['opd_id'] = $user->opd_id;
+        }
+
         $rows = $this->laporanService->buildQuery($filters)->get();
         $summary = $this->laporanService->buildSummary($rows, $filters);
         $kop = $this->laporanService->getKopSettings();
@@ -166,6 +184,11 @@ class LaporanController extends Controller implements HasMiddleware
      */
     public function rekapOpd(Request $request)
     {
+        $user = auth()->user();
+        if (!$user || !in_array($user->role, [UserRole::SUPERADMIN, UserRole::ADMIN])) {
+            abort(403, 'Akses ditolak: Rekapitulasi per OPD hanya dapat diakses oleh Administrator.');
+        }
+
         $filters = ['q' => trim((string) $request->input('q', ''))];
         $rekapData = $this->laporanService->getRekapPerOpd($filters);
         $kop = $this->laporanService->getKopSettings();

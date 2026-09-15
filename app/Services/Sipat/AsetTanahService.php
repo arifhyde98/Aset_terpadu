@@ -131,7 +131,12 @@ class AsetTanahService
             $asetTanah = $orderQuery->paginate((int)$perPage)->withQueryString();
         }
 
-        $opdList = Opd::where('aktif', 1)->orderBy('nama', 'asc')->get();
+        $user = auth()->user();
+        if ($user && in_array($user->role, [\App\Enums\UserRole::OPD, \App\Enums\UserRole::KPB])) {
+            $opdList = Opd::where('id', $user->opd_id)->get();
+        } else {
+            $opdList = Opd::where('aktif', 1)->orderBy('nama', 'asc')->get();
+        }
         $statusList = StatusProses::orderBy('urutan', 'asc')->get();
         $kecamatanList = \App\Models\Kecamatan::orderBy('nama', 'asc')->get();
 

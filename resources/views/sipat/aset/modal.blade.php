@@ -63,6 +63,12 @@
     }
 </style>
 
+@php
+    $canManageAset = in_array(auth()->user()?->role, [\App\Enums\UserRole::SUPERADMIN, \App\Enums\UserRole::ADMIN])
+        || (auth()->user()?->role === \App\Enums\UserRole::OPD && (int)$aset->opd_id === (int)auth()->user()?->opd_id)
+        || (auth()->user()?->role === \App\Enums\UserRole::KPB && (int)$aset->sub_opd_id === (int)auth()->user()?->sub_opd_id);
+@endphp
+
 <div class="modal-header border-bottom px-4 py-3">
     <div>
         <div class="d-flex align-items-center gap-2 mb-1 flex-wrap">
@@ -228,11 +234,14 @@
                     <h6 class="fw-bold mb-0 text-body">Kronologi Pensertifikatan BPN</h6>
                     <small class="text-secondary">Tahapan pengurusan sertifikat tanah di BPN Kabupaten Donggala</small>
                 </div>
+                @if($canManageAset)
                 <button type="button" class="btn btn-sm btn-primary rounded-pill px-3" data-bs-toggle="collapse" data-bs-target="#formTambahProses">
                     <i class="bi bi-plus-lg me-1"></i> Tambah Status BPN
                 </button>
+                @endif
             </div>
 
+            @if($canManageAset)
             <!-- Form Tambah Status BPN -->
             <div class="collapse mb-4" id="formTambahProses">
                 <div class="detail-card-surface p-3 border-top border-3 border-primary">
@@ -265,6 +274,7 @@
                     </form>
                 </div>
             </div>
+            @endif
 
             <div class="detail-card-surface p-4">
                 @if(empty($prosesList) || count($prosesList) == 0)
@@ -302,31 +312,37 @@
         <div class="tab-pane fade" id="tab-security" role="tabpanel">
             <div class="detail-card-surface p-4 mx-auto" style="max-width: 650px;">
                 <h6 class="fw-bold text-body mb-3"><i class="bi bi-shield-check text-success me-2"></i>Status Pengamanan Fisik Aset</h6>
+                @if(!$canManageAset)
+                    <div class="alert alert-secondary border-0 small py-2 px-3 mb-3 d-flex align-items-center gap-2">
+                        <i class="bi bi-lock-fill text-secondary"></i>
+                        <span>Mode Hanya Baca: Anda hanya dapat melihat data pengamanan fisik aset OPD lain.</span>
+                    </div>
+                @endif
                 <form action="{{ route('sipat.aset.storePengamanan', $aset->id_aset) }}" method="POST">
                     @csrf
                     <div class="row g-3 mb-4">
                         <div class="col-md-6">
                             <div class="form-check form-switch p-3 border rounded-3 bg-body d-flex align-items-center justify-content-between">
                                 <label class="form-check-label fw-semibold text-body cursor-pointer" for="chk_sertifikat">Sertifikat Ada & Valid</label>
-                                <input class="form-check-input ms-0 mt-0" type="checkbox" role="switch" name="sertifikat_ada" id="chk_sertifikat" value="1" {{ !empty($pengamanan->sertifikat_ada) ? 'checked' : '' }}>
+                                <input class="form-check-input ms-0 mt-0" type="checkbox" role="switch" name="sertifikat_ada" id="chk_sertifikat" value="1" {{ !empty($pengamanan->sertifikat_ada) ? 'checked' : '' }} {{ !$canManageAset ? 'disabled' : '' }}>
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="form-check form-switch p-3 border rounded-3 bg-body d-flex align-items-center justify-content-between">
                                 <label class="form-check-label fw-semibold text-body cursor-pointer" for="chk_papan">Papan Nama Pemda</label>
-                                <input class="form-check-input ms-0 mt-0" type="checkbox" role="switch" name="papan_nama" id="chk_papan" value="1" {{ !empty($pengamanan->papan_nama) ? 'checked' : '' }}>
+                                <input class="form-check-input ms-0 mt-0" type="checkbox" role="switch" name="papan_nama" id="chk_papan" value="1" {{ !empty($pengamanan->papan_nama) ? 'checked' : '' }} {{ !$canManageAset ? 'disabled' : '' }}>
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="form-check form-switch p-3 border rounded-3 bg-body d-flex align-items-center justify-content-between">
                                 <label class="form-check-label fw-semibold text-body cursor-pointer" for="chk_pagar">Pagar Batas/Patok</label>
-                                <input class="form-check-input ms-0 mt-0" type="checkbox" role="switch" name="pagar" id="chk_pagar" value="1" {{ !empty($pengamanan->pagar) ? 'checked' : '' }}>
+                                <input class="form-check-input ms-0 mt-0" type="checkbox" role="switch" name="pagar" id="chk_pagar" value="1" {{ !empty($pengamanan->pagar) ? 'checked' : '' }} {{ !$canManageAset ? 'disabled' : '' }}>
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="form-check form-switch p-3 border rounded-3 bg-body d-flex align-items-center justify-content-between">
                                 <label class="form-check-label fw-semibold text-body cursor-pointer" for="chk_dikuasai">Dikuasai Pihak Lain</label>
-                                <input class="form-check-input ms-0 mt-0" type="checkbox" role="switch" name="dikuasai_pihak_lain" id="chk_dikuasai" value="1" {{ !empty($pengamanan->dikuasai_pihak_lain) ? 'checked' : '' }}>
+                                <input class="form-check-input ms-0 mt-0" type="checkbox" role="switch" name="dikuasai_pihak_lain" id="chk_dikuasai" value="1" {{ !empty($pengamanan->dikuasai_pihak_lain) ? 'checked' : '' }} {{ !$canManageAset ? 'disabled' : '' }}>
                             </div>
                         </div>
                     </div>
@@ -334,19 +350,21 @@
                     <div class="row g-3">
                         <div class="col-md-6">
                             <label class="form-label small fw-semibold text-secondary">Tanggal Pengecekan Lapangan</label>
-                            <input type="date" name="tgl_cek" class="form-control" value="{{ $pengamanan->tgl_cek ?? '' }}">
+                            <input type="date" name="tgl_cek" class="form-control" value="{{ $pengamanan->tgl_cek ?? '' }}" {{ !$canManageAset ? 'readonly disabled' : '' }}>
                         </div>
                         <div class="col-12">
                             <label class="form-label small fw-semibold text-secondary">Catatan Kondisi Fisik Lapangan</label>
-                            <textarea name="catatan" class="form-control" rows="3" placeholder="Tuliskan kondisi fisik tanah di lapangan...">{{ $pengamanan->catatan ?? '' }}</textarea>
+                            <textarea name="catatan" class="form-control" rows="3" placeholder="Tuliskan kondisi fisik tanah di lapangan..." {{ !$canManageAset ? 'readonly disabled' : '' }}>{{ $pengamanan->catatan ?? '' }}</textarea>
                         </div>
                     </div>
 
+                    @if($canManageAset)
                     <div class="text-end mt-4">
                         <button type="submit" class="btn btn-success rounded-pill px-4 shadow-sm">
                             <i class="bi bi-save me-1"></i> Simpan Status Pengamanan
                         </button>
                     </div>
+                    @endif
                 </form>
             </div>
         </div>
@@ -358,11 +376,14 @@
                     <h6 class="mb-0 fw-bold text-body">Arsip Dokumen Digital</h6>
                     <small class="text-secondary">Berkas digital sertifikat, SKPT, dan dokumen tanah</small>
                 </div>
+                @if($canManageAset)
                 <button class="btn btn-sm btn-primary rounded-pill px-3 shadow-sm" type="button" data-bs-toggle="collapse" data-bs-target="#formUploadDokumen">
                     <i class="bi bi-cloud-arrow-up me-1"></i> Upload Dokumen
                 </button>
+                @endif
             </div>
 
+            @if($canManageAset)
             <!-- Form Upload Dokumen -->
             <div class="collapse mb-4" id="formUploadDokumen">
                 <div class="detail-card-surface p-4 border-top border-3 border-indigo">
@@ -390,6 +411,7 @@
                     </form>
                 </div>
             </div>
+            @endif
 
             <div class="detail-card-surface overflow-hidden">
                 @if(empty($dokumenList) || count($dokumenList) == 0)
@@ -523,11 +545,13 @@
                             <div class="p-3 bg-light rounded-3 border text-center text-secondary">
                                 <i class="bi bi-file-earmark-x fs-2 d-block mb-1 text-warning opacity-75"></i>
                                 <span class="small fw-semibold">File scan PDF sertifikat belum diunggah di Katalog eLabel.</span>
+                                @if($canManageAset)
                                 <div class="mt-2">
                                     <a href="{{ route('elabel.sertifikat.edit', $elabelSertifikat->id) }}" target="_blank" class="btn btn-sm btn-outline-primary">
                                         <i class="bi bi-upload me-1"></i> Upload Scan PDF Sekarang
                                     </a>
                                 </div>
+                                @endif
                             </div>
                         </div>
                     @endif
@@ -558,8 +582,15 @@
                         <div class="p-4 bg-body rounded-3 border text-center my-3">
                             <i class="bi bi-folder-plus text-primary fs-1 d-block mb-2"></i>
                             <h6 class="fw-bold text-dark mb-1">Daftarkan Sertifikat Fisik Sekarang</h6>
-                            <p class="text-secondary small mb-3">Klik tombol di bawah untuk mendaftarkan sertifikat tanah ini langsung ke Katalog eLabel dengan data terisi otomatis.</p>
+                            <p class="text-secondary small mb-3">
+                                @if($canManageAset)
+                                    Klik tombol di bawah untuk mendaftarkan sertifikat tanah ini langsung ke Katalog eLabel dengan data terisi otomatis.
+                                @else
+                                    Pendaftaran ke Katalog eLabel hanya dapat dilakukan oleh OPD pemilik aset atau Administrator.
+                                @endif
+                            </p>
                             
+                            @if($canManageAset)
                             <a href="{{ route('elabel.sertifikat.create', [
                                 'nibar' => $aset->kode_aset ?? '',
                                 'no_sertipikat' => $aset->no_sertifikat ?? '',
@@ -577,6 +608,7 @@
                             ]) }}" target="_blank" class="btn btn-primary fw-bold px-4 py-2 shadow-sm">
                                 <i class="bi bi-plus-lg me-1"></i> + Daftarkan ke Katalog eLabel
                             </a>
+                            @endif
                         </div>
                     @else
                         <div class="alert alert-danger border-0 bg-danger bg-opacity-10 text-danger rounded-3 mb-4">

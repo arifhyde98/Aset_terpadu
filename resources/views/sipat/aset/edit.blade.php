@@ -53,12 +53,26 @@
 
                     <div class="col-md-6">
                         <label class="form-label small fw-semibold">OPD Pengelola</label>
-                        <select name="opd_id" class="form-select">
-                            <option value="">-- Pilih OPD Pengelola --</option>
-                            @foreach($opdList as $opd)
-                                <option value="{{ $opd->id }}" {{ old('opd_id', $aset->opd_id) == $opd->id ? 'selected' : '' }}>{{ $opd->nama }}</option>
-                            @endforeach
-                        </select>
+                        @if(auth()->check() && (auth()->user()->role === \App\Enums\UserRole::OPD || auth()->user()->role === \App\Enums\UserRole::KPB))
+                            <div class="input-group">
+                                <span class="input-group-text bg-body border-0 text-secondary"><i class="bi bi-building-lock text-primary"></i></span>
+                                <div class="form-control bg-light text-secondary fw-semibold">
+                                    {{ $aset->opdSipat?->nama ?? auth()->user()->opd?->nama ?? 'Instansi Tidak Ditemukan' }}
+                                </div>
+                            </div>
+                            <input type="hidden" name="opd_id" value="{{ auth()->user()->opd_id }}">
+                            <input type="hidden" name="opd" value="{{ auth()->user()->opd?->nama }}">
+                            @if(auth()->user()->role === \App\Enums\UserRole::KPB)
+                                <input type="hidden" name="sub_opd_id" value="{{ auth()->user()->sub_opd_id }}">
+                            @endif
+                        @else
+                            <select name="opd_id" class="form-select">
+                                <option value="">-- Pilih OPD Pengelola --</option>
+                                @foreach($opdList as $opd)
+                                    <option value="{{ $opd->id }}" {{ old('opd_id', $aset->opd_id) == $opd->id ? 'selected' : '' }}>{{ $opd->nama }}</option>
+                                @endforeach
+                            </select>
+                        @endif
                     </div>
 
                     <div class="col-md-6">

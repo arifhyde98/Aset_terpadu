@@ -89,9 +89,10 @@ Dokumen ini merupakan ringkasan eksekutif dan arsitektur tingkat tinggi (*High-L
      - Menghapus kompleksitas tabel jembatan `opd_mappings` dan tabel `opd` lama (dialihkan ke `opd_mappings_legacy_backup` dan `opd_legacy_backup`).
      - Dukungan penuh hierarki Sub-OPD (Kuasa Pengguna Barang) untuk modul pertanahan dan bangunan via kolom `sub_opd_id`.
      - Backward compatibility terjamin lewat proxy `OpdSipat extends Opd` dan alias relasi Eloquent `opdSipat()` serta `opdRelation()`.
-  4. **Data Isolation (Tenant Isolation):**
-     - E-RANDIS: Implementasi `TenantScope` (Global Scope) pada model `Vehicle`. Jika `opd_id` bernilai null, sistem mengunci akses (*fail-safe*).
-     - SIPAT & eLABEL: Isolasi data berdasarkan `opd_id` pada `AsetTanah` dan `sipat_opd_id` pada seluruh berkas arsip.
+   4. **Data Isolation (Tenant Isolation):**
+      - E-RANDIS: Implementasi `TenantScope` (Global Scope) pada model `Vehicle` dan `EbmdVehicle`. Jika `opd_id` bernilai null, sistem mengunci akses (*fail-safe*).
+      - SIPAT: Mengadopsi arsitektur multi-tenancy ketat sesuai blueprint E-RANDIS via `TenantScope` global pada `AsetTanah`, isolasi mutasi data lewat `checkAsetOwnership()` controller guard, validasi form request terkunci (`StoreAsetTanahRequest`, `UpdateAsetTanahRequest`, `BulkStoreProsesRequest`), pembatasan form input UI Blade berbasis akun instansi, dan isolasi filter laporan/target capaian.
+      - eLABEL: Isolasi data fisik arsip berdasarkan `sipat_opd_id` pada seluruh berkas sertifikat dan BPKB.
   5. **Observer Pattern & Audit Trail Terpadu:**
      - `VehicleObserver`, `UserObserver`, dan `OpdObserver` menangani perekaman snapshot data sebelum (`old_data`) dan sesudah (`new_data`) ke tabel `activities`.
      - Sanitasi otomatis membersihkan data kredensial (`password`, `plain_password`, `remember_token`).

@@ -115,13 +115,20 @@
                     <!-- 1. OPD Filter -->
                     <div class="col-12 col-sm-6 col-md-3 col-xl-2">
                         <label class="form-label small fw-semibold text-secondary mb-1">OPD Pengelola</label>
-                        <select name="opd_id" class="form-select" onchange="document.getElementById('filterForm').submit()">
-                            <option value="">-- Semua OPD --</option>
-                            <option value="KOSONG" {{ request('opd_id', request('opd')) === 'KOSONG' ? 'selected' : '' }}>[Tanpa OPD / Kosong]</option>
-                            @foreach($opdList as $opd)
-                                <option value="{{ $opd->id }}" {{ (string) request('opd_id', request('opd')) === (string) $opd->id ? 'selected' : '' }}>{{ $opd->nama }}</option>
-                            @endforeach
-                        </select>
+                        @if(auth()->check() && (auth()->user()->role === \App\Enums\UserRole::OPD || auth()->user()->role === \App\Enums\UserRole::KPB))
+                            <div class="form-control bg-light text-secondary small fw-semibold text-truncate" title="{{ auth()->user()->opd?->nama }}">
+                                <i class="bi bi-building-lock text-primary me-1"></i>{{ auth()->user()->opd?->nama ?? 'Instansi Saya' }}
+                            </div>
+                            <input type="hidden" name="opd_id" value="{{ auth()->user()->opd_id }}">
+                        @else
+                            <select name="opd_id" class="form-select" onchange="document.getElementById('filterForm').submit()">
+                                <option value="">-- Semua OPD --</option>
+                                <option value="KOSONG" {{ request('opd_id', request('opd')) === 'KOSONG' ? 'selected' : '' }}>[Tanpa OPD / Kosong]</option>
+                                @foreach($opdList as $opd)
+                                    <option value="{{ $opd->id }}" {{ (string) request('opd_id', request('opd')) === (string) $opd->id ? 'selected' : '' }}>{{ $opd->nama }}</option>
+                                @endforeach
+                            </select>
+                        @endif
                     </div>
 
                     <!-- 2. Kecamatan Filter -->
@@ -473,14 +480,21 @@
                                 @endif
                             </td>
                             <td class="text-center pe-3">
+                                @php
+                                    $canManageRow = in_array(auth()->user()?->role, [\App\Enums\UserRole::SUPERADMIN, \App\Enums\UserRole::ADMIN]) 
+                                        || (auth()->user()?->role === \App\Enums\UserRole::OPD && (int)$item->opd_id === (int)auth()->user()?->opd_id)
+                                        || (auth()->user()?->role === \App\Enums\UserRole::KPB && (int)$item->sub_opd_id === (int)auth()->user()?->sub_opd_id);
+                                @endphp
                                 <div class="btn-group btn-group-sm">
                                     <button type="button" class="btn btn-outline-primary" onclick="showDetail({{ $item->id_aset }})" data-bs-toggle="tooltip" title="Lihat Detail Modal (5 Tab)">
                                         <i class="bi bi-eye"></i>
                                     </button>
+                                    @if($canManageRow)
                                     <a href="{{ route('sipat.aset.edit', $item->id_aset) }}" class="btn btn-outline-secondary" data-bs-toggle="tooltip" title="Edit Aset">
                                         <i class="bi bi-pencil-square"></i>
                                     </a>
-                                    @if(auth()->user()?->role !== \App\Enums\UserRole::OPD)
+                                    @endif
+                                    @if(in_array(auth()->user()?->role, [\App\Enums\UserRole::SUPERADMIN, \App\Enums\UserRole::ADMIN]))
                                     <form action="{{ route('sipat.aset.destroy', $item->id_aset) }}" method="POST" class="d-inline delete-confirm">
                                         @csrf
                                         @method('DELETE')

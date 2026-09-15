@@ -38,6 +38,25 @@ class StoreAsetTanahRequest extends FormRequest
 
     protected function prepareForValidation(): void
     {
+        // Kunci tenant: paksa opd_id dan nama opd sesuai user login jika rolenya adalah OPD atau KPB (Pola E-RANDIS)
+        if (auth()->check()) {
+            $user = auth()->user();
+            if ($user->role === \App\Enums\UserRole::OPD) {
+                $this->merge([
+                    'opd_id' => $user->opd_id,
+                    'opd' => $user->opd?->nama,
+                ]);
+                return;
+            } elseif ($user->role === \App\Enums\UserRole::KPB) {
+                $this->merge([
+                    'opd_id' => $user->opd_id,
+                    'opd' => $user->opd?->nama,
+                    'sub_opd_id' => $user->sub_opd_id,
+                ]);
+                return;
+            }
+        }
+
         if ($this->filled('opd_id')) {
             return;
         }

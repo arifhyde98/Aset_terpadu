@@ -132,11 +132,13 @@
     <!-- Navigasi Tab Laporan -->
     <div class="border-bottom mb-4">
         <ul class="nav nav-tabs report-tabs border-bottom-0">
+            @if(in_array(auth()->user()?->role, [\App\Enums\UserRole::SUPERADMIN, \App\Enums\UserRole::ADMIN]))
             <li class="nav-item">
                 <a class="nav-link" href="{{ route('sipat.laporan.rekapOpd') }}">
                     <i class="bi bi-building me-1.5"></i>Rekapitulasi per OPD
                 </a>
             </li>
+            @endif
             <li class="nav-item">
                 <a class="nav-link active" href="{{ route('sipat.laporan.index') }}">
                     <i class="bi bi-list-columns-reverse me-1.5"></i>Rincian Daftar Aset KIB A
@@ -160,6 +162,7 @@
                         <div class="row g-3">
                             <div class="col-md-6">
                                 <label class="form-label small fw-semibold text-secondary mb-1"><i class="bi bi-building me-1"></i> OPD Pengelola</label>
+                                @if(in_array(auth()->user()?->role, [\App\Enums\UserRole::SUPERADMIN, \App\Enums\UserRole::ADMIN]))
                                 <select name="opd_id" class="form-select">
                                     <option value="">-- Semua OPD --</option>
                                     <option value="KOSONG" {{ request('opd_id', request('opd')) === 'KOSONG' ? 'selected' : '' }}>[Tanpa OPD / Kosong]</option>
@@ -167,6 +170,13 @@
                                         <option value="{{ $opd->id }}" {{ (string) request('opd_id', request('opd')) === (string) $opd->id ? 'selected' : '' }}>{{ $opd->nama }}</option>
                                     @endforeach
                                 </select>
+                                @else
+                                <div class="form-control bg-light text-body fw-medium py-2 d-flex align-items-center justify-content-between">
+                                    <span><i class="bi bi-building me-1.5 text-secondary"></i> {{ auth()->user()->opdRelation?->nama ?? auth()->user()->opd ?? 'OPD Anda' }}</span>
+                                    <span class="badge bg-secondary-subtle text-secondary border">Terkunci</span>
+                                </div>
+                                <input type="hidden" name="opd_id" value="{{ auth()->user()->opd_id }}">
+                                @endif
                             </div>
 
                             <div class="col-md-6">

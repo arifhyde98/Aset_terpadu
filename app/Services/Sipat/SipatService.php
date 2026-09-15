@@ -100,14 +100,14 @@ class SipatService
 
     private function computeDashboardStats(): array
     {
-        $totalAset = AsetTanah::count();
-        $totalTanahTercatat = AsetTanah::where(function($q) {
+        $totalAset = AsetTanah::withoutGlobalScopes()->count();
+        $totalTanahTercatat = AsetTanah::withoutGlobalScopes()->where(function($q) {
             $q->where('status_pencatatan', 'TERCATAT_KIB_A')
               ->orWhereNull('status_pencatatan')
               ->orWhere('status_pencatatan', '!=', 'USULAN_BELUM_TERCATAT');
         })->count();
-        $totalTanahTakTercatat = AsetTanah::where('status_pencatatan', 'USULAN_BELUM_TERCATAT')->count();
-        $totalLuas = AsetTanah::sum('luas');
+        $totalTanahTakTercatat = AsetTanah::withoutGlobalScopes()->where('status_pencatatan', 'USULAN_BELUM_TERCATAT')->count();
+        $totalLuas = AsetTanah::withoutGlobalScopes()->sum('luas');
         $statusMaster = StatusProses::orderBy('urutan', 'asc')->get();
 
         $statusMap = [];
@@ -427,7 +427,7 @@ class SipatService
                     DB::raw("COALESCE(o.nama, NULLIF(TRIM(a.opd), ''), 'Tidak Diketahui') as opd"),
                     DB::raw("'Administrator' as user_name")
                 )
-                ->leftJoin('opd as o', 'o.id', '=', 'a.opd_id')
+                ->leftJoin('opds as o', 'o.id', '=', 'a.opd_id')
                 ->orderBy('p.id_proses', 'desc')
                 ->limit(5)
                 ->get();

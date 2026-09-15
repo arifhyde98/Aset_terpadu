@@ -8,6 +8,31 @@ class BulkStoreProsesRequest extends FormRequest
 {
     public function authorize(): bool
     {
+        if (!auth()->check()) {
+            return false;
+        }
+
+        $user = auth()->user();
+        if (in_array($user->role, [\App\Enums\UserRole::SUPERADMIN, \App\Enums\UserRole::ADMIN])) {
+            return true;
+        }
+
+        $asetIds = (array) $this->input('aset_ids', []);
+        if (!empty($asetIds)) {
+            $query = \App\Models\AsetTanah::withoutGlobalScopes()->whereIn('id_aset', $asetIds);
+            if ($user->role === \App\Enums\UserRole::OPD) {
+                $forbidden = (clone $query)->where('opd_id', '!=', $user->opd_id)->exists();
+                if ($forbidden) {
+                    return false;
+                }
+            } elseif ($user->role === \App\Enums\UserRole::KPB) {
+                $forbidden = (clone $query)->where('sub_opd_id', '!=', $user->sub_opd_id)->exists();
+                if ($forbidden) {
+                    return false;
+                }
+            }
+        }
+
         return true;
     }
 
