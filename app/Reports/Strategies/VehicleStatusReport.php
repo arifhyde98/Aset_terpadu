@@ -25,7 +25,7 @@ class VehicleStatusReport implements ReportStrategy
         $modelClass = ($filters['source'] ?? 'real') === 'ebmd' ? EbmdVehicle::class : Vehicle::class;
 
         $query = $modelClass::query()
-            ->with(['opdRelation', 'vehicleType'])
+            ->with(['opdRelation', 'vehicleType', 'subOpd'])
             ->select([
                 'id',
                 'no_polisi',
@@ -36,6 +36,7 @@ class VehicleStatusReport implements ReportStrategy
                 'status',
                 'kondisi',
                 'opd_id',
+                'sub_opd_id',
                 'opd',
                 'pemegang',
                 'nilai_perolehan',

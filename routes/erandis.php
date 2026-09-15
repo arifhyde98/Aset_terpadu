@@ -21,11 +21,12 @@ Route::prefix('vehicles')->name('vehicles.')->group(function () {
     Route::post('{vehicle}/sync-to-real', [VehicleController::class, 'syncToReal'])->name('sync-to-real');
     Route::get('rekon-bpkb', [VehicleController::class, 'rekonBpkb'])->name('rekon-bpkb');
 });
-Route::resource('vehicles', VehicleController::class)->except(['create', 'edit', 'show']);
+Route::resource('vehicles', VehicleController::class);
 
 // Pemetaan OPD Terpadu (SIPAT ↔ E-RANDIS)
 Route::prefix('master-data/opd-mapping')->name('master.opd-mapping.')->group(function () {
     Route::get('/', [\App\Http\Controllers\Master\MasterOpdMappingController::class, 'index'])->name('index');
+    Route::post('/refresh', [\App\Http\Controllers\Master\MasterOpdMappingController::class, 'refresh'])->name('refresh');
     Route::delete('/{id}', [\App\Http\Controllers\Master\MasterOpdMappingController::class, 'destroy'])->name('destroy');
 });
 
@@ -39,5 +40,14 @@ Route::resource('vehicle-types', VehicleTypeController::class)->except(['create'
 // OPD / Instansi
 Route::prefix('opds')->name('opds.')->group(function () {
     Route::delete('truncate', [OpdController::class, 'truncate'])->name('truncate');
+    Route::post('merge', [OpdController::class, 'merge'])->name('merge');
+    Route::post('convert-to-sub-opd', [OpdController::class, 'convertToSubOpd'])->name('convert-to-sub-opd');
 });
 Route::resource('opds', OpdController::class)->except(['create', 'edit', 'show']);
+
+// Sub-OPD / Kuasa Pengguna Barang (KPB)
+Route::prefix('sub-opds')->name('sub-opds.')->group(function () {
+    Route::get('by-opd/{opdId}', [\App\Http\Controllers\Erandis\SubOpdController::class, 'getByOpd'])->name('by-opd');
+});
+Route::resource('sub-opds', \App\Http\Controllers\Erandis\SubOpdController::class)->except(['create', 'edit', 'show']);
+

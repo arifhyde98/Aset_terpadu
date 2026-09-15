@@ -40,8 +40,10 @@ class ReportService
         $user = auth()->user();
         $role = $user ? $user->role->value : 'guest';
         
-        // Buat cache key yang aman berdasarkan sumber data, role, dan scope OPD untuk mencegah pencemaran lintas-role
-        $scopeKey = $opdId ? "opd_{$opdId}" : ($user && $user->role->value === 'opd' ? 'opd_null' : 'global');
+        // Buat cache key yang aman berdasarkan sumber data, role, dan scope OPD/KPB untuk mencegah pencemaran lintas-role
+        $scopeKey = $opdId 
+            ? "opd_{$opdId}" 
+            : ($user ? ($user->role->value === 'opd' ? "opd_{$user->opd_id}" : ($user->role->value === 'kpb' ? "kpb_{$user->sub_opd_id}" : 'global')) : 'guest');
         $cacheKey = "reports.summary.{$source}.{$role}.{$scopeKey}";
 
         return cache()->remember($cacheKey, 300, function () use ($opdId, $source) {

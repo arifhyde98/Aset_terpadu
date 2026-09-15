@@ -3,7 +3,15 @@
 namespace App\Services\Erandis;
 
 use App\Models\Vehicle;
+use App\Models\EbmdVehicle;
+use App\Models\Opd;
+use App\Models\VehicleType;
+use App\Models\User;
+use App\Models\OpdMapping;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
 
 /**
  * Service untuk Logika Bisnis Kendaraan
@@ -246,6 +254,7 @@ class VehicleService
             'pemegang' => ['pemegang', 'nama pemegang', 'penanggung jawab', 'peminjam', 'user', 'driver', 'nama pemakai', 'penggunaan', 'pengguna'],
             'keterangan' => ['keterangan', 'ket', 'note', 'notes', 'keterangan tambahan', 'keterangan aset'],
             'opd' => ['opd', 'instansi', 'dinas', 'skpd', 'kantor', 'bagian', 'department', 'organisasi'],
+            'sub_opd' => ['sub opd', 'sub_opd', 'kpb', 'kuasa pengguna barang', 'unit kerja', 'puskesmas', 'sub unit', 'sub opd / kpb'],
             'nomor_register' => ['nomor register', 'no register', 'no. register', 'nomer register', 'register', 'register number', 'reg number', 'no_register', 'no reg'],
         ];
 
@@ -301,9 +310,9 @@ class VehicleService
         $vehicles = $modelClass::withoutGlobalScopes()->get();
         $duplicates = [];
 
+        // 1. Deteksi jika plat berakhir dengan sufiks impor ganda "(2)", "(3)", dst
         foreach ($vehicles as $v) {
             $plate = $v->no_polisi;
-            // Deteksi jika plat berakhir dengan sufiks impor ganda "(2)", "(3)", dst
             if (preg_match('/^(.+?)\s*\(\d+\)$/', $plate, $matches)) {
                 $originalPlate = trim($matches[1]);
                 
@@ -323,11 +332,84 @@ class VehicleService
             }
         }
 
-        // Deteksi duplikasi berdasarkan Nomor Mesin yang identik
+        // 2. Deteksi plat nomor yang sama persis (khususnya untuk tabel yang mengizinkan duplikasi plat seperti e-BMD)
+        $exactPlateDuplicates = $modelClass::withoutGlobalScopes()
+            ->select('no_polisi', \DB::raw('count(*) as count'))
+            ->whereNotNull('no_polisi')
+            ->whereNotIn('no_polisi', ['', '-', '?'])
+            ->where('no_polisi', 'not like', 'TANPA-PLAT-%')
+            ->groupBy('no_polisi')
+            ->having('count', '>', 1)
+            ->pluck('no_polisi')
+            ->toArray();
+
+        foreach ($exactPlateDuplicates as $noPolisi) {
+            $vList = $modelClass::withoutGlobalScopes()
+                ->where('no_polisi', $noPolisi)
+                ->orderBy('id', 'asc')
+                ->get();
+
+            if ($vList->count() > 1) {
+                $original = $vList->first();
+                for ($i = 1; $i < $vList->count(); $i++) {
+                    $dup = $vList[$i];
+
+                    $alreadyAdded = collect($duplicates)->contains(function($item) use ($dup) {
+                        return $item['duplicate_vehicle']->id === $dup->id;
+                    });
+
+                    if (!$alreadyAdded) {
+                        $duplicates[] = [
+                            'duplicate_vehicle' => $dup,
+                            'original_vehicle'  => $original,
+                            'reason'            => "Nomor Polisi sama persis: \"{$noPolisi}\""
+                        ];
+                    }
+                }
+            }
+        }
+
+        // 3. Deteksi duplikasi berdasarkan Nomor Rangka yang identik
+        $rangkaDuplicates = $modelClass::withoutGlobalScopes()
+            ->select('no_rangka', \DB::raw('count(*) as count'))
+            ->whereNotNull('no_rangka')
+            ->whereNotIn('no_rangka', ['', '-', '?'])
+            ->groupBy('no_rangka')
+            ->having('count', '>', 1)
+            ->pluck('no_rangka')
+            ->toArray();
+
+        foreach ($rangkaDuplicates as $noRangka) {
+            $vList = $modelClass::withoutGlobalScopes()
+                ->where('no_rangka', $noRangka)
+                ->orderBy('id', 'asc')
+                ->get();
+
+            if ($vList->count() > 1) {
+                $original = $vList->first();
+                for ($i = 1; $i < $vList->count(); $i++) {
+                    $dup = $vList[$i];
+
+                    $alreadyAdded = collect($duplicates)->contains(function($item) use ($dup) {
+                        return $item['duplicate_vehicle']->id === $dup->id;
+                    });
+
+                    if (!$alreadyAdded) {
+                        $duplicates[] = [
+                            'duplicate_vehicle' => $dup,
+                            'original_vehicle'  => $original,
+                            'reason'            => "Nomor Rangka identik ganda: \"{$noRangka}\""
+                        ];
+                    }
+                }
+            }
+        }
+
+        // 4. Deteksi duplikasi berdasarkan Nomor Mesin yang identik
         $engineDuplicates = $modelClass::withoutGlobalScopes()
             ->select('no_mesin', \DB::raw('count(*) as count'))
             ->whereNotNull('no_mesin')
-            ->whereNotIn('no_mesin', ['', '-'])
+            ->whereNotIn('no_mesin', ['', '-', '?'])
             ->groupBy('no_mesin')
             ->having('count', '>', 1)
             ->pluck('no_mesin')
@@ -336,6 +418,7 @@ class VehicleService
         foreach ($engineDuplicates as $noMesin) {
             $vList = $modelClass::withoutGlobalScopes()
                 ->where('no_mesin', $noMesin)
+                ->orderBy('id', 'asc')
                 ->get();
             
             if ($vList->count() > 1) {
@@ -343,7 +426,7 @@ class VehicleService
                 for ($i = 1; $i < $vList->count(); $i++) {
                     $dup = $vList[$i];
                     
-                    // Hindari duplikasi entri di list jika sudah terdeteksi di plat
+                    // Hindari duplikasi entri di list jika sudah terdeteksi di plat / rangka
                     $alreadyAdded = collect($duplicates)->contains(function($item) use ($dup) {
                         return $item['duplicate_vehicle']->id === $dup->id;
                     });
@@ -442,13 +525,29 @@ class VehicleService
             $fields = [
                 'jenis', 'merk', 'tipe', 'no_mesin', 'no_rangka', 'tahun_pembuatan',
                 'tgl_stnk', 'tgl_perolehan', 'nilai_perolehan', 'stnk_ada', 'bpkb_ada',
-                'kondisi', 'pemegang', 'keterangan', 'foto_kendaraan'
+                'kondisi', 'pemegang', 'keterangan', 'foto_kendaraan', 'warna',
+                'nomor_register', 'vehicle_type_id', 'opd', 'opd_id', 'sub_opd_id'
             ];
 
             $updated = false;
             foreach ($fields as $field) {
                 if (empty($original->{$field}) && !empty($duplicate->{$field})) {
                     $original->{$field} = $duplicate->{$field};
+                    $updated = true;
+                }
+            }
+
+            // Jika plat asli memiliki suffix (2) dan plat induknya bebas, bersihkan suffix-nya
+            if (preg_match('/^(.+?)\s*\(\d+\)$/', $original->no_polisi, $matches)) {
+                $basePlate = trim($matches[1]);
+                $otherWithBasePlate = $modelClass::withoutGlobalScopes()
+                    ->where('no_polisi', $basePlate)
+                    ->where('id', '!=', $original->id)
+                    ->where('id', '!=', $duplicate->id)
+                    ->exists();
+
+                if (!$otherWithBasePlate) {
+                    $original->no_polisi = $basePlate;
                     $updated = true;
                 }
             }
@@ -466,6 +565,7 @@ class VehicleService
 
     /**
      * Menggabungkan OPD duplikat: Memindahkan seluruh kendaraan dari OPD sumber ke OPD target, lalu menghapus OPD sumber.
+     * Menjaga integritas data dengan memperbarui tabel vehicles dan ebmd_vehicles sekaligus sebelum menghapus instansi.
      *
      * @param int $targetOpdId
      * @param int $sourceOpdId
@@ -474,25 +574,321 @@ class VehicleService
      */
     public function mergeOpds(int $targetOpdId, int $sourceOpdId, ?string $targetTable = 'real'): bool
     {
-        $modelClass = $targetTable === 'ebmd' ? \App\Models\EbmdVehicle::class : Vehicle::class;
-        return \DB::transaction(function () use ($targetOpdId, $sourceOpdId, $modelClass) {
+        return \DB::transaction(function () use ($targetOpdId, $sourceOpdId) {
             $target = \App\Models\Opd::find($targetOpdId);
             $source = \App\Models\Opd::find($sourceOpdId);
 
             if (!$target || !$source) return false;
 
-            // Pindahkan seluruh kendaraan dari OPD sumber ke OPD target dan sinkronkan nama OPD-nya
-            $modelClass::withoutGlobalScopes()
+            // Pindahkan seluruh kendaraan di tabel Real (Fisik) ke OPD target
+            Vehicle::withoutGlobalScopes()
                 ->where('opd_id', $sourceOpdId)
                 ->update([
                     'opd_id' => $targetOpdId,
                     'opd'    => $target->nama
                 ]);
 
-            // Hapus OPD sumber
+            // Pindahkan seluruh kendaraan di tabel e-BMD ke OPD target
+            \App\Models\EbmdVehicle::withoutGlobalScopes()
+                ->where('opd_id', $sourceOpdId)
+                ->update([
+                    'opd_id' => $targetOpdId,
+                    'opd'    => $target->nama
+                ]);
+
+            // Pindahkan user yang terikat ke OPD sumber
+            \App\Models\User::where('opd_id', $sourceOpdId)
+                ->update(['opd_id' => $targetOpdId]);
+
+            // Pindahkan Sub-OPD / KPB yang terikat ke OPD sumber ke OPD target
+            if (\Illuminate\Support\Facades\Schema::hasTable('sub_opds')) {
+                \App\Models\SubOpd::where('opd_id', $sourceOpdId)
+                    ->update(['opd_id' => $targetOpdId]);
+            }
+
+            // Pindahkan pemetaan OPD jika ada
+            if (\Illuminate\Support\Facades\Schema::hasTable('opd_mappings')) {
+                \App\Models\OpdMapping::where('erandis_opd_id', $sourceOpdId)
+                    ->update(['erandis_opd_id' => $targetOpdId]);
+            }
+
+            // Hapus OPD sumber yang sudah kosong
             $source->delete();
 
             return true;
+        });
+    }
+
+    /**
+     * Menggabungkan banyak OPD sumber ke satu OPD tujuan (Batch Merge).
+     * 
+     * Memindahkan seluruh kendaraan Real, e-BMD, Sub-OPD, pengguna, dan pemetaan
+     * dari beberapa OPD sumber ke OPD target, lalu menghapus OPD sumber.
+     * 
+     * @param int $targetOpdId ID OPD tujuan
+     * @param array<int> $sourceOpdIds Daftar ID OPD sumber yang akan dilebur
+     * @return array{target_name: string, merged_opds_count: int, moved_vehicles_real: int, moved_vehicles_ebmd: int, moved_sub_opds: int}
+     * @throws \Exception
+     */
+    public function mergeMultipleOpds(int $targetOpdId, array $sourceOpdIds): array
+    {
+        $filteredSourceIds = collect($sourceOpdIds)
+            ->map(fn($id) => (int) $id)
+            ->reject(fn($id) => $id === $targetOpdId)
+            ->unique()
+            ->values()
+            ->toArray();
+
+        if (empty($filteredSourceIds)) {
+            throw new \InvalidArgumentException('Tidak ada OPD sumber yang valid untuk digabungkan.');
+        }
+
+        return \DB::transaction(function () use ($targetOpdId, $filteredSourceIds) {
+            $target = \App\Models\Opd::findOrFail($targetOpdId);
+
+            $movedVehiclesReal = 0;
+            $movedVehiclesEbmd = 0;
+            $movedSubOpds = 0;
+            $deletedOpdNames = [];
+
+            // 1. Pindahkan seluruh kendaraan di tabel Real (Fisik)
+            $movedVehiclesReal = \App\Models\Vehicle::withoutGlobalScopes()
+                ->whereIn('opd_id', $filteredSourceIds)
+                ->update([
+                    'opd_id' => $targetOpdId,
+                    'opd'    => $target->nama
+                ]);
+
+            // 2. Pindahkan seluruh kendaraan di tabel e-BMD
+            $movedVehiclesEbmd = \App\Models\EbmdVehicle::withoutGlobalScopes()
+                ->whereIn('opd_id', $filteredSourceIds)
+                ->update([
+                    'opd_id' => $targetOpdId,
+                    'opd'    => $target->nama
+                ]);
+
+            // 3. Pindahkan Sub-OPD / Kuasa Pengguna Barang (KPB)
+            if (\Illuminate\Support\Facades\Schema::hasTable('sub_opds')) {
+                $movedSubOpds = \App\Models\SubOpd::whereIn('opd_id', $filteredSourceIds)
+                    ->update(['opd_id' => $targetOpdId]);
+            }
+
+            // 4. Pindahkan User / Akun Admin
+            \App\Models\User::whereIn('opd_id', $filteredSourceIds)
+                ->update(['opd_id' => $targetOpdId]);
+
+            // 5. Pindahkan relasi pemetaan OPD jika ada
+            if (\Illuminate\Support\Facades\Schema::hasTable('opd_mappings')) {
+                $existingSipatIds = \App\Models\OpdMapping::where('erandis_opd_id', $targetOpdId)
+                    ->pluck('sipat_opd_id')
+                    ->toArray();
+
+                // Hapus mapping sumber yang bertabrakan dengan mapping target
+                \App\Models\OpdMapping::whereIn('erandis_opd_id', $filteredSourceIds)
+                    ->whereIn('sipat_opd_id', $existingSipatIds)
+                    ->delete();
+
+                // Update sisa mapping ke target
+                \App\Models\OpdMapping::whereIn('erandis_opd_id', $filteredSourceIds)
+                    ->update(['erandis_opd_id' => $targetOpdId]);
+            }
+
+            // 6. Kumpulkan nama OPD yang dilebur lalu hapus
+            $sources = \App\Models\Opd::whereIn('id', $filteredSourceIds)->get();
+            foreach ($sources as $source) {
+                $deletedOpdNames[] = $source->nama;
+                $source->delete();
+            }
+
+            // 7. Catat Log Aktivitas
+            \App\Models\Activity::log(
+                "Menggabungkan " . count($deletedOpdNames) . " OPD ke dalam instansi \"{$target->nama}\"",
+                'warning',
+                \App\Models\Activity::MODULE_ERANDIS,
+                'erandis',
+                [
+                    'Target OPD' => $target->nama,
+                    'OPD Sumber Dilebur' => implode(', ', $deletedOpdNames),
+                    'Kendaraan Real Dipindahkan' => $movedVehiclesReal,
+                    'Kendaraan e-BMD Dipindahkan' => $movedVehiclesEbmd,
+                    'Sub-OPD Dipindahkan' => $movedSubOpds,
+                ]
+            );
+
+            // 8. Invalidate seluruh cache statistik
+            $this->invalidateDashboardStats(opdId: $targetOpdId, invalidateAllOpd: true);
+
+            return [
+                'target_name'            => $target->nama,
+                'merged_opds_count'      => count($deletedOpdNames),
+                'moved_vehicles_real'    => $movedVehiclesReal,
+                'moved_vehicles_ebmd'    => $movedVehiclesEbmd,
+                'moved_sub_opds'         => $movedSubOpds,
+            ];
+        });
+    }
+
+    /**
+     * Mengonversi satu atau beberapa instansi OPD menjadi Sub-OPD (Kuasa Pengguna Barang) di bawah OPD Induk.
+     * Seluruh kendaraan (Real & e-BMD) akan dialokasikan ke Sub-OPD ini di bawah OPD Induk.
+     * Akun pengguna admin dialihkan ke OPD Induk dengan peran kpb.
+     * Record OPD sumber kemudian dihapus secara aman.
+     *
+     * @param int $parentOpdId ID OPD Induk tujuan
+     * @param array<int> $sourceOpdIds Daftar ID OPD yang akan dikonversi menjadi Sub-OPD
+     * @param string|null $jenis Jenis Sub-OPD (puskesmas, uptd, bagian, sekolah, rsud, lainnya)
+     * @param string|null $customNama Nama kustom jika hanya 1 OPD yang dikonversi
+     * @param string|null $customKodeSub Kode sub kustom jika hanya 1 OPD yang dikonversi
+     * @return array{parent_name: string, converted_count: int, moved_vehicles_real: int, moved_vehicles_ebmd: int, sub_opd_names: array<string>}
+     * @throws \Exception
+     */
+    public function convertOpdsToSubOpd(
+        int $parentOpdId,
+        array $sourceOpdIds,
+        ?string $jenis = null,
+        ?string $customNama = null,
+        ?string $customKodeSub = null
+    ): array {
+        $filteredSourceIds = collect($sourceOpdIds)
+            ->map(fn($id) => (int) $id)
+            ->reject(fn($id) => $id === $parentOpdId)
+            ->unique()
+            ->values()
+            ->toArray();
+
+        if (empty($filteredSourceIds)) {
+            throw new \InvalidArgumentException('Tidak ada OPD sumber yang valid untuk dikonversi menjadi Sub-OPD.');
+        }
+
+        return \DB::transaction(function () use ($parentOpdId, $filteredSourceIds, $jenis, $customNama, $customKodeSub) {
+            $parentOpd = \App\Models\Opd::findOrFail($parentOpdId);
+
+            $createdSubOpds = [];
+            $totalVehiclesReal = 0;
+            $totalVehiclesEbmd = 0;
+            $isSingle = count($filteredSourceIds) === 1;
+
+            foreach ($filteredSourceIds as $sourceId) {
+                $sourceOpd = \App\Models\Opd::find($sourceId);
+                if (!$sourceOpd) {
+                    continue;
+                }
+
+                // Tentukan nama Sub-OPD
+                $subName = ($isSingle && !empty($customNama)) ? trim($customNama) : $sourceOpd->nama;
+                $subKode = ($isSingle && !empty($customKodeSub)) ? trim($customKodeSub) : $sourceOpd->singkatan;
+
+                // Tentukan jenis Sub-OPD (pilihan pengguna atau deteksi otomatis)
+                if (!empty($jenis)) {
+                    $itemJenis = $jenis;
+                } else {
+                    $lower = strtolower($subName);
+                    if (str_contains($lower, 'puskesmas') || str_contains($lower, 'pkm')) {
+                        $itemJenis = 'puskesmas';
+                    } elseif (str_contains($lower, 'rsud') || str_contains($lower, 'rumah sakit')) {
+                        $itemJenis = 'rsud';
+                    } elseif (str_contains($lower, 'uptd') || str_contains($lower, 'balai')) {
+                        $itemJenis = 'uptd';
+                    } elseif (str_contains($lower, 'bagian') || str_contains($lower, 'sekretariat') || str_contains($lower, 'bidang')) {
+                        $itemJenis = 'bagian';
+                    } elseif (str_contains($lower, 'smp') || str_contains($lower, 'sd ') || str_contains($lower, 'sekolah') || str_contains($lower, 'tk ')) {
+                        $itemJenis = 'sekolah';
+                    } else {
+                        $itemJenis = 'uptd';
+                    }
+                }
+
+                // 1. Buat atau temukan Sub-OPD di bawah OPD Induk
+                $subOpd = \App\Models\SubOpd::firstOrCreate(
+                    [
+                        'opd_id' => $parentOpdId,
+                        'nama'   => $subName,
+                    ],
+                    [
+                        'kode_sub' => $subKode,
+                        'jenis'    => $itemJenis,
+                        'alamat'   => $sourceOpd->alamat,
+                        'aktif'    => true,
+                    ]
+                );
+                $createdSubOpds[] = $subOpd;
+
+                // 2. Pindahkan kendaraan Real dan set sub_opd_id
+                $updatedReal = \App\Models\Vehicle::withoutGlobalScopes()
+                    ->where('opd_id', $sourceId)
+                    ->update([
+                        'opd_id'     => $parentOpdId,
+                        'sub_opd_id' => $subOpd->id,
+                        'opd'        => $parentOpd->nama,
+                    ]);
+                $totalVehiclesReal += $updatedReal;
+
+                // 3. Pindahkan kendaraan e-BMD dan set sub_opd_id
+                $updatedEbmd = \App\Models\EbmdVehicle::withoutGlobalScopes()
+                    ->where('opd_id', $sourceId)
+                    ->update([
+                        'opd_id'     => $parentOpdId,
+                        'sub_opd_id' => $subOpd->id,
+                        'opd'        => $parentOpd->nama,
+                    ]);
+                $totalVehiclesEbmd += $updatedEbmd;
+
+                // 4. Jika OPD sumber memiliki sub-opds sebelumnya, pindahkan ke OPD Induk
+                \App\Models\SubOpd::where('opd_id', $sourceId)
+                    ->where('id', '!=', $subOpd->id)
+                    ->update(['opd_id' => $parentOpdId]);
+
+                // 5. Pindahkan user admin ke OPD Induk dan beri peran kpb
+                \App\Models\User::where('opd_id', $sourceId)
+                    ->update([
+                        'opd_id'     => $parentOpdId,
+                        'sub_opd_id' => $subOpd->id,
+                        'role'       => 'kpb',
+                    ]);
+
+                // 6. Rekonsiliasi relasi pemetaan OPD
+                if (\Illuminate\Support\Facades\Schema::hasTable('opd_mappings')) {
+                    $existingSipatIds = \App\Models\OpdMapping::where('erandis_opd_id', $parentOpdId)
+                        ->pluck('sipat_opd_id')
+                        ->toArray();
+
+                    \App\Models\OpdMapping::where('erandis_opd_id', $sourceId)
+                        ->whereIn('sipat_opd_id', $existingSipatIds)
+                        ->delete();
+
+                    \App\Models\OpdMapping::where('erandis_opd_id', $sourceId)
+                        ->update(['erandis_opd_id' => $parentOpdId]);
+                }
+
+                // 7. Hapus record OPD sumber
+                $sourceOpd->delete();
+            }
+
+            // 8. Catat log audit
+            $subOpdNames = collect($createdSubOpds)->pluck('nama')->toArray();
+            \App\Models\Activity::log(
+                "Mengonversi " . count($createdSubOpds) . " OPD menjadi Sub-OPD di bawah instansi \"{$parentOpd->nama}\"",
+                'info',
+                \App\Models\Activity::MODULE_ERANDIS,
+                'erandis',
+                [
+                    'OPD Induk' => $parentOpd->nama,
+                    'Sub-OPD Baru' => implode(', ', $subOpdNames),
+                    'Kendaraan Real Dipindahkan' => $totalVehiclesReal,
+                    'Kendaraan e-BMD Dipindahkan' => $totalVehiclesEbmd,
+                ]
+            );
+
+            // 9. Invalidate cache
+            $this->invalidateDashboardStats(opdId: $parentOpdId, invalidateAllOpd: true);
+
+            return [
+                'parent_name'         => $parentOpd->nama,
+                'converted_count'     => count($createdSubOpds),
+                'moved_vehicles_real' => $totalVehiclesReal,
+                'moved_vehicles_ebmd' => $totalVehiclesEbmd,
+                'sub_opd_names'       => $subOpdNames,
+            ];
         });
     }
 
@@ -501,20 +897,22 @@ class VehicleService
      * 
      * Menghapus semua karakter kecuali huruf (A-Z, a-z) dan angka (0-9).
      * 
+     * @param string|null $targetTable Target tabel ('real' atau 'ebmd')
      * @return int Jumlah kendaraan yang berhasil diperbarui
      */
-    public function sanitizeIdentifiers(): int
+    public function sanitizeIdentifiers(?string $targetTable = 'real'): int
     {
         $count = 0;
+        $modelClass = $targetTable === 'ebmd' ? \App\Models\EbmdVehicle::class : Vehicle::class;
 
-        \DB::transaction(function () use (&$count) {
-            Vehicle::chunk(100, function ($vehicles) use (&$count) {
+        \DB::transaction(function () use (&$count, $modelClass) {
+            $modelClass::chunk(100, function ($vehicles) use (&$count) {
                 foreach ($vehicles as $vehicle) {
                     $dirtyRangka = $vehicle->no_rangka;
                     $dirtyMesin = $vehicle->no_mesin;
 
-                    $cleanRangka = $dirtyRangka ? preg_replace('/[^a-zA-Z0-9]/', '', $dirtyRangka) : $dirtyRangka;
-                    $cleanMesin = $dirtyMesin ? preg_replace('/[^a-zA-Z0-9]/', '', $dirtyMesin) : $dirtyMesin;
+                    $cleanRangka = $dirtyRangka ? strtoupper(preg_replace('/[^a-zA-Z0-9]/', '', $dirtyRangka)) : $dirtyRangka;
+                    $cleanMesin = $dirtyMesin ? strtoupper(preg_replace('/[^a-zA-Z0-9]/', '', $dirtyMesin)) : $dirtyMesin;
 
                     if ($dirtyRangka !== $cleanRangka || $dirtyMesin !== $cleanMesin) {
                         $vehicle->no_rangka = $cleanRangka;
@@ -532,20 +930,23 @@ class VehicleService
 
         return $count;
     }
+
     /**
      * Memperbaiki posisi Nomor Mesin dan Nomor Rangka yang tertukar.
      * 
      * Menggunakan heuristik: jika panjang nomor mesin lebih besar dari nomor rangka,
      * kemungkinan besar mereka tertukar posisinya (karena VIN/No Rangka biasanya lebih panjang, yaitu 17 digit).
      * 
+     * @param string|null $targetTable Target tabel ('real' atau 'ebmd')
      * @return int Jumlah kendaraan yang posisinya ditukar
      */
-    public function fixSwappedIdentifiers(): int
+    public function fixSwappedIdentifiers(?string $targetTable = 'real'): int
     {
         $count = 0;
+        $modelClass = $targetTable === 'ebmd' ? \App\Models\EbmdVehicle::class : Vehicle::class;
 
-        \DB::transaction(function () use (&$count) {
-            Vehicle::chunk(100, function ($vehicles) use (&$count) {
+        \DB::transaction(function () use (&$count, $modelClass) {
+            $modelClass::chunk(100, function ($vehicles) use (&$count) {
                 foreach ($vehicles as $vehicle) {
                     $mesin = trim($vehicle->no_mesin ?? '');
                     $rangka = trim($vehicle->no_rangka ?? '');

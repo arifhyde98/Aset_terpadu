@@ -25,7 +25,7 @@ class DocumentValidityReport implements ReportStrategy
         $modelClass = ($filters['source'] ?? 'real') === 'ebmd' ? EbmdVehicle::class : Vehicle::class;
 
         $query = $modelClass::query()
-            ->with(['opdRelation', 'vehicleType'])
+            ->with(['opdRelation', 'vehicleType', 'subOpd'])
             ->select([
                 'id',
                 'no_polisi',
@@ -34,6 +34,7 @@ class DocumentValidityReport implements ReportStrategy
                 'tipe',
                 'jenis',
                 'opd_id',
+                'sub_opd_id',
                 'opd',
                 'pemegang',
                 'stnk_ada',

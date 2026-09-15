@@ -333,12 +333,18 @@
                                 <span><i class="bi bi-sliders me-1 text-primary"></i> MASTER ERANDIS</span>
                                 <i class="bi bi-chevron-down nested-chevron"></i>
                             </a>
-                            <div id="erandisSubMaster" class="collapse {{ Request::is('opds*', 'vehicle-types*', 'activities*') ? 'show' : '' }}">
+                            <div id="erandisSubMaster" class="collapse {{ Request::is('opds*', 'sub-opds*', 'vehicle-types*', 'activities*') ? 'show' : '' }}">
                                 <ul class="submenu-list">
                                     <li class="{{ Request::is('opds*') ? 'active' : '' }}">
                                         <a href="{{ route('opds.index') }}" data-bs-toggle="tooltip" data-bs-placement="right" title="OPD / Instansi">
                                             <i class="bi bi-building"></i>
                                             <span>OPD / Instansi</span>
+                                        </a>
+                                    </li>
+                                    <li class="{{ Request::is('sub-opds*') ? 'active' : '' }}">
+                                        <a href="{{ route('sub-opds.index') }}" data-bs-toggle="tooltip" data-bs-placement="right" title="Sub-OPD (Kuasa Pengguna Barang)">
+                                            <i class="bi bi-diagram-3"></i>
+                                            <span>Sub-OPD (KPB)</span>
                                         </a>
                                     </li>
                                     <li class="{{ Request::is('vehicle-types*') ? 'active' : '' }}">

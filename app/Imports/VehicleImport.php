@@ -5,6 +5,7 @@ namespace App\Imports;
 use App\Models\Vehicle;
 use App\Models\VehicleType;
 use App\Models\Opd;
+use App\Models\SubOpd;
 use Maatwebsite\Excel\Concerns\ToModel;
 use Maatwebsite\Excel\Concerns\WithStartRow;
 use Maatwebsite\Excel\Concerns\WithBatchInserts;
@@ -34,6 +35,7 @@ class VehicleImport implements ToModel, WithStartRow, WithBatchInserts, WithChun
     /** @var array Cache memori untuk Master Data */
     private $typeCache = [];
     private $opdCache = [];
+    private $subOpdCache = [];
 
     /** @var array Pemetaan kolom database => indeks kolom Excel */
     private $columnIndexes = [];
@@ -107,6 +109,7 @@ class VehicleImport implements ToModel, WithStartRow, WithBatchInserts, WithChun
                 'pemegang'        => 'Pemegang',
                 'keterangan'      => 'Keterangan',
                 'opd'             => 'OPD / DINAS',
+                'sub_opd'         => 'Sub-OPD / Kuasa Pengguna Barang',
             ];
         }
 
@@ -262,14 +265,36 @@ class VehicleImport implements ToModel, WithStartRow, WithBatchInserts, WithChun
         }
         $typeId = $this->typeCache[$jenisName];
 
-        // 3. Proses OPD menggunakan Cache Memori (Dinamis)
+        // 3. Proses OPD dan Sub-OPD menggunakan Cache Memori (Dinamis)
         $user = auth()->user();
-        if ($user && $user->role === \App\Enums\UserRole::OPD) {
+        $subOpdId = null;
+
+        if ($user && $user->role === \App\Enums\UserRole::KPB) {
+            if (empty($user->opd_id) || empty($user->sub_opd_id)) {
+                throw new \Exception('Akun KPB belum terhubung ke OPD atau Sub-OPD. Impor dibatalkan demi keamanan tenant.');
+            }
+            $opdName = $user->opd?->nama ?? 'INSTANSI TIDAK DIKENAL';
+            $opdId = $user->opd_id;
+            $subOpdId = $user->sub_opd_id;
+        } elseif ($user && $user->role === \App\Enums\UserRole::OPD) {
             if (empty($user->opd_id)) {
                 throw new \Exception('Akun OPD belum terhubung ke instansi. Impor dibatalkan.');
             }
             $opdName = $user->opd?->nama ?? 'INSTANSI TIDAK DIKENAL';
             $opdId = $user->opd_id;
+
+            // Jika ada kolom sub_opd yang terbaca
+            $rawSubOpd = trim((string)$this->getVal($row, 'sub_opd', ''));
+            if (!empty($rawSubOpd) && !in_array($rawSubOpd, ['-', '?', 'null', 'NULL'])) {
+                $subKey = "{$opdId}_" . strtoupper($rawSubOpd);
+                if (!isset($this->subOpdCache[$subKey])) {
+                    $subOpdModel = SubOpd::firstOrCreate(
+                        ['opd_id' => $opdId, 'nama' => $rawSubOpd]
+                    );
+                    $this->subOpdCache[$subKey] = $subOpdModel->id;
+                }
+                $subOpdId = $this->subOpdCache[$subKey];
+            }
         } else {
             $opdName = trim($this->getVal($row, 'opd', 'BELUM DIKETAHUI'));
             if (empty($opdName) || in_array($opdName, ['-', '?'])) {
@@ -285,6 +310,19 @@ class VehicleImport implements ToModel, WithStartRow, WithBatchInserts, WithChun
                 $this->opdCache[$opdName] = $newOpd->id;
             }
             $opdId = $this->opdCache[$opdName];
+
+            // Cek Sub-OPD jika ada
+            $rawSubOpd = trim((string)$this->getVal($row, 'sub_opd', ''));
+            if (!empty($rawSubOpd) && !in_array($rawSubOpd, ['-', '?', 'null', 'NULL'])) {
+                $subKey = "{$opdId}_" . strtoupper($rawSubOpd);
+                if (!isset($this->subOpdCache[$subKey])) {
+                    $subOpdModel = SubOpd::firstOrCreate(
+                        ['opd_id' => $opdId, 'nama' => $rawSubOpd]
+                    );
+                    $this->subOpdCache[$subKey] = $subOpdModel->id;
+                }
+                $subOpdId = $this->subOpdCache[$subKey];
+            }
         }
 
         // 4. Persiapkan Data Dinamis
@@ -345,6 +383,7 @@ class VehicleImport implements ToModel, WithStartRow, WithBatchInserts, WithChun
             'keterangan'      => $this->getVal($row, 'keterangan'),
             'opd'             => $opdName,
             'opd_id'          => $opdId,
+            'sub_opd_id'      => $subOpdId,
         ]);
     }
 

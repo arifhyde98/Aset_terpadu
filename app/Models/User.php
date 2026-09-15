@@ -44,6 +44,7 @@ class User extends Authenticatable
         'plain_password',
         'role',
         'opd_id',
+        'sub_opd_id',
         'avatar',
     ];
 
@@ -106,6 +107,16 @@ class User extends Authenticatable
     public function opd(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
         return $this->belongsTo(Opd::class);
+    }
+
+    /**
+     * Mendapatkan data Sub-OPD / KPB yang terkait dengan user ini (jika role adalah KPB).
+     * 
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function subOpd(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(SubOpd::class, 'sub_opd_id');
     }
 }
 

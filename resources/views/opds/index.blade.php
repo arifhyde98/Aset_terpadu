@@ -17,7 +17,7 @@
             </nav>
             <h3 class="fw-bold text-navy mb-0">Manajemen Data OPD / Instansi</h3>
         </div>
-        <div class="action-toolbar d-flex gap-2">
+        <div class="action-toolbar d-flex flex-wrap gap-2">
             <form action="{{ route('opds.truncate') }}" method="POST" class="d-inline truncate-confirm">
                 @csrf
                 @method('DELETE')
@@ -25,6 +25,12 @@
                     <i class="bi bi-trash3 text-danger"></i> Kosongkan OPD Kosong
                 </button>
             </form>
+            <button type="button" class="btn btn-outline-info rounded-3 shadow-sm d-flex align-items-center gap-2 d-none" id="btnConvertToSubOpdSelected">
+                <i class="bi bi-diagram-2"></i> Jadikan Sub-OPD (<span id="convertCount">0</span>)
+            </button>
+            <button type="button" class="btn btn-outline-warning rounded-3 shadow-sm d-flex align-items-center gap-2 d-none" id="btnMergeSelected">
+                <i class="bi bi-intersect"></i> Gabungkan OPD (<span id="mergeCount">0</span>)
+            </button>
             <button type="button" class="btn btn-primary shadow-sm fw-medium d-flex align-items-center gap-2" data-bs-toggle="modal" data-bs-target="#addOpdModal">
                 <i class="bi bi-plus-lg"></i> Tambah OPD
             </button>
@@ -63,7 +69,10 @@
 
         <x-slot:thead>
             <tr>
-                <th class="py-3 px-4 border-bottom-0 fw-semibold" style="width: 50px;">No</th>
+                <th class="py-3 px-3 border-bottom-0 fw-semibold text-center" style="width: 40px;">
+                    <input type="checkbox" class="form-check-input" id="checkAll" title="Pilih Semua">
+                </th>
+                <th class="py-3 px-3 border-bottom-0 fw-semibold text-center" style="width: 50px;">No</th>
                 <th class="py-3 border-bottom-0 fw-semibold">
                     <a href="{{ request()->fullUrlWithQuery(['sort_by' => 'nama', 'sort_order' => $currentSortBy === 'nama' ? $nextSortOrder : 'asc']) }}" class="text-navy text-decoration-none d-inline-flex align-items-center gap-1">
                         <span>Nama Instansi / OPD</span>
@@ -84,6 +93,7 @@
                         @endif
                     </a>
                 </th>
+                <th class="py-3 border-bottom-0 fw-semibold text-center">Kendaraan & KPB</th>
                 <th class="py-3 border-bottom-0 fw-semibold">Akun Admin</th>
                 <th class="py-3 border-bottom-0 fw-semibold d-none d-md-table-cell">Alamat</th>
                 <th class="py-3 px-4 border-bottom-0 fw-semibold text-center" style="width: 100px;">Aksi</th>
@@ -92,7 +102,16 @@
 
         @foreach($opds as $index => $opd)
             <tr>
-                <td class="px-4 py-3 text-secondary text-center">
+                <td class="px-3 py-3 text-center">
+                    <input type="checkbox" class="form-check-input merge-check" 
+                           value="{{ $opd->id }}" 
+                           data-name="{{ $opd->nama }}" 
+                           data-count="{{ ($opd->vehicles_count ?? 0) + ($opd->ebmd_vehicles_count ?? 0) }}"
+                           data-real="{{ $opd->vehicles_count ?? 0 }}"
+                           data-ebmd="{{ $opd->ebmd_vehicles_count ?? 0 }}"
+                           data-subopd="{{ $opd->sub_opds_count ?? 0 }}">
+                </td>
+                <td class="px-3 py-3 text-secondary text-center">
                     {{ ($opds->currentPage() - 1) * $opds->perPage() + $loop->iteration }}
                 </td>
                 <td class="py-3">
@@ -100,6 +119,21 @@
                 </td>
                 <td class="py-3">
                     <span class="badge bg-light text-primary border border-primary border-opacity-25 px-2 py-1">{{ $opd->singkatan ?? '-' }}</span>
+                </td>
+                <td class="py-3 text-center">
+                    <div class="d-flex justify-content-center gap-1 flex-wrap">
+                        <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 px-2 py-1 rounded-pill fw-medium" title="Data Real">
+                            <i class="bi bi-car-front-fill" style="font-size: 0.65rem;"></i> {{ $opd->vehicles_count ?? 0 }} Real
+                        </span>
+                        <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-2 py-1 rounded-pill fw-medium" title="Data e-BMD">
+                            <i class="bi bi-file-earmark-spreadsheet" style="font-size: 0.65rem;"></i> {{ $opd->ebmd_vehicles_count ?? 0 }} e-BMD
+                        </span>
+                        @if(($opd->sub_opds_count ?? 0) > 0)
+                            <span class="badge bg-info bg-opacity-10 text-info border border-info border-opacity-25 px-2 py-1 rounded-pill fw-medium" title="Sub-OPD / Kuasa Pengguna Barang">
+                                <i class="bi bi-diagram-3" style="font-size: 0.65rem;"></i> {{ $opd->sub_opds_count }} KPB
+                            </span>
+                        @endif
+                    </div>
                 </td>
                 <td class="py-3">
                     @if($opd->user)
@@ -114,19 +148,30 @@
                 </td>
                 <td class="px-4 py-3 text-center">
                     <div class="d-flex justify-content-center gap-2">
+                        <button type="button" class="btn btn-sm btn-light border shadow-none text-info btn-row-convert-subopd" 
+                                data-id="{{ $opd->id }}"
+                                data-nama="{{ $opd->nama }}"
+                                data-singkatan="{{ $opd->singkatan }}"
+                                data-real="{{ $opd->vehicles_count ?? 0 }}"
+                                data-ebmd="{{ $opd->ebmd_vehicles_count ?? 0 }}"
+                                data-subopd="{{ $opd->sub_opds_count ?? 0 }}"
+                                title="Jadikan Sub-OPD (Kuasa Pengguna Barang)">
+                            <i class="bi bi-diagram-2"></i>
+                        </button>
                         <button type="button" class="btn btn-sm btn-light border shadow-none text-primary" 
                                 data-bs-toggle="modal" 
                                 data-bs-target="#editOpdModal"
                                 data-id="{{ $opd->id }}"
                                 data-nama="{{ $opd->nama }}"
                                 data-singkatan="{{ $opd->singkatan }}"
-                                data-alamat="{{ $opd->alamat }}">
+                                data-alamat="{{ $opd->alamat }}"
+                                title="Edit Data OPD">
                             <i class="bi bi-pencil-square"></i>
                         </button>
                         <form action="{{ route('opds.destroy', $opd) }}" method="POST" class="d-inline delete-confirm">
                             @csrf
                             @method('DELETE')
-                            <button type="submit" class="btn btn-sm btn-light border shadow-none text-danger">
+                            <button type="submit" class="btn btn-sm btn-light border shadow-none text-danger" title="Hapus OPD">
                                 <i class="bi bi-trash3"></i>
                             </button>
                         </form>
@@ -182,11 +227,149 @@
             </div>
         </form>
     </x-modal>
+    <!-- MERGE OPD MODAL -->
+    <div class="modal fade" id="mergeOpdModal" tabindex="-1" aria-labelledby="mergeOpdModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content rounded-4 border-0 shadow">
+                <div class="modal-header border-bottom px-4 py-3 bg-light rounded-top-4">
+                    <h5 class="modal-title fw-bold text-navy d-flex align-items-center gap-2" id="mergeOpdModalLabel">
+                        <i class="bi bi-intersect text-warning"></i> Gabungkan Instansi OPD
+                    </h5>
+                    <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form action="{{ route('opds.merge') }}" method="POST" id="mergeForm">
+                    @csrf
+                    <div class="modal-body p-4">
+                        <div class="alert alert-warning border-0 bg-warning bg-opacity-10 d-flex align-items-start mb-4 rounded-3">
+                            <div class="fs-4 me-3 text-warning"><i class="bi bi-exclamation-triangle-fill"></i></div>
+                            <div>
+                                <h6 class="fw-bold mb-1 text-warning-emphasis" style="font-size: 0.9rem;">Perhatian — Aksi Peleburan Instansi Permanen</h6>
+                                <p class="mb-0 small text-secondary">
+                                    Seluruh kendaraan (Real & e-BMD), unit kerja Sub-OPD (KPB), akun admin, serta riwayat dari OPD yang dipilih akan <strong>dipindahkan</strong> ke OPD tujuan, lalu OPD sumber akan <strong>dihapus</strong> secara permanen.
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Daftar OPD yang akan di-merge -->
+                        <h6 class="fw-bold text-navy mb-2"><i class="bi bi-list-check me-1"></i> OPD yang Akan Digabungkan:</h6>
+                        <div class="border rounded-3 p-3 mb-4 bg-light" id="mergeSourceList" style="max-height: 200px; overflow-y: auto;">
+                            <!-- Diisi via JavaScript -->
+                        </div>
+
+                        <!-- Pilih OPD tujuan -->
+                        <div class="mb-2">
+                            <label class="form-label fw-bold text-navy"><i class="bi bi-bullseye me-1"></i> Pilih OPD Tujuan (Induk Utama) <span class="text-danger">*</span></label>
+                            <select name="target_id" id="mergeTargetSelect" class="form-select form-select-lg shadow-none" required>
+                                <option value="">-- Pilih OPD Tujuan --</option>
+                            </select>
+                            <div class="form-text small text-secondary mt-1">
+                                <i class="bi bi-info-circle me-1"></i> Semua kendaraan Real, e-BMD, dan Sub-OPD akan dialihkan ke instansi yang dipilih di atas.
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-top bg-light px-4 py-3 rounded-bottom-4">
+                        <button type="button" class="btn btn-light border fw-medium" data-bs-dismiss="modal">Batal</button>
+                        <button type="submit" class="btn btn-warning fw-bold px-4 d-flex align-items-center gap-2" id="mergeSubmitBtn">
+                            <i class="bi bi-intersect"></i> Gabungkan Sekarang
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- CONVERT TO SUB-OPD MODAL -->
+    <div class="modal fade" id="convertToSubOpdModal" tabindex="-1" aria-labelledby="convertToSubOpdModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content rounded-4 border-0 shadow">
+                <div class="modal-header border-bottom px-4 py-3 bg-light rounded-top-4">
+                    <h5 class="modal-title fw-bold text-navy d-flex align-items-center gap-2" id="convertToSubOpdModalLabel">
+                        <i class="bi bi-diagram-2 text-info"></i> Jadikan Sub-OPD (Kuasa Pengguna Barang)
+                    </h5>
+                    <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form action="{{ route('opds.convert-to-sub-opd') }}" method="POST" id="convertToSubOpdForm">
+                    @csrf
+                    <div class="modal-body p-4">
+                        <div class="alert alert-info border-0 bg-info bg-opacity-10 d-flex align-items-start mb-4 rounded-3">
+                            <div class="fs-4 me-3 text-info"><i class="bi bi-info-circle-fill"></i></div>
+                            <div>
+                                <h6 class="fw-bold mb-1 text-info-emphasis" style="font-size: 0.9rem;">Penyelarasan Sub-Unit / Kuasa Pengguna Barang (KPB)</h6>
+                                <p class="mb-0 small text-secondary">
+                                    Gunakan fitur ini jika OPD yang dipilih sebenarnya merupakan <strong>Sub-Unit / Kuasa Pengguna Barang (KPB)</strong> (seperti Puskesmas, Bagian, UPTD, atau Sekolah) yang berinduk di bawah dinas lain.
+                                    Seluruh kendaraan (Real & e-BMD) akan dialokasikan ke Sub-OPD ini di bawah OPD Induk yang dipilih, dan akun pengguna akan disesuaikan menjadi Operator KPB.
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Daftar OPD yang akan dijadikan Sub-OPD -->
+                        <h6 class="fw-bold text-navy mb-2"><i class="bi bi-list-check me-1"></i> OPD yang Akan Dijadikan Sub-OPD:</h6>
+                        <div class="border rounded-3 p-3 mb-4 bg-light" id="convertSourceList" style="max-height: 180px; overflow-y: auto;">
+                            <!-- Diisi via JavaScript -->
+                        </div>
+
+                        <!-- Pilih OPD Induk -->
+                        <div class="mb-3">
+                            <label class="form-label fw-bold text-navy"><i class="bi bi-building me-1"></i> Pilih OPD Induk (Pengguna Barang) <span class="text-danger">*</span></label>
+                            <select name="parent_opd_id" id="convertParentSelect" class="form-select form-select-lg shadow-none" required>
+                                <option value="">-- Pilih OPD Induk Tujuan --</option>
+                            </select>
+                            <div class="form-text small text-secondary mt-1">
+                                Seluruh aset kendaraan dan akun admin akan dialihkan di bawah naungan dinas induk ini.
+                            </div>
+                        </div>
+
+                        <!-- Jenis Sub-OPD -->
+                        <div class="mb-3">
+                            <label class="form-label fw-bold text-navy"><i class="bi bi-tag me-1"></i> Jenis Sub-OPD</label>
+                            <select name="jenis" id="convertJenisSelect" class="form-select shadow-none">
+                                <option value="puskesmas">Puskesmas / Fasilitas Pelayanan Kesehatan</option>
+                                <option value="uptd">UPTD / Balai Teknis Daerah</option>
+                                <option value="bagian">Bagian / Bidang / Sekretariat</option>
+                                <option value="sekolah">Sekolah / Satuan Pendidikan (SMP/SD/TK)</option>
+                                <option value="rsud">RSUD / Rumah Sakit Daerah</option>
+                                <option value="lainnya">Lainnya</option>
+                            </select>
+                            <div class="form-text small text-secondary">
+                                Klasifikasi unit kerja untuk kemudahan pengelompokan dan penyaringan data laporan.
+                            </div>
+                        </div>
+
+                        <!-- Opsi Khusus Single OPD Selection -->
+                        <div id="singleOpdExtraFields" class="d-none">
+                            <div class="card border bg-light rounded-3 p-3">
+                                <h6 class="fw-bold text-navy mb-2 small"><i class="bi bi-pencil-square me-1"></i> Penyesuaian Identitas Sub-OPD Baru (Opsional):</h6>
+                                <div class="row g-2">
+                                    <div class="col-md-8">
+                                        <label class="form-label small fw-medium text-secondary mb-1">Nama Sub-OPD</label>
+                                        <input type="text" name="nama" id="convertCustomNama" class="form-control form-control-sm shadow-none" placeholder="Nama Sub-OPD...">
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label small fw-medium text-secondary mb-1">Kode Sub (Singkatan)</label>
+                                        <input type="text" name="kode_sub" id="convertCustomKodeSub" class="form-control form-control-sm shadow-none" placeholder="Contoh: PKM-BNW">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-top bg-light px-4 py-3 rounded-bottom-4">
+                        <button type="button" class="btn btn-light border fw-medium" data-bs-dismiss="modal">Batal</button>
+                        <button type="submit" class="btn btn-info text-white fw-bold px-4 d-flex align-items-center gap-2" id="convertSubmitBtn">
+                            <i class="bi bi-diagram-2"></i> Jadikan Sub-OPD Sekarang
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 @endpush
 
 @push('scripts')
 <script>
     document.addEventListener('DOMContentLoaded', function () {
+        // Data seluruh OPD untuk dropdown selector
+        const allOpdsData = @json($allOpds ?? []);
+
         // Notifikasi Akun Baru
         @if(session('new_account'))
             Swal.fire({
@@ -209,6 +392,7 @@
             });
         @endif
 
+        // Modal Edit OPD
         const editModal = document.getElementById('editOpdModal');
         if (editModal) {
             editModal.addEventListener('show.bs.modal', function (event) {
@@ -219,7 +403,6 @@
                 const alamat = button.getAttribute('data-alamat');
 
                 const form = document.getElementById('editOpdForm');
-                // Use a safe way to construct the URL
                 const routeTemplate = "{{ route('opds.update', ':id') }}";
                 form.action = routeTemplate.replace(':id', id);
 
@@ -242,6 +425,290 @@
                     confirmButtonColor: '#dc3545',
                     cancelButtonColor: '#64748b',
                     confirmButtonText: 'Ya, Kosongkan!',
+                    cancelButtonText: 'Batal'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        this.submit();
+                    }
+                });
+            });
+        }
+
+        // === CHECKBOX MULTI-SELECT LOGIC ===
+        const checkAll = document.getElementById('checkAll');
+        const mergeChecks = document.querySelectorAll('.merge-check');
+        const btnMerge = document.getElementById('btnMergeSelected');
+        const btnConvert = document.getElementById('btnConvertToSubOpdSelected');
+        const mergeCount = document.getElementById('mergeCount');
+        const convertCount = document.getElementById('convertCount');
+
+        function updateActionButtons() {
+            const checked = document.querySelectorAll('.merge-check:checked');
+            const count = checked.length;
+            if (mergeCount) mergeCount.textContent = count;
+            if (convertCount) convertCount.textContent = count;
+
+            // Tombol Gabungkan OPD (minimal 2 OPD dipilih)
+            if (btnMerge) {
+                if (count >= 2) {
+                    btnMerge.classList.remove('d-none');
+                } else {
+                    btnMerge.classList.add('d-none');
+                }
+            }
+
+            // Tombol Jadikan Sub-OPD (minimal 1 OPD dipilih)
+            if (btnConvert) {
+                if (count >= 1) {
+                    btnConvert.classList.remove('d-none');
+                } else {
+                    btnConvert.classList.add('d-none');
+                }
+            }
+        }
+
+        if (checkAll) {
+            checkAll.addEventListener('change', function () {
+                mergeChecks.forEach(cb => cb.checked = this.checked);
+                updateActionButtons();
+            });
+        }
+
+        mergeChecks.forEach(cb => {
+            cb.addEventListener('change', updateActionButtons);
+        });
+
+        // === FUNGSI HELPER AUTO-DETECT JENIS SUB-OPD ===
+        function detectJenisSubOpd(name) {
+            const lower = (name || '').toLowerCase();
+            if (lower.includes('puskesmas') || lower.includes('pkm')) return 'puskesmas';
+            if (lower.includes('rsud') || lower.includes('rumah sakit')) return 'rsud';
+            if (lower.includes('uptd') || lower.includes('balai')) return 'uptd';
+            if (lower.includes('bagian') || lower.includes('sekretariat') || lower.includes('bidang')) return 'bagian';
+            if (lower.includes('smp') || lower.includes('sd ') || lower.includes('sekolah') || lower.includes('tk ')) return 'sekolah';
+            return 'uptd';
+        }
+
+        // === MODAL JADIKAN SUB-OPD (BULK & SINGLE) ===
+        function openConvertToSubOpdModal(items) {
+            if (!items || items.length === 0) return;
+
+            const sourceList = document.getElementById('convertSourceList');
+            const parentSelect = document.getElementById('convertParentSelect');
+            const jenisSelect = document.getElementById('convertJenisSelect');
+            const singleExtra = document.getElementById('singleOpdExtraFields');
+            const customNama = document.getElementById('convertCustomNama');
+            const customKode = document.getElementById('convertCustomKodeSub');
+            const form = document.getElementById('convertToSubOpdForm');
+
+            // Hapus hidden input lama
+            form.querySelectorAll('input[name="source_ids[]"]').forEach(el => el.remove());
+
+            // Render list sumber
+            sourceList.innerHTML = '';
+            const sourceIds = items.map(it => parseInt(it.id));
+
+            items.forEach(it => {
+                let details = [];
+                if (parseInt(it.real) > 0) details.push(`<span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 rounded-pill px-2">${it.real} Real</span>`);
+                if (parseInt(it.ebmd) > 0) details.push(`<span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 rounded-pill px-2">${it.ebmd} e-BMD</span>`);
+                if (parseInt(it.subopd) > 0) details.push(`<span class="badge bg-info bg-opacity-10 text-info border border-info border-opacity-25 rounded-pill px-2">${it.subopd} KPB</span>`);
+                if (details.length === 0) details.push(`<span class="badge bg-secondary bg-opacity-10 text-secondary border rounded-pill px-2">Kosong</span>`);
+
+                sourceList.innerHTML += `
+                    <div class="d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom border-light">
+                        <span class="fw-semibold text-dark"><i class="bi bi-building text-secondary me-1"></i> ${it.nama}</span>
+                        <div class="d-flex gap-1">${details.join(' ')}</div>
+                    </div>
+                `;
+
+                // Hidden input
+                const hidden = document.createElement('input');
+                hidden.type = 'hidden';
+                hidden.name = 'source_ids[]';
+                hidden.value = it.id;
+                form.appendChild(hidden);
+            });
+
+            // Bangun opsi Parent OPD (kecualikan OPD sumber)
+            parentSelect.innerHTML = '<option value="">-- Pilih OPD Induk Tujuan --</option>';
+            allOpdsData.forEach(opd => {
+                if (!sourceIds.includes(parseInt(opd.id))) {
+                    const opt = document.createElement('option');
+                    opt.value = opd.id;
+                    opt.textContent = `${opd.nama}${opd.singkatan ? ' (' + opd.singkatan + ')' : ''}`;
+                    parentSelect.appendChild(opt);
+                }
+            });
+
+            // Tangani Single vs Multiple
+            if (items.length === 1) {
+                singleExtra.classList.remove('d-none');
+                customNama.value = items[0].nama || '';
+                customKode.value = (items[0].singkatan && items[0].singkatan !== '-') ? items[0].singkatan : '';
+                jenisSelect.value = detectJenisSubOpd(items[0].nama);
+            } else {
+                singleExtra.classList.add('d-none');
+                customNama.value = '';
+                customKode.value = '';
+                jenisSelect.value = detectJenisSubOpd(items[0].nama);
+            }
+
+            const modal = new bootstrap.Modal(document.getElementById('convertToSubOpdModal'));
+            modal.show();
+        }
+
+        // Trigger dari Toolbar: Jadikan Sub-OPD
+        if (btnConvert) {
+            btnConvert.addEventListener('click', function () {
+                const checked = document.querySelectorAll('.merge-check:checked');
+                const items = [];
+                checked.forEach(cb => {
+                    items.push({
+                        id: cb.value,
+                        nama: cb.getAttribute('data-name'),
+                        singkatan: cb.getAttribute('data-singkatan') || '',
+                        real: cb.getAttribute('data-real') || 0,
+                        ebmd: cb.getAttribute('data-ebmd') || 0,
+                        subopd: cb.getAttribute('data-subopd') || 0,
+                    });
+                });
+                openConvertToSubOpdModal(items);
+            });
+        }
+
+        // Trigger dari Baris Tabel: Tombol Jadikan Sub-OPD
+        document.querySelectorAll('.btn-row-convert-subopd').forEach(btn => {
+            btn.addEventListener('click', function () {
+                const item = {
+                    id: this.getAttribute('data-id'),
+                    nama: this.getAttribute('data-nama'),
+                    singkatan: this.getAttribute('data-singkatan') || '',
+                    real: this.getAttribute('data-real') || 0,
+                    ebmd: this.getAttribute('data-ebmd') || 0,
+                    subopd: this.getAttribute('data-subopd') || 0,
+                };
+                openConvertToSubOpdModal([item]);
+            });
+        });
+
+        // Konfirmasi Form Jadikan Sub-OPD
+        const convertForm = document.getElementById('convertToSubOpdForm');
+        if (convertForm) {
+            convertForm.addEventListener('submit', function (e) {
+                e.preventDefault();
+                const parentSelect = document.getElementById('convertParentSelect');
+                const parentName = parentSelect.options[parentSelect.selectedIndex]?.text || 'OPD Induk Terpilih';
+
+                Swal.fire({
+                    title: 'Jadikan Sub-OPD?',
+                    html: `Instansi yang dipilih akan dikonversi menjadi <strong>Sub-OPD (Kuasa Pengguna Barang)</strong> di bawah naungan <strong>${parentName}</strong>.<br><br>Seluruh kendaraan fisik (Real) dan e-BMD akan dialihkan ke unit ini. Lanjutkan?`,
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonColor: '#0ea5e9',
+                    cancelButtonColor: '#64748b',
+                    confirmButtonText: 'Ya, Konversi Sekarang!',
+                    cancelButtonText: 'Batal'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        this.submit();
+                    }
+                });
+            });
+        }
+
+        // === MERGE MODAL OPEN & SUBMIT ===
+        if (btnMerge) {
+            btnMerge.addEventListener('click', function () {
+                const checked = document.querySelectorAll('.merge-check:checked');
+                const sourceList = document.getElementById('mergeSourceList');
+                const targetSelect = document.getElementById('mergeTargetSelect');
+                const form = document.getElementById('mergeForm');
+
+                // Hapus hidden inputs lama
+                form.querySelectorAll('input[name="source_ids[]"]').forEach(el => el.remove());
+
+                // Bangun daftar sumber & opsi target
+                sourceList.innerHTML = '';
+                targetSelect.innerHTML = '<option value="">-- Pilih OPD Tujuan (Induk Utama) --</option>';
+
+                const checkedIds = [];
+                checked.forEach(cb => {
+                    const name = cb.getAttribute('data-name');
+                    const real = cb.getAttribute('data-real') || 0;
+                    const ebmd = cb.getAttribute('data-ebmd') || 0;
+                    const subopd = cb.getAttribute('data-subopd') || 0;
+                    const id = cb.value;
+                    checkedIds.push(parseInt(id));
+
+                    // Tampilkan di daftar sumber
+                    let details = [];
+                    if (parseInt(real) > 0) details.push(`<span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 rounded-pill px-2">${real} Real</span>`);
+                    if (parseInt(ebmd) > 0) details.push(`<span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 rounded-pill px-2">${ebmd} e-BMD</span>`);
+                    if (parseInt(subopd) > 0) details.push(`<span class="badge bg-info bg-opacity-10 text-info border border-info border-opacity-25 rounded-pill px-2">${subopd} KPB</span>`);
+                    if (details.length === 0) details.push(`<span class="badge bg-secondary bg-opacity-10 text-secondary border rounded-pill px-2">Kosong</span>`);
+
+                    sourceList.innerHTML += `
+                        <div class="d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom border-light">
+                            <span class="fw-semibold text-dark"><i class="bi bi-building text-secondary me-1"></i> ${name}</span>
+                            <div class="d-flex gap-1">${details.join(' ')}</div>
+                        </div>
+                    `;
+
+                    // Tambah hidden input source_ids
+                    const hidden = document.createElement('input');
+                    hidden.type = 'hidden';
+                    hidden.name = 'source_ids[]';
+                    hidden.value = id;
+                    form.appendChild(hidden);
+                });
+
+                // Tampilkan OPD terpilih di atas
+                const optGroupChecked = document.createElement('optgroup');
+                optGroupChecked.label = '— Dari OPD yang Terpilih —';
+                checked.forEach(cb => {
+                    const opt = document.createElement('option');
+                    opt.value = cb.value;
+                    opt.textContent = `${cb.getAttribute('data-name')} (${cb.getAttribute('data-real') || 0} Real / ${cb.getAttribute('data-ebmd') || 0} e-BMD)`;
+                    optGroupChecked.appendChild(opt);
+                });
+                targetSelect.appendChild(optGroupChecked);
+
+                // Tambahkan OPD lainnya yang tidak terpilih
+                const optGroupOther = document.createElement('optgroup');
+                optGroupOther.label = '— OPD Lainnya di Sistem —';
+                allOpdsData.forEach(opd => {
+                    if (!checkedIds.includes(parseInt(opd.id))) {
+                        const opt = document.createElement('option');
+                        opt.value = opd.id;
+                        opt.textContent = `${opd.nama}${opd.singkatan ? ' (' + opd.singkatan + ')' : ''}`;
+                        optGroupOther.appendChild(opt);
+                    }
+                });
+                targetSelect.appendChild(optGroupOther);
+
+                // Buka modal
+                const modal = new bootstrap.Modal(document.getElementById('mergeOpdModal'));
+                modal.show();
+            });
+        }
+
+        // Konfirmasi Form Merge OPD
+        const mergeForm = document.getElementById('mergeForm');
+        if (mergeForm) {
+            mergeForm.addEventListener('submit', function (e) {
+                e.preventDefault();
+                const targetSelect = document.getElementById('mergeTargetSelect');
+                const targetName = targetSelect.options[targetSelect.selectedIndex]?.text || 'OPD Tujuan';
+
+                Swal.fire({
+                    title: 'Peleburan Instansi Permanen?',
+                    html: `Seluruh kendaraan dan akun dari OPD sumber akan disatukan ke dalam <strong>${targetName}</strong>, lalu data OPD sumber akan dihapus permanen. Lanjutkan?`,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#f59e0b',
+                    cancelButtonColor: '#64748b',
+                    confirmButtonText: 'Ya, Gabungkan Sekarang!',
                     cancelButtonText: 'Batal'
                 }).then((result) => {
                     if (result.isConfirmed) {

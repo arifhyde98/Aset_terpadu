@@ -29,7 +29,7 @@ class ReportFilterRequest extends FormRequest
         $user = auth()->user();
 
         // Laporan duplikasi hanya boleh diakses oleh Admin BMD dan Super Admin
-        if ($type === 'duplicate' && $user && $user->role === \App\Enums\UserRole::OPD) {
+        if ($type === 'duplicate' && $user && in_array($user->role, [\App\Enums\UserRole::OPD, \App\Enums\UserRole::KPB])) {
             return false;
         }
 
@@ -91,7 +91,7 @@ class ReportFilterRequest extends FormRequest
         $user = auth()->user();
         $merges = [];
 
-        if ($user && $user->role->value === 'opd') {
+        if ($user && in_array($user->role->value, ['opd', 'kpb'])) {
             $merges['opd_id'] = $user->opd_id;
         }
 

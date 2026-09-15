@@ -38,7 +38,7 @@ class UserController extends Controller implements HasMiddleware
      */
     public function index(Request $request)
     {
-        $query = User::with('opd');
+        $query = User::with(['opd', 'subOpd']);
 
         if ($request->filled('role')) {
             $query->where('role', $request->role);
@@ -79,6 +79,14 @@ class UserController extends Controller implements HasMiddleware
         $validated = $request->validated();
         $validated['plain_password'] = $validated['password'];
 
+        // Sanitasi relasi tenant berdasarkan role
+        if (!in_array($validated['role'], [UserRole::OPD->value, UserRole::KPB->value])) {
+            $validated['opd_id'] = null;
+            $validated['sub_opd_id'] = null;
+        } elseif ($validated['role'] === UserRole::OPD->value) {
+            $validated['sub_opd_id'] = null;
+        }
+
         User::create($validated);
 
         return redirect()->route('users.index')->with('success', 'Pengguna berhasil ditambahkan.');
@@ -100,6 +108,14 @@ class UserController extends Controller implements HasMiddleware
             unset($validated['plain_password']);
         } else {
             $validated['plain_password'] = $validated['password'];
+        }
+
+        // Sanitasi relasi tenant berdasarkan role
+        if (!in_array($validated['role'], [UserRole::OPD->value, UserRole::KPB->value])) {
+            $validated['opd_id'] = null;
+            $validated['sub_opd_id'] = null;
+        } elseif ($validated['role'] === UserRole::OPD->value) {
+            $validated['sub_opd_id'] = null;
         }
 
         $user->update($validated);

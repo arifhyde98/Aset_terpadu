@@ -7,6 +7,13 @@
             <h4 class="fw-bold mb-1">Pemetaan OPD Terpadu</h4>
             <p class="text-muted mb-0 small">Jembatan penghubung data OPD antara Modul Pertanahan (SIPAT) dan Pengelolaan Aset (E-RANDIS)</p>
         </div>
+        <form id="refreshMappingForm" action="{{ route('master.opd-mapping.refresh') }}" method="POST">
+            @csrf
+            <button type="submit" class="btn btn-primary d-flex align-items-center gap-2 shadow-sm fw-medium" id="btnRefreshMapping" title="Pindai dan hubungkan otomatis instansi SIPAT ↔ E-RANDIS yang belum terpetakan">
+                <i class="bi bi-arrow-repeat fs-5"></i>
+                <span>Refresh Pemetaan</span>
+            </button>
+        </form>
     </div>
 
     @if(session('success'))
@@ -135,4 +142,37 @@
         @endif
     </div>
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const refreshForm = document.getElementById('refreshMappingForm');
+        if (refreshForm) {
+            refreshForm.addEventListener('submit', function (e) {
+                e.preventDefault();
+                Swal.fire({
+                    title: 'Refresh Pemetaan OPD?',
+                    text: 'Sistem akan memindai seluruh instansi di Modul Pertanahan (SIPAT) dan menghubungkan otomatis ke instansi pasangannya di Modul Kendaraan (E-RANDIS).',
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonColor: '#1e40af',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: 'Ya, Sinkronkan!',
+                    cancelButtonText: 'Batal'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        Swal.fire({
+                            title: 'Memindai & Menyinkronkan...',
+                            text: 'Mohon tunggu sebentar.',
+                            allowOutsideClick: false,
+                            didOpen: () => {
+                                Swal.showLoading();
+                            }
+                        });
+                        this.submit();
+                    }
+                });
+            });
+        }
+    });
+</script>
 @endsection

@@ -33,12 +33,21 @@ class UpdateVehicleRequest extends FormRequest
             ]);
         }
 
-        // Kunci tenant: paksa opd_id dan nama opd sesuai user login jika rolenya adalah OPD
-        if (auth()->check() && auth()->user()->role === \App\Enums\UserRole::OPD) {
-            $this->merge([
-                'opd_id' => auth()->user()->opd_id,
-                'opd' => auth()->user()->opd?->nama,
-            ]);
+        // Kunci tenant: paksa opd_id dan nama opd sesuai user login jika rolenya adalah OPD atau KPB
+        if (auth()->check()) {
+            $user = auth()->user();
+            if ($user->role === \App\Enums\UserRole::OPD) {
+                $this->merge([
+                    'opd_id' => $user->opd_id,
+                    'opd' => $user->opd?->nama,
+                ]);
+            } elseif ($user->role === \App\Enums\UserRole::KPB) {
+                $this->merge([
+                    'opd_id' => $user->opd_id,
+                    'opd' => $user->opd?->nama,
+                    'sub_opd_id' => $user->sub_opd_id,
+                ]);
+            }
         }
     }
 
@@ -80,6 +89,7 @@ class UpdateVehicleRequest extends FormRequest
             'keterangan' => 'nullable',
             'user_id' => 'nullable|exists:users,id',
             'opd_id' => 'nullable|exists:opds,id',
+            'sub_opd_id' => 'nullable|exists:sub_opds,id',
         ];
 
         if ($this->input('target_table') === 'ebmd') {

@@ -4,10 +4,12 @@ namespace App\Http\Controllers\Erandis;
 
 use App\Http\Controllers\Controller;
 use App\Models\Vehicle;
+use App\Models\EbmdVehicle;
 use App\Models\User;
 use App\Models\VehicleType;
-use App\Models\Op;
 use App\Models\Opd;
+use App\Models\Activity;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 use App\Http\Requests\Erandis\StoreVehicleRequest;
 use App\Http\Requests\Erandis\UpdateVehicleRequest;
@@ -91,10 +93,13 @@ class VehicleController extends Controller implements HasMiddleware
         $stats = $this->vehicleService->getDashboardStats();
         $ebmdStats = $isEbmd ? $this->vehicleService->getEbmdStats() : [];
         $opds = Opd::orderBy('nama')->get();
+        $filterOpds = $isEbmd 
+            ? Opd::whereIn('id', EbmdVehicle::withoutGlobalScopes()->distinct()->pluck('opd_id'))->orderBy('nama')->get()
+            : Opd::whereIn('id', Vehicle::withoutGlobalScopes()->distinct()->pluck('opd_id'))->orderBy('nama')->get();
 
         return view('vehicles.index', compact(
             'vehicles', 'stats', 'ebmdStats', 'vehicleTypes', 
-            'opds', 'statuses', 'conditions', 'vehicleDataMap'
+            'opds', 'filterOpds', 'statuses', 'conditions', 'vehicleDataMap'
         ));
     }
 
@@ -303,29 +308,37 @@ class VehicleController extends Controller implements HasMiddleware
     /**
      * Membersihkan massal seluruh nomor rangka dan nomor mesin kendaraan dari karakter khusus.
      * 
+     * @param Request $request
      * @return RedirectResponse
      */
-    public function sanitizeIdentifiers(): RedirectResponse
+    public function sanitizeIdentifiers(Request $request): RedirectResponse
     {
-        $count = $this->vehicleService->sanitizeIdentifiers();
+        $targetTable = $request->input('target_table', 'real');
+        $count = $this->vehicleService->sanitizeIdentifiers($targetTable);
 
-        \App\Models\Activity::log("Melakukan pembersihan massal karakter khusus nomor mesin dan nomor rangka kendaraan [Jumlah data: {$count}]", 'info');
+        $label = $targetTable === 'ebmd' ? 'e-BMD' : 'Data Real';
+        \App\Models\Activity::log("Melakukan pembersihan massal karakter khusus nomor mesin dan nomor rangka kendaraan {$label} [Jumlah data: {$count}]", 'info');
 
-        return redirect()->route('vehicles.index')->with('success', "Pembersihan berhasil. {$count} data kendaraan telah diperbarui.");
+        return redirect()->route('vehicles.index', ['tab' => $targetTable])
+            ->with('success', "Pembersihan karakter {$label} berhasil. {$count} data kendaraan telah diperbarui.");
     }
 
     /**
      * Memperbaiki posisi massal nomor mesin dan rangka yang tertukar.
      * 
+     * @param Request $request
      * @return RedirectResponse
      */
-    public function sanitizeSwappedIdentifiers(): RedirectResponse
+    public function sanitizeSwappedIdentifiers(Request $request): RedirectResponse
     {
-        $count = $this->vehicleService->fixSwappedIdentifiers();
+        $targetTable = $request->input('target_table', 'real');
+        $count = $this->vehicleService->fixSwappedIdentifiers($targetTable);
 
-        \App\Models\Activity::log("Melakukan perbaikan massal posisi Nomor Mesin dan Nomor Rangka yang tertukar [Jumlah data: {$count}]", 'info');
+        $label = $targetTable === 'ebmd' ? 'e-BMD' : 'Data Real';
+        \App\Models\Activity::log("Melakukan perbaikan massal posisi Nomor Mesin dan Nomor Rangka yang tertukar pada {$label} [Jumlah data: {$count}]", 'info');
 
-        return redirect()->route('vehicles.index')->with('success', "Perbaikan berhasil. {$count} data kendaraan telah ditukar posisinya (Nomor Mesin & Rangka).");
+        return redirect()->route('vehicles.index', ['tab' => $targetTable])
+            ->with('success', "Perbaikan posisi {$label} berhasil. {$count} data kendaraan telah ditukar posisinya (Nomor Mesin & Rangka).");
     }
 
     /**
@@ -430,11 +443,6 @@ class VehicleController extends Controller implements HasMiddleware
         }
     }
 
-    /**
-     * Menganalisis database dan mengembalikan daftar duplikasi kendaraan & OPD untuk modal diagnosis.
-     *
-     * @return JsonResponse
-     */
     /**
      * Menganalisis database dan mengembalikan daftar duplikasi kendaraan & OPD untuk modal diagnosis.
      *

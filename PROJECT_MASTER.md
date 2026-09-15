@@ -34,7 +34,8 @@ Dokumen ini merupakan ringkasan eksekutif dan arsitektur tingkat tinggi (*High-L
 - **User Target & Tingkatan Akses:**
   - `Superadmin`: Developer / Administrator Root Global (akses seluruh sistem, sinkronisasi staging DB, dan konfigurasi master).
   - `Admin`: Pengelola Aset BPKAD / Administrator BMD Daerah (verifikasi target, kontrol data lintas instansi, dan ekspor laporan resmi).
-  - `OPD`: Operator Pengelola Aset tingkat unit kerja instansi/dinas (terisolasi hanya pada aset milik instansinya sendiri).
+  - `OPD`: Operator Pengelola Aset tingkat unit kerja instansi/dinas (Pengguna Barang, akses instansi induk).
+  - `KPB`: Operator Kuasa Pengguna Barang (Sub-OPD seperti Puskesmas, UPTD, Bagian Setda, terisolasi ketat pada data unit kerjanya).
 - **Status Project:** Production-Ready (Fase Pemeliharaan, Optimasi Performa, & Integrasi Terpadu).
 
 ---
@@ -85,6 +86,7 @@ Dokumen ini merupakan ringkasan eksekutif dan arsitektur tingkat tinggi (*High-L
      - Mendukung pemisahan sumber data riil (`vehicles`) vs data e-BMD (`ebmd_vehicles`).
   3. **OPD Mapping Hub (Inter-Module Bridge):**
      - Menjembatani heterogenitas ID instansi antara Modul Pertanahan (`opd` / `OpdSipat`) dan Modul Kendaraan Dinas (`opds` / `Opd`) via tabel jembatan `opd_mappings`.
+     - Didukung mesin sinkronisasi cerdas otomatis (`MasterOpdMappingController@refresh`) berbasis normalisasi teks dan heuristik akronim.
   4. **Data Isolation (Tenant Isolation):**
      - E-RANDIS: Implementasi `TenantScope` (Global Scope) pada model `Vehicle`. Jika `opd_id` bernilai null, sistem mengunci akses (*fail-safe*).
      - SIPAT & eLABEL: Isolasi data berdasarkan `opd_id` pada `AsetTanah` dan `sipat_opd_id` pada seluruh berkas arsip.
@@ -115,13 +117,13 @@ Aset_terpadu/
 │   │   │   ├── Admin/    # Controller sistem & administrasi (User, Profile, Setting, Backup, Activity, AuditLogs).
 │   │   │   ├── Bangunan/ # Controller modul bangunan/gedung (KIB C).
 │   │   │   ├── Elabel/   # Controller pengarsipan & Dynamic Archive (Bpkb, Sertifikat, Box, Smart Extractor).
-│   │   │   ├── Erandis/  # Controller kendaraan dinas & laporan (Vehicle, VehicleType, Report, ReportSetting).
+│   │   │   ├── Erandis/  # Controller kendaraan dinas & laporan (Vehicle, VehicleType, Report, ReportSetting, SubOpd).
 │   │   │   ├── Master/   # Controller data master lintas modul (MasterData, Wilayah, OpdMapping, MasterSipatOpd, StatusProses, KopSettings).
 │   │   │   ├── Sipat/    # Controller pertanahan (AsetTanah, Dashboard, Import, TargetSertifikat, Surat, Laporan, Peta, Rekonsiliasi).
 │   │   │   └── ...       # Controller root (Auth, LandingPage, AiAssistant, HealthCheck).
 │   │   ├── Middleware/   # Middleware aplikasi, CheckRole, dan SsoAuthenticate.
 │   │   └── Requests/     # FormRequest validasi terpusat (Admin/, Bangunan/, Elabel/, Erandis/, Sipat/, dan Shared).
-│   ├── Models/           # Model Eloquent (Vehicle, AsetTanah, Opd, OpdSipat, OpdMapping, SuratSkpt, dsb).
+│   ├── Models/           # Model Eloquent (Vehicle, AsetTanah, Opd, SubOpd, OpdSipat, OpdMapping, SuratSkpt, dsb).
 │   │   ├── Elabel/       # Model khusus eLABEL (ElabelBpkb, ElabelBox, ElabelLoan, dll).
 │   │   └── Dynamic/      # Model Universal Dynamic Archive (ArchiveType, ArchiveBox, ArchiveItem, dll).
 │   ├── Observers/        # Observer database (VehicleObserver, UserObserver, OpdObserver, AsetTanahObserver, dll).
@@ -230,7 +232,8 @@ Seluruh fitur berikut telah selesai diimplementasikan (**DONE**) dan beroperasi 
 |---|:---:|---|
 | **Manajemen Kendaraan (CRUD)** | `DONE` | Pengelolaan data kendaraan dinas, filter status operasional & kondisi fisik, plat nomor unik, modal CRUD tersentralisasi, dan pembatasan isolasi `TenantScope` OPD. |
 | **AI Smart Import Excel** | `DONE` | Impor data massal cerdas via `VehicleImport` dengan pencocokan kesamaan semantik header Excel, pratinjau 3 sampel baris, dan eksekusi aman berbasis `import_token`. |
-| **Diagnosis & Resolusi Duplikasi** | `DONE` | Algoritma deteksi duplikasi presisi 4 tingkat (NIB identik, suffix `(2)`, nomor sertifikat BPN sama, serta kesamaan peruntukan + OPD + luas) dengan aksi konsolidasi/merge data. |
+| **Diagnosis & Resolusi Duplikasi** | `DONE` | Algoritma deteksi duplikasi komprehensif pada Data Real & e-BMD (suffix `(2)`, plat identik, nomor rangka identik, dan nomor mesin identik) dengan aksi konsolidasi/merge data aman. |
+| **Sanitasi Identifier & Tukar Posisi** | `DONE` | Fitur 'Generate' pembersihan massal karakter khusus nomor rangka/mesin dan perbaikan posisi tertukar dengan isolasi target tabel (`real` dan `ebmd`). |
 | **Rekonsiliasi BPKB Kendaraan** | `DONE` | Fitur verifikasi silang kepemilikan berkas fisik BPKB di eLABEL dengan data inventaris fisik kendaraan di E-RANDIS (`/vehicles/rekon-bpkb`). |
 | **Modul Laporan Modular** | `DONE` | Format laporan fleksibel berbasis Strategy Pattern (Status, Distribusi OPD, STNK, Duplikasi), kolom jenis kendaraan terpadu, pratinjau AJAX, cetak browser, dan PDF mPDF ber-chunking. |
 

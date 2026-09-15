@@ -58,19 +58,25 @@ Dokumen ini merupakan sumber kebenaran tunggal (*Single Source of Truth*) mengen
 - **Enum Role:** Menggunakan Enum `App\Enums\UserRole` dengan tingkatan:
   - `SUPERADMIN`: Akses penuh konfigurasi sistem, database restore/sync, manajemen seluruh OPD, dan audit trail global.
   - `ADMIN`: Administrator pengelola aset tingkat BPKAD/daerah (akses lintas OPD, manajemen master data, verifikasi target).
-  - `OPD`: Operator/Pengelola aset tingkat unit kerja instansi (terisolasi hanya pada data instansinya sendiri).
+  - `OPD`: Operator/Pengelola aset tingkat unit kerja instansi (Pengguna Barang, terisolasi pada seluruh data instansinya).
+  - `KPB`: Operator Kuasa Pengguna Barang / Sub-OPD (misal: Puskesmas, Bagian Setda, terisolasi ketat hanya pada data `sub_opd_id` unit kerjanya).
 
 ### 2.2 Isolasi Data Multi-Tenancy (Fail-Safe Access Control)
-- **E-RANDIS (Kendaraan Dinas):**
-  - Mengimplementasikan `App\Models\Scopes\TenantScope` pada model `Vehicle`.
-  - Admin OPD secara otomatis dibatasi aksesnya hanya pada catatan berelasi `opd_id` miliknya.
-  - *Fail-Safe:* Jika `opd_id` pengguna hilang atau bernilai `null`, sistem mengunci akses (menolak akses data) dan **bukan** membuka akses global.
+- **E-RANDIS (Kendaraan Dinas & Sub-OPD):**
+  - Mengimplementasikan `App\Models\Scopes\TenantScope` pada model `Vehicle` dan `EbmdVehicle`.
+  - Admin OPD secara otomatis dibatasi aksesnya hanya pada catatan berelasi `opd_id` miliknya (dapat melihat kendaraan induk dan seluruh Sub-OPD di bawahnya).
+  - Operator KPB dibatasi secara ketat hanya pada catatan dengan `sub_opd_id` miliknya sendiri.
+  - *Fail-Safe:* Jika `opd_id` (untuk role OPD) atau `sub_opd_id` (untuk role KPB) bernilai `null`, sistem otomatis mengunci akses (`whereRaw('1 = 0')`) dan **bukan** membuka akses global.
 - **SIPAT (Aset Tanah) & eLABEL (Pengarsipan):**
   - Data diisolasi berdasarkan instansi OPD.
   - Kolom `opd_id` pada model `AsetTanah` terhubung ke tabel `opd` (`OpdSipat` model).
   - Kolom `sipat_opd_id` pada tabel `elabel_bpkb`, `elabel_sertifikat_tanah`, dan `archive_items` menjamin kepemilikan arsip per instansi OPD.
 - **OPD Mapping Hub:**
   - Menjembatani heterogenitas identitas instansi lintas modul melalui tabel `opd_mappings` yang memetakan `sipat_opd_id` (SIPAT/eLABEL) ke `erandis_opd_id` (E-RANDIS).
+- **Sub-OPD (Kuasa Pengguna Barang):**
+  - Dikelola melalui tabel `sub_opds` berelasi `belongsTo(Opd::class)`.
+  - Kolom `sub_opd_id` disematkan pada `vehicles`, `ebmd_vehicles`, dan `users` dengan foreign key berindeks performa tinggi.
+  - Fitur merger OPD (`VehicleService::mergeOpds`) secara otomatis memindahkan seluruh Sub-OPD dari instansi sumber ke instansi target sebelum entitas sumber dihapus demi mencegah *cascading loss*.
 
 ### 2.3 Single Sign-On (SSO) & Keamanan Sesi Terpusat
 - **Middleware SSO (`App\Http\Middleware\SsoAuthenticate`):** Terdaftar dengan alias `sso` pada `bootstrap/app.php`.
@@ -245,11 +251,13 @@ Untuk mencegah penurunan performa akibat kueri agregasi berat berulang, data sta
 - **users:**
   - `id` (PK, BigInt)
   - `name`, `email`, `password`
-  - `role` (String: `superadmin`, `admin`, `opd`)
+  - `role` (String: `superadmin`, `admin`, `opd`, `kpb`)
   - `opd_id` (Nullable ForeignId ke `opds.id`, ON DELETE CASCADE)
+  - `sub_opd_id` (Nullable ForeignId ke `sub_opds.id`, ON DELETE SET NULL) — Menunjuk ke unit kerja KPB.
   - `avatar` (String, Nullable)
   - `plain_password` (Text, Nullable, terenkripsi AES-256 via cast `encrypted`)
-- **opds:** Master data unit kerja instansi E-RANDIS (`id`, `nama_opd`, `singkatan`, `alamat`, `telepon`, `is_active`). Terhubung 1-to-1 dengan user admin OPD.
+- **opds:** Master data unit kerja instansi Pengguna Barang E-RANDIS (`id`, `nama`, `singkatan`, `alamat`, `aktif`).
+- **sub_opds:** Master data Sub-OPD / Kuasa Pengguna Barang (KPB) di bawah dinas induk (`id`, `opd_id` [FK ke `opds.id`], `nama`, `kode_sub`, `jenis` [puskesmas, uptd, bagian, sekolah, rsud, lainnya], `alamat`, `nama_pimpinan`, `nip_pimpinan`, `aktif`).
 - **vehicles:**
   - `id` (PK, BigInt)
   - `no_polisi` (String, Unique) — Nomor plat kendaraan.
@@ -261,6 +269,7 @@ Untuk mencegah penurunan performa akibat kueri agregasi berat berulang, data sta
   - `kondisi` (String: 'Baik', 'Rusak Ringan', 'Rusak Berat', 'Hilang', 'Dalam Penelusuran') — Kondisi fisik kendaraan.
   - `opd` (String) & `pemegang` (String) — Riwayat penanggung jawab.
   - `opd_id` (Nullable FK ke `opds.id`, ON DELETE SET NULL)
+  - `sub_opd_id` (Nullable FK ke `sub_opds.id`, ON DELETE SET NULL) — Alokasi ke Sub-OPD / KPB.
   - `vehicle_type_id` (Nullable FK ke `vehicle_types.id`, ON DELETE SET NULL)
 - **activities:** Log audit sistem (`id`, `user_id` [FK Set Null], `type`, `description`, `old_data` [longText], `new_data` [longText], `created_at`).
 - **settings:** Konfigurasi web/CMS (`id`, `key`, `value`, `group`), termasuk dukungan logo ganda:
@@ -461,9 +470,9 @@ Seluruh peningkatan visual kustom diisolasi pada file [`resources/sass/component
 ### 10.1 Modul E-RANDIS (Manajemen Kendaraan Dinas)
 - **Pencarian Publik Landing Page (`/` dan `/vehicle-search`):** Antarmuka pencarian kendaraan dinas bagi masyarakat dengan auto-formatting plat nomor via `VehicleService::formatPlateNumber()`.
 - **AI Smart Import Excel (`/vehicles/import`):** Impor kendaraan massal dengan analisis header semantik otomatis, pemilihan sheet pertama yang valid, visualisasi sampel 3 baris pratinjau, dan eksekusi berbasis `import_token` yang aman.
-- **Diagnosis & Resolusi Duplikasi Data 4 Tingkat:** Deteksi duplikasi aset tanah dengan algoritma presisi tinggi (NIB identik, penambahan suffix `(2)` hasil impor, Nomor Sertifikat BPN sama, serta kombinasi Peruntukan + OPD + Luas identik) dilengkapi aksi konsolidasi/merge data.
+- **Diagnosis & Resolusi Duplikasi Kendaraan & OPD:** Algoritma deteksi duplikasi komprehensif pada Data Real maupun Data e-BMD (suffix impor `(2)`, plat nomor identik, nomor rangka identik, dan nomor mesin identik) dilengkapi aksi penggabungan data (merge) tanpa kehilangan kolom penting serta konsolidasi OPD terintegrasi.
 - **Rekonsiliasi BPKB Kendaraan (`/vehicles/rekon-bpkb`):** Fitur verifikasi silang kepemilikan berkas fisik BPKB di eLABEL dengan data inventaris fisik kendaraan di E-RANDIS.
-- **Sanitasi Identifier Kendaraan:** Perbaikan otomatis nomor rangka/mesin yang tertukar (`/vehicles/sanitize-swapped-identifiers`) dan sinkronisasi data e-BMD ke data riil.
+- **Sanitasi Identifier Kendaraan (`/vehicles/sanitize-identifiers` & `/vehicles/sanitize-swapped-identifiers`):** Pembersihan massal karakter khusus nomor rangka & mesin (kapitalisasi standar) serta perbaikan posisi nomor mesin/rangka yang tertukar, mendukung isolasi target tabel (`real` maupun `ebmd`).
 - **Laporan Komprehensif Kendaraan (`/reports`):** Laporan status kendaraan, sebaran per OPD, validitas STNK/dokumen, dan analisis duplikasi dengan ekspor Excel, PDF mPDF (chunked), dan pengaturan kop/penanda tangan dinamis.
 
 ### 10.2 Modul SIPAT (Administrasi Pertanahan)
@@ -565,8 +574,13 @@ Seluruh peningkatan visual kustom diisolasi pada file [`resources/sass/component
 | **E-RANDIS** | POST | `/vehicles/resolve-duplicate-vehicle` | `Erandis\VehicleController@resolveDuplicateVehicle` | Auth | Resolusi / merge plat nomor kendaraan ganda |
 | **E-RANDIS** | POST | `/vehicles/resolve-duplicate-opd` | `Erandis\VehicleController@resolveDuplicateOpd` | Auth | Resolusi duplikasi instansi OPD E-RANDIS |
 | **E-RANDIS** | GET | `/master-data/opd-mapping` | `Master\MasterOpdMappingController@index` | Auth | Hub pemetaan instansi SIPAT ↔ E-RANDIS |
+| **E-RANDIS** | POST | `/master-data/opd-mapping/refresh` | `Master\MasterOpdMappingController@refresh` | Auth | Sinkronisasi & pemindaian cerdas otomatis pemetaan OPD SIPAT ↔ E-RANDIS |
 | **E-RANDIS** | Resource | `/vehicle-types` | `Erandis\VehicleTypeController` | Auth | CRUD Master Jenis Kendaraan Dinas |
 | **E-RANDIS** | Resource | `/opds` | `Erandis\OpdController` | Auth | CRUD Master OPD Kendaraan Dinas |
+| **E-RANDIS** | POST | `/opds/merge` | `Erandis\OpdController@merge` | Superadmin, Admin | Peleburan & Penggabungan Massal OPD E-RANDIS |
+| **E-RANDIS** | POST | `/opds/convert-to-sub-opd` | `Erandis\OpdController@convertToSubOpd` | Superadmin, Admin | Konversi OPD Menjadi Sub-OPD (KPB) di Bawah Dinas Induk |
+| **E-RANDIS** | Resource | `/sub-opds` | `Erandis\SubOpdController` | Auth | CRUD Master Sub-OPD / Kuasa Pengguna Barang (KPB) |
+| **E-RANDIS** | GET | `/sub-opds/by-opd/{opdId}` | `Erandis\SubOpdController@getByOpd` | Auth | API JSON Chained Dropdown Sub-OPD per OPD Induk |
 | **E-RANDIS** | GET | `/reports` | `Erandis\ReportController@index` | Auth | Dashboard Modul Laporan Kendaraan |
 | **E-RANDIS** | GET | `/reports/preview` | `Erandis\ReportController@preview` | Auth | Pratinjau AJAX Laporan Kendaraan |
 | **E-RANDIS** | GET | `/reports/export` | `Erandis\ReportController@export` | Auth | Ekspor Excel Laporan Kendaraan |

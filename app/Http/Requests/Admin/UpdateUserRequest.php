@@ -37,7 +37,8 @@ class UpdateUserRequest extends FormRequest
             ],
             'password' => 'nullable|string|min:8',
             'role' => ['required', Rule::enum(UserRole::class)],
-            'opd_id' => 'nullable|required_if:role,opd|exists:opds,id',
+            'opd_id' => 'nullable|required_if:role,opd,kpb|exists:opds,id',
+            'sub_opd_id' => 'nullable|required_if:role,kpb|exists:sub_opds,id',
         ];
     }
 }

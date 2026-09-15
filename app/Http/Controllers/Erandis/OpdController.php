@@ -47,7 +47,8 @@ class OpdController extends Controller implements HasMiddleware
      */
     public function index(Request $request): \Illuminate\View\View
     {
-        $query = Opd::query()->with('user');
+        $query = Opd::query()->with('user')
+            ->withCount(['vehicles', 'ebmdVehicles', 'subOpds']);
 
         if ($request->filled('q')) {
             $query->where('nama', 'like', '%' . $request->q . '%')
@@ -56,7 +57,7 @@ class OpdController extends Controller implements HasMiddleware
 
         $sortBy = $request->input('sort_by');
         $sortOrder = $request->input('sort_order', 'asc');
-        $allowedSorts = ['nama', 'singkatan'];
+        $allowedSorts = ['nama', 'singkatan', 'vehicles_count', 'ebmd_vehicles_count', 'sub_opds_count'];
 
         if ($sortBy && in_array($sortBy, $allowedSorts)) {
             $query->orderBy($sortBy, $sortOrder);
@@ -65,8 +66,76 @@ class OpdController extends Controller implements HasMiddleware
         }
 
         $opds = $query->paginate(15)->withQueryString();
+        $allOpds = Opd::orderBy('nama')->get(['id', 'nama', 'singkatan']);
         
-        return view('opds.index', compact('opds'));
+        return view('opds.index', compact('opds', 'allOpds'));
+    }
+
+    /**
+     * Menggabungkan beberapa instansi OPD ke satu instansi tujuan.
+     * 
+     * @param Request $request
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    public function merge(Request $request): \Illuminate\Http\RedirectResponse
+    {
+        $request->validate([
+            'target_id' => 'required|exists:opds,id',
+            'source_ids' => 'required|array|min:1',
+            'source_ids.*' => 'exists:opds,id',
+        ]);
+
+        $targetId = (int) $request->input('target_id');
+        $sourceIds = $request->input('source_ids');
+
+        try {
+            $result = $this->vehicleService->mergeMultipleOpds($targetId, $sourceIds);
+
+            return redirect()->route('opds.index')
+                ->with('success', "Berhasil menggabungkan {$result['merged_opds_count']} instansi OPD ke dalam {$result['target_name']}. Seluruh kendaraan Real, e-BMD, Sub-OPD, dan akun terkait telah disatukan.");
+        } catch (\Throwable $e) {
+            return back()->with('error', 'Gagal menggabungkan OPD: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Mengonversi satu atau beberapa OPD menjadi Sub-OPD (Kuasa Pengguna Barang) di bawah OPD Induk.
+     * 
+     * @param Request $request
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    public function convertToSubOpd(Request $request): \Illuminate\Http\RedirectResponse
+    {
+        $request->validate([
+            'parent_opd_id' => 'required|exists:opds,id',
+            'source_ids' => 'required|array|min:1',
+            'source_ids.*' => 'exists:opds,id',
+            'jenis' => 'nullable|string|in:puskesmas,uptd,bagian,sekolah,rsud,lainnya',
+            'nama' => 'nullable|string|max:255',
+            'kode_sub' => 'nullable|string|max:50',
+        ]);
+
+        $parentOpdId = (int) $request->input('parent_opd_id');
+        $sourceIds = $request->input('source_ids');
+        $jenis = $request->input('jenis');
+        $nama = $request->input('nama');
+        $kodeSub = $request->input('kode_sub');
+
+        try {
+            $result = $this->vehicleService->convertOpdsToSubOpd(
+                $parentOpdId, 
+                $sourceIds, 
+                $jenis, 
+                $nama, 
+                $kodeSub
+            );
+
+            $subOpdNames = implode(', ', $result['sub_opd_names']);
+            return redirect()->route('opds.index')
+                ->with('success', "Berhasil mengonversi {$result['converted_count']} OPD ({$subOpdNames}) menjadi Sub-OPD di bawah \"{$result['parent_name']}\". Total {$result['moved_vehicles_real']} kendaraan Real dan {$result['moved_vehicles_ebmd']} kendaraan e-BMD telah dialokasikan ke Sub-OPD ini.");
+        } catch (\Throwable $e) {
+            return back()->with('error', 'Gagal mengonversi OPD menjadi Sub-OPD: ' . $e->getMessage());
+        }
     }
 
     /**

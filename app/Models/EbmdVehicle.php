@@ -59,7 +59,7 @@ class EbmdVehicle extends Model
         'no_polisi', 'nomor_register', 'merk', 'tipe', 'jenis', 'vehicle_type_id', 
         'tahun_pembuatan', 'tgl_perolehan', 'nilai_perolehan', 
         'stnk_ada', 'bpkb_ada', 'no_rangka', 'no_mesin', 'warna', 
-        'tgl_stnk', 'opd', 'opd_id', 'pemegang', 'status', 'kondisi', 
+        'tgl_stnk', 'opd', 'opd_id', 'sub_opd_id', 'pemegang', 'status', 'kondisi', 
         'foto_kendaraan', 'keterangan', 'user_id', 'is_synced',
     ];
 
@@ -100,6 +100,16 @@ class EbmdVehicle extends Model
     public function opdRelation(): BelongsTo
     {
         return $this->belongsTo(Opd::class, 'opd_id');
+    }
+
+    /**
+     * Relasi ke model SubOpd (Kuasa Pengguna Barang).
+     * 
+     * @return BelongsTo
+     */
+    public function subOpd(): BelongsTo
+    {
+        return $this->belongsTo(SubOpd::class, 'sub_opd_id');
     }
 
     /**

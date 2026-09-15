@@ -43,6 +43,16 @@ class Opd extends Model
         return $this->hasMany(\App\Models\EbmdVehicle::class, 'opd_id');
     }
 
+    /**
+     * Mendapatkan daftar Sub-OPD / Kuasa Pengguna Barang (KPB) di bawah OPD ini.
+     * 
+     * @return HasMany
+     */
+    public function subOpds(): HasMany
+    {
+        return $this->hasMany(SubOpd::class, 'opd_id');
+    }
+
 
     /**
      * Mendapatkan data akun admin yang mengelola OPD ini.

@@ -34,13 +34,15 @@
             @if(auth()->user()->role === \App\Enums\UserRole::SUPERADMIN)
                 <form id="sanitizeIdentifiersForm" action="{{ route('vehicles.sanitize-identifiers') }}" method="POST" class="d-inline">
                     @csrf
-                    <button type="submit" class="btn btn-outline-secondary shadow-sm fw-medium d-flex align-items-center gap-2" id="btnSanitizeIdentifiers" title="Pembersihan Karakter Nomor Rangka & Mesin">
+                    <input type="hidden" name="target_table" value="{{ request('tab', 'real') }}">
+                    <button type="submit" class="btn btn-outline-secondary shadow-sm fw-medium d-flex align-items-center gap-2" id="btnSanitizeIdentifiers" title="Pembersihan Karakter Nomor Rangka & Mesin ({{ request('tab') === 'ebmd' ? 'e-BMD' : 'Data Real' }})">
                         <i class="bi bi-shield-check"></i> <span class="d-none d-sm-inline">Generate</span>
                     </button>
                 </form>
                 <form id="sanitizeSwappedIdentifiersForm" action="{{ route('vehicles.sanitize-swapped-identifiers') }}" method="POST" class="d-inline">
                     @csrf
-                    <button type="submit" class="btn btn-outline-info shadow-sm fw-medium d-flex align-items-center gap-2" id="btnSanitizeSwappedIdentifiers" title="Tukar Posisi Mesin & Rangka (Jika Tertukar)">
+                    <input type="hidden" name="target_table" value="{{ request('tab', 'real') }}">
+                    <button type="submit" class="btn btn-outline-info shadow-sm fw-medium d-flex align-items-center gap-2" id="btnSanitizeSwappedIdentifiers" title="Tukar Posisi Mesin & Rangka (Jika Tertukar) - {{ request('tab') === 'ebmd' ? 'e-BMD' : 'Data Real' }}">
                         <i class="bi bi-arrow-left-right"></i> <span class="d-none d-sm-inline">Tukar Posisi</span>
                     </button>
                 </form>
@@ -112,22 +114,32 @@
         <x-slot:filters>
             <form action="{{ route('vehicles.index') }}" method="GET" class="row g-2 align-items-center">
                 <input type="hidden" name="tab" value="{{ request('tab', 'real') }}">
-                <div class="col-md-4">
+                <div class="col-md-3">
                     <div class="input-group input-group-sm">
                         <span class="input-group-text bg-white border-end-0"><i class="bi bi-search text-secondary"></i></span>
-                        <input type="text" name="q" value="{{ request('q') }}" class="form-control border-start-0 bg-white shadow-none" placeholder="Cari nomor polisi, nomor register, atau nama pengguna...">
+                        <input type="text" name="q" value="{{ request('q') }}" class="form-control border-start-0 bg-white shadow-none" placeholder="Cari nopol, merk, tipe, pemegang...">
                     </div>
                 </div>
+                @if(auth()->user()->role !== \App\Enums\UserRole::OPD && auth()->user()->role !== \App\Enums\UserRole::KPB)
                 <div class="col-md-3">
-                    <select class="form-select form-select-sm shadow-none" name="status">
+                    <select class="form-select form-select-sm shadow-none" name="opd_id" onchange="this.form.submit()">
+                        <option value="">Semua OPD / Instansi</option>
+                        @foreach(($filterOpds ?? $opds) as $opd)
+                            <option value="{{ $opd->id }}" {{ request('opd_id') == $opd->id ? 'selected' : '' }}>{{ $opd->nama }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                @endif
+                <div class="col-md-2">
+                    <select class="form-select form-select-sm shadow-none" name="status" onchange="this.form.submit()">
                         <option value="">Semua Status</option>
                         @foreach($statuses as $key => $label)
                             <option value="{{ $key }}" {{ request('status') == $key ? 'selected' : '' }}>{{ $label }}</option>
                         @endforeach
                     </select>
                 </div>
-                <div class="col-md-3">
-                    <select class="form-select form-select-sm shadow-none" name="kondisi">
+                <div class="col-md-2">
+                    <select class="form-select form-select-sm shadow-none" name="kondisi" onchange="this.form.submit()">
                         <option value="">Semua Kondisi</option>
                         @foreach($conditions as $key => $label)
                             <option value="{{ $key }}" {{ request('kondisi') == $key ? 'selected' : '' }}>{{ $label }}</option>
@@ -135,8 +147,14 @@
                     </select>
                 </div>
                 <div class="col-md-2 d-flex gap-2">
-                    <button type="submit" class="btn btn-primary btn-sm w-100 fw-medium">Filter</button>
-                    <a href="{{ route('vehicles.index') }}" class="btn btn-light border btn-sm bg-white" title="Reset Filter"><i class="bi bi-arrow-clockwise"></i></a>
+                    <select class="form-select form-select-sm shadow-none" name="per_page" onchange="this.form.submit()" title="Jumlah data per halaman" style="max-width: 75px;">
+                        <option value="10" {{ request('per_page', 10) == 10 ? 'selected' : '' }}>10</option>
+                        <option value="25" {{ request('per_page') == 25 ? 'selected' : '' }}>25</option>
+                        <option value="50" {{ request('per_page') == 50 ? 'selected' : '' }}>50</option>
+                        <option value="100" {{ request('per_page') == 100 ? 'selected' : '' }}>100</option>
+                    </select>
+                    <button type="submit" class="btn btn-primary btn-sm flex-fill fw-medium">Filter</button>
+                    <a href="{{ route('vehicles.index', ['tab' => request('tab', 'real')]) }}" class="btn btn-light border btn-sm bg-white" title="Reset Filter"><i class="bi bi-arrow-clockwise"></i></a>
                 </div>
             </form>
         </x-slot:filters>
@@ -255,6 +273,9 @@
                 <td data-label="Pengguna" class="py-3">
                     <div class="fw-medium text-dark"><i class="bi bi-person-fill text-secondary me-1"></i> {{ $vehicle->pemegang }}</div>
                     <div class="small text-secondary">{{ Str::limit($vehicle->opdRelation?->nama ?? $vehicle->opd, 40) }}</div>
+                    @if($vehicle->subOpd)
+                        <div><span class="badge bg-light text-primary border small font-monospace"><i class="bi bi-diagram-3 me-1"></i>{{ $vehicle->subOpd->nama }}</span></div>
+                    @endif
                 </td>
                 <td data-label="Kondisi Fisik" class="text-center">
                     <x-condition-badge :kondisi="$vehicle->kondisi" />
@@ -392,20 +413,33 @@
                 </div>
                 <div class="col-md-4">
                     <label class="form-label fw-semibold small text-uppercase">OPD / Instansi <span class="text-danger">*</span></label>
-                    @if(auth()->user()->role === \App\Enums\UserRole::OPD)
+                    @if(auth()->user()->role === \App\Enums\UserRole::OPD || auth()->user()->role === \App\Enums\UserRole::KPB)
                         <div class="form-control bg-light text-secondary fw-medium">
                             {{ auth()->user()->opd?->nama ?? 'Instansi Tidak Ditemukan' }}
                         </div>
-                        <input type="hidden" name="opd_id" value="{{ auth()->user()->opd_id }}">
+                        <input type="hidden" name="opd_id" id="add_opd_id" value="{{ auth()->user()->opd_id }}">
                         <input type="hidden" name="opd" id="add_opd_text" value="{{ auth()->user()->opd?->nama }}">
                     @else
-                        <select name="opd_id" class="form-select" required onchange="document.getElementById('add_opd_text').value = this.options[this.selectedIndex].text">
+                        <select name="opd_id" id="add_opd_id" class="form-select" required onchange="document.getElementById('add_opd_text').value = this.options[this.selectedIndex].text; loadSubOpds(this.value, 'add_sub_opd_id');">
                             <option value="">-- Pilih OPD --</option>
                             @foreach($opds as $opd)
                                 <option value="{{ $opd->id }}">{{ $opd->nama }}</option>
                             @endforeach
                         </select>
                         <input type="hidden" name="opd" id="add_opd_text" value="">
+                    @endif
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label fw-semibold small text-uppercase">Sub-OPD / KPB (Opsional)</label>
+                    @if(auth()->user()->role === \App\Enums\UserRole::KPB)
+                        <div class="form-control bg-light text-secondary fw-medium">
+                            {{ auth()->user()->subOpd?->nama ?? 'Unit Kerja' }}
+                        </div>
+                        <input type="hidden" name="sub_opd_id" value="{{ auth()->user()->sub_opd_id }}">
+                    @else
+                        <select name="sub_opd_id" id="add_sub_opd_id" class="form-select">
+                            <option value="">-- Tanpa Sub-OPD (Dinas Induk) --</option>
+                        </select>
                     @endif
                 </div>
                 <div class="col-md-4">
@@ -528,20 +562,33 @@
                 </div>
                 <div class="col-md-4">
                     <label class="form-label fw-semibold small text-uppercase">OPD / Instansi <span class="text-danger">*</span></label>
-                    @if(auth()->user()->role === \App\Enums\UserRole::OPD)
+                    @if(auth()->user()->role === \App\Enums\UserRole::OPD || auth()->user()->role === \App\Enums\UserRole::KPB)
                         <div class="form-control bg-light text-secondary fw-medium" id="edit_opd_display">
                             {{ auth()->user()->opd?->nama ?? 'Instansi Tidak Ditemukan' }}
                         </div>
                         <input type="hidden" name="opd_id" id="edit_opd_id_locked" value="{{ auth()->user()->opd_id }}">
                         <input type="hidden" name="opd" id="edit_opd_text" value="{{ auth()->user()->opd?->nama }}">
                     @else
-                        <select name="opd_id" id="edit_opd_id" class="form-select" required onchange="document.getElementById('edit_opd_text').value = this.options[this.selectedIndex].text">
+                        <select name="opd_id" id="edit_opd_id" class="form-select" required onchange="document.getElementById('edit_opd_text').value = this.options[this.selectedIndex].text; loadSubOpds(this.value, 'edit_sub_opd_id');">
                             <option value="">-- Pilih OPD --</option>
                             @foreach($opds as $opd)
                                 <option value="{{ $opd->id }}">{{ $opd->nama }}</option>
                             @endforeach
                         </select>
                         <input type="hidden" name="opd" id="edit_opd_text" value="">
+                    @endif
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label fw-semibold small text-uppercase">Sub-OPD / KPB (Opsional)</label>
+                    @if(auth()->user()->role === \App\Enums\UserRole::KPB)
+                        <div class="form-control bg-light text-secondary fw-medium">
+                            {{ auth()->user()->subOpd?->nama ?? 'Unit Kerja' }}
+                        </div>
+                        <input type="hidden" name="sub_opd_id" id="edit_sub_opd_id_locked" value="{{ auth()->user()->sub_opd_id }}">
+                    @else
+                        <select name="sub_opd_id" id="edit_sub_opd_id" class="form-select">
+                            <option value="">-- Tanpa Sub-OPD (Dinas Induk) --</option>
+                        </select>
                     @endif
                 </div>
                 <div class="col-md-4">
@@ -731,6 +778,9 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', function () {
+        // Konteks Tab Aktif ('real' atau 'ebmd')
+        const currentTab = "{{ request('tab', 'real') }}";
+
         // Global Helpers
         const escapeHtml = (str) => {
             if (str === null || str === undefined) return '';
@@ -740,6 +790,30 @@
                 .replace(/>/g, '&gt;')
                 .replace(/"/g, '&quot;')
                 .replace(/'/g, '&#039;');
+        };
+
+        // Helper pembuat opsi Sub-OPD dinamis (Chained Dropdown)
+        window.loadSubOpds = function (opdId, targetSelectId, selectedSubOpdId = null) {
+            const select = document.getElementById(targetSelectId);
+            if (!select) return;
+
+            select.innerHTML = '<option value="">-- Tanpa Sub-OPD (Dinas Induk) --</option>';
+            if (!opdId) return;
+
+            fetch(`/sub-opds/by-opd/${opdId}`)
+                .then(res => res.json())
+                .then(data => {
+                    data.forEach(item => {
+                        const opt = document.createElement('option');
+                        opt.value = item.id;
+                        opt.textContent = `[${item.jenis.toUpperCase()}] ${item.nama}`;
+                        if (selectedSubOpdId && selectedSubOpdId == item.id) {
+                            opt.selected = true;
+                        }
+                        select.appendChild(opt);
+                    });
+                })
+                .catch(err => console.error('Gagal memuat Sub-OPD:', err));
         };
 
         // Vehicle Data Map
@@ -818,40 +892,52 @@
                 detailContent.innerHTML = `
                     <div class="row g-4">
                         <div class="col-md-6">
-                            <div class="p-3 bg-light rounded-3 border-start border-primary border-4">
+                            <div class="p-3 bg-light rounded-3 border-start border-primary border-4 h-100">
                                 <small class="text-secondary text-uppercase fw-bold d-block mb-1" style="font-size: 0.7rem;">Nomor Polisi</small>
                                 <h4 class="fw-bold text-navy mb-0">${escapeHtml(vehicle.no_polisi)}</h4>
                                 ${vehicle.nomor_register ? `<span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 mt-1 small"><i class="bi bi-hash"></i> ${escapeHtml(vehicle.nomor_register)}</span>` : ''}
-                                <p class="text-secondary mb-0 small mt-1">${escapeHtml(vehicle.merk)} (${escapeHtml(vehicle.tahun_pembuatan)})</p>
+                                <p class="text-secondary mb-0 small mt-1">${escapeHtml(vehicle.merk)} ${vehicle.tipe ? escapeHtml(vehicle.tipe) : ''} (${escapeHtml(vehicle.tahun_pembuatan || '-')})</p>
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="p-3 bg-light rounded-3 h-100 d-flex flex-column justify-content-center border-start border-info border-4">
-                                <small class="text-secondary text-uppercase fw-bold d-block mb-1" style="font-size: 0.7rem;">OPD Pengelola</small>
+                                <small class="text-secondary text-uppercase fw-bold d-block mb-1" style="font-size: 0.7rem;">OPD / Instansi Pengelola</small>
                                 <div class="fw-bold text-navy small">${escapeHtml(vehicle.opd)}</div>
+                                ${vehicle.sub_opd_nama ? `<div class="mt-1"><span class="badge bg-light text-primary border border-primary-subtle small"><i class="bi bi-diagram-2 me-1"></i> ${escapeHtml(vehicle.sub_opd_nama)}</span></div>` : ''}
                             </div>
                         </div>
-                        <div class="col-12 mt-4">
+                        <div class="col-12 mt-3">
                             <div class="row g-3">
                                 <div class="col-md-3">
-                                    <label class="small text-secondary fw-bold text-uppercase" style="font-size: 0.65rem;">Nomor Register</label>
-                                    <div class="fw-semibold text-dark">${escapeHtml(vehicle.nomor_register) || '-'}</div>
+                                    <label class="small text-secondary fw-bold text-uppercase" style="font-size: 0.65rem;">Jenis Kendaraan</label>
+                                    <div class="fw-semibold text-dark">${escapeHtml(vehicle.jenis) || '-'}</div>
                                 </div>
                                 <div class="col-md-3">
-                                    <label class="small text-secondary fw-bold text-uppercase" style="font-size: 0.65rem;">Nomor Mesin</label>
-                                    <div class="fw-semibold text-dark">${escapeHtml(vehicle.no_mesin) || '-'}</div>
+                                    <label class="small text-secondary fw-bold text-uppercase" style="font-size: 0.65rem;">Kondisi Fisik</label>
+                                    <div><span class="badge bg-secondary-subtle text-secondary border px-2 py-1">${escapeHtml(vehicle.kondisi) || 'Baik'}</span></div>
                                 </div>
                                 <div class="col-md-3">
-                                    <label class="small text-secondary fw-bold text-uppercase" style="font-size: 0.65rem;">Nomor Rangka</label>
-                                    <div class="fw-semibold text-dark">${escapeHtml(vehicle.no_rangka) || '-'}</div>
+                                    <label class="small text-secondary fw-bold text-uppercase" style="font-size: 0.65rem;">Status Operasional</label>
+                                    <div><span class="badge bg-info-subtle text-info border px-2 py-1">${escapeHtml(vehicle.status) || 'Tersedia'}</span></div>
                                 </div>
                                 <div class="col-md-3">
-                                    <label class="small text-secondary fw-bold text-uppercase" style="font-size: 0.65rem;">Pemegang</label>
+                                    <label class="small text-secondary fw-bold text-uppercase" style="font-size: 0.65rem;">Pemegang / Pengguna</label>
                                     <div class="fw-semibold text-dark">${escapeHtml(vehicle.pemegang) || '-'}</div>
                                 </div>
                                 <div class="col-md-3">
-                                    <label class="small text-secondary fw-bold text-uppercase" style="font-size: 0.65rem;">Status STNK</label>
-                                    <div class="fw-semibold text-dark">${escapeHtml(vehicle.stnk_ada) || '-'}</div>
+                                    <label class="small text-secondary fw-bold text-uppercase" style="font-size: 0.65rem;">Nomor Mesin</label>
+                                    <div class="fw-semibold text-dark font-monospace">${escapeHtml(vehicle.no_mesin) || '-'}</div>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="small text-secondary fw-bold text-uppercase" style="font-size: 0.65rem;">Nomor Rangka</label>
+                                    <div class="fw-semibold text-dark font-monospace">${escapeHtml(vehicle.no_rangka) || '-'}</div>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="small text-secondary fw-bold text-uppercase" style="font-size: 0.65rem;">Status & Tgl STNK</label>
+                                    <div class="fw-semibold text-dark">
+                                        ${escapeHtml(vehicle.stnk_ada) || '-'}
+                                        ${vehicle.tgl_stnk ? `<small class="text-muted d-block">(${escapeHtml(vehicle.tgl_stnk)})</small>` : ''}
+                                    </div>
                                 </div>
                                 <div class="col-md-3">
                                     <label class="small text-secondary fw-bold text-uppercase" style="font-size: 0.65rem;">Status BPKB</label>
@@ -872,6 +958,14 @@
                                     <label class="small text-secondary fw-bold text-uppercase" style="font-size: 0.65rem;">Tahun Pembuatan</label>
                                     <div class="fw-semibold text-dark">${escapeHtml(vehicle.tahun_pembuatan) || '-'}</div>
                                 </div>
+                                <div class="col-md-3">
+                                    <label class="small text-secondary fw-bold text-uppercase" style="font-size: 0.65rem;">Tanggal Perolehan</label>
+                                    <div class="fw-semibold text-dark">${escapeHtml(vehicle.tgl_perolehan) || '-'}</div>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="small text-secondary fw-bold text-uppercase" style="font-size: 0.65rem;">Nomor Register</label>
+                                    <div class="fw-semibold text-dark font-monospace">${escapeHtml(vehicle.nomor_register) || '-'}</div>
+                                </div>
                                 <div class="col-md-12 mt-2">
                                     <div class="p-3 border rounded-3 bg-white d-flex align-items-center">
                                         <div class="bg-success bg-opacity-10 text-success p-2 rounded-3 me-3">
@@ -883,6 +977,12 @@
                                         </div>
                                     </div>
                                 </div>
+                                ${vehicle.keterangan ? `
+                                <div class="col-12 mt-2">
+                                    <label class="small text-secondary fw-bold text-uppercase" style="font-size: 0.65rem;">Keterangan Tambahan</label>
+                                    <div class="p-2.5 bg-light rounded-3 border small text-dark">${escapeHtml(vehicle.keterangan)}</div>
+                                </div>
+                                ` : ''}
                                 <div class="col-md-12 mt-3">
                                     <label class="small text-secondary fw-bold text-uppercase mb-2" style="font-size: 0.65rem;">Galeri Foto Fisik</label>
                                     ${renderPhotos(vehicle.foto_kendaraan)}
@@ -891,6 +991,17 @@
                         </div>
                     </div>
                 `;
+            });
+        }
+
+        // Add Modal Event untuk role OPD agar Sub-OPD termuat otomatis
+        const addVehicleModalEl = document.getElementById('addVehicleModal');
+        if (addVehicleModalEl) {
+            addVehicleModalEl.addEventListener('show.bs.modal', function() {
+                const addOpdInput = document.getElementById('add_opd_id');
+                if (addOpdInput && addOpdInput.value) {
+                    loadSubOpds(addOpdInput.value, 'add_sub_opd_id');
+                }
             });
         }
 
@@ -929,10 +1040,17 @@
                         ? @js(auth()->user()->opd?->nama)
                         : (vehicle.opd || '');
                 }
+
+                // Memuat Sub-OPD terkait
+                const targetOpdId = vehicle.opd_id || (editOpdLocked ? editOpdLocked.value : null);
+                loadSubOpds(targetOpdId, 'edit_sub_opd_id', vehicle.sub_opd_id);
                 document.getElementById('edit_pemegang').value = vehicle.pemegang || '';
                 document.getElementById('edit_kondisi').value = vehicle.kondisi || 'Baik';
                 document.getElementById('edit_status').value = vehicle.status || 'Tersedia';
-                document.getElementById('edit_tahun_pembuatan').value = vehicle.tahun_pembuatan || '';
+                const tahunInput = document.getElementById('edit_tahun_pembuatan');
+                if (tahunInput) {
+                    tahunInput.value = vehicle.tahun_pembuatan || '';
+                }
                 document.getElementById('edit_warna').value = vehicle.warna || '';
                 document.getElementById('edit_stnk_ada').value = vehicle.stnk_ada || 'Ada';
                 document.getElementById('edit_bpkb_ada').value = vehicle.bpkb_ada || 'Ada';
@@ -1227,8 +1345,6 @@
 
                 // Buka modal
                 diagnosisModal.show();
-
-                const currentTab = "{{ request('tab', 'real') }}";
 
                 // Panggil Ajax Diagnosis
                 fetch("{{ route('vehicles.check-duplicates') }}?target_table=" + encodeURIComponent(currentTab), {
@@ -1624,9 +1740,10 @@
         if (sanitizeForm) {
             sanitizeForm.addEventListener('submit', function(e) {
                 e.preventDefault();
+                const targetLabel = currentTab === 'ebmd' ? 'data e-BMD' : 'Data Real (Fisik)';
                 Swal.fire({
-                    title: 'Konfirmasi Pembersihan?',
-                    text: 'Aksi ini akan membersihkan semua karakter spesial (spasi, tanda hubung, titik, dll) kecuali huruf dan angka pada kolom Nomor Rangka dan Nomor Mesin untuk SELURUH kendaraan di sistem.',
+                    title: `Konfirmasi Pembersihan Karakter (${targetLabel})?`,
+                    text: `Aksi ini akan membersihkan seluruh karakter khusus dan spasi (hanya huruf dan angka) pada Nomor Rangka & Mesin untuk ${targetLabel}.`,
                     icon: 'warning',
                     showCancelButton: true,
                     confirmButtonColor: '#1e40af',
@@ -1636,7 +1753,38 @@
                 }).then((result) => {
                     if (result.isConfirmed) {
                         Swal.fire({
-                            title: 'Memproses data...',
+                            title: 'Memproses pembersihan...',
+                            text: 'Mohon tunggu sebentar.',
+                            allowOutsideClick: false,
+                            didOpen: () => {
+                                Swal.showLoading();
+                            }
+                        });
+                        this.submit();
+                    }
+                });
+            });
+        }
+
+        // Perbaikan Massal Posisi Nomor Mesin & Rangka Tertukar
+        const swappedForm = document.getElementById('sanitizeSwappedIdentifiersForm');
+        if (swappedForm) {
+            swappedForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                const targetLabel = currentTab === 'ebmd' ? 'data e-BMD' : 'Data Real (Fisik)';
+                Swal.fire({
+                    title: `Konfirmasi Tukar Posisi (${targetLabel})?`,
+                    text: `Sistem akan mendeteksi nomor mesin yang lebih panjang dari nomor rangka pada ${targetLabel} dan menukar posisinya ke posisi yang benar.`,
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonColor: '#0284c7',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: 'Ya, Tukar Posisi!',
+                    cancelButtonText: 'Batal'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        Swal.fire({
+                            title: 'Memproses pertukaran...',
                             text: 'Mohon tunggu sebentar.',
                             allowOutsideClick: false,
                             didOpen: () => {

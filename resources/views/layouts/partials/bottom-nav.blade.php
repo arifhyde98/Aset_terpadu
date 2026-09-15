@@ -1,6 +1,6 @@
 @php
     $isSipatActive = request()->routeIs('sipat.*') || (request()->routeIs('master.*') && !request()->routeIs('master.opd-mapping.*')) || (request()->routeIs('activities.*') && request('module') === 'sipat');
-    $isErandisActive = request()->routeIs('erandis.*', 'vehicles.*', 'vehicle-types.*', 'opds.*', 'master.opd-mapping.*', 'maintenance.*', 'reports.*') || (request()->routeIs('activities.*') && request('module') !== 'sipat');
+    $isErandisActive = request()->routeIs('erandis.*', 'vehicles.*', 'vehicle-types.*', 'opds.*', 'sub-opds.*', 'master.opd-mapping.*', 'maintenance.*', 'reports.*') || (request()->routeIs('activities.*') && request('module') !== 'sipat');
     $isElabelActive = request()->routeIs('elabel.*');
 @endphp
 <!-- Bottom Navigation for Mobile -->
@@ -222,10 +222,13 @@
                                 <i class="bi bi-graph-up me-2 text-success"></i> Laporan Kendaraan
                             </a>
 
-                            @if(auth()->user()?->role !== \App\Enums\UserRole::OPD)
+                            @if(auth()->user()?->role !== \App\Enums\UserRole::OPD && auth()->user()?->role !== \App\Enums\UserRole::KPB)
                                 <div class="text-muted fw-bold px-2 pt-2 pb-1" style="font-size: 0.65rem; text-transform: uppercase;">Master Data ERANDIS</div>
                                 <a href="{{ route('opds.index') }}" class="list-group-item list-group-item-action border-0 py-2 rounded-2 {{ Request::is('opds*') ? 'active-sub-erandis' : '' }}">
                                     <i class="bi bi-building me-2 text-primary"></i> OPD / Instansi
+                                </a>
+                                <a href="{{ route('sub-opds.index') }}" class="list-group-item list-group-item-action border-0 py-2 rounded-2 {{ Request::is('sub-opds*') ? 'active-sub-erandis' : '' }}">
+                                    <i class="bi bi-diagram-2 me-2 text-primary"></i> Sub-OPD (KPB)
                                 </a>
                                 <a href="{{ route('vehicle-types.index') }}" class="list-group-item list-group-item-action border-0 py-2 rounded-2 {{ Request::is('vehicle-types*') ? 'active-sub-erandis' : '' }}">
                                     <i class="bi bi-grid-3x3-gap me-2 text-primary"></i> Jenis Kendaraan

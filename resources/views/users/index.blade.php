@@ -127,7 +127,16 @@
                     </span>
                 </td>
                 <td class="py-3 text-secondary small">
-                    {{ $user->opd->singkatan ?? ($user->role->value === 'opd' ? '-' : 'Akses Global') }}
+                    @if($user->role->value === 'kpb')
+                        <div class="fw-medium text-dark">{{ $user->opd->nama ?? '-' }}</div>
+                        <span class="badge bg-light text-primary border border-primary-subtle mt-1" style="font-size: 0.72rem;">
+                            <i class="bi bi-diagram-2 me-1"></i>{{ $user->subOpd->nama ?? 'Semua Sub-OPD' }}
+                        </span>
+                    @elseif($user->role->value === 'opd')
+                        {{ $user->opd->nama ?? '-' }}
+                    @else
+                        <span class="text-muted fst-italic">Akses Global</span>
+                    @endif
                 </td>
                 <td class="px-4 py-3 text-center">
                     <div class="d-flex justify-content-center gap-1">
@@ -141,6 +150,7 @@
                                 data-role="{{ $user->role->value }}"
                                 data-role-label="{{ $user->role->label() }}"
                                 data-opd="{{ $user->opd->nama ?? ($user->role->value === 'opd' ? '-' : 'Akses Global') }}"
+                                data-sub-opd="{{ $user->subOpd->nama ?? '' }}"
                                 data-created="{{ $user->created_at ? $user->created_at->translatedFormat('d F Y, H:i') : '-' }}"
                                 data-password="{{ $user->plain_password ?? '' }}"
                                 data-reset-url="{{ route('users.reset-password', $user) }}">
@@ -160,6 +170,7 @@
                                 data-email="{{ $user->email }}"
                                 data-role="{{ $user->role->value }}"
                                 data-opd="{{ $user->opd_id }}"
+                                data-sub-opd="{{ $user->sub_opd_id }}"
                                 title="Edit Pengguna">
                             <i class="bi bi-pencil-square"></i>
                         </button>
@@ -212,6 +223,14 @@
                 <div class="input-group">
                     <span class="input-group-text bg-light text-muted border-end-0"><i class="bi bi-building"></i></span>
                     <input type="text" id="detail_opd" class="form-control bg-light border-start-0" readonly>
+                </div>
+            </div>
+
+            <div class="col-12 d-none" id="detail_sub_opd_wrapper">
+                <label class="form-label fw-semibold text-secondary small mb-1">Sub-OPD / Kuasa Pengguna Barang (KPB)</label>
+                <div class="input-group">
+                    <span class="input-group-text bg-light text-muted border-end-0"><i class="bi bi-diagram-2"></i></span>
+                    <input type="text" id="detail_sub_opd" class="form-control bg-light border-start-0" readonly>
                 </div>
             </div>
 
@@ -300,14 +319,21 @@
                     @endforeach
                 </select>
             </div>
-            <div id="opd_select_group" class="mb-0 d-none">
-                <label class="form-label fw-semibold text-dark small">Pilih OPD</label>
-                <select name="opd_id" class="form-select">
+            <div id="opd_select_group" class="mb-3 d-none">
+                <label class="form-label fw-semibold text-dark small">Pilih OPD <span class="text-danger">*</span></label>
+                <select name="opd_id" id="add_opd_id" class="form-select">
                     <option value="">-- Pilih OPD --</option>
                     @foreach($opds as $opd)
                         <option value="{{ $opd->id }}">{{ $opd->nama }}</option>
                     @endforeach
                 </select>
+            </div>
+            <div id="sub_opd_select_group" class="mb-0 d-none">
+                <label class="form-label fw-semibold text-dark small">Pilih Sub-OPD (KPB) <span class="text-danger">*</span></label>
+                <select name="sub_opd_id" id="add_sub_opd_id" class="form-select">
+                    <option value="">-- Pilih OPD Dahulu --</option>
+                </select>
+                <div class="form-text small text-muted">Hanya menampilkan Sub-OPD di bawah OPD yang dipilih.</div>
             </div>
         </form>
     </x-modal>
@@ -342,14 +368,21 @@
                     @endforeach
                 </select>
             </div>
-            <div id="edit_opd_select_group" class="mb-0 d-none">
-                <label class="form-label fw-semibold text-dark small">Pilih OPD</label>
+            <div id="edit_opd_select_group" class="mb-3 d-none">
+                <label class="form-label fw-semibold text-dark small">Pilih OPD <span class="text-danger">*</span></label>
                 <select name="opd_id" id="edit_opd_id" class="form-select">
                     <option value="">-- Pilih OPD --</option>
                     @foreach($opds as $opd)
                         <option value="{{ $opd->id }}">{{ $opd->nama }}</option>
                     @endforeach
                 </select>
+            </div>
+            <div id="edit_sub_opd_select_group" class="mb-0 d-none">
+                <label class="form-label fw-semibold text-dark small">Pilih Sub-OPD (KPB) <span class="text-danger">*</span></label>
+                <select name="sub_opd_id" id="edit_sub_opd_id" class="form-select">
+                    <option value="">-- Pilih OPD Dahulu --</option>
+                </select>
+                <div class="form-text small text-muted">Hanya menampilkan Sub-OPD di bawah OPD yang dipilih.</div>
             </div>
         </form>
     </x-modal>
@@ -379,22 +412,82 @@
             });
         @endif
 
-        // Toggle OPD Select based on Role
+        // Toggle OPD & Sub-OPD Select based on Role
         const addRoleSelect = document.getElementById('add_role');
         const addOpdGroup = document.getElementById('opd_select_group');
+        const addOpdSelect = document.getElementById('add_opd_id');
+        const addSubOpdGroup = document.getElementById('sub_opd_select_group');
+        const addSubOpdSelect = document.getElementById('add_sub_opd_id');
+
         const editRoleSelect = document.getElementById('edit_role');
         const editOpdGroup = document.getElementById('edit_opd_select_group');
+        const editOpdSelect = document.getElementById('edit_opd_id');
+        const editSubOpdGroup = document.getElementById('edit_sub_opd_select_group');
+        const editSubOpdSelect = document.getElementById('edit_sub_opd_id');
 
-        function toggleOpdSelect(roleValue, targetGroup) {
-            if (roleValue === 'opd') {
-                targetGroup.classList.remove('d-none');
+        function fetchSubOpds(opdId, targetSelect, selectedSubOpdId = null) {
+            targetSelect.innerHTML = '<option value="">Memuat data Sub-OPD...</option>';
+            if (!opdId) {
+                targetSelect.innerHTML = '<option value="">-- Pilih OPD Dahulu --</option>';
+                return;
+            }
+
+            fetch(`/sub-opds/by-opd/${opdId}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data && data.length > 0) {
+                        let html = '<option value="">-- Pilih Sub-OPD / KPB --</option>';
+                        data.forEach(item => {
+                            const isSelected = selectedSubOpdId && selectedSubOpdId == item.id ? 'selected' : '';
+                            html += `<option value="${item.id}" ${isSelected}>${item.nama}</option>`;
+                        });
+                        targetSelect.innerHTML = html;
+                    } else {
+                        targetSelect.innerHTML = '<option value="">-- Belum ada Sub-OPD terdaftar --</option>';
+                    }
+                })
+                .catch(() => {
+                    targetSelect.innerHTML = '<option value="">Gagal memuat Sub-OPD</option>';
+                });
+        }
+
+        function toggleRoleFields(roleValue, opdGroup, subOpdGroup, opdSelect, subOpdSelect) {
+            if (roleValue === 'kpb') {
+                opdGroup.classList.remove('d-none');
+                subOpdGroup.classList.remove('d-none');
+                if (opdSelect.value) {
+                    fetchSubOpds(opdSelect.value, subOpdSelect);
+                }
+            } else if (roleValue === 'opd') {
+                opdGroup.classList.remove('d-none');
+                subOpdGroup.classList.add('d-none');
             } else {
-                targetGroup.classList.add('d-none');
+                opdGroup.classList.add('d-none');
+                subOpdGroup.classList.add('d-none');
             }
         }
 
-        if (addRoleSelect) addRoleSelect.addEventListener('change', (e) => toggleOpdSelect(e.target.value, addOpdGroup));
-        if (editRoleSelect) editRoleSelect.addEventListener('change', (e) => toggleOpdSelect(e.target.value, editOpdGroup));
+        if (addRoleSelect) {
+            addRoleSelect.addEventListener('change', (e) => toggleRoleFields(e.target.value, addOpdGroup, addSubOpdGroup, addOpdSelect, addSubOpdSelect));
+        }
+        if (addOpdSelect) {
+            addOpdSelect.addEventListener('change', (e) => {
+                if (addRoleSelect.value === 'kpb') {
+                    fetchSubOpds(e.target.value, addSubOpdSelect);
+                }
+            });
+        }
+
+        if (editRoleSelect) {
+            editRoleSelect.addEventListener('change', (e) => toggleRoleFields(e.target.value, editOpdGroup, editSubOpdGroup, editOpdSelect, editSubOpdSelect));
+        }
+        if (editOpdSelect) {
+            editOpdSelect.addEventListener('change', (e) => {
+                if (editRoleSelect.value === 'kpb') {
+                    fetchSubOpds(e.target.value, editSubOpdSelect);
+                }
+            });
+        }
 
         // Detail User Modal Event
         const detailModal = document.getElementById('detailUserModal');
@@ -406,6 +499,7 @@
                 const role = button.getAttribute('data-role') || '';
                 const roleLabel = button.getAttribute('data-role-label') || '-';
                 const opd = button.getAttribute('data-opd') || '-';
+                const subOpd = button.getAttribute('data-sub-opd') || '';
                 const created = button.getAttribute('data-created') || '-';
                 const password = button.getAttribute('data-password') || '';
                 const resetUrl = button.getAttribute('data-reset-url') || '';
@@ -414,6 +508,16 @@
                 document.getElementById('detail_email').value = email;
                 document.getElementById('detail_opd').value = opd;
                 document.getElementById('detail_created').value = created;
+
+                const subOpdWrapper = document.getElementById('detail_sub_opd_wrapper');
+                const subOpdInput = document.getElementById('detail_sub_opd');
+                if (subOpd && subOpd.trim() !== '') {
+                    subOpdWrapper.classList.remove('d-none');
+                    subOpdInput.value = subOpd;
+                } else {
+                    subOpdWrapper.classList.add('d-none');
+                    subOpdInput.value = '';
+                }
 
                 // Inisial Nama
                 const initial = name ? name.trim().charAt(0).toUpperCase() : 'U';
@@ -582,6 +686,7 @@
                 const email = button.getAttribute('data-email');
                 const role = button.getAttribute('data-role');
                 const opdId = button.getAttribute('data-opd');
+                const subOpdId = button.getAttribute('data-sub-opd');
 
                 const form = document.getElementById('editUserForm');
                 const routeTemplate = "{{ route('users.update', ':id') }}";
@@ -592,7 +697,10 @@
                 document.getElementById('edit_role').value = role;
                 document.getElementById('edit_opd_id').value = opdId || '';
                 
-                toggleOpdSelect(role, editOpdGroup);
+                toggleRoleFields(role, editOpdGroup, editSubOpdGroup, editOpdSelect, editSubOpdSelect);
+                if (role === 'kpb' && opdId) {
+                    fetchSubOpds(opdId, editSubOpdSelect, subOpdId);
+                }
             });
         }
     });

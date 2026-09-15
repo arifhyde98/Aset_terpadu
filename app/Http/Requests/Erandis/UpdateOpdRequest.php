@@ -35,4 +35,17 @@ class UpdateOpdRequest extends FormRequest
             'alamat' => 'nullable|string',
         ];
     }
+
+    /**
+     * Pesan kustom validasi.
+     *
+     * @return array<string, string>
+     */
+    public function messages(): array
+    {
+        return [
+            'nama.required' => 'Nama OPD wajib diisi.',
+            'nama.unique' => 'Nama OPD ":input" sudah terdaftar pada instansi lain. Jika ingin menyatukan kedua instansi ini, silakan gunakan fitur "Gabungkan OPD".',
+        ];
+    }
 }

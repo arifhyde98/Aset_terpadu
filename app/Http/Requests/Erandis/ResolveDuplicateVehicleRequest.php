@@ -69,7 +69,8 @@ class ResolveDuplicateVehicleRequest extends FormRequest
             $duplicates = $this->vehicleService->getDuplicateVehiclesList($targetTable);
 
             $isValidPair = collect($duplicates)->contains(function ($item) use ($originalId, $duplicateId) {
-                return $item['original_vehicle']->id === $originalId && $item['duplicate_vehicle']->id === $duplicateId;
+                return ($item['original_vehicle']->id === $originalId && $item['duplicate_vehicle']->id === $duplicateId) ||
+                       ($item['original_vehicle']->id === $duplicateId && $item['duplicate_vehicle']->id === $originalId);
             });
 
             if (!$isValidPair) {

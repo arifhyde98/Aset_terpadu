@@ -58,9 +58,9 @@ class ReportController extends Controller implements HasMiddleware
     public function index(Request $request)
     {
         $user = auth()->user();
-        $isOpd = $user->role->value === 'opd';
+        $isOpd = in_array($user->role->value, ['opd', 'kpb']);
 
-        // 1. Dapatkan OPD ID (Kunci bagi OPD, Null untuk global bagi Admin/Superadmin)
+        // 1. Dapatkan OPD ID (Kunci bagi OPD/KPB, Null untuk global bagi Admin/Superadmin)
         $opdId = $isOpd ? $user->opd_id : null;
 
         // 2. Tarik ringkasan statistik (Tunggal & Ter-cache)
