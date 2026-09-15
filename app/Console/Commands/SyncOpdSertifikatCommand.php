@@ -31,8 +31,8 @@ class SyncOpdSertifikatCommand extends Command
 
         $differing = DB::table('elabel_sertifikat_tanah as s')
             ->join('aset_tanah as a', 's.nibar', '=', 'a.kode_aset')
-            ->leftJoin('opd as o_tanah', 'a.opd_id', '=', 'o_tanah.id')
-            ->leftJoin('opd as o_sertifikat', 's.sipat_opd_id', '=', 'o_sertifikat.id')
+            ->leftJoin('opds as o_tanah', 'a.opd_id', '=', 'o_tanah.id')
+            ->leftJoin('opds as o_sertifikat', 's.sipat_opd_id', '=', 'o_sertifikat.id')
             ->whereNotNull('s.nibar')
             ->where('s.nibar', '!=', '')
             ->whereNotNull('a.opd_id')
@@ -75,7 +75,7 @@ class SyncOpdSertifikatCommand extends Command
         $updated = DB::update('
             UPDATE elabel_sertifikat_tanah s
             INNER JOIN aset_tanah a ON s.nibar = a.kode_aset
-            LEFT JOIN opd o ON a.opd_id = o.id
+            LEFT JOIN opds o ON a.opd_id = o.id
             SET s.sipat_opd_id = a.opd_id,
                 s.dinas = COALESCE(o.nama, a.opd)
             WHERE s.nibar IS NOT NULL 

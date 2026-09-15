@@ -114,7 +114,7 @@ class ElabelBpkbController extends Controller implements HasMiddleware
         $vehicleLabel = $this->vehicleLabel($vehicleType);
         $boxes = ElabelBox::orderBy('box_code', 'asc')->get();
         $years = $this->availableYears($vehicleType);
-        $opds = \App\Models\OpdSipat::where('aktif', 1)->orderBy('nama', 'asc')->get();
+        $opds = \App\Models\Opd::where('aktif', 1)->orderBy('nama', 'asc')->get();
 
         return view('elabel.bpkb.create', [
             'boxes'        => $boxes,
@@ -198,7 +198,7 @@ class ElabelBpkbController extends Controller implements HasMiddleware
         }
 
         $vehicleType = $this->normalizeVehicleType($item->vehicle_type);
-        $opds = \App\Models\OpdSipat::where('aktif', 1)->orderBy('nama', 'asc')->get();
+        $opds = \App\Models\Opd::where('aktif', 1)->orderBy('nama', 'asc')->get();
 
         return view('elabel.bpkb.edit', [
             'item'         => $item,

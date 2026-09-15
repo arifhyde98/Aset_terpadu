@@ -28,11 +28,16 @@ class SipatTargetSertifikat extends Model
     }
 
     /**
-     * Relasi/Accessor ke OPD SIPAT (selalu merujuk dinamis ke Aset Tanah)
+     * Relasi/Accessor ke OPD Terpadu (selalu merujuk dinamis ke Aset Tanah)
      */
+    public function opd(): BelongsTo
+    {
+        return $this->belongsTo(Opd::class, 'opd_id', 'id');
+    }
+
     public function opdSipat(): BelongsTo
     {
-        return $this->belongsTo(OpdSipat::class, 'opd_id', 'id');
+        return $this->opd();
     }
 
     /**

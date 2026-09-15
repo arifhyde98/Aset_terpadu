@@ -2,7 +2,7 @@
 
 namespace App\Http\Requests\Sipat;
 
-use App\Models\OpdSipat;
+use App\Models\Opd;
 use Illuminate\Foundation\Http\FormRequest;
 
 class StoreAsetTanahRequest extends FormRequest
@@ -19,7 +19,8 @@ class StoreAsetTanahRequest extends FormRequest
             'nama_aset' => 'required|string|max:150',
             'peruntukan' => 'nullable|string|max:150',
             'luas' => 'nullable|numeric',
-            'opd_id' => 'nullable|integer|exists:opd,id',
+            'opd_id' => 'nullable|integer|exists:opds,id',
+            'sub_opd_id' => 'nullable|integer|exists:sub_opds,id',
             'opd' => 'nullable|string|max:150',
             'alamat' => 'nullable|string',
             'lat' => 'nullable|numeric',
@@ -46,7 +47,7 @@ class StoreAsetTanahRequest extends FormRequest
             return;
         }
 
-        $opd = OpdSipat::whereRaw('LOWER(TRIM(nama)) = ?', [mb_strtolower($opdName)])->first();
+        $opd = Opd::whereRaw('LOWER(TRIM(nama)) = ?', [mb_strtolower($opdName)])->first();
         if ($opd) {
             $this->merge(['opd_id' => $opd->id]);
         }

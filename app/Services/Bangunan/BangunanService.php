@@ -5,7 +5,7 @@ namespace App\Services\Bangunan;
 use App\Enums\BangunanKondisi;
 use App\Enums\UserRole;
 use App\Models\Bangunan;
-use App\Models\OpdSipat;
+use App\Models\Opd;
 use App\Models\AsetTanah;
 use App\Models\Kecamatan;
 use App\Models\User;

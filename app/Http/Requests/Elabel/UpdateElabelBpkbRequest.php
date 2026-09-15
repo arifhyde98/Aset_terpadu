@@ -26,7 +26,7 @@ class UpdateElabelBpkbRequest extends FormRequest
             'isi_silinder' => ['nullable', 'string', 'max:50'],
             'pengguna'     => ['nullable', 'string', 'max:100'],
             'pdf'          => ['nullable', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:20480'],
-            'sipat_opd_id' => ['nullable', 'integer', 'exists:opd,id'],
+            'sipat_opd_id' => ['nullable', 'integer', 'exists:opds,id'],
         ];
     }
 

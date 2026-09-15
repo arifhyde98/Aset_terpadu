@@ -84,9 +84,11 @@ Dokumen ini merupakan ringkasan eksekutif dan arsitektur tingkat tinggi (*High-L
   2. **Strategy & Registry Pattern (Modul Laporan E-RANDIS):**
      - Memetakan jenis laporan ke kelas strategi mandiri (`VehicleStatusReport`, `OpdAssetReport`, `DocumentValidityReport`, `DuplicateVehicleReport`) via `ReportRegistry`.
      - Mendukung pemisahan sumber data riil (`vehicles`) vs data e-BMD (`ebmd_vehicles`).
-  3. **OPD Mapping Hub (Inter-Module Bridge):**
-     - Menjembatani heterogenitas ID instansi antara Modul Pertanahan (`opd` / `OpdSipat`) dan Modul Kendaraan Dinas (`opds` / `Opd`) via tabel jembatan `opd_mappings`.
-     - Didukung mesin sinkronisasi cerdas otomatis (`MasterOpdMappingController@refresh`) berbasis normalisasi teks dan heuristik akronim.
+  3. **Master OPD Tunggal Terpadu (`opds`):**
+     - Konsolidasi seluruh master instansi ke dalam 1 tabel tunggal `opds` sebagai *single source of truth* untuk seluruh modul (SIPAT, Bangunan, E-RANDIS, eLABEL, Arsip Dinamis).
+     - Menghapus kompleksitas tabel jembatan `opd_mappings` dan tabel `opd` lama (dialihkan ke `opd_mappings_legacy_backup` dan `opd_legacy_backup`).
+     - Dukungan penuh hierarki Sub-OPD (Kuasa Pengguna Barang) untuk modul pertanahan dan bangunan via kolom `sub_opd_id`.
+     - Backward compatibility terjamin lewat proxy `OpdSipat extends Opd` dan alias relasi Eloquent `opdSipat()` serta `opdRelation()`.
   4. **Data Isolation (Tenant Isolation):**
      - E-RANDIS: Implementasi `TenantScope` (Global Scope) pada model `Vehicle`. Jika `opd_id` bernilai null, sistem mengunci akses (*fail-safe*).
      - SIPAT & eLABEL: Isolasi data berdasarkan `opd_id` pada `AsetTanah` dan `sipat_opd_id` pada seluruh berkas arsip.
@@ -167,9 +169,9 @@ Aset_terpadu/
 ## 5. Database Architecture & Relations
 
 ### 5.1 Skema Relasional Modul Terpadu
-- **Jembatan OPD:** `opd_mappings` menghubungkan `opd` (modul SIPAT/eLABEL) dengan `opds` (modul E-RANDIS) via `sipat_opd_id` dan `erandis_opd_id`.
+- **Master OPD Terpadu:** Tabel tunggal `opds` menaungi seluruh aset dan dokumen lintas modul (`id`, `nama`, `singkatan`, `alamat`, `aktif`). Tabel legacy `opd` dan `opd_mappings` dipensiunkan dan dibackup ke `opd_legacy_backup` serta `opd_mappings_legacy_backup`.
 - **Pertanahan (SIPAT):**
-  - `aset_tanah` terhubung ke `opd` (SIPAT) via `opd_id`, dilengkapi kolom koordinat GPS (`lat`, `lng`), `geojson` batas poligon, dan relasi wilayah `kecamatan_id` & `desa_id`.
+  - `aset_tanah` terhubung ke `opds` via `opd_id` dan `sub_opds` via `sub_opd_id`, dilengkapi kolom koordinat GPS (`lat`, `lng`), `geojson` batas poligon, dan relasi wilayah `kecamatan_id` & `desa_id`.
   - `sipat_target_sertifikat` mencatat target pensertifikatan tahunan yang berelasi dengan `aset_tanah`.
   - `proses_aset` mencatat histori langkah pensertifikatan BPN yang menunjuk ke `aset_tanah`.
   - `surat_skpt` mencatat berkas Surat Keterangan Pendaftaran Tanah yang terhubung ke `aset_tanah` serta pejabat pengesah (camat, kepala desa, dan pemohon).
@@ -269,7 +271,7 @@ Seluruh fitur berikut telah selesai diimplementasikan (**DONE**) dan beroperasi 
 | **Asisten Pintar AI (Google Gemini Cloud)** | `DONE` | Floating widget interaktif di seluruh halaman internal untuk Q&A seputar regulasi BMD dan pembuatan ringkasan data aset ditenagai oleh `GeminiAiService`. |
 | **Unified Asset Portal & Search** | `DONE` | Portal pencarian publik landing page lintas 3 modul (Kendaraan, Tanah, Arsip) via `UnifiedAssetSearchService`, proteksi data privat, dan statistik live berbasis cache. |
 | **Landing Sebaran OPD & Kecamatan** | `DONE` | Dua diagram Donut interaktif berdampingan di halaman muka dengan modal pop-up interaktif full-featured (tabel 54 OPD & 16 Kecamatan tanpa memenuhi halaman). |
-| **OPD Mapping Hub** | `DONE` | Tabel pemetaan relasi ID instansi antara modul SIPAT/eLABEL dan E-RANDIS guna memastikan konsistensi kepemilikan aset. |
+| **Master OPD Terpadu (Tunggal)** | `DONE` | Konsolidasi master instansi ke tabel tunggal `opds` dengan dukungan Sub-OPD (`sub_opds`) untuk seluruh modul (SIPAT, Bangunan, Kendaraan, e-Label), badge counter terpadu, dan merger aman lintas entitas. |
 | **Audit Trail / Log Aktivitas Terpadu** | `DONE` | Konsolidasi rekaman aktivitas 3 modul ke `activities` dengan penyimpanan diff sebelum vs sesudah (`old_data` & `new_data`), sanitasi kredensial, dan modal diff dual-mode. |
 
 ### 8.5 Modul Administrasi Sistem & Keamanan

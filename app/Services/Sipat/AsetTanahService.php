@@ -3,11 +3,13 @@
 namespace App\Services\Sipat;
 
 use App\Models\AsetTanah;
-use App\Models\OpdSipat;
+use App\Models\Opd;
+use App\Models\Bangunan;
 use App\Models\ProsesAset;
 use App\Models\StatusProses;
 use App\Models\Activity;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Http\UploadedFile;
 
@@ -129,7 +131,7 @@ class AsetTanahService
             $asetTanah = $orderQuery->paginate((int)$perPage)->withQueryString();
         }
 
-        $opdList = OpdSipat::where('aktif', 1)->orderBy('nama', 'asc')->get();
+        $opdList = Opd::where('aktif', 1)->orderBy('nama', 'asc')->get();
         $statusList = StatusProses::orderBy('urutan', 'asc')->get();
         $kecamatanList = \App\Models\Kecamatan::orderBy('nama', 'asc')->get();
 
@@ -369,7 +371,7 @@ class AsetTanahService
             return;
         }
 
-        $opd = OpdSipat::find($data['opd_id']);
+        $opd = Opd::find($data['opd_id']);
         if ($opd) {
             $data['opd'] = $opd->nama;
         }
@@ -386,7 +388,7 @@ class AsetTanahService
         $duplicates = [];
         $addedPairs = [];
 
-        $opdNames = OpdSipat::pluck('nama')->map(fn($n) => strtoupper(trim($n)))->toArray();
+        $opdNames = Opd::pluck('nama')->map(fn($n) => strtoupper(trim($n)))->toArray();
         $genericPrefixes = [
             'DINAS', 'BADAN', 'KANTOR', 'BAGIAN', 'SKPD', 'DPPKH', 'UPTD', 'PEMERINTAH',
             'TANAH BANGUNAN', 'TANAH UNTUK', 'TANAH KOSONG', 'TANAH TAMBAK', 'TANAH JALAN', 'BANGUNAN'
@@ -543,7 +545,7 @@ class AsetTanahService
      */
     public function getDuplicateOpdSipatList(): array
     {
-        $opds = OpdSipat::all();
+        $opds = Opd::all();
         $duplicates = [];
         $checked = [];
 
@@ -653,7 +655,7 @@ class AsetTanahService
     }
 
     /**
-     * Menggabungkan OPD duplikat SIPAT.
+     * Menggabungkan OPD duplikat.
      *
      * @param int $targetId
      * @param int $sourceId
@@ -662,8 +664,8 @@ class AsetTanahService
     public function mergeOpdSipat(int $targetId, int $sourceId): bool
     {
         return DB::transaction(function () use ($targetId, $sourceId) {
-            $target = OpdSipat::find($targetId);
-            $source = OpdSipat::find($sourceId);
+            $target = Opd::find($targetId);
+            $source = Opd::find($sourceId);
 
             if (!$target || !$source) return false;
 
@@ -673,12 +675,39 @@ class AsetTanahService
                 'opd'    => $target->nama
             ]);
 
-            // 2. Perbarui mapping OPD
-            DB::table('opd_mappings')->where('sipat_opd_id', $sourceId)->update([
-                'sipat_opd_id' => $targetId
-            ]);
+            // 2. Pindahkan aset bangunan
+            if (Schema::hasTable('aset_bangunan')) {
+                Bangunan::where('opd_id', $sourceId)->update(['opd_id' => $targetId]);
+            }
 
-            // 3. Pindahkan dokumen BPKB/Sertifikat di eLABEL
+            // 3. Pindahkan kendaraan dan pengguna
+            if (Schema::hasTable('vehicles')) {
+                \App\Models\Vehicle::withoutGlobalScopes()->where('opd_id', $sourceId)->update([
+                    'opd_id' => $targetId,
+                    'opd'    => $target->nama
+                ]);
+            }
+            if (Schema::hasTable('ebmd_vehicles')) {
+                \App\Models\EbmdVehicle::withoutGlobalScopes()->where('opd_id', $sourceId)->update([
+                    'opd_id' => $targetId,
+                    'opd'    => $target->nama
+                ]);
+            }
+            if (Schema::hasTable('sub_opds')) {
+                \App\Models\SubOpd::where('opd_id', $sourceId)->update(['opd_id' => $targetId]);
+            }
+            if (Schema::hasTable('users')) {
+                \App\Models\User::where('opd_id', $sourceId)->update(['opd_id' => $targetId]);
+            }
+
+            // 4. Perbarui mapping OPD jika tabel ada
+            if (Schema::hasTable('opd_mappings')) {
+                DB::table('opd_mappings')->where('sipat_opd_id', $sourceId)->update([
+                    'sipat_opd_id' => $targetId
+                ]);
+            }
+
+            // 5. Pindahkan dokumen BPKB/Sertifikat di eLABEL
             if (Schema::hasTable('elabel_bpkb')) {
                 DB::table('elabel_bpkb')->where('sipat_opd_id', $sourceId)->update(['sipat_opd_id' => $targetId]);
             }
@@ -692,7 +721,7 @@ class AsetTanahService
                 DB::table('elabel_loans')->where('sipat_opd_id', $sourceId)->update(['sipat_opd_id' => $targetId]);
             }
 
-            // 4. Hapus OPD sumber
+            // 6. Hapus OPD sumber
             $source->delete();
 
             $this->sipatService->invalidateDashboardCache();

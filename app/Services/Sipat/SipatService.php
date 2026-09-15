@@ -3,7 +3,7 @@
 namespace App\Services\Sipat;
 
 use App\Models\AsetTanah;
-use App\Models\OpdSipat;
+use App\Models\Opd;
 use App\Models\ProsesAset;
 use App\Models\StatusProses;
 use Illuminate\Support\Facades\DB;

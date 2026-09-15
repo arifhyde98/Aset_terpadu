@@ -67,16 +67,16 @@ Dokumen ini merupakan sumber kebenaran tunggal (*Single Source of Truth*) mengen
   - Admin OPD secara otomatis dibatasi aksesnya hanya pada catatan berelasi `opd_id` miliknya (dapat melihat kendaraan induk dan seluruh Sub-OPD di bawahnya).
   - Operator KPB dibatasi secara ketat hanya pada catatan dengan `sub_opd_id` miliknya sendiri.
   - *Fail-Safe:* Jika `opd_id` (untuk role OPD) atau `sub_opd_id` (untuk role KPB) bernilai `null`, sistem otomatis mengunci akses (`whereRaw('1 = 0')`) dan **bukan** membuka akses global.
-- **SIPAT (Aset Tanah) & eLABEL (Pengarsipan):**
-  - Data diisolasi berdasarkan instansi OPD.
-  - Kolom `opd_id` pada model `AsetTanah` terhubung ke tabel `opd` (`OpdSipat` model).
-  - Kolom `sipat_opd_id` pada tabel `elabel_bpkb`, `elabel_sertifikat_tanah`, dan `archive_items` menjamin kepemilikan arsip per instansi OPD.
-- **OPD Mapping Hub:**
-  - Menjembatani heterogenitas identitas instansi lintas modul melalui tabel `opd_mappings` yang memetakan `sipat_opd_id` (SIPAT/eLABEL) ke `erandis_opd_id` (E-RANDIS).
-- **Sub-OPD (Kuasa Pengguna Barang):**
+- **Master OPD Tunggal Terpadu (`opds`):**
+  - Seluruh modul (SIPAT, E-RANDIS, Bangunan, eLABEL, dan Arsip Dinamis) kini menggunakan **tabel tunggal `opds`** sebagai *single source of truth*.
+  - Menghapus ketergantungan pada tabel jembatan `opd_mappings` dan mempensiunkan tabel `opd` lama (dialihkan aman ke `opd_legacy_backup` dan `opd_mappings_legacy_backup`).
+  - Seluruh `opd_id` pada `aset_tanah`, `aset_bangunan`, `vehicles`, `ebmd_vehicles`, dan `users` serta `sipat_opd_id` pada modul `elabel_*` langsung merujuk ke `opds.id`.
+  - Kompatibilitas mundur dijamin melalui proxy class `App\Models\OpdSipat extends Opd` dan alias relasi Eloquent `opdSipat()` serta `opdRelation()`.
+- **Sub-OPD (Kuasa Pengguna Barang) Lintas Modul:**
   - Dikelola melalui tabel `sub_opds` berelasi `belongsTo(Opd::class)`.
-  - Kolom `sub_opd_id` disematkan pada `vehicles`, `ebmd_vehicles`, dan `users` dengan foreign key berindeks performa tinggi.
-  - Fitur merger OPD (`VehicleService::mergeOpds`) secara otomatis memindahkan seluruh Sub-OPD dari instansi sumber ke instansi target sebelum entitas sumber dihapus demi mencegah *cascading loss*.
+  - Kolom `sub_opd_id` disematkan pada `aset_tanah`, `aset_bangunan`, `vehicles`, `ebmd_vehicles`, dan `users` dengan foreign key berindeks.
+  - Aset kelurahan di bawah Kecamatan Banawa (Kelurahan Tanjung Batu, Ganti, Gunung Bale, Kabonga Besar) tercatat rapi di bawah `opd_id = 31` (Kecamatan Banawa) dengan `sub_opd_id` masing-masing kelurahan.
+  - Fitur merger OPD (`VehicleService::mergeMultipleOpds`) dan konversi Sub-OPD (`convertOpdsToSubOpd`) memindahkan Tanah, Bangunan, Kendaraan, dan User secara otomatis.
 
 ### 2.3 Single Sign-On (SSO) & Keamanan Sesi Terpusat
 - **Middleware SSO (`App\Http\Middleware\SsoAuthenticate`):** Terdaftar dengan alias `sso` pada `bootstrap/app.php`.
@@ -154,7 +154,8 @@ Modul KIB C mengelola gedung dan bangunan pemerintah daerah sesuai Permendagri N
 ### 3.4 Proteksi Dependensi Data Master & Guard Cascade Delete
 Mencegah terjadinya *cascade delete* database yang dapat melenyapkan data historis secara tidak sengaja:
 - **Master Status Proses (`StatusProsesController@destroy`):** Memeriksa dependensi `ProsesAset::where('id_status', $id)->count()`. Menolak penghapusan jika status masih digunakan oleh catatan aset tanah aktif.
-- **Master OPD SIPAT (`MasterSipatOpdController@destroy`):** Memeriksa dependensi pada `AsetTanah::where('opd_id', $id)`, `opd_mappings`, dan `elabel_sertifikat_tanah`. Menolak penghapusan jika OPD masih menaungi aset aktif.
+- **Master OPD Terpadu (`OpdController@destroy` & `truncate`):** Memeriksa dependensi pada `asetTanahs()`, `bangunans()`, `vehicles()`, `ebmdVehicles()`, `subOpds()`, dan dokumen `elabel_*`. Menolak penghapusan jika OPD masih menaungi aset aktif di modul mana pun.
+- **Master OPD SIPAT Legacy (`MasterSipatOpdController`):** Seluruh aksi secara transparan dialihkan (`redirect`) ke antarmuka Master OPD Terpadu di `/opds`.
 - **Master Data Wilayah (`MasterDataWilayahController`):**
   - Mengganti seluruh pemanggilan `$request->all()` dengan data tervalidasi `$validated = $request->validate(...)` guna mencegah celah *mass assignment*.
   - Menambahkan guard dependensi relasi:
@@ -287,13 +288,13 @@ Untuk mencegah penurunan performa akibat kueri agregasi berat berulang, data sta
   - `alamat` (Text)
   - `lat`, `lng` (Double) — Titik koordinat GPS.
   - `geojson` (Text / JSON) — Poligon spasial batas bidang tanah.
-  - `opd_id` (FK ke `opd.id`), `opd` (String fallback)
+  - `opd_id` (FK ke `opds.id`), `sub_opd_id` (FK ke `sub_opds.id`), `opd` (String raw name fallback)
   - `kecamatan_id` (FK ke `kecamatan.id`), `desa_id` (FK ke `desa.id`)
   - `dasar_perolehan`, `harga_perolehan`, `tanggal_perolehan`, `keterangan`
-- **sipat_target_sertifikat:** Penetapan target pensertifikatan tahunan (`id`, `tahun`, `aset_tanah_id` [FK ke `aset_tanah.id_aset`], `target_jumlah`, `keterangan`, `created_at`, `updated_at`). Relasi OPD diturunkan langsung dari `asetTanah->opdSipat`.
+- **sipat_target_sertifikat:** Penetapan target pensertifikatan tahunan (`id`, `tahun`, `aset_tanah_id` [FK ke `aset_tanah.id_aset`], `target_jumlah`, `keterangan`, `created_at`, `updated_at`). Relasi OPD diturunkan langsung dari `asetTanah->opdRelation`.
 - **proses_aset:** Riwayat tahapan pengurusan sertifikat BPN (`id_proses`, `id_aset`, `status_proses_id`, `id_status`, `tanggal_proses`, `tgl_mulai`, `keterangan`, `dokumen`). Status aktif diambil dari relasi baris terbaru (`latestProses`).
 - **surat_skpt:** Dokumen Surat Keterangan Pendaftaran Tanah (`id`, `aset_tanah_id`, `nomor_surat`, `tanggal_surat`, `pemohon_id`, `camat_id`, `kades_id`, `keterangan`).
-- **opd_mappings:** Jembatan relasi instansi antar-modul (`id`, `sipat_opd_id`, `erandis_opd_id`, `status_verifikasi`).
+- **Tabel Legacy Terbackup:** `opd_legacy_backup` dan `opd_mappings_legacy_backup` (pensiun pasca konsolidasi ke `opds`).
 
 ### 6.3 Tabel Modul eLABEL & Universal Dynamic Archive Engine
 - **Katalog Berkas Fisik Legacy:**

@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Sipat;
 
 use App\Http\Controllers\Controller;
-use App\Models\OpdSipat;
+use App\Models\Opd;
 use App\Models\StatusProses;
 use App\Services\Sipat\LaporanService;
 use Illuminate\Http\Request;
@@ -30,7 +30,7 @@ class LaporanController extends Controller implements HasMiddleware
     public function index(Request $request)
     {
         $filters = $this->laporanService->getFilters($request->all());
-        $opdList = OpdSipat::where('aktif', 1)->orderBy('nama', 'asc')->get();
+        $opdList = Opd::where('aktif', 1)->orderBy('nama', 'asc')->get();
         $statusList = StatusProses::orderBy('urutan', 'asc')->get();
 
         $reportTitles = collect();

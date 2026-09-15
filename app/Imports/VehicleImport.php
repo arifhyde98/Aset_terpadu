@@ -55,7 +55,7 @@ class VehicleImport implements ToModel, WithStartRow, WithBatchInserts, WithChun
     /**
      * Reset shared state untuk proses impor baru.
      */
-    public static function resetSharedState()
+    public static function resetSharedState(?string $modelClass = null)
     {
         static::$sharedExistingPlates = null;
         static::$sharedExistingRegisters = null;

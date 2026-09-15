@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Bangunan;
 
 use App\Http\Controllers\Controller;
 use App\Models\Bangunan;
-use App\Models\OpdSipat;
+use App\Models\Opd;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
@@ -25,7 +25,7 @@ class BangunanPetaController extends Controller implements HasMiddleware
      */
     public function index(): View
     {
-        $opds = OpdSipat::orderBy('nama')->get();
+        $opds = Opd::orderBy('nama')->get();
         return view('bangunan.peta', compact('opds'));
     }
 

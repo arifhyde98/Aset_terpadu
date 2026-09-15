@@ -27,6 +27,7 @@ class Bangunan extends Model
         'nama_bangunan',
         'nomor_register',
         'opd_id',
+        'sub_opd_id',
         'aset_tanah_id',
         'status_tanah_dasar',
         'luas_tanah_dasar',
@@ -81,19 +82,32 @@ class Bangunan extends Model
     ];
 
     /**
-     * Relasi ke Instansi OPD (SIPAT).
-     */
-    public function opdSipat(): BelongsTo
-    {
-        return $this->belongsTo(OpdSipat::class, 'opd_id');
-    }
-
-    /**
-     * Alias relasi opd.
+     * Relasi ke Instansi OPD Terpadu.
      */
     public function opd(): BelongsTo
     {
-        return $this->belongsTo(OpdSipat::class, 'opd_id');
+        return $this->belongsTo(Opd::class, 'opd_id');
+    }
+
+    public function opdRelation(): BelongsTo
+    {
+        return $this->belongsTo(Opd::class, 'opd_id');
+    }
+
+    /**
+     * Alias backward-compatible untuk opd().
+     */
+    public function opdSipat(): BelongsTo
+    {
+        return $this->belongsTo(Opd::class, 'opd_id');
+    }
+
+    /**
+     * Relasi ke Sub-OPD / KPB.
+     */
+    public function subOpd(): BelongsTo
+    {
+        return $this->belongsTo(SubOpd::class, 'sub_opd_id');
     }
 
     /**

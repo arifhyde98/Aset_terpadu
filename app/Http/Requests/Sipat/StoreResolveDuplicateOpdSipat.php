@@ -24,8 +24,8 @@ class StoreResolveDuplicateOpdSipat extends FormRequest
     public function rules(): array
     {
         return [
-            'target_opd_id' => ['required', 'integer', 'exists:opd,id'],
-            'source_opd_id' => ['required', 'integer', 'exists:opd,id', 'different:target_opd_id'],
+            'target_opd_id' => ['required', 'integer', 'exists:opds,id'],
+            'source_opd_id' => ['required', 'integer', 'exists:opds,id', 'different:target_opd_id'],
         ];
     }
 

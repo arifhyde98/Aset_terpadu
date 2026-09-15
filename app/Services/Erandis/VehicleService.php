@@ -606,6 +606,26 @@ class VehicleService
                     ->update(['opd_id' => $targetOpdId]);
             }
 
+            // Pindahkan Aset Tanah dan Bangunan (SIPAT & Bangunan KIB C)
+            if (\Illuminate\Support\Facades\Schema::hasTable('aset_tanah')) {
+                \App\Models\AsetTanah::where('opd_id', $sourceOpdId)
+                    ->update([
+                        'opd_id' => $targetOpdId,
+                        'opd'    => $target->nama
+                    ]);
+            }
+            if (\Illuminate\Support\Facades\Schema::hasTable('aset_bangunan')) {
+                \App\Models\Bangunan::where('opd_id', $sourceOpdId)
+                    ->update(['opd_id' => $targetOpdId]);
+            }
+
+            // Pindahkan dokumen e-Label
+            foreach (['elabel_sertifikat_tanah', 'elabel_bpkb', 'elabel_surat_penyerahan', 'elabel_loans'] as $tbl) {
+                if (\Illuminate\Support\Facades\Schema::hasTable($tbl)) {
+                    \DB::table($tbl)->where('sipat_opd_id', $sourceOpdId)->update(['sipat_opd_id' => $targetOpdId]);
+                }
+            }
+
             // Pindahkan pemetaan OPD jika ada
             if (\Illuminate\Support\Facades\Schema::hasTable('opd_mappings')) {
                 \App\Models\OpdMapping::where('erandis_opd_id', $sourceOpdId)
@@ -673,7 +693,27 @@ class VehicleService
                     ->update(['opd_id' => $targetOpdId]);
             }
 
-            // 4. Pindahkan User / Akun Admin
+            // 4. Pindahkan Aset Tanah dan Bangunan (SIPAT & Bangunan KIB C)
+            if (\Illuminate\Support\Facades\Schema::hasTable('aset_tanah')) {
+                \App\Models\AsetTanah::whereIn('opd_id', $filteredSourceIds)
+                    ->update([
+                        'opd_id' => $targetOpdId,
+                        'opd'    => $target->nama
+                    ]);
+            }
+            if (\Illuminate\Support\Facades\Schema::hasTable('aset_bangunan')) {
+                \App\Models\Bangunan::whereIn('opd_id', $filteredSourceIds)
+                    ->update(['opd_id' => $targetOpdId]);
+            }
+
+            // 5. Pindahkan dokumen e-Label
+            foreach (['elabel_sertifikat_tanah', 'elabel_bpkb', 'elabel_surat_penyerahan', 'elabel_loans'] as $tbl) {
+                if (\Illuminate\Support\Facades\Schema::hasTable($tbl)) {
+                    \DB::table($tbl)->whereIn('sipat_opd_id', $filteredSourceIds)->update(['sipat_opd_id' => $targetOpdId]);
+                }
+            }
+
+            // 6. Pindahkan User / Akun Admin
             \App\Models\User::whereIn('opd_id', $filteredSourceIds)
                 ->update(['opd_id' => $targetOpdId]);
 
@@ -833,12 +873,36 @@ class VehicleService
                     ]);
                 $totalVehiclesEbmd += $updatedEbmd;
 
-                // 4. Jika OPD sumber memiliki sub-opds sebelumnya, pindahkan ke OPD Induk
+                // 4. Pindahkan Aset Tanah dan Bangunan ke OPD Induk + set sub_opd_id
+                if (\Illuminate\Support\Facades\Schema::hasTable('aset_tanah')) {
+                    \App\Models\AsetTanah::where('opd_id', $sourceId)
+                        ->update([
+                            'opd_id'     => $parentOpdId,
+                            'sub_opd_id' => $subOpd->id,
+                            'opd'        => $parentOpd->nama,
+                        ]);
+                }
+                if (\Illuminate\Support\Facades\Schema::hasTable('aset_bangunan')) {
+                    \App\Models\Bangunan::where('opd_id', $sourceId)
+                        ->update([
+                            'opd_id'     => $parentOpdId,
+                            'sub_opd_id' => $subOpd->id,
+                        ]);
+                }
+
+                // 5. Pindahkan dokumen e-Label ke OPD Induk
+                foreach (['elabel_sertifikat_tanah', 'elabel_bpkb', 'elabel_surat_penyerahan', 'elabel_loans'] as $tbl) {
+                    if (\Illuminate\Support\Facades\Schema::hasTable($tbl)) {
+                        \DB::table($tbl)->where('sipat_opd_id', $sourceId)->update(['sipat_opd_id' => $parentOpdId]);
+                    }
+                }
+
+                // 6. Jika OPD sumber memiliki sub-opds sebelumnya, pindahkan ke OPD Induk
                 \App\Models\SubOpd::where('opd_id', $sourceId)
                     ->where('id', '!=', $subOpd->id)
                     ->update(['opd_id' => $parentOpdId]);
 
-                // 5. Pindahkan user admin ke OPD Induk dan beri peran kpb
+                // 7. Pindahkan user admin ke OPD Induk dan beri peran kpb
                 \App\Models\User::where('opd_id', $sourceId)
                     ->update([
                         'opd_id'     => $parentOpdId,

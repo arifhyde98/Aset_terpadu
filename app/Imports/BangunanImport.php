@@ -6,7 +6,7 @@ use App\Enums\BangunanKondisi;
 use App\Enums\UserRole;
 use App\Models\AsetTanah;
 use App\Models\Bangunan;
-use App\Models\OpdSipat;
+use App\Models\Opd;
 use Carbon\Carbon;
 use Illuminate\Support\Str;
 use Maatwebsite\Excel\Concerns\ToModel;
@@ -50,11 +50,11 @@ class BangunanImport implements ToModel, WithStartRow, WithBatchInserts, WithChu
         $this->userRole = $userRole ?? auth()->user()?->role;
 
         // Pre-load Master OPD untuk pemetaan instansi
-        $this->opdCache = OpdSipat::pluck('id', 'nama')->toArray();
+        $this->opdCache = Opd::pluck('id', 'nama')->toArray();
 
         // Pre-load NIBAR Tanah KIB A
         $this->tanahCache = AsetTanah::whereNotNull('kode_aset')
-            ->pluck('id', 'kode_aset')
+            ->pluck('id_aset', 'kode_aset')
             ->toArray();
 
         // Bangun indeks kolom

@@ -93,7 +93,7 @@
                         @endif
                     </a>
                 </th>
-                <th class="py-3 border-bottom-0 fw-semibold text-center">Kendaraan & KPB</th>
+                <th class="py-3 border-bottom-0 fw-semibold text-center">Aset & KPB Terpadu</th>
                 <th class="py-3 border-bottom-0 fw-semibold">Akun Admin</th>
                 <th class="py-3 border-bottom-0 fw-semibold d-none d-md-table-cell">Alamat</th>
                 <th class="py-3 px-4 border-bottom-0 fw-semibold text-center" style="width: 100px;">Aksi</th>
@@ -106,9 +106,12 @@
                     <input type="checkbox" class="form-check-input merge-check" 
                            value="{{ $opd->id }}" 
                            data-name="{{ $opd->nama }}" 
-                           data-count="{{ ($opd->vehicles_count ?? 0) + ($opd->ebmd_vehicles_count ?? 0) }}"
+                           data-singkatan="{{ $opd->singkatan ?? '' }}"
+                           data-count="{{ ($opd->vehicles_count ?? 0) + ($opd->ebmd_vehicles_count ?? 0) + ($opd->aset_tanahs_count ?? 0) + ($opd->bangunans_count ?? 0) }}"
                            data-real="{{ $opd->vehicles_count ?? 0 }}"
                            data-ebmd="{{ $opd->ebmd_vehicles_count ?? 0 }}"
+                           data-tanah="{{ $opd->aset_tanahs_count ?? 0 }}"
+                           data-bangunan="{{ $opd->bangunans_count ?? 0 }}"
                            data-subopd="{{ $opd->sub_opds_count ?? 0 }}">
                 </td>
                 <td class="px-3 py-3 text-secondary text-center">
@@ -122,6 +125,16 @@
                 </td>
                 <td class="py-3 text-center">
                     <div class="d-flex justify-content-center gap-1 flex-wrap">
+                        @if(($opd->aset_tanahs_count ?? 0) > 0)
+                            <span class="badge bg-warning bg-opacity-10 text-warning-emphasis border border-warning border-opacity-25 px-2 py-1 rounded-pill fw-medium" title="Aset Tanah (SIPAT)">
+                                <i class="bi bi-geo-alt-fill" style="font-size: 0.65rem;"></i> {{ $opd->aset_tanahs_count }} Tanah
+                            </span>
+                        @endif
+                        @if(($opd->bangunans_count ?? 0) > 0)
+                            <span class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25 px-2 py-1 rounded-pill fw-medium" title="Aset Bangunan">
+                                <i class="bi bi-building" style="font-size: 0.65rem;"></i> {{ $opd->bangunans_count }} Gedung
+                            </span>
+                        @endif
                         <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 px-2 py-1 rounded-pill fw-medium" title="Data Real">
                             <i class="bi bi-car-front-fill" style="font-size: 0.65rem;"></i> {{ $opd->vehicles_count ?? 0 }} Real
                         </span>
@@ -154,6 +167,8 @@
                                 data-singkatan="{{ $opd->singkatan }}"
                                 data-real="{{ $opd->vehicles_count ?? 0 }}"
                                 data-ebmd="{{ $opd->ebmd_vehicles_count ?? 0 }}"
+                                data-tanah="{{ $opd->aset_tanahs_count ?? 0 }}"
+                                data-bangunan="{{ $opd->bangunans_count ?? 0 }}"
                                 data-subopd="{{ $opd->sub_opds_count ?? 0 }}"
                                 title="Jadikan Sub-OPD (Kuasa Pengguna Barang)">
                             <i class="bi bi-diagram-2"></i>
@@ -245,7 +260,7 @@
                             <div>
                                 <h6 class="fw-bold mb-1 text-warning-emphasis" style="font-size: 0.9rem;">Perhatian — Aksi Peleburan Instansi Permanen</h6>
                                 <p class="mb-0 small text-secondary">
-                                    Seluruh kendaraan (Real & e-BMD), unit kerja Sub-OPD (KPB), akun admin, serta riwayat dari OPD yang dipilih akan <strong>dipindahkan</strong> ke OPD tujuan, lalu OPD sumber akan <strong>dihapus</strong> secara permanen.
+                                    Seluruh aset fisik (Tanah, Bangunan, Kendaraan Real & e-BMD), dokumen e-Label, unit kerja Sub-OPD (KPB), akun admin, serta riwayat dari OPD yang dipilih akan <strong>dipindahkan</strong> ke OPD tujuan, lalu OPD sumber akan <strong>dihapus</strong> secara aman.
                                 </p>
                             </div>
                         </div>
@@ -263,7 +278,7 @@
                                 <option value="">-- Pilih OPD Tujuan --</option>
                             </select>
                             <div class="form-text small text-secondary mt-1">
-                                <i class="bi bi-info-circle me-1"></i> Semua kendaraan Real, e-BMD, dan Sub-OPD akan dialihkan ke instansi yang dipilih di atas.
+                                <i class="bi bi-info-circle me-1"></i> Semua aset fisik (Tanah, Bangunan, Kendaraan) dan Sub-OPD akan dialihkan ke instansi yang dipilih di atas.
                             </div>
                         </div>
                     </div>
@@ -297,7 +312,7 @@
                                 <h6 class="fw-bold mb-1 text-info-emphasis" style="font-size: 0.9rem;">Penyelarasan Sub-Unit / Kuasa Pengguna Barang (KPB)</h6>
                                 <p class="mb-0 small text-secondary">
                                     Gunakan fitur ini jika OPD yang dipilih sebenarnya merupakan <strong>Sub-Unit / Kuasa Pengguna Barang (KPB)</strong> (seperti Puskesmas, Bagian, UPTD, atau Sekolah) yang berinduk di bawah dinas lain.
-                                    Seluruh kendaraan (Real & e-BMD) akan dialokasikan ke Sub-OPD ini di bawah OPD Induk yang dipilih, dan akun pengguna akan disesuaikan menjadi Operator KPB.
+                                    Seluruh aset (Tanah, Bangunan, Kendaraan Real & e-BMD) akan dialokasikan ke Sub-OPD ini di bawah OPD Induk yang dipilih, dan akun pengguna akan disesuaikan menjadi Operator KPB.
                                 </p>
                             </div>
                         </div>
@@ -315,7 +330,7 @@
                                 <option value="">-- Pilih OPD Induk Tujuan --</option>
                             </select>
                             <div class="form-text small text-secondary mt-1">
-                                Seluruh aset kendaraan dan akun admin akan dialihkan di bawah naungan dinas induk ini.
+                                Seluruh aset (Tanah, Bangunan, Kendaraan) dan akun admin akan dialihkan di bawah naungan dinas induk ini.
                             </div>
                         </div>
 
@@ -510,6 +525,8 @@
 
             items.forEach(it => {
                 let details = [];
+                if (parseInt(it.tanah) > 0) details.push(`<span class="badge bg-warning bg-opacity-10 text-warning-emphasis border border-warning border-opacity-25 rounded-pill px-2">${it.tanah} Tanah</span>`);
+                if (parseInt(it.bangunan) > 0) details.push(`<span class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25 rounded-pill px-2">${it.bangunan} Gedung</span>`);
                 if (parseInt(it.real) > 0) details.push(`<span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 rounded-pill px-2">${it.real} Real</span>`);
                 if (parseInt(it.ebmd) > 0) details.push(`<span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 rounded-pill px-2">${it.ebmd} e-BMD</span>`);
                 if (parseInt(it.subopd) > 0) details.push(`<span class="badge bg-info bg-opacity-10 text-info border border-info border-opacity-25 rounded-pill px-2">${it.subopd} KPB</span>`);
@@ -570,6 +587,8 @@
                         singkatan: cb.getAttribute('data-singkatan') || '',
                         real: cb.getAttribute('data-real') || 0,
                         ebmd: cb.getAttribute('data-ebmd') || 0,
+                        tanah: cb.getAttribute('data-tanah') || 0,
+                        bangunan: cb.getAttribute('data-bangunan') || 0,
                         subopd: cb.getAttribute('data-subopd') || 0,
                     });
                 });
@@ -586,6 +605,8 @@
                     singkatan: this.getAttribute('data-singkatan') || '',
                     real: this.getAttribute('data-real') || 0,
                     ebmd: this.getAttribute('data-ebmd') || 0,
+                    tanah: this.getAttribute('data-tanah') || 0,
+                    bangunan: this.getAttribute('data-bangunan') || 0,
                     subopd: this.getAttribute('data-subopd') || 0,
                 };
                 openConvertToSubOpdModal([item]);
@@ -637,12 +658,16 @@
                     const name = cb.getAttribute('data-name');
                     const real = cb.getAttribute('data-real') || 0;
                     const ebmd = cb.getAttribute('data-ebmd') || 0;
+                    const tanah = cb.getAttribute('data-tanah') || 0;
+                    const bangunan = cb.getAttribute('data-bangunan') || 0;
                     const subopd = cb.getAttribute('data-subopd') || 0;
                     const id = cb.value;
                     checkedIds.push(parseInt(id));
 
                     // Tampilkan di daftar sumber
                     let details = [];
+                    if (parseInt(tanah) > 0) details.push(`<span class="badge bg-warning bg-opacity-10 text-warning-emphasis border border-warning border-opacity-25 rounded-pill px-2">${tanah} Tanah</span>`);
+                    if (parseInt(bangunan) > 0) details.push(`<span class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25 rounded-pill px-2">${bangunan} Gedung</span>`);
                     if (parseInt(real) > 0) details.push(`<span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 rounded-pill px-2">${real} Real</span>`);
                     if (parseInt(ebmd) > 0) details.push(`<span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 rounded-pill px-2">${ebmd} e-BMD</span>`);
                     if (parseInt(subopd) > 0) details.push(`<span class="badge bg-info bg-opacity-10 text-info border border-info border-opacity-25 rounded-pill px-2">${subopd} KPB</span>`);
@@ -703,7 +728,7 @@
 
                 Swal.fire({
                     title: 'Peleburan Instansi Permanen?',
-                    html: `Seluruh kendaraan dan akun dari OPD sumber akan disatukan ke dalam <strong>${targetName}</strong>, lalu data OPD sumber akan dihapus permanen. Lanjutkan?`,
+                    html: `Seluruh aset fisik (Tanah, Bangunan, Kendaraan) dan akun dari OPD sumber akan disatukan ke dalam <strong>${targetName}</strong>, lalu data OPD sumber akan dihapus secara aman. Lanjutkan?`,
                     icon: 'warning',
                     showCancelButton: true,
                     confirmButtonColor: '#f59e0b',

@@ -3,7 +3,7 @@
 namespace App\Services\Sipat;
 
 use App\Models\AsetTanah;
-use App\Models\OpdSipat;
+use App\Models\Opd;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
@@ -131,7 +131,7 @@ class LaporanService
                 $opdLabel = 'Tanpa OPD';
                 $opdValue = 'Kosong';
             } elseif (is_numeric($filters['opd_id'])) {
-                $opd = OpdSipat::find((int) $filters['opd_id']);
+                $opd = Opd::find((int) $filters['opd_id']);
                 $opdValue = $opd->nama ?? (string) $filters['opd_id'];
             } else {
                 $opdValue = (string) $filters['opd_id'];
@@ -238,7 +238,7 @@ class LaporanService
             if ($opdFilter === 'KOSONG') {
                 $opdText = 'TANPA OPD';
             } elseif (is_numeric($opdFilter)) {
-                $opd = OpdSipat::find((int) $opdFilter);
+                $opd = Opd::find((int) $opdFilter);
                 if ($opd && !empty($opd->nama)) {
                     $opdText = strtoupper(trim($opd->nama));
                 }

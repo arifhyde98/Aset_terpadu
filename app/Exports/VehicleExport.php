@@ -22,7 +22,7 @@ class VehicleExport implements FromCollection, WithHeadings, WithMapping
      */
     public function collection()
     {
-        return Vehicle::with(['vehicleType', 'subOpd'])->get();
+        return Vehicle::with(['vehicleType', 'subOpd', 'opdRelation'])->get();
     }
 
     /**
@@ -75,7 +75,7 @@ class VehicleExport implements FromCollection, WithHeadings, WithMapping
             $vehicle->status,
             $vehicle->pemegang,
             $vehicle->keterangan,
-            $vehicle->opd,
+            $vehicle->opdRelation?->nama ?? $vehicle->opd,
             $vehicle->subOpd?->nama ?? '-',
         ];
     }

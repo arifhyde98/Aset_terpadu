@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Sipat;
 
 use App\Http\Controllers\Controller;
 use App\Models\AsetTanah;
-use App\Models\OpdSipat;
+use App\Models\Opd;
 use App\Models\SipatTargetSertifikat;
 use App\Models\Activity;
 use App\Services\Sipat\LaporanService;
@@ -45,7 +45,7 @@ class TargetSertifikatController extends Controller implements HasMiddleware
         $search = trim((string) $request->input('search', ''));
 
         $availableYears = range(date('Y') - 2, date('Y') + 4);
-        $opdList = OpdSipat::where('aktif', 1)->orderBy('nama', 'asc')->get();
+        $opdList = Opd::where('aktif', 1)->orderBy('nama', 'asc')->get();
 
         // Query Target Tahunan
         $targetQuery = SipatTargetSertifikat::with([

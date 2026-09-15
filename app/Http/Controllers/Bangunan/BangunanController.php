@@ -11,7 +11,7 @@ use App\Http\Requests\Bangunan\UpdateBangunanRequest;
 use App\Models\AsetTanah;
 use App\Models\Bangunan;
 use App\Models\Kecamatan;
-use App\Models\OpdSipat;
+use App\Models\Opd;
 use App\Services\Bangunan\BangunanService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -46,7 +46,7 @@ class BangunanController extends Controller implements HasMiddleware
         $bangunans = $this->bangunanService->getPaginatedBangunan($filters, 15, auth()->user());
         $stats = $this->bangunanService->getDashboardStats(auth()->user());
 
-        $opds = OpdSipat::orderBy('nama')->get();
+        $opds = Opd::orderBy('nama')->get();
         $kecamatans = Kecamatan::orderBy('nama')->get();
 
         return view('bangunan.index', compact('bangunans', 'stats', 'opds', 'kecamatans', 'filters'));
@@ -57,7 +57,7 @@ class BangunanController extends Controller implements HasMiddleware
      */
     public function create(): View
     {
-        $opds = OpdSipat::orderBy('nama')->get();
+        $opds = Opd::orderBy('nama')->get();
         $kecamatans = Kecamatan::with('desa')->orderBy('nama')->get();
         
         // Ambil data Tanah KIB A untuk ditautkan
@@ -118,7 +118,7 @@ class BangunanController extends Controller implements HasMiddleware
             abort(403, 'Akses ditolak: Anda tidak memiliki izin untuk mengedit aset instansi lain.');
         }
 
-        $opds = OpdSipat::orderBy('nama')->get();
+        $opds = Opd::orderBy('nama')->get();
         $kecamatans = Kecamatan::with('desa')->orderBy('nama')->get();
 
         $tanahQuery = AsetTanah::select('id_aset', 'kode_aset', 'nama_aset', 'alamat', 'luas');

@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Bangunan;
 
 use App\Http\Controllers\Controller;
 use App\Models\Bangunan;
-use App\Models\OpdSipat;
+use App\Models\Opd;
 use App\Models\ReportSetting;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -26,7 +26,7 @@ class BangunanLaporanController extends Controller implements HasMiddleware
      */
     public function index(Request $request): View
     {
-        $opds = OpdSipat::orderBy('nama')->get();
+        $opds = Opd::orderBy('nama')->get();
 
         $query = Bangunan::with(['opdSipat', 'asetTanah', 'kecamatan', 'desa'])
             ->forUser(auth()->user());
@@ -69,7 +69,7 @@ class BangunanLaporanController extends Controller implements HasMiddleware
         $selectedOpd = null;
         if ($request->filled('opd_id')) {
             $query->where('opd_id', $request->opd_id);
-            $selectedOpd = OpdSipat::find($request->opd_id);
+            $selectedOpd = Opd::find($request->opd_id);
         }
 
         if ($request->filled('kondisi')) {

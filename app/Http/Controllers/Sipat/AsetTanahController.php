@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Sipat;
 
 use App\Http\Controllers\Controller;
 use App\Models\AsetTanah;
-use App\Models\OpdSipat;
+use App\Models\Opd;
 use App\Models\StatusProses;
 use App\Services\Sipat\SipatService;
 use App\Services\Sipat\AsetTanahService;
@@ -195,7 +195,7 @@ class AsetTanahController extends Controller implements HasMiddleware
      */
     public function create(): View
     {
-        $opdList = OpdSipat::where('aktif', 1)->orderBy('nama', 'asc')->get();
+        $opdList = Opd::where('aktif', 1)->orderBy('nama', 'asc')->get();
         $statusList = StatusProses::orderBy('urutan', 'asc')->get();
         $kecamatanList = \App\Models\Kecamatan::orderBy('nama', 'asc')->get();
         $desaList = \App\Models\Desa::orderBy('nama', 'asc')->get();
@@ -258,7 +258,7 @@ class AsetTanahController extends Controller implements HasMiddleware
     public function edit(AsetTanah $aset): View
     {
         $aset->load(['targetSertifikat', 'sertifikatElabel']);
-        $opdList = OpdSipat::where('aktif', 1)->orderBy('nama', 'asc')->get();
+        $opdList = Opd::where('aktif', 1)->orderBy('nama', 'asc')->get();
         $statusList = StatusProses::orderBy('urutan', 'asc')->get();
         $kecamatanList = \App\Models\Kecamatan::orderBy('nama', 'asc')->get();
         $desaList = \App\Models\Desa::orderBy('nama', 'asc')->get();

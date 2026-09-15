@@ -48,7 +48,7 @@ class ElabelLoanController extends Controller implements HasMiddleware
                 ->get();
         }
 
-        $opds = \App\Models\OpdSipat::where('aktif', 1)->orderBy('nama', 'asc')->get();
+        $opds = \App\Models\Opd::where('aktif', 1)->orderBy('nama', 'asc')->get();
 
         return view('elabel.loans.index', [
             'items'         => $items,
@@ -70,7 +70,7 @@ class ElabelLoanController extends Controller implements HasMiddleware
             'requester_org'   => ['nullable', 'string', 'max:150'],
             'requester_note'  => ['nullable', 'string', 'max:255'],
             'note'            => ['nullable', 'string', 'max:255'],
-            'sipat_opd_id'    => ['nullable', 'integer', 'exists:opd,id'],
+            'sipat_opd_id'    => ['nullable', 'integer', 'exists:opds,id'],
         ]);
 
         $bpkbId = (int) $request->get('bpkb_id');

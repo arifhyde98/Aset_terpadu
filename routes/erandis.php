@@ -23,11 +23,11 @@ Route::prefix('vehicles')->name('vehicles.')->group(function () {
 });
 Route::resource('vehicles', VehicleController::class);
 
-// Pemetaan OPD Terpadu (SIPAT ↔ E-RANDIS)
+// Pemetaan OPD Terpadu (Telah dipusatkan ke Master OPD Tunggal)
 Route::prefix('master-data/opd-mapping')->name('master.opd-mapping.')->group(function () {
-    Route::get('/', [\App\Http\Controllers\Master\MasterOpdMappingController::class, 'index'])->name('index');
-    Route::post('/refresh', [\App\Http\Controllers\Master\MasterOpdMappingController::class, 'refresh'])->name('refresh');
-    Route::delete('/{id}', [\App\Http\Controllers\Master\MasterOpdMappingController::class, 'destroy'])->name('destroy');
+    Route::get('/', fn() => redirect()->route('opds.index')->with('info', 'Master OPD kini telah disatukan ke dalam satu tabel terpadu.'))->name('index');
+    Route::post('/refresh', fn() => redirect()->route('opds.index'))->name('refresh');
+    Route::delete('/{id}', fn() => redirect()->route('opds.index'))->name('destroy');
 });
 
 // Jenis Kendaraan

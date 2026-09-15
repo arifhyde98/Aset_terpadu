@@ -57,7 +57,7 @@ class ElabelSuratPenyerahanController extends Controller implements HasMiddlewar
 
     public function create(): View
     {
-        $opds = \App\Models\OpdSipat::where('aktif', 1)->orderBy('nama', 'asc')->get();
+        $opds = \App\Models\Opd::where('aktif', 1)->orderBy('nama', 'asc')->get();
         return view('elabel.surat_penyerahan.create', [
             'opds'       => $opds,
             'activeMenu' => 'surat_penyerahan',
@@ -87,7 +87,7 @@ class ElabelSuratPenyerahanController extends Controller implements HasMiddlewar
             return redirect()->route('elabel.surat-penyerahan.index')->with('error', 'Data surat penyerahan tidak ditemukan.');
         }
 
-        $opds = \App\Models\OpdSipat::where('aktif', 1)->orderBy('nama', 'asc')->get();
+        $opds = \App\Models\Opd::where('aktif', 1)->orderBy('nama', 'asc')->get();
         return view('elabel.surat_penyerahan.edit', [
             'item'       => $item,
             'opds'       => $opds,
@@ -166,7 +166,7 @@ class ElabelSuratPenyerahanController extends Controller implements HasMiddlewar
 
     public function export(): StreamedResponse
     {
-        $items = ElabelSuratPenyerahan::orderBy('id', 'desc')->get();
+        $items = ElabelSuratPenyerahan::with('opd')->orderBy('id', 'desc')->get();
         $filename = 'surat-penyerahan-' . date('Ymd') . '.xlsx';
 
         $spreadsheet = new Spreadsheet();
@@ -192,7 +192,7 @@ class ElabelSuratPenyerahanController extends Controller implements HasMiddlewar
                 $item->tanggal_perolehan ? $item->tanggal_perolehan->format('Y-m-d') : '',
                 $item->alamat ?? '',
                 $item->lokasi ?? '',
-                $item->dinas ?? '',
+                $item->opd?->nama ?? $item->dinas ?? '',
                 $item->pemberi_hibah ?? '',
             ]], null, 'A' . $rowIndex);
             $rowIndex++;

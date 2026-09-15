@@ -24,6 +24,7 @@ class AsetTanah extends Model
         'lng',
         'geojson',
         'opd_id',
+        'sub_opd_id',
         'opd',
         'kecamatan_id',
         'desa_id',
@@ -41,9 +42,27 @@ class AsetTanah extends Model
         return !empty($this->geojson);
     }
 
+    public function opd(): BelongsTo
+    {
+        return $this->belongsTo(Opd::class, 'opd_id');
+    }
+
+    public function opdRelation(): BelongsTo
+    {
+        return $this->belongsTo(Opd::class, 'opd_id');
+    }
+
+    /**
+     * Backward-compatible alias untuk opd()
+     */
     public function opdSipat(): BelongsTo
     {
-        return $this->belongsTo(OpdSipat::class, 'opd_id');
+        return $this->belongsTo(Opd::class, 'opd_id');
+    }
+
+    public function subOpd(): BelongsTo
+    {
+        return $this->belongsTo(SubOpd::class, 'sub_opd_id');
     }
 
     public function wilayahKecamatan(): BelongsTo

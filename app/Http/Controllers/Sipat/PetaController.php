@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Sipat;
 
 use App\Http\Controllers\Controller;
 use App\Models\AsetTanah;
-use App\Models\OpdSipat;
+use App\Models\Opd;
 use App\Models\StatusProses;
 use App\Models\Activity;
 use Illuminate\Http\Request;
@@ -38,7 +38,7 @@ class PetaController extends Controller implements HasMiddleware
             });
         })->count();
 
-        $opdList = OpdSipat::where('aktif', 1)->orderBy('nama', 'asc')->get();
+        $opdList = Opd::where('aktif', 1)->orderBy('nama', 'asc')->get();
         $statusList = StatusProses::orderBy('urutan', 'asc')->get();
         $allAsetNibar = AsetTanah::select('id_aset', 'kode_aset', 'nama_aset')->orderBy('kode_aset', 'asc')->get();
 

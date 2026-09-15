@@ -35,7 +35,7 @@ class AsetTanahObserver
         if (!empty($asetTanah->kode_aset) && !empty($asetTanah->opd_id)) {
             $opdNama = $asetTanah->opdSipat?->nama ?? $asetTanah->opd;
             if (!$opdNama) {
-                $opdNama = \App\Models\OpdSipat::find($asetTanah->opd_id)?->nama;
+                $opdNama = \App\Models\Opd::find($asetTanah->opd_id)?->nama;
             }
 
             \App\Models\Elabel\ElabelSertifikat::withoutEvents(function () use ($asetTanah, $opdNama) {

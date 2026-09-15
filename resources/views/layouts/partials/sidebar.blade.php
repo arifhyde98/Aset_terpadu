@@ -198,10 +198,10 @@
                                             <span>KOP Surat Pemda</span>
                                         </a>
                                     </li>
-                                    <li class="{{ Request::is('master-data/opd-sipat*') ? 'active' : '' }}">
-                                        <a href="{{ route('master.opd-sipat.index') }}" data-bs-toggle="tooltip" data-bs-placement="right" title="OPD / Instansi (SIPAT)">
+                                    <li class="{{ Request::is('opds*', 'master-data/opd-sipat*') ? 'active' : '' }}">
+                                        <a href="{{ route('opds.index') }}" data-bs-toggle="tooltip" data-bs-placement="right" title="Master OPD (Terpadu)">
                                             <i class="bi bi-diagram-3"></i>
-                                            <span>OPD Instansi (SIPAT)</span>
+                                            <span>Master OPD (Terpadu)</span>
                                         </a>
                                     </li>
                                     <li class="{{ Request::is('master-data/import*') ? 'active' : '' }}">
@@ -579,10 +579,10 @@
 
             <!-- MODUL: PENGATURAN SISTEM (GLOBAL UTILITY & ADMIN) -->
             <div class="module-group">
-                <a class="module-header {{ (Request::is('users*', 'settings*', 'activities*', 'master-data/opd-mapping*') && request('module') !== 'sipat') ? '' : 'collapsed' }}" 
+                <a class="module-header {{ (Request::is('users*', 'settings*', 'activities*') && request('module') !== 'sipat') ? '' : 'collapsed' }}" 
                    data-bs-toggle="collapse" 
                    data-bs-target="#moduleSystem" 
-                   aria-expanded="{{ (Request::is('users*', 'settings*', 'activities*', 'master-data/opd-mapping*') && request('module') !== 'sipat') ? 'true' : 'false' }}"
+                   aria-expanded="{{ (Request::is('users*', 'settings*', 'activities*') && request('module') !== 'sipat') ? 'true' : 'false' }}"
                    data-bs-toggle-tooltip="tooltip" data-bs-placement="right" title="PENGATURAN SISTEM">
                     <div class="module-header-title">
                         <i class="bi bi-gear-wide-connected module-icon text-success"></i>
@@ -590,16 +590,8 @@
                     </div>
                     <i class="bi bi-chevron-down chevron-icon"></i>
                 </a>
-                <div id="moduleSystem" class="collapse {{ (Request::is('users*', 'settings*', 'activities*', 'master-data/opd-mapping*') && request('module') !== 'sipat') ? 'show' : '' }}" data-bs-parent="#moduleAccordion">
+                <div id="moduleSystem" class="collapse {{ (Request::is('users*', 'settings*', 'activities*') && request('module') !== 'sipat') ? 'show' : '' }}" data-bs-parent="#moduleAccordion">
                     <ul class="submenu-list">
-                        @if(auth()->user()?->role !== \App\Enums\UserRole::OPD)
-                            <li class="{{ Request::is('master-data/opd-mapping*') ? 'active' : '' }}">
-                                <a href="{{ route('master.opd-mapping.index') }}" data-bs-toggle="tooltip" data-bs-placement="right" title="Pemetaan OPD Terpadu (SIPAT ↔ E-RANDIS)">
-                                    <i class="bi bi-link-45deg text-info"></i>
-                                    <span>Pemetaan OPD Terpadu</span>
-                                </a>
-                            </li>
-                        @endif
 
                         @if(auth()->check() && auth()->user()?->role === \App\Enums\UserRole::SUPERADMIN)
                             <li class="{{ Request::is('users*') ? 'active' : '' }}">

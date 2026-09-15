@@ -13,7 +13,6 @@ use App\Models\Elabel\ElabelSertifikatBox;
 use App\Models\Elabel\ElabelSuratPenyerahan;
 use App\Models\Kecamatan;
 use App\Models\Opd;
-use App\Models\OpdSipat;
 use App\Models\StatusProses;
 use App\Models\Vehicle;
 use App\Models\VehicleType;
@@ -71,9 +70,8 @@ class UnifiedAssetSearchService
     public function getFilterOptions(): array
     {
         return Cache::remember('sipat_landing_filter_options', 600, function () {
-            // OPD gabungan untuk filter
-            $opdsSipat = OpdSipat::orderBy('nama')->get(['id', 'nama']);
-            $opdsErandis = Opd::orderBy('nama')->get(['id', 'nama']);
+            // OPD terpadu untuk filter
+            $opds = Opd::orderBy('nama')->get(['id', 'nama']);
 
             // Vehicle types & statuses
             $vehicleTypes = VehicleType::orderBy('name')->pluck('name')->toArray();
@@ -91,8 +89,9 @@ class UnifiedAssetSearchService
             $boxesSertifikat = ElabelSertifikatBox::orderBy('box_code')->get(['id', 'box_code', 'lokasi']);
 
             return [
-                'opd_sipat' => $opdsSipat,
-                'opd_erandis' => $opdsErandis,
+                'opds' => $opds,
+                'opd_sipat' => $opds,
+                'opd_erandis' => $opds,
                 'vehicle_types' => $vehicleTypes,
                 'vehicle_statuses' => $vehicleStatuses,
                 'status_proses' => $statusProses,

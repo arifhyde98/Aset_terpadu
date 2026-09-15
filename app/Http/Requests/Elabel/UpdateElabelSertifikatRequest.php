@@ -28,7 +28,7 @@ class UpdateElabelSertifikatRequest extends FormRequest
             'lokasi'            => ['nullable', 'string', 'max:150'],
             'dinas'             => ['nullable', 'string', 'max:150'],
             'pdf'               => ['nullable', 'file', 'mimes:pdf', 'max:51200'],
-            'sipat_opd_id'      => ['nullable', 'integer', 'exists:opd,id'],
+            'sipat_opd_id'      => ['nullable', 'integer', 'exists:opds,id'],
         ];
     }
 

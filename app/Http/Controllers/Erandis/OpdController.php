@@ -48,7 +48,7 @@ class OpdController extends Controller implements HasMiddleware
     public function index(Request $request): \Illuminate\View\View
     {
         $query = Opd::query()->with('user')
-            ->withCount(['vehicles', 'ebmdVehicles', 'subOpds']);
+            ->withCount(['vehicles', 'ebmdVehicles', 'subOpds', 'asetTanahs', 'bangunans']);
 
         if ($request->filled('q')) {
             $query->where('nama', 'like', '%' . $request->q . '%')
@@ -57,7 +57,7 @@ class OpdController extends Controller implements HasMiddleware
 
         $sortBy = $request->input('sort_by');
         $sortOrder = $request->input('sort_order', 'asc');
-        $allowedSorts = ['nama', 'singkatan', 'vehicles_count', 'ebmd_vehicles_count', 'sub_opds_count'];
+        $allowedSorts = ['nama', 'singkatan', 'vehicles_count', 'ebmd_vehicles_count', 'sub_opds_count', 'aset_tanahs_count', 'bangunans_count'];
 
         if ($sortBy && in_array($sortBy, $allowedSorts)) {
             $query->orderBy($sortBy, $sortOrder);
@@ -177,7 +177,21 @@ class OpdController extends Controller implements HasMiddleware
      */
     public function destroy(Opd $opd): \Illuminate\Http\RedirectResponse
     {
-        // Untuk saat ini langsung hapus (Master Data)
+        // Proteksi: jangan hapus OPD jika masih memiliki keterkaitan data aset, arsip, sub-opd, atau pengguna
+        if (
+            $opd->asetTanahs()->exists() || 
+            $opd->bangunans()->exists() || 
+            $opd->vehicles()->exists() || 
+            $opd->ebmdVehicles()->exists() ||
+            $opd->elabelSertifikats()->exists() ||
+            $opd->elabelBpkbs()->exists() ||
+            $opd->subOpds()->exists() ||
+            $opd->users()->exists()
+        ) {
+            return redirect()->route('opds.index')
+                ->with('error', 'OPD tidak dapat dihapus karena masih memiliki data Aset (Tanah/Bangunan/Kendaraan), Dokumen Arsip, Sub-OPD, atau Akun Pengguna.');
+        }
+
         $opd->delete();
 
         // Invalidation massal karena penghapusan OPD memicu penghapusan kendaraan (Cascade)
@@ -187,16 +201,21 @@ class OpdController extends Controller implements HasMiddleware
     }
 
     /**
-     * Mengosongkan data OPD yang tidak memiliki kendaraan (Master Data).
+     * Mengosongkan data OPD yang tidak memiliki kendaraan, tanah, atau bangunan (Master Data).
      * 
      * @return \Illuminate\Http\RedirectResponse
      */
     public function truncate(): \Illuminate\Http\RedirectResponse
     {
-        // Hanya ambil OPD yang tidak memiliki kendaraan (Real/e-BMD) dan tidak terhubung ke pemetaan SIPAT
+        // Hanya ambil OPD yang benar-benar kosong (tanpa aset tanah, bangunan, kendaraan, sertifikat, bpkb, sub-opd, atau user)
         $opdsToDelete = \App\Models\Opd::whereDoesntHave('vehicles')
             ->whereDoesntHave('ebmdVehicles')
-            ->whereDoesntHave('sipatOpds')
+            ->whereDoesntHave('asetTanahs')
+            ->whereDoesntHave('bangunans')
+            ->whereDoesntHave('elabelSertifikats')
+            ->whereDoesntHave('elabelBpkbs')
+            ->whereDoesntHave('subOpds')
+            ->whereDoesntHave('users')
             ->get();
 
         $count = $opdsToDelete->count();

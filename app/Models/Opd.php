@@ -19,6 +19,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  */
 class Opd extends Model
 {
+    protected $table = 'opds';
+
     protected $fillable = ['nama', 'singkatan', 'alamat'];
 
 
@@ -65,16 +67,35 @@ class Opd extends Model
     }
 
     /**
-     * Relasi pemetaan ke OPD SIPAT.
+     * Mendapatkan daftar Aset Tanah (SIPAT / KIB A) milik OPD ini.
      */
-    public function sipatOpds()
+    public function asetTanahs(): HasMany
     {
-        return $this->belongsToMany(
-            OpdSipat::class,
-            'opd_mappings',
-            'erandis_opd_id',
-            'sipat_opd_id'
-        );
+        return $this->hasMany(\App\Models\AsetTanah::class, 'opd_id');
+    }
+
+    /**
+     * Mendapatkan daftar Aset Bangunan (KIB C) milik OPD ini.
+     */
+    public function bangunans(): HasMany
+    {
+        return $this->hasMany(\App\Models\Bangunan::class, 'opd_id');
+    }
+
+    /**
+     * Mendapatkan daftar Sertifikat Tanah e-Label milik OPD ini.
+     */
+    public function elabelSertifikats(): HasMany
+    {
+        return $this->hasMany(\App\Models\Elabel\ElabelSertifikat::class, 'sipat_opd_id');
+    }
+
+    /**
+     * Mendapatkan daftar BPKB e-Label milik OPD ini.
+     */
+    public function elabelBpkbs(): HasMany
+    {
+        return $this->hasMany(\App\Models\Elabel\ElabelBpkb::class, 'sipat_opd_id');
     }
 }
 

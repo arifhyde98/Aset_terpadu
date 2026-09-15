@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Sipat;
 
 use App\Http\Controllers\Controller;
 use App\Models\AsetTanah;
-use App\Models\OpdSipat;
+use App\Models\Opd;
 use App\Models\StatusProses;
 use App\Models\ProsesAset;
 use App\Models\Activity;
@@ -34,7 +34,7 @@ class TanahTakTercatatController extends Controller implements HasMiddleware
         $opdId = $request->filled('opd_id') ? (int) $request->input('opd_id') : null;
         $search = trim((string) $request->input('search', ''));
 
-        $opdList = OpdSipat::where('aktif', 1)->orderBy('nama', 'asc')->get();
+        $opdList = Opd::where('aktif', 1)->orderBy('nama', 'asc')->get();
         $statusList = StatusProses::orderBy('urutan', 'asc')->get();
 
         $query = AsetTanah::with(['opdSipat', 'latestProses.statusProses'])
@@ -60,7 +60,7 @@ class TanahTakTercatatController extends Controller implements HasMiddleware
         $totalUnrecorded = AsetTanah::where('status_pencatatan', 'USULAN_BELUM_TERCATAT')->count();
 
         $totalDraftNibar = AsetTanah::where('status_pencatatan', 'USULAN_BELUM_TERCATAT')->where('kode_aset', 'LIKE', 'DRAFT-%')->count();
-        $totalOpdCount = OpdSipat::where('aktif', 1)->count();
+        $totalOpdCount = Opd::where('aktif', 1)->count();
 
         return view('sipat.tanah_tak_tercatat.index', compact(
             'tanahItems',
@@ -82,7 +82,7 @@ class TanahTakTercatatController extends Controller implements HasMiddleware
         $validated = $request->validate([
             'kode_aset' => 'nullable|string|max:50|unique:aset_tanah,kode_aset',
             'nama_aset' => 'required|string|max:150',
-            'opd_id' => 'nullable|integer|exists:opd,id',
+            'opd_id' => 'nullable|integer|exists:opds,id',
             'peruntukan' => 'nullable|string|max:150',
             'luas' => 'nullable|numeric|min:0',
             'alamat' => 'nullable|string',
@@ -108,7 +108,7 @@ class TanahTakTercatatController extends Controller implements HasMiddleware
             $kodeAset = $candidateCode;
         }
 
-        $opdObj = !empty($validated['opd_id']) ? OpdSipat::find($validated['opd_id']) : null;
+        $opdObj = !empty($validated['opd_id']) ? Opd::find($validated['opd_id']) : null;
 
         $aset = DB::transaction(function () use ($validated, $kodeAset, $opdObj) {
             $aset = AsetTanah::create([

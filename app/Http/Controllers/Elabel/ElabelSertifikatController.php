@@ -132,7 +132,7 @@ class ElabelSertifikatController extends Controller implements HasMiddleware
             'status_penggunaan'  => $request->get('status_penggunaan') ?: ($request->get('peruntukan') ?: ($aset ? $aset->peruntukan : null)),
         ];
 
-        $opds = \App\Models\OpdSipat::where('aktif', 1)->orderBy('nama', 'asc')->get();
+        $opds = \App\Models\Opd::where('aktif', 1)->orderBy('nama', 'asc')->get();
         $kecamatans = \App\Models\Kecamatan::orderBy('nama', 'asc')->get();
 
         return view('elabel.sertifikat.create', [
@@ -201,7 +201,7 @@ class ElabelSertifikatController extends Controller implements HasMiddleware
         }
 
         if (!empty($payload['sipat_opd_id'])) {
-            $opd = \App\Models\OpdSipat::find($payload['sipat_opd_id']);
+            $opd = \App\Models\Opd::find($payload['sipat_opd_id']);
             if ($opd) {
                 $payload['dinas'] = $opd->nama;
             }
@@ -227,7 +227,7 @@ class ElabelSertifikatController extends Controller implements HasMiddleware
             return redirect()->route('elabel.sertifikat.index')->with('error', 'Data sertipikat tidak ditemukan.');
         }
 
-        $opds = \App\Models\OpdSipat::where('aktif', 1)->orderBy('nama', 'asc')->get();
+        $opds = \App\Models\Opd::where('aktif', 1)->orderBy('nama', 'asc')->get();
         $kecamatans = \App\Models\Kecamatan::orderBy('nama', 'asc')->get();
 
         return view('elabel.sertifikat.edit', [
@@ -265,7 +265,7 @@ class ElabelSertifikatController extends Controller implements HasMiddleware
         }
 
         if (!empty($payload['sipat_opd_id'])) {
-            $opd = \App\Models\OpdSipat::find($payload['sipat_opd_id']);
+            $opd = \App\Models\Opd::find($payload['sipat_opd_id']);
             if ($opd) {
                 $payload['dinas'] = $opd->nama;
             }
@@ -329,7 +329,7 @@ class ElabelSertifikatController extends Controller implements HasMiddleware
 
     public function export(): StreamedResponse
     {
-        $items = ElabelSertifikat::orderBy('id', 'desc')->get();
+        $items = ElabelSertifikat::with('opd')->orderBy('id', 'desc')->get();
         $filename = 'sertifikat-tanah-' . date('Ymd') . '.xlsx';
 
         $spreadsheet = new Spreadsheet();
@@ -358,7 +358,7 @@ class ElabelSertifikatController extends Controller implements HasMiddleware
                 $item->cara_perolehan ?? '',
                 $item->alamat ?? '',
                 $item->lokasi ?? '',
-                $item->dinas ?? '',
+                $item->opd?->nama ?? $item->dinas ?? '',
             ]], null, 'A' . $rowIndex);
             $rowIndex++;
         }

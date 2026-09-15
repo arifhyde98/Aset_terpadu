@@ -8,7 +8,7 @@ use App\Models\Elabel\ElabelBpkbDelete;
 use App\Models\Elabel\ElabelSertifikat;
 use App\Models\Elabel\ElabelSuratPenyerahan;
 use App\Models\Elabel\ElabelLoan;
-use App\Models\OpdSipat;
+use App\Models\Opd;
 
 class MigrateElabelOpdCommand extends Command
 {
@@ -24,17 +24,17 @@ class MigrateElabelOpdCommand extends Command
      *
      * @var string
      */
-    protected $description = 'Mencocokkan nama dinas/pengguna lama di eLABEL dengan tabel opd SIPAT';
+    protected $description = 'Mencocokkan nama dinas/pengguna lama di eLABEL dengan tabel opds Terpadu';
 
     /**
      * Execute the console command.
      */
     public function handle()
     {
-        $this->info('Memulai sinkronisasi OPD eLABEL ke tabel master SIPAT (opd)...');
+        $this->info('Memulai sinkronisasi OPD eLABEL ke tabel master terpadu (opds)...');
 
-        // Mengambil semua OPD SIPAT dan memetakan nama menjadi case-insensitive key
-        $opds = OpdSipat::all();
+        // Mengambil semua OPD dan memetakan nama menjadi case-insensitive key
+        $opds = Opd::all();
         $opdMap = [];
         foreach ($opds as $opd) {
             $key = strtolower(trim($opd->nama));

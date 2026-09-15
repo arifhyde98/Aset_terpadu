@@ -337,14 +337,14 @@
             <div class="accordion-item border rounded-3 mb-3 overflow-hidden">
                 <h2 class="accordion-header" id="headingMobileSystem">
                     @php
-                        $isSystemActive = request()->routeIs('users.*', 'settings.*') || (request()->routeIs('activities.*') && request('module') !== 'sipat') || request()->routeIs('master.opd-mapping.*');
+                        $isSystemActive = request()->routeIs('users.*', 'settings.*', 'opds.*', 'sub-opds.*') || (request()->routeIs('activities.*') && request('module') !== 'sipat');
                     @endphp
                     <button class="accordion-button py-2.5 px-3 {{ $isSystemActive ? '' : 'collapsed' }}" type="button" data-bs-toggle="collapse" data-bs-target="#collapseMobileSystem" aria-expanded="{{ $isSystemActive ? 'true' : 'false' }}">
                         <div class="d-flex align-items-center gap-2">
                             <span class="badge bg-secondary text-white rounded-pill p-1.5"><i class="bi bi-gear-wide-connected"></i></span>
                             <div class="lh-1">
                                 <span class="fw-bold fs-6 text-dark d-block">PENGATURAN SISTEM</span>
-                                <small class="text-secondary" style="font-size: 0.68rem;">Integrasi OPD & Konfigurasi</small>
+                                <small class="text-secondary" style="font-size: 0.68rem;">Master OPD Terpadu & Konfigurasi</small>
                             </div>
                         </div>
                     </button>
@@ -353,8 +353,8 @@
                     <div class="accordion-body p-2 bg-light bg-opacity-50">
                         <div class="list-group list-group-flush rounded-2 overflow-hidden border-0">
                             @if(auth()->user()?->role !== \App\Enums\UserRole::OPD)
-                                <a href="{{ route('master.opd-mapping.index') }}" class="list-group-item list-group-item-action border-0 py-2 rounded-2 {{ Request::is('master-data/opd-mapping*') ? 'active rounded' : '' }}">
-                                    <i class="bi bi-link-45deg me-2 text-info"></i> Pemetaan OPD Terpadu
+                                <a href="{{ route('opds.index') }}" class="list-group-item list-group-item-action border-0 py-2 rounded-2 {{ request()->routeIs('opds.*') ? 'active rounded' : '' }}">
+                                    <i class="bi bi-building me-2 text-primary"></i> Master Data OPD Terpadu
                                 </a>
                             @endif
                             @if(auth()->check() && auth()->user()?->role === \App\Enums\UserRole::SUPERADMIN)

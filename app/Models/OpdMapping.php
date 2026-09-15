@@ -6,11 +6,14 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+/**
+ * @deprecated Tabel opd_mappings telah dipensiunkan setelah konsolidasi master OPD ke tabel tunggal opds.
+ */
 class OpdMapping extends Model
 {
     use HasFactory;
 
-    protected $table = 'opd_mappings';
+    protected $table = 'opd_mappings_legacy_backup';
 
     protected $fillable = [
         'sipat_opd_id',
@@ -23,7 +26,7 @@ class OpdMapping extends Model
      */
     public function sipatOpd(): BelongsTo
     {
-        return $this->belongsTo(OpdSipat::class, 'sipat_opd_id');
+        return $this->belongsTo(Opd::class, 'sipat_opd_id');
     }
 
     /**

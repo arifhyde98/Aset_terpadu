@@ -16,13 +16,13 @@ class ElabelSertifikatObserver
     public function saving(ElabelSertifikat $sertifikat): void
     {
         if (!empty($sertifikat->nibar)) {
-            $asetTanah = AsetTanah::with('opdSipat')
+            $asetTanah = AsetTanah::with('opdRelation')
                 ->where('kode_aset', $sertifikat->nibar)
                 ->first();
 
             if ($asetTanah && !empty($asetTanah->opd_id)) {
                 $sertifikat->sipat_opd_id = $asetTanah->opd_id;
-                $sertifikat->dinas = $asetTanah->opdSipat?->nama ?? $asetTanah->opd ?? $sertifikat->dinas;
+                $sertifikat->dinas = $asetTanah->opdRelation?->nama ?? $asetTanah->opd ?? $sertifikat->dinas;
             }
         }
     }
