@@ -106,7 +106,7 @@
                         @endforeach
                     </select>
                     @else
-                    <input type="text" class="form-control form-control-sm bg-light" value="{{ auth()->user()->opdRelation?->nama ?? auth()->user()->opd ?? 'OPD Anda' }}" readonly disabled>
+                    <input type="text" class="form-control form-control-sm bg-light fw-medium" value="{{ auth()->user()->opd?->nama ?? 'OPD Anda' }}" readonly disabled>
                     <input type="hidden" name="opd_id" value="{{ auth()->user()->opd_id }}">
                     @endif
                 </div>

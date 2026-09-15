@@ -16,7 +16,7 @@ class ElabelSertifikatObserver
     public function saving(ElabelSertifikat $sertifikat): void
     {
         if (!empty($sertifikat->nibar)) {
-            $asetTanah = AsetTanah::with('opdRelation')
+            $asetTanah = AsetTanah::withoutGlobalScopes()->with('opdRelation')
                 ->where('kode_aset', $sertifikat->nibar)
                 ->first();
 
@@ -36,7 +36,7 @@ class ElabelSertifikatObserver
     {
         if (!empty($sertifikat->nibar) && (float) $sertifikat->luas > 0) {
             AsetTanah::withoutEvents(function () use ($sertifikat) {
-                AsetTanah::where('kode_aset', $sertifikat->nibar)
+                AsetTanah::withoutGlobalScopes()->where('kode_aset', $sertifikat->nibar)
                     ->update(['luas' => $sertifikat->luas]);
             });
             app(SipatService::class)->invalidateDashboardCache();

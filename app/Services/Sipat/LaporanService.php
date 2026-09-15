@@ -739,7 +739,7 @@ class LaporanService
      */
     public function getRekapPerOpd(array $filters = []): array
     {
-        $query = AsetTanah::with(['opdSipat', 'latestProses.statusProses']);
+        $query = AsetTanah::withoutGlobalScopes()->with(['opdSipat', 'latestProses.statusProses']);
 
         if (!empty($filters['q'])) {
             $search = trim((string) $filters['q']);

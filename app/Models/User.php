@@ -110,6 +110,16 @@ class User extends Authenticatable
     }
 
     /**
+     * Alias relasi opdRelation untuk konsistensi lintas model.
+     * 
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function opdRelation(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(Opd::class, 'opd_id');
+    }
+
+    /**
      * Mendapatkan data Sub-OPD / KPB yang terkait dengan user ini (jika role adalah KPB).
      * 
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo

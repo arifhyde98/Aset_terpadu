@@ -112,7 +112,7 @@
                         @endforeach
                     </select>
                     @else
-                    <input type="text" class="form-control form-control-sm bg-light" value="{{ auth()->user()->opdRelation?->nama ?? auth()->user()->opd ?? 'OPD Anda' }}" readonly disabled>
+                    <input type="text" class="form-control form-control-sm bg-light fw-medium" value="{{ auth()->user()->opd?->nama ?? 'OPD Anda' }}" readonly disabled>
                     <input type="hidden" name="opd_id" value="{{ auth()->user()->opd_id }}">
                     @endif
                 </div>
@@ -403,8 +403,8 @@
                             </select>
                             @else
                             <div class="form-control bg-light text-body fw-medium py-2 d-flex align-items-center justify-content-between">
-                                <span><i class="bi bi-building me-1.5 text-secondary"></i> {{ auth()->user()->opdRelation?->nama ?? auth()->user()->opd ?? 'OPD Anda' }}</span>
-                                <span class="badge bg-secondary-subtle text-secondary border">Terkunci</span>
+                                <span class="text-truncate" title="{{ auth()->user()->opd?->nama }}"><i class="bi bi-building me-1.5 text-secondary"></i> {{ auth()->user()->opd?->nama ?? 'OPD Anda' }}</span>
+                                <span class="badge bg-secondary-subtle text-secondary border ms-2 flex-shrink-0">Terkunci</span>
                             </div>
                             <input type="hidden" name="opd_id" value="{{ auth()->user()->opd_id }}">
                             @endif

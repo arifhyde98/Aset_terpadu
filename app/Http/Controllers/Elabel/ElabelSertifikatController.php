@@ -62,7 +62,7 @@ class ElabelSertifikatController extends Controller implements HasMiddleware
         $aset = null;
 
         if (!empty($nibar)) {
-            $aset = \App\Models\AsetTanah::with(['latestProses.statusProses', 'opdSipat'])->where('kode_aset', $nibar)->first();
+            $aset = \App\Models\AsetTanah::withoutGlobalScopes()->with(['latestProses.statusProses', 'opdSipat'])->where('kode_aset', $nibar)->first();
         }
 
         // Jika role pengguna adalah admin, wajib mendaftar lewat SIPAT
@@ -155,7 +155,7 @@ class ElabelSertifikatController extends Controller implements HasMiddleware
                 return redirect()->back()->withInput()->with('error', 'Role Admin wajib mendaftarkan sertifikat melalui modul SIPAT.');
             }
 
-            $aset = \App\Models\AsetTanah::with('latestProses.statusProses')->where('kode_aset', $nibar)->first();
+            $aset = \App\Models\AsetTanah::withoutGlobalScopes()->with('latestProses.statusProses')->where('kode_aset', $nibar)->first();
             if (!$aset) {
                 return redirect()->back()->withInput()->with('error', 'Kode aset (NIBAR) ' . $nibar . ' tidak ditemukan di SIPAT. Admin wajib mendaftarkan lewat SIPAT.');
             }
@@ -176,7 +176,7 @@ class ElabelSertifikatController extends Controller implements HasMiddleware
         } else {
             // Untuk superadmin (atau role lain jika ada), opsional melakukan pengecekan jika nibar disertakan
             if ($nibar) {
-                $aset = \App\Models\AsetTanah::with('latestProses.statusProses')->where('kode_aset', $nibar)->first();
+                $aset = \App\Models\AsetTanah::withoutGlobalScopes()->with('latestProses.statusProses')->where('kode_aset', $nibar)->first();
                 if ($aset) {
                     $isBersertifikat = false;
                     if ($aset->latestProses && $aset->latestProses->statusProses) {

@@ -138,7 +138,7 @@ class SipatService
             ];
         }
 
-        $asetRows = AsetTanah::with(['opdSipat', 'wilayahKecamatan'])->select('id_aset', 'opd', 'opd_id', 'kecamatan_id', 'luas', 'alamat')->get();
+        $asetRows = AsetTanah::withoutGlobalScopes()->with(['opdSipat', 'wilayahKecamatan'])->select('id_aset', 'opd', 'opd_id', 'kecamatan_id', 'luas', 'alamat')->get();
         $asetBersertifikat = 0;
         $asetKendala       = 0;
         $asetProses        = 0;
@@ -434,7 +434,7 @@ class SipatService
         }
 
         $targetAsetIds = DB::table('sipat_target_sertifikat')->pluck('aset_tanah_id')->filter()->toArray();
-        $targetBelumSertifikatIds = AsetTanah::whereIn('id_aset', $targetAsetIds)
+        $targetBelumSertifikatIds = AsetTanah::withoutGlobalScopes()->whereIn('id_aset', $targetAsetIds)
             ->where(function($q) {
                 $q->doesntHave('latestProses')
                   ->orWhereHas('latestProses', function($lq) {
