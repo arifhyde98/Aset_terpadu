@@ -272,6 +272,7 @@ Seluruh fitur berikut telah selesai diimplementasikan (**DONE**) dan beroperasi 
 | **Unified Asset Portal & Search** | `DONE` | Portal pencarian publik landing page lintas 3 modul (Kendaraan, Tanah, Arsip) via `UnifiedAssetSearchService`, proteksi data privat, dan statistik live berbasis cache. |
 | **Landing Sebaran OPD & Kecamatan** | `DONE` | Dua diagram Donut interaktif berdampingan di halaman muka dengan modal pop-up interaktif full-featured (tabel 54 OPD & 16 Kecamatan tanpa memenuhi halaman). |
 | **Master OPD Terpadu (Tunggal)** | `DONE` | Konsolidasi master instansi ke tabel tunggal `opds` dengan dukungan Sub-OPD (`sub_opds`) untuk seluruh modul (SIPAT, Bangunan, Kendaraan, e-Label), badge counter terpadu, dan merger aman lintas entitas. |
+| **Navigasi Sidebar & Pengaturan Terpadu** | `DONE` | Penataan ulang struktur navigasi sidebar & mobile drawer menjadi arsitektur satu pintu: modul aset murni untuk operasional, grup **Master Data Terpadu** (OPD, Sub-OPD, Wilayah, Klasifikasi, Import) dan **Pengaturan Sistem** (User, Konfigurasi, Cetak, KOP, Backup, Log) khusus Admin/Superadmin tanpa duplikasi menu. |
 | **Audit Trail / Log Aktivitas Terpadu** | `DONE` | Konsolidasi rekaman aktivitas 3 modul ke `activities` dengan penyimpanan diff sebelum vs sesudah (`old_data` & `new_data`), sanitasi kredensial, dan modal diff dual-mode. |
 
 ### 8.5 Modul Administrasi Sistem & Keamanan

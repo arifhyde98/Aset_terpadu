@@ -346,6 +346,30 @@
                 }
             }
         }
+
+        /* 4. MASTER DATA Module Accent (Indigo / Violet) */
+        &.module-master {
+            .submenu-list li.active > a {
+                background: rgba(139, 92, 246, 0.15);
+                color: #c4b5fd;
+                &::before {
+                    background-color: #a78bfa;
+                    box-shadow: 0 0 0 2.5px rgba(167, 139, 250, 0.3);
+                }
+            }
+        }
+
+        /* 5. SYSTEM Module Accent (Emerald / Green) */
+        &.module-system {
+            .submenu-list li.active > a {
+                background: rgba(16, 185, 129, 0.15);
+                color: #a7f3d0;
+                &::before {
+                    background-color: #34d399;
+                    box-shadow: 0 0 0 2.5px rgba(52, 211, 153, 0.3);
+                }
+            }
+        }
     }
 }
 
@@ -462,6 +486,24 @@ html[data-theme="light"] #sidebar {
             &::before {
                 background-color: #0891b2;
                 box-shadow: 0 0 0 2.5px rgba(8, 145, 178, 0.2);
+            }
+        }
+
+        &.module-master .submenu-list li.active > a {
+            color: #0f172a;
+            background: #f5f3ff;
+            &::before {
+                background-color: #7c3aed;
+                box-shadow: 0 0 0 2.5px rgba(124, 58, 237, 0.2);
+            }
+        }
+
+        &.module-system .submenu-list li.active > a {
+            color: #0f172a;
+            background: #ecfdf5;
+            &::before {
+                background-color: #059669;
+                box-shadow: 0 0 0 2.5px rgba(5, 150, 105, 0.2);
             }
         }
     }

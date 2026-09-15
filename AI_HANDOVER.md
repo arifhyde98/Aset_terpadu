@@ -464,6 +464,23 @@ Seluruh peningkatan visual kustom diisolasi pada file [`resources/sass/component
 - **Proporsi Card Breakdown Dashboard (`resources/views/home.blade.php`):** Rincian metrik pada kartu e-RANDIS, eLABEL, dan Layanan Aktif distandarkan menggunakan tipografi `0.81rem`, utility class `text-nowrap`, serta padding adaptif `p-3 p-xxl-4` guna mencegah pemotongan teks atau pembungkusan baris (*unwanted text wrapping*) pada resolusi layar kerja.
 - **Formulir Edit Terproteksi (`resources/views/elabel/sertifikat/edit.blade.php`):** Pilihan dropdown instansi OPD secara visual bertransformasi menjadi field terkunci (*read-only / disabled*) berlabel badge `<i class="bi bi-lock-fill"></i> Mengacu KIB A` serta hidden input ketika dokumen sertifikat terhubung dengan NIBAR aset tanah KIB A.
 
+### 9.5 Arsitektur Navigasi Sidebar & Pengaturan Terpadu (Single-Door Administration)
+Untuk menjaga kebersihan antarmuka dan menghindari duplikasi menu di berbagai modul, struktur menu navigasi sidebar (`resources/views/layouts/partials/sidebar.blade.php`) dan mobile drawer (`resources/views/layouts/partials/bottom-nav.blade.php`) disatukan ke dalam arsitektur **Master Data & Pengaturan Terpadu**:
+1. **Modul Operasional Aset Murni (Clean Asset Ops):**
+   - **SIPAT (Aset Tanah):** Hanya berfokus pada Data Aset Tanah, Tanah Belum Tercatat, Target Pensertifikatan, Peta GIS, Laporan, Cetak SKPT, dan Rekonsiliasi Arsip. Seluruh master data lawas dipindahkan ke Master Data Terpadu.
+   - **Bangunan (KIB C):** Berfokus pada Data Bangunan, Peta GIS Bangunan, dan Laporan KIB C.
+   - **E-RANDIS (Kendaraan Dinas):** Berfokus pada Data Kendaraan Dinas, Laporan Kendaraan, dan Rekonsiliasi BPKB.
+   - **eLABEL (Arsip & Box):** Berfokus pada Dokumen BPKB, Sertifikat Tanah, Surat Penyerahan, Kategori Arsip Dinamis, dan Layanan Peminjaman.
+2. **Master Data Terpadu (`/opds`, `/sub-opds`, `/master-data/wilayah`, `/status-proses`, `/vehicle-types`, `/master-data/import`, `/elabel/dynamic/types`):**
+   - Menjadi satu-satunya pintu pengelolaan referensi sistem tingkat kabupaten:
+     - **Instansi & Unit Kerja:** Master OPD Terpadu (`opds`) dan Sub-OPD / KPB (`sub_opds`).
+     - **Wilayah Administratif:** Kecamatan, Desa, Pejabat Camat & Kades (`master-data/wilayah`).
+     - **Klasifikasi & Jenis:** Status Proses Sertifikat, Jenis Kendaraan Dinas, dan Kategori Form Arsip Dinamis.
+     - **Integrasi Data:** Import Data SIPAT.
+   - Diproteksi secara ketat menggunakan middleware dan `@if(auth()->check() && in_array(auth()->user()->role->value, ['superadmin', 'admin']))` sehingga pengguna tingkat OPD/KPB tidak terganggu oleh opsi administratif.
+3. **Pengaturan Sistem (Global Administration):**
+   - Dikhususkan bagi **Superadmin** untuk manajemen pengguna (`/users`), konfigurasi identitas/logo aplikasi (`/settings`), format cetak & KOP surat (`/settings/reports` & `/master-data/kop-surat`), backup/restore database (`/settings/backups`), dan log aktivitas terpadu (`/activities`).
+
 ---
 
 ## 10. 📦 Peta Fitur Penuh (Full Feature Stack)

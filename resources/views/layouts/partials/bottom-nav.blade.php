@@ -169,28 +169,6 @@
                                 <i class="bi bi-arrow-left-right me-2 text-info"></i> Rekonsiliasi Arsip
                             </a>
 
-                            <!-- Master Data SIPAT (Non-OPD) -->
-                            @if(auth()->user()?->role !== \App\Enums\UserRole::OPD)
-                                <div class="text-muted fw-bold px-2 pt-2 pb-1" style="font-size: 0.65rem; text-transform: uppercase;">Pengaturan SIPAT</div>
-                                <a href="{{ route('status-proses.index') }}" class="list-group-item list-group-item-action border-0 py-2 rounded-2 {{ Request::is('master-data/status-proses*') ? 'active-sub-sipat' : '' }}">
-                                    <i class="bi bi-tags me-2 text-success"></i> Master Status Proses
-                                </a>
-                                <a href="{{ route('master.wilayah.index') }}" class="list-group-item list-group-item-action border-0 py-2 rounded-2 {{ Request::is('master-data/wilayah*') ? 'active-sub-sipat' : '' }}">
-                                    <i class="bi bi-geo-alt me-2 text-success"></i> Master Wilayah & Pejabat
-                                </a>
-                                <a href="{{ route('master.kop-settings.index') }}" class="list-group-item list-group-item-action border-0 py-2 rounded-2 {{ Request::is('master-data/kop-surat*') ? 'active-sub-sipat' : '' }}">
-                                    <i class="bi bi-file-earmark-pdf me-2 text-success"></i> KOP Surat Pemda
-                                </a>
-                                <a href="{{ route('master.opd-sipat.index') }}" class="list-group-item list-group-item-action border-0 py-2 rounded-2 {{ Request::is('master-data/opd-sipat*') ? 'active-sub-sipat' : '' }}">
-                                    <i class="bi bi-diagram-3 me-2 text-success"></i> OPD Instansi (SIPAT)
-                                </a>
-                                <a href="{{ route('master.import.index') }}" class="list-group-item list-group-item-action border-0 py-2 rounded-2 {{ Request::is('master-data/import*') ? 'active-sub-sipat' : '' }}">
-                                    <i class="bi bi-file-earmark-arrow-up me-2 text-success"></i> Import Data SIPAT
-                                </a>
-                                <a href="{{ route('activities.index', ['module' => 'sipat']) }}" class="list-group-item list-group-item-action border-0 py-2 rounded-2 {{ Request::is('activities*') && request('module') === 'sipat' ? 'active-sub-sipat' : '' }}">
-                                    <i class="bi bi-journal-check me-2 text-success"></i> Log Aktivitas SIPAT
-                                </a>
-                            @endif
                         </div>
                     </div>
                 </div>
@@ -222,23 +200,6 @@
                                 <i class="bi bi-graph-up me-2 text-success"></i> Laporan Kendaraan
                             </a>
 
-                            @if(auth()->user()?->role !== \App\Enums\UserRole::OPD && auth()->user()?->role !== \App\Enums\UserRole::KPB)
-                                <div class="text-muted fw-bold px-2 pt-2 pb-1" style="font-size: 0.65rem; text-transform: uppercase;">Master Data ERANDIS</div>
-                                <a href="{{ route('opds.index') }}" class="list-group-item list-group-item-action border-0 py-2 rounded-2 {{ Request::is('opds*') ? 'active-sub-erandis' : '' }}">
-                                    <i class="bi bi-building me-2 text-primary"></i> OPD / Instansi
-                                </a>
-                                <a href="{{ route('sub-opds.index') }}" class="list-group-item list-group-item-action border-0 py-2 rounded-2 {{ Request::is('sub-opds*') ? 'active-sub-erandis' : '' }}">
-                                    <i class="bi bi-diagram-2 me-2 text-primary"></i> Sub-OPD (KPB)
-                                </a>
-                                <a href="{{ route('vehicle-types.index') }}" class="list-group-item list-group-item-action border-0 py-2 rounded-2 {{ Request::is('vehicle-types*') ? 'active-sub-erandis' : '' }}">
-                                    <i class="bi bi-grid-3x3-gap me-2 text-primary"></i> Jenis Kendaraan
-                                </a>
-                                @if(auth()->check() && auth()->user()?->role === \App\Enums\UserRole::SUPERADMIN)
-                                    <a href="{{ route('activities.index') }}" class="list-group-item list-group-item-action border-0 py-2 rounded-2 {{ Request::is('activities*') ? 'active-sub-erandis' : '' }}">
-                                        <i class="bi bi-shield-lock me-2 text-primary"></i> Log Aktivitas Terpadu
-                                    </a>
-                                @endif
-                            @endif
                         </div>
                     </div>
                 </div>
@@ -337,41 +298,102 @@
             <div class="accordion-item border rounded-3 mb-3 overflow-hidden">
                 <h2 class="accordion-header" id="headingMobileSystem">
                     @php
-                        $isSystemActive = request()->routeIs('users.*', 'settings.*', 'opds.*', 'sub-opds.*') || (request()->routeIs('activities.*') && request('module') !== 'sipat');
+                        $isMasterMobileActive = request()->routeIs('opds.*', 'sub-opds.*', 'master.wilayah.*', 'status-proses.*', 'vehicle-types.*', 'master.import.*', 'elabel.dynamic.types.*');
+                        $isSystemActive = request()->routeIs('users.*', 'settings.*', 'reports.settings.*', 'settings.reports.*', 'master.kop-settings.*') || (request()->routeIs('activities.*') && request('module') !== 'sipat');
                     @endphp
-                    <button class="accordion-button py-2.5 px-3 {{ $isSystemActive ? '' : 'collapsed' }}" type="button" data-bs-toggle="collapse" data-bs-target="#collapseMobileSystem" aria-expanded="{{ $isSystemActive ? 'true' : 'false' }}">
-                        <div class="d-flex align-items-center gap-2">
-                            <span class="badge bg-secondary text-white rounded-pill p-1.5"><i class="bi bi-gear-wide-connected"></i></span>
-                            <div class="lh-1">
-                                <span class="fw-bold fs-6 text-dark d-block">PENGATURAN SISTEM</span>
-                                <small class="text-secondary" style="font-size: 0.68rem;">Master OPD Terpadu & Konfigurasi</small>
+
+                    <!-- 5. MASTER DATA TERPADU -->
+                    @if(auth()->check() && in_array(auth()->user()->role->value, ['superadmin', 'admin']))
+                    <div class="accordion-item border rounded-3 mb-2 overflow-hidden">
+                        <h2 class="accordion-header" id="headingMobileMaster">
+                            <button class="accordion-button py-2.5 px-3 {{ $isMasterMobileActive ? '' : 'collapsed' }}" type="button" data-bs-toggle="collapse" data-bs-target="#collapseMobileMaster" aria-expanded="{{ $isMasterMobileActive ? 'true' : 'false' }}">
+                                <div class="d-flex align-items-center gap-2">
+                                    <span class="badge bg-primary bg-opacity-75 text-white rounded-pill p-1.5"><i class="bi bi-database-fill-gear"></i></span>
+                                    <div class="lh-1">
+                                        <span class="fw-bold fs-6 text-dark d-block">MASTER DATA TERPADU</span>
+                                        <small class="text-secondary" style="font-size: 0.68rem;">OPD, Wilayah & Klasifikasi</small>
+                                    </div>
+                                </div>
+                            </button>
+                        </h2>
+                        <div id="collapseMobileMaster" class="accordion-collapse collapse {{ $isMasterMobileActive ? 'show' : '' }}" data-bs-parent="#mobileModulesAccordion">
+                            <div class="accordion-body p-2 bg-light bg-opacity-50">
+                                <div class="list-group list-group-flush rounded-2 overflow-hidden border-0">
+                                    <div class="text-muted fw-bold px-2 pt-1 pb-1" style="font-size: 0.65rem; text-transform: uppercase;">Instansi & Unit Kerja</div>
+                                    <a href="{{ route('opds.index') }}" class="list-group-item list-group-item-action border-0 py-2 rounded-2 {{ request()->routeIs('opds.*') ? 'active rounded' : '' }}">
+                                        <i class="bi bi-diagram-3 me-2 text-primary"></i> Master OPD (Terpadu)
+                                    </a>
+                                    <a href="{{ route('sub-opds.index') }}" class="list-group-item list-group-item-action border-0 py-2 rounded-2 {{ request()->routeIs('sub-opds.*') ? 'active rounded' : '' }}">
+                                        <i class="bi bi-diagram-2 me-2 text-primary"></i> Sub-OPD (KPB)
+                                    </a>
+
+                                    <div class="text-muted fw-bold px-2 pt-2 pb-1" style="font-size: 0.65rem; text-transform: uppercase;">Wilayah & Pejabat</div>
+                                    <a href="{{ route('master.wilayah.index') }}" class="list-group-item list-group-item-action border-0 py-2 rounded-2 {{ request()->routeIs('master.wilayah.*') ? 'active rounded' : '' }}">
+                                        <i class="bi bi-map me-2 text-success"></i> Kecamatan & Desa
+                                    </a>
+
+                                    <div class="text-muted fw-bold px-2 pt-2 pb-1" style="font-size: 0.65rem; text-transform: uppercase;">Klasifikasi & Referensi</div>
+                                    <a href="{{ route('status-proses.index') }}" class="list-group-item list-group-item-action border-0 py-2 rounded-2 {{ request()->routeIs('status-proses.*') ? 'active rounded' : '' }}">
+                                        <i class="bi bi-tags me-2 text-warning"></i> Status Proses Tanah
+                                    </a>
+                                    <a href="{{ route('vehicle-types.index') }}" class="list-group-item list-group-item-action border-0 py-2 rounded-2 {{ request()->routeIs('vehicle-types.*') ? 'active rounded' : '' }}">
+                                        <i class="bi bi-car-front me-2 text-warning"></i> Jenis Kendaraan
+                                    </a>
+                                    <a href="{{ route('elabel.dynamic.types.index') }}" class="list-group-item list-group-item-action border-0 py-2 rounded-2 {{ request()->routeIs('elabel.dynamic.types.*') ? 'active rounded' : '' }}">
+                                        <i class="bi bi-sliders me-2 text-warning"></i> Kategori Form Arsip
+                                    </a>
+
+                                    <div class="text-muted fw-bold px-2 pt-2 pb-1" style="font-size: 0.65rem; text-transform: uppercase;">Integrasi & Import</div>
+                                    <a href="{{ route('master.import.index') }}" class="list-group-item list-group-item-action border-0 py-2 rounded-2 {{ request()->routeIs('master.import.*') ? 'active rounded' : '' }}">
+                                        <i class="bi bi-file-earmark-arrow-up me-2 text-info"></i> Import Data SIPAT
+                                    </a>
+                                </div>
                             </div>
                         </div>
-                    </button>
-                </h2>
-                <div id="collapseMobileSystem" class="accordion-collapse collapse {{ $isSystemActive ? 'show' : '' }}" data-bs-parent="#mobileModulesAccordion">
-                    <div class="accordion-body p-2 bg-light bg-opacity-50">
-                        <div class="list-group list-group-flush rounded-2 overflow-hidden border-0">
-                            @if(auth()->user()?->role !== \App\Enums\UserRole::OPD)
-                                <a href="{{ route('opds.index') }}" class="list-group-item list-group-item-action border-0 py-2 rounded-2 {{ request()->routeIs('opds.*') ? 'active rounded' : '' }}">
-                                    <i class="bi bi-building me-2 text-primary"></i> Master Data OPD Terpadu
-                                </a>
-                            @endif
-                            @if(auth()->check() && auth()->user()?->role === \App\Enums\UserRole::SUPERADMIN)
-                                <a href="{{ route('users.index') }}" class="list-group-item list-group-item-action border-0 py-2 rounded-2 {{ Request::is('users*') ? 'active rounded' : '' }}">
-                                    <i class="bi bi-people-fill me-2 text-primary"></i> Manajemen Pengguna
-                                </a>
-                                <a href="{{ route('settings.index') }}" class="list-group-item list-group-item-action border-0 py-2 rounded-2 {{ request()->routeIs('settings.*') ? 'active rounded' : '' }}">
-                                    <i class="bi bi-gear me-2 text-secondary"></i> Pengaturan System
-                                </a>
-                                <a href="{{ route('activities.index') }}" class="list-group-item list-group-item-action border-0 py-2 rounded-2 {{ Request::is('activities*') ? 'active rounded' : '' }}">
-                                    <i class="bi bi-shield-lock me-2 text-primary"></i> Log Aktivitas Terpadu
-                                </a>
-                            @endif
+                    </div>
+                    @endif
+
+                    <!-- 6. PENGATURAN SISTEM & GLOBAL -->
+                    @if(auth()->check() && auth()->user()?->role === \App\Enums\UserRole::SUPERADMIN)
+                    <div class="accordion-item border rounded-3 mb-3 overflow-hidden">
+                        <h2 class="accordion-header" id="headingMobileSystem">
+                            <button class="accordion-button py-2.5 px-3 {{ $isSystemActive ? '' : 'collapsed' }}" type="button" data-bs-toggle="collapse" data-bs-target="#collapseMobileSystem" aria-expanded="{{ $isSystemActive ? 'true' : 'false' }}">
+                                <div class="d-flex align-items-center gap-2">
+                                    <span class="badge bg-secondary text-white rounded-pill p-1.5"><i class="bi bi-gear-wide-connected"></i></span>
+                                    <div class="lh-1">
+                                        <span class="fw-bold fs-6 text-dark d-block">PENGATURAN SISTEM</span>
+                                        <small class="text-secondary" style="font-size: 0.68rem;">Konfigurasi & Administrasi</small>
+                                    </div>
+                                </div>
+                            </button>
+                        </h2>
+                        <div id="collapseMobileSystem" class="accordion-collapse collapse {{ $isSystemActive ? 'show' : '' }}" data-bs-parent="#mobileModulesAccordion">
+                            <div class="accordion-body p-2 bg-light bg-opacity-50">
+                                <div class="list-group list-group-flush rounded-2 overflow-hidden border-0">
+                                    <a href="{{ route('users.index') }}" class="list-group-item list-group-item-action border-0 py-2 rounded-2 {{ Request::is('users*') ? 'active rounded' : '' }}">
+                                        <i class="bi bi-people-fill me-2 text-primary"></i> Manajemen Pengguna
+                                    </a>
+                                    <a href="{{ route('settings.index') }}" class="list-group-item list-group-item-action border-0 py-2 rounded-2 {{ request()->routeIs('settings.index') ? 'active rounded' : '' }}">
+                                        <i class="bi bi-gear me-2 text-secondary"></i> Pengaturan Sistem
+                                    </a>
+                                    <a href="{{ route('settings.reports.index') }}" class="list-group-item list-group-item-action border-0 py-2 rounded-2 {{ Request::is('reports/settings*', 'settings/reports*') ? 'active rounded' : '' }}">
+                                        <i class="bi bi-printer-fill me-2 text-primary"></i> Pengaturan Cetak Laporan
+                                    </a>
+                                    <a href="{{ route('master.kop-settings.index') }}" class="list-group-item list-group-item-action border-0 py-2 rounded-2 {{ request()->routeIs('master.kop-settings.*') ? 'active rounded' : '' }}">
+                                        <i class="bi bi-file-earmark-pdf me-2 text-danger"></i> KOP Surat Pemda
+                                    </a>
+                                    <a href="{{ route('settings.backups.index') }}" class="list-group-item list-group-item-action border-0 py-2 rounded-2 {{ request()->routeIs('settings.backups.*') ? 'active rounded' : '' }}">
+                                        <i class="bi bi-cloud-arrow-down me-2 text-info"></i> Backup Sistem
+                                    </a>
+                                    <a href="{{ route('activities.index') }}" class="list-group-item list-group-item-action border-0 py-2 rounded-2 {{ Request::is('activities*') ? 'active rounded' : '' }}">
+                                        <i class="bi bi-shield-check me-2 text-success"></i> Log Aktivitas Terpadu
+                                    </a>
+                                </div>
+                            </div>
                         </div>
                     </div>
+                    @endif
                 </div>
-            </div>
         </div>
 
         <!-- Logout Action -->
