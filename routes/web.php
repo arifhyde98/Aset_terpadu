@@ -78,7 +78,11 @@ Route::resource('users', UserController::class)->except(['create', 'edit', 'show
 
 // Manajemen Aktivitas (Audit Log)
 Route::get('activities', [ActivityController::class, 'index'])->name('activities.index');
-Route::delete('activities/clear', [ActivityController::class, 'clear'])->name('activities.clear');
+// Modul Kendaraan Pinjam Pakai (eRANDIS)
+Route::get('vehicles/pinjam-pakai/import/template', [\App\Http\Controllers\KendaraanPinjamPakaiController::class, 'downloadImportTemplate'])->name('vehicles.pinjam-pakai.import.template');
+Route::post('vehicles/pinjam-pakai/import', [\App\Http\Controllers\KendaraanPinjamPakaiController::class, 'import'])->name('vehicles.pinjam-pakai.import');
+Route::post('vehicles/pinjam-pakai/{id}/kembalikan', [\App\Http\Controllers\KendaraanPinjamPakaiController::class, 'kembalikan'])->name('vehicles.pinjam-pakai.kembalikan');
+Route::resource('vehicles/pinjam-pakai', \App\Http\Controllers\KendaraanPinjamPakaiController::class, ['names' => 'vehicles.pinjam-pakai']);
 
 // Modul Laporan Modular
 Route::get('reports', [ReportController::class, 'index'])->name('reports.index');

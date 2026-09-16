@@ -122,7 +122,7 @@
                 </div>
                 @if(auth()->user()->role !== \App\Enums\UserRole::OPD && auth()->user()->role !== \App\Enums\UserRole::KPB)
                 <div class="col-md-3">
-                    <select class="form-select form-select-sm shadow-none" name="opd_id" onchange="this.form.submit()">
+                    <select class="form-select form-select-sm shadow-none searchable-select" name="opd_id" onchange="this.form.submit()">
                         <option value="">Semua OPD / Instansi</option>
                         @foreach(($filterOpds ?? $opds) as $opd)
                             <option value="{{ $opd->id }}" {{ request('opd_id') == $opd->id ? 'selected' : '' }}>{{ $opd->nama }}</option>
@@ -395,7 +395,7 @@
                 </div>
                 <div class="col-md-3">
                     <label class="form-label fw-semibold small text-uppercase">Jenis <span class="text-danger">*</span></label>
-                    <select name="vehicle_type_id" class="form-select" required onchange="document.getElementById('add_jenis_text').value = this.options[this.selectedIndex].text">
+                    <select name="vehicle_type_id" class="form-select searchable-select" required onchange="document.getElementById('add_jenis_text').value = this.options[this.selectedIndex].text">
                         <option value="">-- Pilih Jenis --</option>
                         @foreach($vehicleTypes as $type)
                             <option value="{{ $type->id }}">{{ $type->name }}</option>
@@ -420,7 +420,7 @@
                         <input type="hidden" name="opd_id" id="add_opd_id" value="{{ auth()->user()->opd_id }}">
                         <input type="hidden" name="opd" id="add_opd_text" value="{{ auth()->user()->opd?->nama }}">
                     @else
-                        <select name="opd_id" id="add_opd_id" class="form-select" required onchange="document.getElementById('add_opd_text').value = this.options[this.selectedIndex].text; loadSubOpds(this.value, 'add_sub_opd_id');">
+                        <select name="opd_id" id="add_opd_id" class="form-select searchable-select" required onchange="document.getElementById('add_opd_text').value = this.options[this.selectedIndex].text; loadSubOpds(this.value, 'add_sub_opd_id');">
                             <option value="">-- Pilih OPD --</option>
                             @foreach($opds as $opd)
                                 <option value="{{ $opd->id }}">{{ $opd->nama }}</option>
@@ -437,7 +437,7 @@
                         </div>
                         <input type="hidden" name="sub_opd_id" value="{{ auth()->user()->sub_opd_id }}">
                     @else
-                        <select name="sub_opd_id" id="add_sub_opd_id" class="form-select">
+                        <select name="sub_opd_id" id="add_sub_opd_id" class="form-select searchable-select">
                             <option value="">-- Tanpa Sub-OPD (Dinas Induk) --</option>
                         </select>
                     @endif
@@ -448,7 +448,7 @@
                 </div>
                 <div class="col-md-6">
                     <label class="form-label fw-semibold small text-uppercase">Kondisi Fisik <span class="text-danger">*</span></label>
-                    <select name="kondisi" class="form-select shadow-none" required>
+                    <select name="kondisi" class="form-select shadow-none searchable-select" required>
                         @foreach($conditions as $key => $label)
                             <option value="{{ $key }}">{{ $label }}</option>
                         @endforeach
@@ -456,7 +456,7 @@
                 </div>
                 <div class="col-md-6">
                     <label class="form-label fw-semibold small text-uppercase">Status Operasional <span class="text-danger">*</span></label>
-                    <select name="status" class="form-select shadow-none" required>
+                    <select name="status" class="form-select shadow-none searchable-select" required>
                         @foreach($statuses as $key => $label)
                             <option value="{{ $key }}">{{ $label }}</option>
                         @endforeach
@@ -474,14 +474,14 @@
                 </div>
                 <div class="col-md-3">
                     <label class="form-label fw-semibold small text-uppercase">Dok. STNK <span class="text-danger">*</span></label>
-                    <select name="stnk_ada" class="form-select" required>
+                    <select name="stnk_ada" class="form-select searchable-select" required>
                         <option value="Ada">Ada</option>
                         <option value="Tidak">Tidak Ada</option>
                     </select>
                 </div>
                 <div class="col-md-3">
                     <label class="form-label fw-semibold small text-uppercase">Dok. BPKB <span class="text-danger">*</span></label>
-                    <select name="bpkb_ada" class="form-select" required>
+                    <select name="bpkb_ada" class="form-select searchable-select" required>
                         <option value="Ada">Ada</option>
                         <option value="Tidak">Tidak Ada</option>
                     </select>
@@ -544,7 +544,7 @@
                 </div>
                 <div class="col-md-3">
                     <label class="form-label fw-semibold small text-uppercase">Jenis <span class="text-danger">*</span></label>
-                    <select name="vehicle_type_id" id="edit_vehicle_type_id" class="form-select" required onchange="document.getElementById('edit_jenis_text').value = this.options[this.selectedIndex].text">
+                    <select name="vehicle_type_id" id="edit_vehicle_type_id" class="form-select searchable-select" required onchange="document.getElementById('edit_jenis_text').value = this.options[this.selectedIndex].text">
                         <option value="">-- Pilih Jenis --</option>
                         @foreach($vehicleTypes as $type)
                             <option value="{{ $type->id }}">{{ $type->name }}</option>
@@ -569,7 +569,7 @@
                         <input type="hidden" name="opd_id" id="edit_opd_id_locked" value="{{ auth()->user()->opd_id }}">
                         <input type="hidden" name="opd" id="edit_opd_text" value="{{ auth()->user()->opd?->nama }}">
                     @else
-                        <select name="opd_id" id="edit_opd_id" class="form-select" required onchange="document.getElementById('edit_opd_text').value = this.options[this.selectedIndex].text; loadSubOpds(this.value, 'edit_sub_opd_id');">
+                        <select name="opd_id" id="edit_opd_id" class="form-select searchable-select" required onchange="document.getElementById('edit_opd_text').value = this.options[this.selectedIndex].text; loadSubOpds(this.value, 'edit_sub_opd_id');">
                             <option value="">-- Pilih OPD --</option>
                             @foreach($opds as $opd)
                                 <option value="{{ $opd->id }}">{{ $opd->nama }}</option>
@@ -586,7 +586,7 @@
                         </div>
                         <input type="hidden" name="sub_opd_id" id="edit_sub_opd_id_locked" value="{{ auth()->user()->sub_opd_id }}">
                     @else
-                        <select name="sub_opd_id" id="edit_sub_opd_id" class="form-select">
+                        <select name="sub_opd_id" id="edit_sub_opd_id" class="form-select searchable-select">
                             <option value="">-- Tanpa Sub-OPD (Dinas Induk) --</option>
                         </select>
                     @endif
@@ -597,7 +597,7 @@
                 </div>
                 <div class="col-md-6">
                     <label class="form-label fw-semibold small text-uppercase">Kondisi Fisik <span class="text-danger">*</span></label>
-                    <select name="kondisi" id="edit_kondisi" class="form-select shadow-none" required>
+                    <select name="kondisi" id="edit_kondisi" class="form-select shadow-none searchable-select" required>
                         @foreach($conditions as $key => $label)
                             <option value="{{ $key }}">{{ $label }}</option>
                         @endforeach
@@ -605,7 +605,7 @@
                 </div>
                 <div class="col-md-6">
                     <label class="form-label fw-semibold small text-uppercase">Status Operasional <span class="text-danger">*</span></label>
-                    <select name="status" id="edit_status" class="form-select shadow-none" required>
+                    <select name="status" id="edit_status" class="form-select shadow-none searchable-select" required>
                         @foreach($statuses as $key => $label)
                             <option value="{{ $key }}">{{ $label }}</option>
                         @endforeach
@@ -623,14 +623,14 @@
                 </div>
                 <div class="col-md-3">
                     <label class="form-label fw-semibold small text-uppercase">Dok. STNK <span class="text-danger">*</span></label>
-                    <select name="stnk_ada" id="edit_stnk_ada" class="form-select" required>
+                    <select name="stnk_ada" id="edit_stnk_ada" class="form-select searchable-select" required>
                         <option value="Ada">Ada</option>
                         <option value="Tidak">Tidak Ada</option>
                     </select>
                 </div>
                 <div class="col-md-3">
                     <label class="form-label fw-semibold small text-uppercase">Dok. BPKB <span class="text-danger">*</span></label>
-                    <select name="bpkb_ada" id="edit_bpkb_ada" class="form-select" required>
+                    <select name="bpkb_ada" id="edit_bpkb_ada" class="form-select searchable-select" required>
                         <option value="Ada">Ada</option>
                         <option value="Tidak">Tidak Ada</option>
                     </select>
@@ -798,7 +798,10 @@
             if (!select) return;
 
             select.innerHTML = '<option value="">-- Tanpa Sub-OPD (Dinas Induk) --</option>';
-            if (!opdId) return;
+            if (!opdId) {
+                if (window.syncSearchableSelectOptions) window.syncSearchableSelectOptions(select);
+                return;
+            }
 
             fetch(`/sub-opds/by-opd/${opdId}`)
                 .then(res => res.json())
@@ -812,6 +815,7 @@
                         }
                         select.appendChild(opt);
                     });
+                    if (window.syncSearchableSelectOptions) window.syncSearchableSelectOptions(select);
                 })
                 .catch(err => console.error('Gagal memuat Sub-OPD:', err));
         };
@@ -1060,6 +1064,14 @@
                 document.getElementById('edit_no_mesin').value = vehicle.no_mesin || '';
                 document.getElementById('edit_no_rangka').value = vehicle.no_rangka || '';
                 document.getElementById('edit_keterangan').value = vehicle.keterangan || '';
+
+                // Sinkronisasi komponen Searchable Dropdown (TomSelect)
+                if (window.setSearchableSelectValue) {
+                    ['edit_vehicle_type_id', 'edit_opd_id', 'edit_kondisi', 'edit_status', 'edit_stnk_ada', 'edit_bpkb_ada'].forEach(id => {
+                        const el = document.getElementById(id);
+                        if (el) window.setSearchableSelectValue(el, el.value);
+                    });
+                }
             });
         }
 

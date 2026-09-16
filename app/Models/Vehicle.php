@@ -121,6 +121,14 @@ class Vehicle extends Model
     }
 
     /**
+     * Accessor gabungan Merk dan Tipe Kendaraan.
+     */
+    public function getMerkTipeAttribute(): string
+    {
+        return trim(($this->merk ?? '') . ' ' . ($this->tipe ?? ''));
+    }
+
+    /**
      * Mendapatkan daftar kondisi fisik yang tersedia.
      * 
      * @return array<string, string>

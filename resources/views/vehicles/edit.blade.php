@@ -42,7 +42,7 @@
                         </div>
                         <div class="col-md-6">
                             <label class="form-label small fw-semibold text-dark">Jenis Kendaraan</label>
-                            <select name="vehicle_type_id" class="form-select @error('vehicle_type_id') is-invalid @enderror" required onchange="document.getElementById('jenis_text').value = this.options[this.selectedIndex].text">
+                            <select name="vehicle_type_id" class="form-select searchable-select @error('vehicle_type_id') is-invalid @enderror" required onchange="document.getElementById('jenis_text').value = this.options[this.selectedIndex].text">
                                 <option value="">Pilih Jenis</option>
                                 @foreach($vehicleTypes as $type)
                                     <option value="{{ $type->id }}" {{ old('vehicle_type_id', $vehicle->vehicle_type_id) == $type->id ? 'selected' : '' }}>{{ $type->name }}</option>
@@ -131,7 +131,7 @@
                     
                     <div class="mb-4">
                         <label class="form-label small fw-semibold text-dark">Unit Kerja / OPD</label>
-                        <select name="opd_id" id="opd_select" class="form-select @error('opd_id') is-invalid @enderror" required
+                        <select name="opd_id" id="opd_select" class="form-select searchable-select @error('opd_id') is-invalid @enderror" required
                                 onchange="document.getElementById('opd_text').value = this.options[this.selectedIndex].text">
                             <option value="">-- Pilih OPD --</option>
                             @foreach($opds as $o)

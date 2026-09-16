@@ -251,6 +251,12 @@
                                         <span>Rekonsiliasi BPKB</span>
                                     </a>
                                 </li>
+                                <li class="{{ Request::is('vehicles/pinjam-pakai*') ? 'active' : '' }}">
+                                    <a href="{{ Route::has('vehicles.pinjam-pakai.index') ? route('vehicles.pinjam-pakai.index') : '#' }}" data-bs-toggle="tooltip" data-bs-placement="right" title="Pinjam Pakai BMD">
+                                        <i class="bi bi-journal-arrow-up"></i>
+                                        <span>Kendaraan Pinjam Pakai</span>
+                                    </a>
+                                </li>
                             </ul>
                         </div>
                     </div>

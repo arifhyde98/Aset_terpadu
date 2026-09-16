@@ -82,6 +82,7 @@
                         <li><a class="dropdown-item py-2 px-3 small d-flex align-items-center gap-2 {{ Request::is('vehicles') ? 'active fw-bold' : '' }}" href="{{ Route::has('vehicles.index') ? route('vehicles.index') : '#' }}"><i class="bi bi-car-front-fill text-warning"></i> Data Kendaraan Dinas</a></li>
                         <li><a class="dropdown-item py-2 px-3 small d-flex align-items-center gap-2 {{ Request::is('reports*') ? 'active fw-bold' : '' }}" href="{{ Route::has('reports.index') ? route('reports.index') : '#' }}"><i class="bi bi-bar-chart-line-fill text-primary"></i> Laporan Kendaraan</a></li>
                         <li><a class="dropdown-item py-2 px-3 small d-flex align-items-center gap-2 {{ Request::is('vehicles/rekon-bpkb*') ? 'active fw-bold' : '' }}" href="{{ Route::has('vehicles.rekon-bpkb') ? route('vehicles.rekon-bpkb') : '#' }}"><i class="bi bi-intersect text-info"></i> Rekonsiliasi BPKB</a></li>
+                        <li><a class="dropdown-item py-2 px-3 small d-flex align-items-center gap-2 {{ Request::is('vehicles/pinjam-pakai*') ? 'active fw-bold' : '' }}" href="{{ Route::has('vehicles.pinjam-pakai.index') ? route('vehicles.pinjam-pakai.index') : '#' }}"><i class="bi bi-journal-arrow-up text-danger"></i> Pinjam Pakai Kendaraan</a></li>
                     </ul>
                 </div>
 
