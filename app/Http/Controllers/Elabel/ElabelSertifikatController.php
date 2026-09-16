@@ -46,12 +46,19 @@ class ElabelSertifikatController extends Controller implements HasMiddleware
             });
         }
 
+        $totalSertifikatCount = (clone $builder)->count();
+        $totalSertifikatWithFileCount = (clone $builder)->whereNotNull('pdf_path')->where('pdf_path', '!=', '')->count();
+        $totalSertifikatWithNibarCount = (clone $builder)->whereNotNull('nibar')->where('nibar', '!=', '')->count();
+
         $items = $builder->get();
 
         return view('elabel.sertifikat.index', [
-            'items'       => $items,
-            'searchQuery' => $query,
-            'activeMenu'  => 'sertifikat',
+            'items'                         => $items,
+            'searchQuery'                   => $query,
+            'activeMenu'                    => 'sertifikat',
+            'totalSertifikatCount'          => $totalSertifikatCount,
+            'totalSertifikatWithFileCount'  => $totalSertifikatWithFileCount,
+            'totalSertifikatWithNibarCount' => $totalSertifikatWithNibarCount,
         ]);
     }
 

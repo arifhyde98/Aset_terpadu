@@ -206,18 +206,24 @@
             </table>
         </div>
 
-        @if($items->total() > 0)
-            <div class="card-footer bg-transparent border-top border-light-subtle p-3 d-flex flex-column flex-md-row align-items-center justify-content-between gap-2">
-                <span class="small text-secondary">
-                    Menampilkan <strong>{{ $items->firstItem() }}</strong> sampai <strong>{{ $items->lastItem() }}</strong> dari total <strong>{{ $items->total() }}</strong> berkas BPKB
+        <div class="card-footer bg-white border-top py-3 px-4 d-flex flex-column flex-md-row align-items-md-center justify-content-md-between gap-3">
+            <div class="d-flex flex-wrap align-items-center gap-2 small">
+                <span class="badge bg-light text-navy border px-3 py-2 fw-medium me-1">
+                    <i class="bi bi-journal-bookmark-fill text-primary me-1"></i> Total BPKB: <strong>{{ number_format($totalBpkbCount ?? 0) }}</strong>
                 </span>
-                @if($items->hasPages())
-                    <div>
-                        {{ $items->links() }}
-                    </div>
-                @endif
+                <span class="badge bg-primary-subtle text-primary-emphasis border border-primary-subtle px-3 py-2 fw-medium">
+                    <i class="bi bi-upc-scan text-primary me-1"></i> Ada NIBAR: <strong>{{ number_format($totalBpkbWithNibarCount ?? 0) }}</strong> <span class="fw-normal text-secondary">({{ ($totalBpkbCount ?? 0) > 0 ? round((($totalBpkbWithNibarCount ?? 0) / $totalBpkbCount) * 100, 1) : 0 }}%)</span>
+                </span>
+                <span class="badge bg-success-subtle text-success-emphasis border border-success-subtle px-3 py-2 fw-medium">
+                    <i class="bi bi-file-earmark-check-fill text-success me-1"></i> Ada File PDF: <strong>{{ number_format($totalBpkbWithFileCount ?? 0) }}</strong> <span class="fw-normal text-secondary">({{ ($totalBpkbCount ?? 0) > 0 ? round((($totalBpkbWithFileCount ?? 0) / $totalBpkbCount) * 100, 1) : 0 }}%)</span>
+                </span>
             </div>
-        @endif
+            @if($items->hasPages())
+                <div class="pagination-sm mb-0">
+                    {{ $items->links() }}
+                </div>
+            @endif
+        </div>
     </div>
 
 </div>

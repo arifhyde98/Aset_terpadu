@@ -96,15 +96,22 @@ class ElabelBpkbController extends Controller implements HasMiddleware
 
         $years = $yearsBuilder->orderBy('elabel_box_years.year', 'desc')->pluck('year')->toArray();
 
+        $totalBpkbCount = (clone $builder)->count();
+        $totalBpkbWithFileCount = (clone $builder)->whereNotNull('pdf_path')->where('pdf_path', '!=', '')->count();
+        $totalBpkbWithNibarCount = (clone $builder)->whereNotNull('nibar')->where('nibar', '!=', '')->count();
+
         return view('elabel.bpkb.index', [
-            'items'        => $items,
-            'years'        => $years,
-            'vehicleType'  => $vehicleType,
-            'vehicleLabel' => $vehicleLabel,
-            'vehicleRoute' => $vehicleType ? $this->routeSegment($vehicleType) : null,
-            'activeMenu'   => $vehicleType === 'R2' ? 'bpkb_motor' : ($vehicleType === 'R4' ? 'bpkb_mobil' : 'bpkb'),
-            'searchQuery'  => $query,
-            'perPage'      => $perPage,
+            'items'                   => $items,
+            'years'                   => $years,
+            'vehicleType'             => $vehicleType,
+            'vehicleLabel'            => $vehicleLabel,
+            'vehicleRoute'            => $vehicleType ? $this->routeSegment($vehicleType) : null,
+            'activeMenu'              => $vehicleType === 'R2' ? 'bpkb_motor' : ($vehicleType === 'R4' ? 'bpkb_mobil' : 'bpkb'),
+            'searchQuery'             => $query,
+            'perPage'                 => $perPage,
+            'totalBpkbCount'          => $totalBpkbCount,
+            'totalBpkbWithFileCount'  => $totalBpkbWithFileCount,
+            'totalBpkbWithNibarCount' => $totalBpkbWithNibarCount,
         ]);
     }
 

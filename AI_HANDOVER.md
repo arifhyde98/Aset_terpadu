@@ -569,6 +569,8 @@ Diimplementasikan arsitektur *Admin Template Switcher* yang memungkinkan penggun
   - Penyimpanan fisik sertifikat tanah, penataan box fisik khusus sertifikat, operasi split/merge box, dan impor Excel.
   - Sinkronisasi otomatis dua arah untuk luas fisik tanah dan instansi kepemilikan OPD dengan modul SIPAT (dilengkapi command audit terminal `php artisan sipat:sync-opd-sertifikat {--dry-run}`).
   - Proteksi form edit sertifikat dengan penguncian dropdown OPD otomatis dan badge `Mengacu KIB A` untuk berkas yang terhubung dengan NIBAR aset tanah KIB A.
+- **Ringkasan Footer Statistik Berkas (BPKB & Sertifikat Tanah):**
+  - Penyajian indikator statistik ringkas di bagian bawah footer tabel katalog BPKB (`/elabel/bpkb`) dan Sertifikat Tanah (`/elabel/sertifikat`) yang menampilkan statistik realtime total berkas terdaftar, jumlah berkas yang memiliki NIBAR (Kode Aset), serta jumlah berkas yang telah memiliki lampiran digital (file PDF/scan) beserta persentasenya.
 - **Surat Penyerahan & Box Penyerahan (`/elabel/surat-penyerahan`, `/elabel/surat-penyerahan-boxes`):**
   - Administrasi berita acara penyerahan fisik berkas aset dan penataan box fisik surat penyerahan.
 - **Alur Peminjaman Dokumen (`/elabel/peminjaman`):**

@@ -121,6 +121,24 @@
                 </tbody>
             </table>
         </div>
+        <div class="card-footer bg-white border-top py-3 px-4 d-flex flex-column flex-md-row align-items-md-center justify-content-md-between gap-3">
+            <div class="d-flex flex-wrap align-items-center gap-2 small">
+                <span class="badge bg-light text-navy border px-3 py-2 fw-medium me-1">
+                    <i class="bi bi-patch-check-fill text-success me-1"></i> Total Sertifikat: <strong>{{ number_format($totalSertifikatCount ?? 0) }}</strong>
+                </span>
+                <span class="badge bg-primary-subtle text-primary-emphasis border border-primary-subtle px-3 py-2 fw-medium">
+                    <i class="bi bi-upc-scan text-primary me-1"></i> Ada NIBAR: <strong>{{ number_format($totalSertifikatWithNibarCount ?? 0) }}</strong> <span class="fw-normal text-secondary">({{ ($totalSertifikatCount ?? 0) > 0 ? round((($totalSertifikatWithNibarCount ?? 0) / $totalSertifikatCount) * 100, 1) : 0 }}%)</span>
+                </span>
+                <span class="badge bg-success-subtle text-success-emphasis border border-success-subtle px-3 py-2 fw-medium">
+                    <i class="bi bi-file-earmark-check-fill text-success me-1"></i> Ada File PDF: <strong>{{ number_format($totalSertifikatWithFileCount ?? 0) }}</strong> <span class="fw-normal text-secondary">({{ ($totalSertifikatCount ?? 0) > 0 ? round((($totalSertifikatWithFileCount ?? 0) / $totalSertifikatCount) * 100, 1) : 0 }}%)</span>
+                </span>
+            </div>
+            @if(method_exists($items, 'hasPages') && $items->hasPages())
+                <div class="pagination-sm mb-0">
+                    {{ $items->links() }}
+                </div>
+            @endif
+        </div>
     </div>
 
 </div>
