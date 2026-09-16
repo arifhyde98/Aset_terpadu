@@ -488,6 +488,14 @@ Tampilan tabel Manajemen Data OPD / Instansi dioptimalkan agar lebih rapi, compa
 5. **Kerapian Kolom OPD & Singkatan:** Nama OPD menjadi kolom utama (38% width, max 2 baris line-clamp), Singkatan dibuat fixed badge (`110px`).
 6. **Aksi Compact & Safe Delete Dropdown:** Tombol Edit utama dipertahankan di luar, sedangkan aksi sekunder (`Jadikan Sub-OPD` & `Hapus OPD`) dikelompokkan dalam dropdown `⋮` untuk mencegah salah klik tombol hapus.
 7. **Multi-Select Checkbox Integration:** Checkbox seleksi massal diintegrasikan secara menyatu pada header & cell `NO` tanpa menambah lebar kolom secara tak perlu.
+
+### 9.7 Sistem Pengaturan Template Admin Layout Swappable (`/settings/admin-template`)
+Diimplementasikan arsitektur *Admin Template Switcher* yang memungkinkan pengguna memilih 4 jenis variasi layout antarmuka visual yang berbeda tanpa mengubah kode modul:
+1. **Classic Navy (Default):** Layout standar institusional dengan sidebar vertikal navy.
+2. **Executive Dark:** Theme sidebar slate dark (`#0f172a`) dengan aksen cyan & emerald.
+3. **Horizontal Floating Topbar:** Tanpa sidebar kiri, memberikan 100% lebar desktop untuk data tabel.
+4. **Glassmorphism Futuristic:** Sidebar efek kaca transparan (*backdrop blur*) dengan gradien indigo-purple.
+- Preferensi disimpan di kolom `users.admin_template`, `session('admin_template')`, dan `localStorage` (mencegah *flicker* peramban). Ditrigger melalui tombol modal navbar `<i class="bi bi-layout-text-window-reverse"></i>`.
    - **Bangunan (KIB C):** Berfokus pada Data Bangunan, Peta GIS Bangunan, dan Laporan KIB C.
    - **E-RANDIS (Kendaraan Dinas):** Berfokus pada Data Kendaraan Dinas, Laporan Kendaraan, dan Rekonsiliasi BPKB.
    - **eLABEL (Arsip & Box):** Berfokus pada Dokumen BPKB, Sertifikat Tanah, Surat Penyerahan, Kategori Arsip Dinamis, dan Layanan Peminjaman.

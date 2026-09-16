@@ -59,6 +59,7 @@ Route::get('master-data', [MasterDataController::class, 'index'])->name('master-
 // Pengaturan & Manajemen User
 Route::get('settings', [SettingController::class, 'index'])->name('settings.index');
 Route::post('settings', [SettingController::class, 'update'])->name('settings.update');
+Route::post('settings/admin-template', [\App\Http\Controllers\AdminTemplateController::class, 'update'])->name('settings.admin-template');
 
 // Manajemen Backup (Spatie Backup)
 Route::get('settings/backups', [\App\Http\Controllers\Admin\BackupController::class, 'index'])->name('settings.backups.index');

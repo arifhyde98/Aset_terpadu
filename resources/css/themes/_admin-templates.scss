@@ -1,0 +1,402 @@
+/* ==========================================================================
+   ADMIN LAYOUT TEMPLATES STYLES (INTEGRATED LIGHT & DARK MODES)
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. CLASSIC DEFAULT (Original System Template - 100% Untouched)
+   -------------------------------------------------------------------------- */
+/* Retains original sidebar & navbar styles without modification */
+
+/* --------------------------------------------------------------------------
+   2. SLEEK EXECUTIVE DARK
+   -------------------------------------------------------------------------- */
+[data-admin-template="executive"] {
+    /* Executive Light Mode (Slate Sidebar + Light Crisp Surface) */
+    &:not([data-theme="dark"]) {
+        #sidebar {
+            background: #0f172a !important;
+            border-right: 1px solid #1e293b !important;
+
+            .sidebar-header {
+                background: #090d16 !important;
+                border-bottom: 1px solid #1e293b !important;
+
+                h4 { color: #38bdf8 !important; }
+            }
+
+            ul.components li.sidebar-category { color: #64748b !important; }
+
+            ul.components li a {
+                color: #94a3b8 !important;
+
+                &:hover, &.active {
+                    background: #1e293b !important;
+                    color: #38bdf8 !important;
+                    border-left: 4px solid #38bdf8 !important;
+                }
+
+                i { color: #38bdf8 !important; }
+            }
+
+            .sidebar-footer {
+                background: #090d16 !important;
+                border-top: 1px solid #1e293b !important;
+            }
+        }
+    }
+
+    /* Executive Dark Mode (Obsidian Dark Sidebar + Deep Dark Surface) */
+    &[data-theme="dark"], &[data-bs-theme="dark"] {
+        #sidebar {
+            background: #020617 !important;
+            border-right: 1px solid #1e293b !important;
+
+            .sidebar-header {
+                background: #000000 !important;
+                border-bottom: 1px solid #1e293b !important;
+
+                h4 { color: #38bdf8 !important; }
+            }
+
+            ul.components li a {
+                color: #cbd5e1 !important;
+
+                &:hover, &.active {
+                    background: #0f172a !important;
+                    color: #38bdf8 !important;
+                    border-left: 4px solid #38bdf8 !important;
+                }
+
+                i { color: #38bdf8 !important; }
+            }
+
+            .sidebar-footer {
+                background: #000000 !important;
+                border-top: 1px solid #1e293b !important;
+            }
+        }
+    }
+}
+
+/* --------------------------------------------------------------------------
+   3. HORIZONTAL FLOATING TOPBAR
+   -------------------------------------------------------------------------- */
+[data-admin-template="horizontal"] {
+    #sidebar { 
+        display: none !important; 
+    }
+
+    #sidebarCollapse { 
+        display: none !important; 
+    }
+
+    #content,
+    & #content,
+    &.sidebar-compact #content,
+    body.sidebar-compact &#content,
+    html[data-admin-template="horizontal"] body #content,
+    html[data-admin-template="horizontal"] body.sidebar-compact #content,
+    body[data-admin-template="horizontal"].sidebar-compact #content {
+        width: 100% !important;
+        max-width: 100% !important;
+        margin-left: 0 !important;
+        padding-left: 1.25rem !important;
+        padding-right: 1.25rem !important;
+    }
+
+    .navbar-admin {
+        margin-bottom: 0.75rem !important;
+    }
+
+    .horizontal-topbar-wrapper {
+        display: flex !important;
+    }
+
+
+    #horizontalNavbarCard {
+        border: 1px solid rgba(226, 232, 240, 0.9) !important;
+        box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.05), 0 4px 6px -2px rgba(15, 23, 42, 0.02) !important;
+    }
+
+    .nav-pill-btn {
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        font-size: 0.825rem;
+
+        &.hover-light:hover {
+            background-color: #f1f5f9 !important;
+            color: #1e40af !important;
+        }
+    }
+
+    &[data-theme="dark"], &[data-bs-theme="dark"] {
+        #horizontalNavbarCard {
+            background-color: #0f172a !important;
+            border: 1px solid #1e293b !important;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4) !important;
+
+            .nav-pill-btn {
+                &.hover-light {
+                    background-color: #1e293b !important;
+                    color: #cbd5e1 !important;
+
+                    &:hover {
+                        background-color: #334155 !important;
+                        color: #38bdf8 !important;
+                    }
+                }
+            }
+
+            .dropdown-menu {
+                background-color: #1e293b !important;
+                border: 1px solid #334155 !important;
+                .dropdown-item {
+                    color: #cbd5e1 !important;
+                    &:hover, &.active {
+                        background-color: #334155 !important;
+                        color: #38bdf8 !important;
+                    }
+                }
+            }
+        }
+    }
+}
+
+/* --------------------------------------------------------------------------
+   4. GLASSMORPHISM FUTURISTIC
+   -------------------------------------------------------------------------- */
+[data-admin-template="glass"] {
+    /* Glassmorphism Light Mode */
+    &:not([data-theme="dark"]) {
+        background: linear-gradient(135deg, #f1f5f9 0%, #e0e7ff 50%, #f3e8ff 100%) !important;
+        background-attachment: fixed !important;
+
+        #sidebar {
+            background: rgba(255, 255, 255, 0.78) !important;
+            backdrop-filter: blur(16px) !important;
+            -webkit-backdrop-filter: blur(16px) !important;
+            border-right: 1px solid rgba(255, 255, 255, 0.6) !important;
+            box-shadow: 4px 0 24px rgba(99, 102, 241, 0.08) !important;
+
+            .sidebar-header {
+                background: rgba(255, 255, 255, 0.5) !important;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.5) !important;
+                h4 { color: #4f46e5 !important; }
+            }
+
+            ul.components li a {
+                color: #475569 !important;
+                border-radius: 12px !important;
+                margin: 3px 12px !important;
+
+                &:hover, &.active {
+                    background: linear-gradient(135deg, rgba(99, 102, 241, 0.15), rgba(168, 85, 247, 0.15)) !important;
+                    color: #4f46e5 !important;
+                    font-weight: 600 !important;
+                }
+
+                i { color: #6366f1 !important; }
+            }
+
+            .sidebar-footer {
+                background: rgba(255, 255, 255, 0.5) !important;
+                border-top: 1px solid rgba(255, 255, 255, 0.5) !important;
+            }
+        }
+
+        .admin-card, .card {
+            background: rgba(255, 255, 255, 0.85) !important;
+            backdrop-filter: blur(14px) !important;
+            -webkit-backdrop-filter: blur(14px) !important;
+            border: 1px solid rgba(255, 255, 255, 0.7) !important;
+            box-shadow: 0 10px 30px -5px rgba(99, 102, 241, 0.08) !important;
+            border-radius: 16px !important;
+        }
+    }
+
+    /* Glassmorphism Dark Mode */
+    &[data-theme="dark"], &[data-bs-theme="dark"] {
+        background: linear-gradient(135deg, #090d16 0%, #1e1b4b 50%, #2e1065 100%) !important;
+        background-attachment: fixed !important;
+
+        #sidebar {
+            background: rgba(15, 23, 42, 0.78) !important;
+            backdrop-filter: blur(16px) !important;
+            -webkit-backdrop-filter: blur(16px) !important;
+            border-right: 1px solid rgba(255, 255, 255, 0.1) !important;
+            box-shadow: 4px 0 24px rgba(0, 0, 0, 0.3) !important;
+
+            .sidebar-header {
+                background: rgba(15, 23, 42, 0.5) !important;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+                h4 { color: #818cf8 !important; }
+            }
+
+            ul.components li a {
+                color: #cbd5e1 !important;
+                border-radius: 12px !important;
+                margin: 3px 12px !important;
+
+                &:hover, &.active {
+                    background: linear-gradient(135deg, rgba(99, 102, 241, 0.3), rgba(168, 85, 247, 0.3)) !important;
+                    color: #a5b4fc !important;
+                    font-weight: 600 !important;
+                }
+
+                i { color: #818cf8 !important; }
+            }
+
+            .sidebar-footer {
+                background: rgba(15, 23, 42, 0.5) !important;
+                border-top: 1px solid rgba(255, 255, 255, 0.1) !important;
+            }
+        }
+
+        .admin-card, .card {
+            background: rgba(30, 41, 59, 0.75) !important;
+            backdrop-filter: blur(14px) !important;
+            -webkit-backdrop-filter: blur(14px) !important;
+            border: 1px solid rgba(255, 255, 255, 0.1) !important;
+            box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.4) !important;
+            border-radius: 16px !important;
+        }
+    }
+}
+
+/* --------------------------------------------------------------------------
+   5. ULTRA-MINIMALIST CANVAS (Insp. Pinterest Soft White & Dark Pill UI)
+   -------------------------------------------------------------------------- */
+[data-admin-template="minimalist"] {
+    #sidebar { 
+        display: none !important; 
+    }
+
+    #sidebarCollapse { 
+        display: none !important; 
+    }
+
+    #content,
+    & #content,
+    &.sidebar-compact #content,
+    body.sidebar-compact &#content,
+    html[data-admin-template="minimalist"] body #content,
+    html[data-admin-template="minimalist"] body.sidebar-compact #content,
+    body[data-admin-template="minimalist"].sidebar-compact #content {
+        width: 100% !important;
+        max-width: 100% !important;
+        margin-left: 0 !important;
+        padding-left: 1.5rem !important;
+        padding-right: 1.5rem !important;
+        background-color: #f4f5f7 !important;
+    }
+
+    .navbar-admin {
+        margin-bottom: 0.75rem !important;
+    }
+
+    .horizontal-topbar-wrapper {
+        display: flex !important;
+    }
+
+    #horizontalNavbarCard {
+        background-color: #ffffff !important;
+        border: 1px solid #e5e7eb !important;
+        border-radius: 9999px !important;
+        padding: 0.25rem 0.5rem !important;
+        box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.04), 0 2px 6px -1px rgba(0, 0, 0, 0.02) !important;
+
+        .nav-pill-btn {
+            border-radius: 9999px !important;
+            font-size: 0.85rem !important;
+            padding: 0.45rem 1.15rem !important;
+            color: #374151 !important;
+            background-color: transparent !important;
+            font-weight: 500 !important;
+
+            &:hover {
+                background-color: #f3f4f6 !important;
+                color: #111827 !important;
+            }
+
+            &.active-pill {
+                background-color: #18181b !important;
+                color: #ffffff !important;
+                font-weight: 600 !important;
+                box-shadow: 0 4px 12px rgba(24, 24, 27, 0.15) !important;
+
+                i {
+                    color: #ffffff !important;
+                }
+            }
+        }
+    }
+
+    .admin-card, .card {
+        background-color: #ffffff !important;
+        border: 1px solid #e5e7eb !important;
+        border-radius: 18px !important;
+        box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.03), 0 2px 4px -1px rgba(0, 0, 0, 0.02) !important;
+    }
+
+    .btn-primary {
+        background-color: #18181b !important;
+        border-color: #18181b !important;
+        color: #ffffff !important;
+        border-radius: 12px !important;
+
+        &:hover, &:focus, &:active {
+            background-color: #27272a !important;
+            border-color: #27272a !important;
+            color: #ffffff !important;
+        }
+    }
+
+    /* Minimalist Dark Mode */
+    &[data-theme="dark"], &[data-bs-theme="dark"] {
+        #content,
+        & #content,
+        html[data-admin-template="minimalist"] body #content {
+            background-color: #09090b !important;
+        }
+
+        #horizontalNavbarCard {
+            background-color: #18181b !important;
+            border: 1px solid #27272a !important;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5) !important;
+
+            .nav-pill-btn {
+                color: #a1a1aa !important;
+
+                &:hover {
+                    background-color: #27272a !important;
+                    color: #f4f4f5 !important;
+                }
+
+                &.active-pill {
+                    background-color: #27272a !important;
+                    color: #ffffff !important;
+                    box-shadow: inset 0 0 0 1px #3f3f46 !important;
+                }
+            }
+        }
+
+        .admin-card, .card {
+            background-color: #18181b !important;
+            border: 1px solid #27272a !important;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4) !important;
+            border-radius: 18px !important;
+        }
+
+        .btn-primary {
+            background-color: #f4f4f5 !important;
+            border-color: #f4f4f5 !important;
+            color: #09090b !important;
+
+            &:hover, &:focus, &:active {
+                background-color: #e4e4e7 !important;
+                border-color: #e4e4e7 !important;
+                color: #09090b !important;
+            }
+        }
+    }
+}
+

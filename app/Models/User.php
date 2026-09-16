@@ -46,6 +46,7 @@ class User extends Authenticatable
         'opd_id',
         'sub_opd_id',
         'avatar',
+        'admin_template',
     ];
 
     /**

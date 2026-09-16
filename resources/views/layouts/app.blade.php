@@ -1,5 +1,13 @@
+@php
+    $adminTemplate = 'classic';
+    if (auth()->check() && !empty(auth()->user()->admin_template)) {
+        $adminTemplate = auth()->user()->admin_template;
+    } elseif (session()->has('admin_template')) {
+        $adminTemplate = session('admin_template');
+    }
+@endphp
 <!doctype html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" data-admin-template="{{ $adminTemplate }}">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -11,13 +19,19 @@
 
     @vite(['resources/css/app.scss', 'resources/js/app.js'])
 </head>
-<body class="bg-light" id="theme-root">
+<body class="bg-light" id="theme-root" data-admin-template="{{ $adminTemplate }}">
     <script>
-        // Pre-initialization theme check to avoid flicker
+        // Pre-initialization theme & template check to avoid flicker
         (function() {
             const savedTheme = localStorage.getItem('theme') || 'light';
+            const savedTemplate = localStorage.getItem('admin_template') || '{{ $adminTemplate }}';
             document.documentElement.setAttribute('data-bs-theme', savedTheme);
-            document.getElementById('theme-root').setAttribute('data-theme', savedTheme);
+            document.documentElement.setAttribute('data-admin-template', savedTemplate);
+            const root = document.getElementById('theme-root');
+            if (root) {
+                root.setAttribute('data-theme', savedTheme);
+                root.setAttribute('data-admin-template', savedTemplate);
+            }
             if(savedTheme === 'dark') {
                 document.body.classList.remove('bg-light');
             }
@@ -30,6 +44,7 @@
         <!-- Page Content -->
         <div id="content">
             @include('layouts.partials.navbar')
+            @include('layouts.partials.horizontal-topbar')
 
             <!-- Main Content Area -->
             <main class="animate-on-scroll">
@@ -58,6 +73,7 @@
 
     @include('layouts.partials.bottom-nav')
     @include('layouts.partials.ai-floating-widget')
+    @include('layouts.partials.template-selector-modal')
 
     @stack('modals')
     @stack('scripts')

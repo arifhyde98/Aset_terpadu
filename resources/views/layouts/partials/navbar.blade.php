@@ -25,6 +25,11 @@
                     </span>
                 </a>
 
+                <!-- Layout Template Switcher Button -->
+                <button type="button" class="btn btn-light rounded-3 shadow-sm border text-secondary px-2 py-1" data-bs-toggle="modal" data-bs-target="#templateSelectorModal" title="Pengaturan Layout Template Admin">
+                    <i class="bi bi-layout-text-window-reverse fs-5 text-primary"></i>
+                </button>
+
                 <!-- Theme Toggle -->
                 <button type="button" id="themeToggle" class="btn btn-light rounded-3 shadow-sm border text-secondary px-2 py-1">
                     <i class="bi bi-moon-stars fs-5" id="themeIcon"></i>
