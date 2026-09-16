@@ -2,6 +2,20 @@
 
 @section('title', 'Data OPD')
 
+@push('styles')
+<style>
+    .admin-card .table-responsive {
+        min-height: 280px;
+    }
+    .text-wrap-2 {
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+</style>
+@endpush
+
 @section('content')
 <div class="container-fluid px-0">
     
@@ -69,11 +83,13 @@
 
         <x-slot:thead>
             <tr>
-                <th class="py-3 px-3 border-bottom-0 fw-semibold text-center" style="width: 40px;">
-                    <input type="checkbox" class="form-check-input" id="checkAll" title="Pilih Semua">
+                <th class="py-3 px-2 border-bottom-0 fw-semibold text-center" style="width: 55px;">
+                    <div class="d-flex align-items-center justify-content-center gap-1.5">
+                        <input type="checkbox" class="form-check-input mt-0" id="checkAll" title="Pilih Semua">
+                        <span>NO</span>
+                    </div>
                 </th>
-                <th class="py-3 px-3 border-bottom-0 fw-semibold text-center" style="width: 50px;">No</th>
-                <th class="py-3 border-bottom-0 fw-semibold">
+                <th class="py-3 px-3 border-bottom-0 fw-semibold" style="width: 38%;">
                     <a href="{{ request()->fullUrlWithQuery(['sort_by' => 'nama', 'sort_order' => $currentSortBy === 'nama' ? $nextSortOrder : 'asc']) }}" class="text-navy text-decoration-none d-inline-flex align-items-center gap-1">
                         <span>Nama Instansi / OPD</span>
                         @if($currentSortBy === 'nama')
@@ -83,7 +99,7 @@
                         @endif
                     </a>
                 </th>
-                <th class="py-3 border-bottom-0 fw-semibold">
+                <th class="py-3 px-2 border-bottom-0 fw-semibold text-center" style="width: 110px;">
                     <a href="{{ request()->fullUrlWithQuery(['sort_by' => 'singkatan', 'sort_order' => $currentSortBy === 'singkatan' ? $nextSortOrder : 'asc']) }}" class="text-navy text-decoration-none d-inline-flex align-items-center gap-1">
                         <span>Singkatan</span>
                         @if($currentSortBy === 'singkatan')
@@ -93,87 +109,83 @@
                         @endif
                     </a>
                 </th>
-                <th class="py-3 border-bottom-0 fw-semibold text-center">Aset & KPB Terpadu</th>
-                <th class="py-3 border-bottom-0 fw-semibold">Akun Admin</th>
-                <th class="py-3 border-bottom-0 fw-semibold d-none d-md-table-cell">Alamat</th>
-                <th class="py-3 px-4 border-bottom-0 fw-semibold text-center" style="width: 100px;">Aksi</th>
+                <th class="py-3 px-2 border-bottom-0 fw-semibold text-center" style="width: 200px;">Ringkasan Aset</th>
+                <th class="py-3 px-3 border-bottom-0 fw-semibold" style="width: 230px;">Akun Admin</th>
+                <th class="py-3 px-3 border-bottom-0 fw-semibold text-center" style="width: 100px;">Aksi</th>
             </tr>
         </x-slot:thead>
 
         @foreach($opds as $index => $opd)
             <tr>
-                <td class="px-3 py-3 text-center">
-                    <input type="checkbox" class="form-check-input merge-check" 
-                           value="{{ $opd->id }}" 
-                           data-name="{{ $opd->nama }}" 
-                           data-singkatan="{{ $opd->singkatan ?? '' }}"
-                           data-count="{{ ($opd->vehicles_count ?? 0) + ($opd->ebmd_vehicles_count ?? 0) + ($opd->aset_tanahs_count ?? 0) + ($opd->bangunans_count ?? 0) }}"
-                           data-real="{{ $opd->vehicles_count ?? 0 }}"
-                           data-ebmd="{{ $opd->ebmd_vehicles_count ?? 0 }}"
-                           data-tanah="{{ $opd->aset_tanahs_count ?? 0 }}"
-                           data-bangunan="{{ $opd->bangunans_count ?? 0 }}"
-                           data-subopd="{{ $opd->sub_opds_count ?? 0 }}">
+                <td class="px-2 py-2.5 text-center">
+                    <div class="d-flex align-items-center justify-content-center gap-2">
+                        <input type="checkbox" class="form-check-input merge-check mt-0" 
+                               value="{{ $opd->id }}" 
+                               data-name="{{ $opd->nama }}" 
+                               data-singkatan="{{ $opd->singkatan ?? '' }}"
+                               data-count="{{ ($opd->vehicles_count ?? 0) + ($opd->ebmd_vehicles_count ?? 0) + ($opd->aset_tanahs_count ?? 0) + ($opd->bangunans_count ?? 0) }}"
+                               data-real="{{ $opd->vehicles_count ?? 0 }}"
+                               data-ebmd="{{ $opd->ebmd_vehicles_count ?? 0 }}"
+                               data-tanah="{{ $opd->aset_tanahs_count ?? 0 }}"
+                               data-bangunan="{{ $opd->bangunans_count ?? 0 }}"
+                               data-subopd="{{ $opd->sub_opds_count ?? 0 }}">
+                        <span class="text-secondary small font-monospace fw-medium">{{ ($opds->currentPage() - 1) * $opds->perPage() + $loop->iteration }}</span>
+                    </div>
                 </td>
-                <td class="px-3 py-3 text-secondary text-center">
-                    {{ ($opds->currentPage() - 1) * $opds->perPage() + $loop->iteration }}
+                <td class="py-2.5 px-3">
+                    <div class="fw-bold text-navy" title="{{ $opd->nama }}" style="line-height: 1.35; font-size: 0.88rem; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
+                        {{ $opd->nama }}
+                    </div>
                 </td>
-                <td class="py-3">
-                    <div class="fw-bold text-navy">{{ $opd->nama }}</div>
+                <td class="py-2.5 px-2 text-center">
+                    @if($opd->singkatan && $opd->singkatan !== '-')
+                        <span class="badge bg-light text-primary border border-primary border-opacity-25 px-2 py-1 font-monospace fw-semibold" style="font-size: 0.75rem;">{{ $opd->singkatan }}</span>
+                    @else
+                        <span class="text-secondary small px-2">-</span>
+                    @endif
                 </td>
-                <td class="py-3">
-                    <span class="badge bg-light text-primary border border-primary border-opacity-25 px-2 py-1">{{ $opd->singkatan ?? '-' }}</span>
-                </td>
-                <td class="py-3 text-center">
-                    <div class="d-flex justify-content-center gap-1 flex-wrap">
+                <td class="py-2.5 px-2 text-center">
+                    <div class="d-flex justify-content-center align-items-center gap-1 flex-wrap">
                         @if(($opd->aset_tanahs_count ?? 0) > 0)
-                            <span class="badge bg-warning bg-opacity-10 text-warning-emphasis border border-warning border-opacity-25 px-2 py-1 rounded-pill fw-medium" title="Aset Tanah (SIPAT)">
-                                <i class="bi bi-geo-alt-fill" style="font-size: 0.65rem;"></i> {{ $opd->aset_tanahs_count }} Tanah
+                            <span class="badge bg-warning bg-opacity-10 text-warning-emphasis border border-warning border-opacity-25 px-1.5 py-0.5 rounded-pill fw-medium" style="font-size: 0.72rem;" title="Aset Tanah (SIPAT)">
+                                <i class="bi bi-geo-alt-fill me-0.5" style="font-size: 0.65rem;"></i>{{ $opd->aset_tanahs_count }}
                             </span>
                         @endif
                         @if(($opd->bangunans_count ?? 0) > 0)
-                            <span class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25 px-2 py-1 rounded-pill fw-medium" title="Aset Bangunan">
-                                <i class="bi bi-building" style="font-size: 0.65rem;"></i> {{ $opd->bangunans_count }} Gedung
+                            <span class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25 px-1.5 py-0.5 rounded-pill fw-medium" style="font-size: 0.72rem;" title="Aset Bangunan / Gedung">
+                                <i class="bi bi-building me-0.5" style="font-size: 0.65rem;"></i>{{ $opd->bangunans_count }}
                             </span>
                         @endif
-                        <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 px-2 py-1 rounded-pill fw-medium" title="Data Real">
-                            <i class="bi bi-car-front-fill" style="font-size: 0.65rem;"></i> {{ $opd->vehicles_count ?? 0 }} Real
+                        <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 px-1.5 py-0.5 rounded-pill fw-medium" style="font-size: 0.72rem;" title="Data Kendaraan Real">
+                            <i class="bi bi-car-front-fill me-0.5" style="font-size: 0.65rem;"></i>{{ $opd->vehicles_count ?? 0 }}
                         </span>
-                        <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-2 py-1 rounded-pill fw-medium" title="Data e-BMD">
-                            <i class="bi bi-file-earmark-spreadsheet" style="font-size: 0.65rem;"></i> {{ $opd->ebmd_vehicles_count ?? 0 }} e-BMD
+                        <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-1.5 py-0.5 rounded-pill fw-medium" style="font-size: 0.72rem;" title="Data Kendaraan e-BMD">
+                            <i class="bi bi-file-earmark-spreadsheet me-0.5" style="font-size: 0.65rem;"></i>{{ $opd->ebmd_vehicles_count ?? 0 }}
                         </span>
                         @if(($opd->sub_opds_count ?? 0) > 0)
-                            <span class="badge bg-info bg-opacity-10 text-info border border-info border-opacity-25 px-2 py-1 rounded-pill fw-medium" title="Sub-OPD / Kuasa Pengguna Barang">
-                                <i class="bi bi-diagram-3" style="font-size: 0.65rem;"></i> {{ $opd->sub_opds_count }} KPB
+                            <span class="badge bg-info bg-opacity-10 text-info border border-info border-opacity-25 px-1.5 py-0.5 rounded-pill fw-medium" style="font-size: 0.72rem;" title="Sub-OPD / Kuasa Pengguna Barang (KPB)">
+                                <i class="bi bi-diagram-3 me-0.5" style="font-size: 0.65rem;"></i>{{ $opd->sub_opds_count }}
                             </span>
                         @endif
                     </div>
                 </td>
-                <td class="py-3">
+                <td class="py-2.5 px-3">
                     @if($opd->user)
-                        <div class="small fw-medium text-dark">{{ $opd->user->email }}</div>
-                        <span class="badge bg-success-subtle text-success small border-0 py-0" style="font-size: 0.65rem;">AKTIF</span>
+                        <div class="d-inline-block text-truncate fw-medium text-dark small" style="max-width: 190px; vertical-align: middle;" title="{{ $opd->user->email }}">
+                            {{ $opd->user->email }}
+                        </div>
+                        <div class="mt-0.5">
+                            <span class="badge bg-success-subtle text-success border-0 px-1.5 py-0.5 d-inline-flex align-items-center gap-1" style="font-size: 0.65rem;">
+                                <span style="font-size: 0.45rem;">●</span> AKTIF
+                            </span>
+                        </div>
                     @else
-                        <span class="text-secondary small italic">Tidak ada akun</span>
+                        <span class="text-secondary small fst-italic" style="font-size: 0.75rem;">Tidak ada akun</span>
                     @endif
                 </td>
-                <td class="py-3 text-secondary small d-none d-md-table-cell">
-                    {{ Str::limit($opd->alamat ?? '-', 50) }}
-                </td>
-                <td class="px-4 py-3 text-center">
-                    <div class="d-flex justify-content-center gap-2">
-                        <button type="button" class="btn btn-sm btn-light border shadow-none text-info btn-row-convert-subopd" 
-                                data-id="{{ $opd->id }}"
-                                data-nama="{{ $opd->nama }}"
-                                data-singkatan="{{ $opd->singkatan }}"
-                                data-real="{{ $opd->vehicles_count ?? 0 }}"
-                                data-ebmd="{{ $opd->ebmd_vehicles_count ?? 0 }}"
-                                data-tanah="{{ $opd->aset_tanahs_count ?? 0 }}"
-                                data-bangunan="{{ $opd->bangunans_count ?? 0 }}"
-                                data-subopd="{{ $opd->sub_opds_count ?? 0 }}"
-                                title="Jadikan Sub-OPD (Kuasa Pengguna Barang)">
-                            <i class="bi bi-diagram-2"></i>
-                        </button>
-                        <button type="button" class="btn btn-sm btn-light border shadow-none text-primary" 
+                <td class="px-3 py-2.5 text-center">
+                    <div class="d-flex justify-content-center align-items-center gap-1">
+                        <button type="button" class="btn btn-sm btn-light border shadow-none text-primary px-2 py-1 rounded-2" 
                                 data-bs-toggle="modal" 
                                 data-bs-target="#editOpdModal"
                                 data-id="{{ $opd->id }}"
@@ -183,13 +195,40 @@
                                 title="Edit Data OPD">
                             <i class="bi bi-pencil-square"></i>
                         </button>
-                        <form action="{{ route('opds.destroy', $opd) }}" method="POST" class="d-inline delete-confirm">
-                            @csrf
-                            @method('DELETE')
-                            <button type="submit" class="btn btn-sm btn-light border shadow-none text-danger" title="Hapus OPD">
-                                <i class="bi bi-trash3"></i>
+                        <div class="dropdown">
+                            <button class="btn btn-sm btn-light border shadow-none px-2 py-1 rounded-2 text-secondary" 
+                                    type="button" 
+                                    data-bs-toggle="dropdown" 
+                                    aria-expanded="false" 
+                                    title="Menu Aksi">
+                                <i class="bi bi-three-dots-vertical"></i>
                             </button>
-                        </form>
+                            <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 py-1" style="font-size: 0.85rem; min-width: 170px;">
+                                <li>
+                                    <button type="button" class="dropdown-item d-flex align-items-center gap-2 py-1.5 text-secondary btn-row-convert-subopd" 
+                                            data-id="{{ $opd->id }}"
+                                            data-nama="{{ $opd->nama }}"
+                                            data-singkatan="{{ $opd->singkatan }}"
+                                            data-real="{{ $opd->vehicles_count ?? 0 }}"
+                                            data-ebmd="{{ $opd->ebmd_vehicles_count ?? 0 }}"
+                                            data-tanah="{{ $opd->aset_tanahs_count ?? 0 }}"
+                                            data-bangunan="{{ $opd->bangunans_count ?? 0 }}"
+                                            data-subopd="{{ $opd->sub_opds_count ?? 0 }}">
+                                        <i class="bi bi-diagram-2 text-info"></i> Jadikan Sub-OPD
+                                    </button>
+                                </li>
+                                <li><hr class="dropdown-divider my-1"></li>
+                                <li>
+                                    <form action="{{ route('opds.destroy', $opd) }}" method="POST" class="delete-confirm">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="dropdown-item text-danger d-flex align-items-center gap-2 py-1.5">
+                                            <i class="bi bi-trash3 text-danger"></i> Hapus OPD
+                                        </button>
+                                    </form>
+                                </li>
+                            </ul>
+                        </div>
                     </div>
                 </td>
             </tr>

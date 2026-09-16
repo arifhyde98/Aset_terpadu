@@ -478,6 +478,16 @@ Seluruh peningkatan visual kustom diisolasi pada file [`resources/sass/component
 Untuk menjaga kebersihan antarmuka dan menghindari duplikasi menu di berbagai modul, struktur menu navigasi sidebar (`resources/views/layouts/partials/sidebar.blade.php`) dan mobile drawer (`resources/views/layouts/partials/bottom-nav.blade.php`) disatukan ke dalam arsitektur **Master Data & Pengaturan Terpadu**:
 1. **Modul Operasional Aset Murni (Clean Asset Ops):**
    - **SIPAT (Aset Tanah):** Hanya berfokus pada Data Aset Tanah, Tanah Belum Tercatat, Target Pensertifikatan, Peta GIS, Laporan, Cetak SKPT, dan Rekonsiliasi Arsip. Seluruh master data lawas dipindahkan ke Master Data Terpadu.
+
+### 9.6 Refactoring Tabel Manajemen Data OPD / Instansi (`resources/views/opds/index.blade.php`)
+Tampilan tabel Manajemen Data OPD / Instansi dioptimalkan agar lebih rapi, compact, dan tidak terlalu melebar tanpa mengubah fungsi, query, route, controller, atau skema data:
+1. **Struktur Kolom (6 Kolom Fix):** `NO` | `NAMA INSTANSI / OPD` | `SINGKATAN` | `RINGKASAN ASET` | `AKUN ADMIN` | `AKSI`.
+2. **Eliminasi Kolom Alamat di Listing:** Kolom ALAMAT disembunyikan dari tabel utama (tetap aman di DB dan modal edit).
+3. **Header Ringkasan Aset:** Header diganti menjadi `Ringkasan Aset` dengan badge icon-only + angka (`📍 10`, `🏢 5`, `🚗 25`, `📁 235`, `🌿 2`) tanpa teks nama aset, serta dilengkapi atribut `title` keterangan aset saat di-hover.
+4. **Truncate Akun Admin & Badge Status:** Username/Email admin menggunakan `text-truncate` (max 190px) dengan tooltip full email serta badge status `● AKTIF` di bawahnya.
+5. **Kerapian Kolom OPD & Singkatan:** Nama OPD menjadi kolom utama (38% width, max 2 baris line-clamp), Singkatan dibuat fixed badge (`110px`).
+6. **Aksi Compact & Safe Delete Dropdown:** Tombol Edit utama dipertahankan di luar, sedangkan aksi sekunder (`Jadikan Sub-OPD` & `Hapus OPD`) dikelompokkan dalam dropdown `⋮` untuk mencegah salah klik tombol hapus.
+7. **Multi-Select Checkbox Integration:** Checkbox seleksi massal diintegrasikan secara menyatu pada header & cell `NO` tanpa menambah lebar kolom secara tak perlu.
    - **Bangunan (KIB C):** Berfokus pada Data Bangunan, Peta GIS Bangunan, dan Laporan KIB C.
    - **E-RANDIS (Kendaraan Dinas):** Berfokus pada Data Kendaraan Dinas, Laporan Kendaraan, dan Rekonsiliasi BPKB.
    - **eLABEL (Arsip & Box):** Berfokus pada Dokumen BPKB, Sertifikat Tanah, Surat Penyerahan, Kategori Arsip Dinamis, dan Layanan Peminjaman.
