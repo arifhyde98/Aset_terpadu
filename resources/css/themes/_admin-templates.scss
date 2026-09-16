@@ -286,68 +286,164 @@
         margin-left: 0 !important;
         padding-left: 1.5rem !important;
         padding-right: 1.5rem !important;
+        padding-top: 1.25rem !important;
         background-color: #f4f5f7 !important;
     }
 
+    /* Navbar Header Styling */
     .navbar-admin {
-        margin-bottom: 0.75rem !important;
+        background-color: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+        margin-bottom: 0.5rem !important;
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+
+        .btn-light {
+            background-color: #ffffff !important;
+            border: 1px solid #e5e7eb !important;
+            border-radius: 12px !important;
+            color: #374151 !important;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03) !important;
+
+            &:hover {
+                background-color: #f9fafb !important;
+                border-color: #d1d5db !important;
+            }
+        }
     }
 
+    /* Floating Topbar Styling (Pinterest Layout) */
     .horizontal-topbar-wrapper {
         display: flex !important;
+        margin-bottom: 1.5rem !important;
     }
 
     #horizontalNavbarCard {
-        background-color: #ffffff !important;
-        border: 1px solid #e5e7eb !important;
-        border-radius: 9999px !important;
-        padding: 0.25rem 0.5rem !important;
-        box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.04), 0 2px 6px -1px rgba(0, 0, 0, 0.02) !important;
+        background-color: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+        padding: 0 !important;
 
+        .card-body {
+            padding: 0 !important;
+            gap: 0.75rem !important;
+        }
+
+        /* Left Brand Badge (Dark Obsidian Square/Pill) */
+        a.border-end {
+            border-right: none !important;
+            background-color: #18181b !important;
+            color: #ffffff !important;
+            border-radius: 14px !important;
+            padding: 0.55rem 1rem !important;
+            box-shadow: 0 4px 14px rgba(24, 24, 27, 0.2) !important;
+            transition: all 0.2s ease;
+
+            .text-navy {
+                color: #ffffff !important;
+            }
+
+            .text-secondary {
+                color: #a1a1aa !important;
+            }
+
+            img {
+                border-color: rgba(255, 255, 255, 0.2) !important;
+            }
+        }
+
+        /* Nav Pill Buttons */
         .nav-pill-btn {
+            background-color: #ffffff !important;
+            border: 1px solid #e5e7eb !important;
             border-radius: 9999px !important;
-            font-size: 0.85rem !important;
+            font-size: 0.84rem !important;
             padding: 0.45rem 1.15rem !important;
             color: #374151 !important;
-            background-color: transparent !important;
             font-weight: 500 !important;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02) !important;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 
             &:hover {
-                background-color: #f3f4f6 !important;
+                background-color: #f9fafb !important;
+                border-color: #d1d5db !important;
                 color: #111827 !important;
             }
 
+            /* Active Pill (Solid Dark Obsidian Badge) */
             &.active-pill {
                 background-color: #18181b !important;
+                border-color: #18181b !important;
                 color: #ffffff !important;
                 font-weight: 600 !important;
-                box-shadow: 0 4px 12px rgba(24, 24, 27, 0.15) !important;
+                box-shadow: 0 4px 14px rgba(24, 24, 27, 0.22) !important;
 
                 i {
                     color: #ffffff !important;
                 }
             }
         }
+
+        .dropdown-menu {
+            border-radius: 14px !important;
+            border: 1px solid #e5e7eb !important;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.08) !important;
+        }
     }
 
+    /* Cards & Containers (20px Rounded Pinterest UI) */
     .admin-card, .card {
         background-color: #ffffff !important;
-        border: 1px solid #e5e7eb !important;
-        border-radius: 18px !important;
-        box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.03), 0 2px 4px -1px rgba(0, 0, 0, 0.02) !important;
+        border: 1px solid #eaecf0 !important;
+        border-radius: 20px !important;
+        box-shadow: 0 1px 3px rgba(16, 24, 40, 0.04), 0 1px 2px rgba(16, 24, 40, 0.02) !important;
     }
 
+    /* Table Enhancements */
+    .table-responsive {
+        border-radius: 16px !important;
+    }
+
+    .table {
+        thead th {
+            background-color: #f8fafc !important;
+            border-bottom: 1px solid #e2e8f0 !important;
+            color: #475569 !important;
+            font-size: 0.78rem !important;
+            font-weight: 600 !important;
+            letter-spacing: 0.03em !important;
+            text-transform: uppercase !important;
+        }
+
+        tbody td {
+            border-bottom: 1px solid #f1f5f9 !important;
+            color: #0f172a !important;
+        }
+    }
+
+    /* Primary Action Buttons */
     .btn-primary {
         background-color: #18181b !important;
         border-color: #18181b !important;
         color: #ffffff !important;
-        border-radius: 12px !important;
+        border-radius: 9999px !important;
+        font-weight: 600 !important;
+        padding: 0.45rem 1.25rem !important;
+        box-shadow: 0 4px 12px rgba(24, 24, 27, 0.15) !important;
 
         &:hover, &:focus, &:active {
             background-color: #27272a !important;
             border-color: #27272a !important;
             color: #ffffff !important;
+            box-shadow: 0 6px 16px rgba(24, 24, 27, 0.25) !important;
         }
+    }
+
+    /* Light / Secondary Action Buttons */
+    .btn-light, .btn-outline-secondary, .btn-outline-info, .btn-outline-warning {
+        border-radius: 9999px !important;
+        font-weight: 500 !important;
     }
 
     /* Minimalist Dark Mode */
@@ -358,12 +454,27 @@
             background-color: #09090b !important;
         }
 
+        .navbar-admin {
+            .btn-light {
+                background-color: #18181b !important;
+                border-color: #27272a !important;
+                color: #f4f4f5 !important;
+
+                &:hover {
+                    background-color: #27272a !important;
+                }
+            }
+        }
+
         #horizontalNavbarCard {
-            background-color: #18181b !important;
-            border: 1px solid #27272a !important;
-            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5) !important;
+            a.border-end {
+                background-color: #27272a !important;
+                box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4) !important;
+            }
 
             .nav-pill-btn {
+                background-color: #18181b !important;
+                border-color: #27272a !important;
                 color: #a1a1aa !important;
 
                 &:hover {
@@ -372,31 +483,62 @@
                 }
 
                 &.active-pill {
-                    background-color: #27272a !important;
-                    color: #ffffff !important;
-                    box-shadow: inset 0 0 0 1px #3f3f46 !important;
+                    background-color: #ffffff !important;
+                    border-color: #ffffff !important;
+                    color: #09090b !important;
+                    box-shadow: 0 4px 14px rgba(255, 255, 255, 0.2) !important;
+
+                    i {
+                        color: #09090b !important;
+                    }
+                }
+            }
+
+            .dropdown-menu {
+                background-color: #18181b !important;
+                border-color: #27272a !important;
+                .dropdown-item {
+                    color: #cbd5e1 !important;
+                    &:hover, &.active {
+                        background-color: #27272a !important;
+                        color: #ffffff !important;
+                    }
                 }
             }
         }
 
         .admin-card, .card {
             background-color: #18181b !important;
-            border: 1px solid #27272a !important;
+            border-color: #27272a !important;
             box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4) !important;
-            border-radius: 18px !important;
+            border-radius: 20px !important;
+        }
+
+        .table {
+            thead th {
+                background-color: #18181b !important;
+                border-bottom: 1px solid #27272a !important;
+                color: #94a3b8 !important;
+            }
+
+            tbody td {
+                border-bottom: 1px solid #27272a !important;
+                color: #f1f5f9 !important;
+            }
         }
 
         .btn-primary {
-            background-color: #f4f4f5 !important;
-            border-color: #f4f4f5 !important;
+            background-color: #ffffff !important;
+            border-color: #ffffff !important;
             color: #09090b !important;
 
             &:hover, &:focus, &:active {
-                background-color: #e4e4e7 !important;
-                border-color: #e4e4e7 !important;
+                background-color: #f4f4f5 !important;
+                border-color: #f4f4f5 !important;
                 color: #09090b !important;
             }
         }
     }
 }
+
 
