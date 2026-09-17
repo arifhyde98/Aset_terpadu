@@ -5,6 +5,8 @@ use App\Http\Controllers\Erandis\VehicleController;
 use App\Http\Controllers\Erandis\VehicleTypeController;
 use App\Http\Controllers\Erandis\OpdController;
 
+use App\Http\Controllers\Erandis\EbmdReconciliationController;
+
 // Manajemen Kendaraan
 Route::prefix('vehicles')->name('vehicles.')->group(function () {
     Route::get('export', [VehicleController::class, 'export'])->name('export');
@@ -20,6 +22,14 @@ Route::prefix('vehicles')->name('vehicles.')->group(function () {
     Route::post('sanitize-swapped-identifiers', [VehicleController::class, 'sanitizeSwappedIdentifiers'])->name('sanitize-swapped-identifiers');
     Route::post('{vehicle}/sync-to-real', [VehicleController::class, 'syncToReal'])->name('sync-to-real');
     Route::get('rekon-bpkb', [VehicleController::class, 'rekonBpkb'])->name('rekon-bpkb');
+
+    // Rekonsiliasi e-BMD (Selective Column Sync)
+    Route::prefix('rekon-ebmd')->name('rekon-ebmd.')->group(function () {
+        Route::get('/', [EbmdReconciliationController::class, 'index'])->name('index');
+        Route::post('upload-preview', [EbmdReconciliationController::class, 'uploadPreview'])->name('upload-preview');
+        Route::post('diff-preview', [EbmdReconciliationController::class, 'diffPreview'])->name('diff-preview');
+        Route::post('execute', [EbmdReconciliationController::class, 'execute'])->name('execute');
+    });
 });
 Route::resource('vehicles', VehicleController::class);
 

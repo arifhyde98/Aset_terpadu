@@ -132,6 +132,12 @@
                                         <span>Laporan Aset Tanah</span>
                                     </a>
                                 </li>
+                                <li class="{{ Request::is('vehicles/rekon-ebmd*') && request('category') === 'tanah' ? 'active' : '' }}">
+                                    <a href="{{ route('vehicles.rekon-ebmd.index', ['category' => 'tanah']) }}" data-bs-toggle="tooltip" data-bs-placement="right" title="Rekonsiliasi & Sinkronisasi e-BMD Tanah">
+                                        <i class="bi bi-arrow-repeat text-info"></i>
+                                        <span>Rekonsiliasi e-BMD Tanah</span>
+                                    </a>
+                                </li>
                             </ul>
                         </div>
                     </div>
@@ -233,7 +239,7 @@
                         </a>
                         <div id="erandisSubKendaraan" class="collapse {{ Request::is('vehicles*', 'reports*') && !Request::is('reports/settings*') ? 'show' : '' }}">
                             <ul class="submenu-list">
-                                <li class="{{ Request::is('vehicles*') && !Request::is('vehicles/rekon-bpkb') ? 'active' : '' }}">
+                                <li class="{{ Request::is('vehicles*') && !Request::is('vehicles/rekon-bpkb') && !Request::is('vehicles/rekon-ebmd*') ? 'active' : '' }}">
                                     <a href="{{ route('vehicles.index') }}" data-bs-toggle="tooltip" data-bs-placement="right" title="Data Kendaraan">
                                         <i class="bi bi-truck"></i>
                                         <span>Data Kendaraan Dinas</span>
@@ -243,6 +249,12 @@
                                     <a href="{{ route('reports.index') }}" data-bs-toggle="tooltip" data-bs-placement="right" title="Laporan Kendaraan">
                                         <i class="bi bi-graph-up"></i>
                                         <span>Laporan Kendaraan Dinas</span>
+                                    </a>
+                                </li>
+                                <li class="{{ Request::is('vehicles/rekon-ebmd*') ? 'active' : '' }}">
+                                    <a href="{{ route('vehicles.rekon-ebmd.index') }}" data-bs-toggle="tooltip" data-bs-placement="right" title="Rekonsiliasi & Sinkronisasi Fleksibel e-BMD Kemendagri">
+                                        <i class="bi bi-arrow-repeat text-warning"></i>
+                                        <span>Rekonsiliasi e-BMD</span>
                                     </a>
                                 </li>
                                 <li class="{{ Request::is('vehicles/rekon-bpkb') ? 'active' : '' }}">

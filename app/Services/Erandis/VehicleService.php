@@ -239,23 +239,25 @@ class VehicleService
         
         // Kamus sinonim kolom target database
         $synonyms = [
+            'kode_barang' => ['kode barang', 'kode_barang', 'penggolongan dan kodefikasi barang', 'kode barang penggolongan', 'kode aset', 'kode bangunan'],
             'no_polisi' => ['no polisi', 'no. polisi', 'nomor polisi', 'plat', 'no plat', 'no. plat', 'nomor plat', 'nopol', 'plat nomor', 'plate', 'plate number'],
             'jenis' => ['jenis', 'jenis kendaraan', 'kategori', 'kategori kendaraan', 'roda', 'class', 'category', 'jenis roda'],
-            'merk' => ['merk', 'merek', 'brand', 'pabrikan', 'nama aset', 'nama kendaraan', 'make', 'merk jenis', 'merkjenis', 'merk/jenis'],
-            'tipe' => ['tipe', 'type', 'model', 'jenis tipe', 'tipe kendaraan', 'merk jenis', 'merkjenis', 'merk/jenis'],
+            'merk' => ['merk', 'merek', 'brand', 'pabrikan', 'nama aset', 'nama kendaraan', 'make', 'spesifikasi nama barang', 'nama barang', 'spesifikasi'],
+            'tipe' => ['tipe', 'type', 'model', 'jenis tipe', 'tipe kendaraan', 'spesifikasi lainnya', 'spesifikasi barang'],
             'no_mesin' => ['no mesin', 'no. mesin', 'nomor mesin', 'engine number', 'engine no', 'nomer mesin'],
             'no_rangka' => ['no rangka', 'no. rangka', 'nomor rangka', 'chassis number', 'vin', 'chassis no', 'nomer rangka'],
             'tahun_pembuatan' => ['tahun', 'tahun pembuatan', 'thn', 'tahun rakit', 'tahun buat', 'year', 'thn pembuatan', 'thn buat'],
             'tgl_perolehan' => ['tgl perolehan', 'tanggal perolehan', 'tgl beli', 'tanggal beli', 'tanggal perolehan aset', 'acquisition date', 'tgl perolehan aset'],
-            'nilai_perolehan' => ['harga', 'nilai perolehan', 'harga perolehan', 'nilai', 'nilai aset', 'harga beli', 'price', 'value', 'jumlah perolehan'],
+            'nilai_perolehan' => ['harga', 'nilai perolehan', 'harga perolehan', 'nilai', 'nilai aset', 'harga beli', 'price', 'value', 'jumlah perolehan', 'harga satuan perolehan', 'nilai perolehan rp', 'harga satuan perolehan rp', 'rp'],
             'stnk_ada' => ['stnk', 'status stnk', 'kelengkapan stnk', 'ada stnk', 'surat stnk'],
-            'bpkb_ada' => ['bpkb', 'status bpkb', 'kelengkapan bpkb', 'ada bpkb', 'surat bpkb'],
-            'kondisi' => ['kondisi', 'kondisi fisik', 'keadaan', 'status kondisi', 'condition', 'kondisi aset', 'kondisi kendaraan'],
-            'pemegang' => ['pemegang', 'nama pemegang', 'penanggung jawab', 'peminjam', 'user', 'driver', 'nama pemakai', 'penggunaan', 'pengguna'],
+            'bpkb_ada' => ['bpkb', 'status bpkb', 'kelengkapan bpkb', 'ada bpkb', 'surat bpkb', 'bukti kepemilikan'],
+            'kondisi' => ['kondisi', 'kondisi fisik', 'keadaan', 'status kondisi', 'condition', 'kondisi aset', 'kondisi kendaraan', 'status penggunaan'],
+            'pemegang' => ['pemegang', 'nama pemegang', 'penanggung jawab', 'peminjam', 'user', 'driver', 'nama pemakai', 'penggunaan', 'pengguna', 'nama kepemilikan dalam dokumen'],
             'keterangan' => ['keterangan', 'ket', 'note', 'notes', 'keterangan tambahan', 'keterangan aset'],
             'opd' => ['opd', 'instansi', 'dinas', 'skpd', 'kantor', 'bagian', 'department', 'organisasi'],
             'sub_opd' => ['sub opd', 'sub_opd', 'kpb', 'kuasa pengguna barang', 'unit kerja', 'puskesmas', 'sub unit', 'sub opd / kpb'],
             'nomor_register' => ['nomor register', 'no register', 'no. register', 'nomer register', 'register', 'register number', 'reg number', 'no_register', 'no reg'],
+            'nibar' => ['nibar', 'nomor induk barang', 'no nibar', 'no. nibar'],
         ];
 
         foreach ($headers as $header) {
