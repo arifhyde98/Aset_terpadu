@@ -97,9 +97,21 @@ class VehicleController extends Controller implements HasMiddleware
             ? Opd::whereIn('id', EbmdVehicle::withoutGlobalScopes()->distinct()->pluck('opd_id'))->orderBy('nama')->get()
             : Opd::whereIn('id', Vehicle::withoutGlobalScopes()->distinct()->pluck('opd_id'))->orderBy('nama')->get();
 
+        $selectedOpdId = $request->input('opd_id');
+        $filterSubOpdsQuery = \App\Models\SubOpd::where('aktif', true);
+        if ($selectedOpdId) {
+            $filterSubOpdsQuery->where('opd_id', $selectedOpdId);
+        } else {
+            $subOpdIds = $isEbmd 
+                ? EbmdVehicle::withoutGlobalScopes()->whereNotNull('sub_opd_id')->distinct()->pluck('sub_opd_id')
+                : Vehicle::withoutGlobalScopes()->whereNotNull('sub_opd_id')->distinct()->pluck('sub_opd_id');
+            $filterSubOpdsQuery->whereIn('id', $subOpdIds);
+        }
+        $filterSubOpds = $filterSubOpdsQuery->orderBy('nama')->get();
+
         return view('vehicles.index', compact(
             'vehicles', 'stats', 'ebmdStats', 'vehicleTypes', 
-            'opds', 'filterOpds', 'statuses', 'conditions', 'vehicleDataMap'
+            'opds', 'filterOpds', 'filterSubOpds', 'statuses', 'conditions', 'vehicleDataMap'
         ));
     }
 

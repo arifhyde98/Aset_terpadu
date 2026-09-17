@@ -114,12 +114,16 @@
         <x-slot:filters>
             <form action="{{ route('vehicles.index') }}" method="GET" class="row g-2 align-items-center">
                 <input type="hidden" name="tab" value="{{ request('tab', 'real') }}">
+                
+                <!-- Search Keyword -->
                 <div class="col-md-3">
                     <div class="input-group input-group-sm">
                         <span class="input-group-text bg-white border-end-0"><i class="bi bi-search text-secondary"></i></span>
                         <input type="text" name="q" value="{{ request('q') }}" class="form-control border-start-0 bg-white shadow-none" placeholder="Cari nopol, merk, tipe, pemegang...">
                     </div>
                 </div>
+
+                <!-- Filter OPD -->
                 @if(auth()->user()->role !== \App\Enums\UserRole::OPD && auth()->user()->role !== \App\Enums\UserRole::KPB)
                 <div class="col-md-3">
                     <select class="form-select form-select-sm shadow-none searchable-select" name="opd_id" onchange="this.form.submit()">
@@ -130,6 +134,36 @@
                     </select>
                 </div>
                 @endif
+
+                <!-- Filter Sub OPD / Unit Kerja -->
+                @if(isset($filterSubOpds) && $filterSubOpds->count() > 0)
+                <div class="col-md-3">
+                    <select class="form-select form-select-sm shadow-none searchable-select" name="sub_opd_id" onchange="this.form.submit()">
+                        <option value="">Semua Sub OPD / Unit Kerja</option>
+                        @foreach($filterSubOpds as $subOpd)
+                            <option value="{{ $subOpd->id }}" {{ request('sub_opd_id') == $subOpd->id ? 'selected' : '' }}>{{ $subOpd->nama }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                @endif
+
+                <!-- Filter Jenis Kendaraan -->
+                <div class="col-md-2">
+                    <select class="form-select form-select-sm shadow-none" name="jenis" onchange="this.form.submit()">
+                        <option value="">Semua Jenis Kendaraan</option>
+                        @if(isset($vehicleTypes) && $vehicleTypes->count() > 0)
+                            @foreach($vehicleTypes as $type)
+                                <option value="{{ $type->name }}" {{ request('jenis') == $type->name ? 'selected' : '' }}>{{ $type->name }}</option>
+                            @endforeach
+                        @else
+                            <option value="Roda 2" {{ request('jenis') == 'Roda 2' ? 'selected' : '' }}>Roda 2</option>
+                            <option value="Roda 4" {{ request('jenis') == 'Roda 4' ? 'selected' : '' }}>Roda 4</option>
+                            <option value="Roda 3" {{ request('jenis') == 'Roda 3' ? 'selected' : '' }}>Roda 3</option>
+                        @endif
+                    </select>
+                </div>
+
+                <!-- Filter Status Operasional -->
                 <div class="col-md-2">
                     <select class="form-select form-select-sm shadow-none" name="status" onchange="this.form.submit()">
                         <option value="">Semua Status</option>
@@ -138,6 +172,8 @@
                         @endforeach
                     </select>
                 </div>
+
+                <!-- Filter Kondisi Fisik -->
                 <div class="col-md-2">
                     <select class="form-select form-select-sm shadow-none" name="kondisi" onchange="this.form.submit()">
                         <option value="">Semua Kondisi</option>
@@ -146,6 +182,8 @@
                         @endforeach
                     </select>
                 </div>
+
+                <!-- Buttons & Per Page -->
                 <div class="col-md-2 d-flex gap-2">
                     <select class="form-select form-select-sm shadow-none" name="per_page" onchange="this.form.submit()" title="Jumlah data per halaman" style="max-width: 75px;">
                         <option value="10" {{ request('per_page', 10) == 10 ? 'selected' : '' }}>10</option>
