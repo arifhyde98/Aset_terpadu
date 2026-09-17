@@ -339,7 +339,7 @@ Seluruh logika kalkulasi dan query bisnis wajib dienkapsulasi di dalam kelas Ser
 - `ReportGenerationService` (`app/Services/Erandis/ReportGenerationService.php`): Pembuatan berkas ekspor dan PDF laporan kendaraan dinas.
 - `ReportDocumentSettingService` (`app/Services/Erandis/ReportDocumentSettingService.php`): Pengaturan dokumen, kop surat, dan penanda tangan laporan kendaraan.
 - `SipatService` (`app/Services/Sipat/SipatService.php`): Menyediakan statistik ringkasan pertanahan, agregasi capaian BPN, cache dashboard SIPAT, dan sebaran wilayah kecamatan/OPD.
-- `LaporanService` (`app/Services/Sipat/LaporanService.php`): Mesin pengolah laporan pertanahan resmi: resolusi judul 3 baris dinamis, ekspor Excel 11/12 kolom bersertifikat, dan penataan lembar pengesahan tanda tangan ganda.
+- `LaporanService` (`app/Services/Sipat/LaporanService.php`): Mesin pengolah laporan pertanahan resmi: resolusi judul 3 baris dinamis, ekspor Excel 12/13 kolom bersertifikat, dan penataan lembar pengesahan tanda tangan ganda.
 - `AsetTanahService` (`app/Services/Sipat/AsetTanahService.php`):
   - Kueri Master Aset Tanah diurutkan menggunakan `CASE` SQL agar aset ber-NIBAR resmi selalu di urutan paling atas dan usulan draft (`DRAFT-`, `BELUM-`, null, `-`) di paling bawah.
   - Menggunakan **Eloquent Query Scopes** pada Model `AsetTanah` (`scopeSudahBersertifikat`, `scopeDalamProses`, `scopeBermasalah`, `scopeBelumBersertifikat`, dan `scopeFilterKategoriStatus`) sebagai *Single Source of Truth (SSOT)* filter status pertanahan.
@@ -389,29 +389,30 @@ class ContohController extends Controller implements HasMiddleware
 
 ## 8. 📄 Standardisasi Laporan, Dokumen Cetak & Ekspor Resmi
 
-### 8.1 Format 11/12 Kolom Laporan Aset Tanah (SIPAT)
+### 8.1 Format 12/13 Kolom Laporan Aset Tanah (SIPAT)
 Format tabel laporan pertanahan diselaraskan persis dengan format cetak resmi Pemerintah Kabupaten Donggala:
-- **11 Kolom Standar Resmi:**
+- **12 Kolom Standar Resmi:**
   1. `NO.`
   2. `Kode Aset / NIBAR`
   3. `Nama Barang` (`nama_aset`)
   4. `Lokasi` (`alamat`)
-  5. `Bidang` (`peruntukan`)
-  6. `Luas (m²)` (`luas`)
-  7. `Nilai (Rp)` (`harga_perolehan`)
-  8. `Tanggal Perolehan` (`tanggal_perolehan`)
-  9. `Cara Perolehan` (`dasar_perolehan`)
-  10. `Status` (`latestProses.statusProses.nama_status`)
-  11. `Keterangan` (Murni catatan `$row->keterangan`, dilarang keras fallback ke nama barang).
-- **Dukungan Dinamis 12 Kolom (Sub-Kolom `No. Sertifikat`):**
-  - Ketika filter `kategori_status === 'sudah_bersertifikat'` aktif, dokumen cetak dan ekspor otomatis berekspansi menjadi 12 kolom dengan menyisipkan sub-kolom `No. Sertifikat` di bawah grup header `Aset Sudah Bersertifikat` persis di antara sub-kolom `Bidang` dan `Luas (m²)`:
+  5. `Kecamatan` (`wilayahKecamatan.nama` / `kecamatan`)
+  6. `Bidang` (`peruntukan`)
+  7. `Luas (m²)` (`luas`)
+  8. `Nilai (Rp)` (`harga_perolehan`)
+  9. `Tanggal Perolehan` (`tanggal_perolehan`)
+  10. `Cara Perolehan` (`dasar_perolehan`)
+  11. `Status` (`latestProses.statusProses.nama_status`)
+  12. `Keterangan` (Murni catatan `$row->keterangan`, dilarang keras fallback ke nama barang).
+- **Dukungan Dinamis 13 Kolom (Sub-Kolom `No. Sertifikat`):**
+  - Ketika filter `kategori_status === 'sudah_bersertifikat'` aktif, dokumen cetak dan ekspor otomatis berekspansi menjadi 13 kolom dengan menyisipkan sub-kolom `No. Sertifikat` di bawah grup header `Aset Sudah Bersertifikat` persis di antara sub-kolom `Bidang` dan `Luas (m²)`:
     `Bidang` | `No. Sertifikat` | `Luas (m²)` | `Nilai (Rp)`
   - Nomor sertifikat diambil secara efisien melalui eager loading relasi `sertifikatElabel` (`$row->sertifikatElabel?->no_sertipikat ?? '-'`).
 - **Implementasi Kanal Output:**
   1. **Tampilan Web (`sipat/laporan/index.blade.php`):** Desain modern 2-kolom (`.report-shell`) yang memisahkan panel filter dinamis dan kartu ringkasan hasil query (Total Bidang, Total Luas m², Total Nilai Rp) di sisi kiri, serta kartu aksi ekspor cepat (Pratinjau PDF, Unduh PDF, Unduh Excel, Cetak Browser, dan Tab Rekapitulasi per OPD) di sisi kanan.
-  2. **Cetak / Unduh PDF (`sipat/laporan/print_pdf.blade.php`):** Merender 11 kolom atau 12 kolom dinamis (dengan sub-kolom `No. Sertifikat` `colspan="4"` di grup header dan total baris `colspan="6"`) dengan tata letak A4-Landscape presisi 100%.
-  3. **Ekspor Excel (`LaporanService::exportExcel`):** Kolom A s.d. L (12 kolom), KOP A:L, sub-kolom `Bidang` (E), `No. Sertifikat` (F), `Luas (m²)` (G), `Nilai (Rp)` (H), merge total `A:F`, dan blok tanda tangan pada kolom `J:L`.
-  - Untuk kategori lainnya (Semua/Rekap Umum, Belum Diproses, Dalam Proses, Bermasalah/Sengketa), struktur 11 kolom standar tetap dipertahankan.
+  2. **Cetak / Unduh PDF (`sipat/laporan/print_pdf.blade.php`):** Merender 12 kolom atau 13 kolom dinamis (dengan sub-kolom `No. Sertifikat` `colspan="4"` di grup header dan total baris `colspan="7"`) dengan tata letak A4-Landscape presisi 100%.
+  3. **Ekspor Excel (`LaporanService::exportExcel`):** Kolom A s.d. M (13 kolom), KOP A:M, `Kecamatan` (E), sub-kolom `Bidang` (F), `No. Sertifikat` (G), `Luas (m²)` (H), `Nilai (Rp)` (I), merge total `A:G`, dan blok tanda tangan pada kolom `J:M`.
+  - Untuk kategori lainnya (Semua/Rekap Umum, Belum Diproses, Dalam Proses, Bermasalah/Sengketa), struktur 12 kolom standar tetap dipertahankan.
 
 ### 8.2 Mesin Judul Dinamis 3 Baris & Mode Judul
 - **Tata Naskah Resmi 3 Baris (`LaporanService::resolveReportTitleLines`):**

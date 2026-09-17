@@ -51,8 +51,8 @@ class ActivityController extends Controller implements HasMiddleware
                 'description' => $activity->description,
                 'user' => $activity->user,
                 'created_at' => $activity->created_at,
-                'before_data' => json_decode($activity->old_data, true) ?: null,
-                'after_data' => json_decode($activity->new_data, true) ?: null,
+                'before_data' => !empty($activity->old_data) ? (json_decode((string) $activity->old_data, true) ?: null) : null,
+                'after_data' => !empty($activity->new_data) ? (json_decode((string) $activity->new_data, true) ?: null) : null,
             ];
         });
 
@@ -96,8 +96,8 @@ class ActivityController extends Controller implements HasMiddleware
                             'email' => $log->user_email,
                         ],
                         'created_at' => Carbon::parse($log->created_at),
-                        'before_data' => json_decode($log->old_data, true) ?: null,
-                        'after_data' => json_decode($log->new_data, true) ?: null,
+                        'before_data' => !empty($log->old_data) ? (json_decode((string) $log->old_data, true) ?: null) : null,
+                        'after_data' => !empty($log->new_data) ? (json_decode((string) $log->new_data, true) ?: null) : null,
                         'audit_action' => $log->action,
                         'audit_entity' => $log->entity,
                         'audit_entity_id' => $log->entity_id,
@@ -225,8 +225,8 @@ class ActivityController extends Controller implements HasMiddleware
         $id = $log->entity_id;
         
         // Ekstrak JSON
-        $newData = json_decode($log->new_data, true) ?? [];
-        $oldData = json_decode($log->old_data, true) ?? [];
+        $newData = !empty($log->new_data) ? (json_decode((string) $log->new_data, true) ?? []) : [];
+        $oldData = !empty($log->old_data) ? (json_decode((string) $log->old_data, true) ?? []) : [];
         
         // Prioritaskan newData untuk create/update, oldData untuk delete
         $data = in_array($action, ['delete', 'destroy']) ? $oldData : $newData;

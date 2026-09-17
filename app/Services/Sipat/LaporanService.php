@@ -418,9 +418,9 @@ class LaporanService
             $groupHeader = 'Aset Belum Bersertifikat';
         }
 
-        // Khusus laporan aset bersertifikat, tambahkan sub-kolom No. Sertifikat (Total 12 Kolom A s.d. L)
+        // Khusus laporan aset bersertifikat, tambahkan sub-kolom No. Sertifikat (Total 13 Kolom A s.d. M)
         $isBersertifikat = ($kat === 'sudah_bersertifikat');
-        $lastCol = $isBersertifikat ? 'L' : 'K';
+        $lastCol = $isBersertifikat ? 'M' : 'L';
 
         // --- 1. KOP SURAT RESMI ---
         $sheet->mergeCells('A1:' . $lastCol . '1');
@@ -468,18 +468,37 @@ class LaporanService
         $sheet->mergeCells('B' . $headerStartRow . ':B' . $headerRow2);
         $sheet->mergeCells('C' . $headerStartRow . ':C' . $headerRow2);
         $sheet->mergeCells('D' . $headerStartRow . ':D' . $headerRow2);
+        $sheet->mergeCells('E' . $headerStartRow . ':E' . $headerRow2);
 
         $sheet->setCellValue('A' . $headerStartRow, 'NO.');
         $sheet->setCellValue('B' . $headerStartRow, 'Kode Aset / NIBAR');
         $sheet->setCellValue('C' . $headerStartRow, 'Nama Barang');
         $sheet->setCellValue('D' . $headerStartRow, 'Lokasi');
+        $sheet->setCellValue('E' . $headerStartRow, 'Kecamatan');
 
         if ($isBersertifikat) {
             // Sub-kolom khusus aset bersertifikat: Bidang | No. Sertifikat | Luas(m2) | Nilai(Rp)
-            $sheet->mergeCells('E' . $headerStartRow . ':H' . $headerStartRow);
-            $sheet->setCellValue('E' . $headerStartRow, 'Aset Sudah Bersertifikat');
-            $sheet->setCellValue('E' . $headerRow2, 'Bidang');
-            $sheet->setCellValue('F' . $headerRow2, 'No. Sertifikat');
+            $sheet->mergeCells('F' . $headerStartRow . ':I' . $headerStartRow);
+            $sheet->setCellValue('F' . $headerStartRow, 'Aset Sudah Bersertifikat');
+            $sheet->setCellValue('F' . $headerRow2, 'Bidang');
+            $sheet->setCellValue('G' . $headerRow2, 'No. Sertifikat');
+            $sheet->setCellValue('H' . $headerRow2, 'Luas(m2)');
+            $sheet->setCellValue('I' . $headerRow2, 'Nilai(Rp)');
+
+            $sheet->mergeCells('J' . $headerStartRow . ':J' . $headerRow2);
+            $sheet->mergeCells('K' . $headerStartRow . ':K' . $headerRow2);
+            $sheet->mergeCells('L' . $headerStartRow . ':L' . $headerRow2);
+            $sheet->mergeCells('M' . $headerStartRow . ':M' . $headerRow2);
+
+            $sheet->setCellValue('J' . $headerStartRow, 'Tanggal Perolehan');
+            $sheet->setCellValue('K' . $headerStartRow, 'Cara Perolehan');
+            $sheet->setCellValue('L' . $headerStartRow, 'Status');
+            $sheet->setCellValue('M' . $headerStartRow, 'Keterangan');
+        } else {
+            // Standar 12 kolom untuk laporan lainnya: Bidang | Luas(m2) | Nilai(Rp)
+            $sheet->mergeCells('F' . $headerStartRow . ':H' . $headerStartRow);
+            $sheet->setCellValue('F' . $headerStartRow, $groupHeader);
+            $sheet->setCellValue('F' . $headerRow2, 'Bidang');
             $sheet->setCellValue('G' . $headerRow2, 'Luas(m2)');
             $sheet->setCellValue('H' . $headerRow2, 'Nilai(Rp)');
 
@@ -492,23 +511,6 @@ class LaporanService
             $sheet->setCellValue('J' . $headerStartRow, 'Cara Perolehan');
             $sheet->setCellValue('K' . $headerStartRow, 'Status');
             $sheet->setCellValue('L' . $headerStartRow, 'Keterangan');
-        } else {
-            // Standar 11 kolom untuk laporan lainnya: Bidang | Luas(m2) | Nilai(Rp)
-            $sheet->mergeCells('E' . $headerStartRow . ':G' . $headerStartRow);
-            $sheet->setCellValue('E' . $headerStartRow, $groupHeader);
-            $sheet->setCellValue('E' . $headerRow2, 'Bidang');
-            $sheet->setCellValue('F' . $headerRow2, 'Luas(m2)');
-            $sheet->setCellValue('G' . $headerRow2, 'Nilai(Rp)');
-
-            $sheet->mergeCells('H' . $headerStartRow . ':H' . $headerRow2);
-            $sheet->mergeCells('I' . $headerStartRow . ':I' . $headerRow2);
-            $sheet->mergeCells('J' . $headerStartRow . ':J' . $headerRow2);
-            $sheet->mergeCells('K' . $headerStartRow . ':K' . $headerRow2);
-
-            $sheet->setCellValue('H' . $headerStartRow, 'Tanggal Perolehan');
-            $sheet->setCellValue('I' . $headerStartRow, 'Cara Perolehan');
-            $sheet->setCellValue('J' . $headerStartRow, 'Status');
-            $sheet->setCellValue('K' . $headerStartRow, 'Keterangan');
         }
 
         // --- 4. DATA ROWS ---
@@ -528,6 +530,7 @@ class LaporanService
             $kodeAsetText = $row->kode_aset ?? '-';
             $namaBarangText = $row->nama_aset ?? '-';
             $lokasiText = $row->alamat ?? '-';
+            $kecamatanText = $row->wilayahKecamatan?->nama ?? $row->kecamatan ?? '-';
             $bidangText = $row->peruntukan ?? $row->nama_aset ?? '-';
             $noSertifikatText = !empty($row->sertifikatElabel?->no_sertipikat) ? trim($row->sertifikatElabel->no_sertipikat) : '-';
             $tglPerolehanText = !empty($row->tanggal_perolehan) ? \Carbon\Carbon::parse($row->tanggal_perolehan)->format('d/m/Y') : '-';
@@ -541,23 +544,24 @@ class LaporanService
             $sheet->setCellValue('B' . $rowNumber, $kodeAsetText);
             $sheet->setCellValue('C' . $rowNumber, $namaBarangText);
             $sheet->setCellValue('D' . $rowNumber, $lokasiText);
-            $sheet->setCellValue('E' . $rowNumber, $bidangText);
+            $sheet->setCellValue('E' . $rowNumber, $kecamatanText);
+            $sheet->setCellValue('F' . $rowNumber, $bidangText);
 
             if ($isBersertifikat) {
-                $sheet->setCellValue('F' . $rowNumber, $noSertifikatText);
+                $sheet->setCellValue('G' . $rowNumber, $noSertifikatText);
+                $sheet->setCellValue('H' . $rowNumber, $luasVal);
+                $sheet->setCellValue('I' . $rowNumber, $nilaiVal);
+                $sheet->setCellValue('J' . $rowNumber, $tglPerolehanText);
+                $sheet->setCellValue('K' . $rowNumber, $caraPerolehanText);
+                $sheet->setCellValue('L' . $rowNumber, $statusProsesText);
+                $sheet->setCellValue('M' . $rowNumber, $keteranganText);
+            } else {
                 $sheet->setCellValue('G' . $rowNumber, $luasVal);
                 $sheet->setCellValue('H' . $rowNumber, $nilaiVal);
                 $sheet->setCellValue('I' . $rowNumber, $tglPerolehanText);
                 $sheet->setCellValue('J' . $rowNumber, $caraPerolehanText);
                 $sheet->setCellValue('K' . $rowNumber, $statusProsesText);
                 $sheet->setCellValue('L' . $rowNumber, $keteranganText);
-            } else {
-                $sheet->setCellValue('F' . $rowNumber, $luasVal);
-                $sheet->setCellValue('G' . $rowNumber, $nilaiVal);
-                $sheet->setCellValue('H' . $rowNumber, $tglPerolehanText);
-                $sheet->setCellValue('I' . $rowNumber, $caraPerolehanText);
-                $sheet->setCellValue('J' . $rowNumber, $statusProsesText);
-                $sheet->setCellValue('K' . $rowNumber, $keteranganText);
             }
 
             $rowNumber++;
@@ -566,15 +570,15 @@ class LaporanService
         // --- 5. TOTAL ROW ---
         $totalRow = $rowNumber;
         if ($isBersertifikat) {
+            $sheet->mergeCells('A' . $totalRow . ':G' . $totalRow);
+            $sheet->setCellValue('A' . $totalRow, 'JUMLAH / TOTAL');
+            $sheet->setCellValue('H' . $totalRow, $totalLuas);
+            $sheet->setCellValue('I' . $totalRow, $totalNilai);
+        } else {
             $sheet->mergeCells('A' . $totalRow . ':F' . $totalRow);
             $sheet->setCellValue('A' . $totalRow, 'JUMLAH / TOTAL');
             $sheet->setCellValue('G' . $totalRow, $totalLuas);
             $sheet->setCellValue('H' . $totalRow, $totalNilai);
-        } else {
-            $sheet->mergeCells('A' . $totalRow . ':E' . $totalRow);
-            $sheet->setCellValue('A' . $totalRow, 'JUMLAH / TOTAL');
-            $sheet->setCellValue('F' . $totalRow, $totalLuas);
-            $sheet->setCellValue('G' . $totalRow, $totalNilai);
         }
 
         // --- 6. LEMBAR PENGESAHAN (TTD RESMI DUA SISI) ---
@@ -588,7 +592,7 @@ class LaporanService
         $pejabat2Nama = $kop['kop_pejabat2_nama'] ?? ($kop['kop_pejabat_nama'] ?? 'YENI SJ AMIR, SH.MSi');
         $pejabat2Nip = $this->formatNip($kop['kop_pejabat2_nip'] ?? '');
 
-        $ttdRightColStart = $isBersertifikat ? 'I' : 'H';
+        $ttdRightColStart = $isBersertifikat ? 'J' : 'I';
 
         // Berikan ruang tanda tangan fisik yang lapang (4 baris kosong)
         for ($r = $ttdStartRow + 2; $r <= $ttdStartRow + 5; $r++) {
@@ -666,23 +670,23 @@ class LaporanService
 
         // Alignments & Number Formats
         $sheet->getStyle('A' . $dataStartRow . ':A' . $totalRow)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
-        $sheet->getStyle('B' . $dataStartRow . ':E' . $totalRow)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_LEFT);
+        $sheet->getStyle('B' . $dataStartRow . ':F' . $totalRow)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_LEFT);
 
         if ($isBersertifikat) {
-            $sheet->getStyle('F' . $dataStartRow . ':F' . $totalRow)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+            $sheet->getStyle('G' . $dataStartRow . ':G' . $totalRow)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+            $sheet->getStyle('H' . $dataStartRow . ':I' . $totalRow)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_RIGHT);
+            $sheet->getStyle('J' . $dataStartRow . ':L' . $totalRow)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+            $sheet->getStyle('M' . $dataStartRow . ':M' . $totalRow)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_LEFT);
+
+            $sheet->getStyle('H' . $dataStartRow . ':H' . $totalRow)->getNumberFormat()->setFormatCode('#,##0.00');
+            $sheet->getStyle('I' . $dataStartRow . ':I' . $totalRow)->getNumberFormat()->setFormatCode('#,##0.00');
+        } else {
             $sheet->getStyle('G' . $dataStartRow . ':H' . $totalRow)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_RIGHT);
             $sheet->getStyle('I' . $dataStartRow . ':K' . $totalRow)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
             $sheet->getStyle('L' . $dataStartRow . ':L' . $totalRow)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_LEFT);
 
             $sheet->getStyle('G' . $dataStartRow . ':G' . $totalRow)->getNumberFormat()->setFormatCode('#,##0.00');
             $sheet->getStyle('H' . $dataStartRow . ':H' . $totalRow)->getNumberFormat()->setFormatCode('#,##0.00');
-        } else {
-            $sheet->getStyle('F' . $dataStartRow . ':G' . $totalRow)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_RIGHT);
-            $sheet->getStyle('H' . $dataStartRow . ':J' . $totalRow)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
-            $sheet->getStyle('K' . $dataStartRow . ':K' . $totalRow)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_LEFT);
-
-            $sheet->getStyle('F' . $dataStartRow . ':F' . $totalRow)->getNumberFormat()->setFormatCode('#,##0.00');
-            $sheet->getStyle('G' . $dataStartRow . ':G' . $totalRow)->getNumberFormat()->setFormatCode('#,##0.00');
         }
 
         // TTD Styling Sisi Kiri (Penanda Tangan 1)
@@ -705,23 +709,24 @@ class LaporanService
         $sheet->getColumnDimension('B')->setWidth(24);
         $sheet->getColumnDimension('C')->setWidth(26);
         $sheet->getColumnDimension('D')->setWidth(28);
-        $sheet->getColumnDimension('E')->setWidth(28);
+        $sheet->getColumnDimension('E')->setWidth(22);
+        $sheet->getColumnDimension('F')->setWidth(28);
 
         if ($isBersertifikat) {
-            $sheet->getColumnDimension('F')->setWidth(22); // No. Sertifikat
+            $sheet->getColumnDimension('G')->setWidth(22); // No. Sertifikat
+            $sheet->getColumnDimension('H')->setWidth(14); // Luas(m2)
+            $sheet->getColumnDimension('I')->setWidth(20); // Nilai(Rp)
+            $sheet->getColumnDimension('J')->setWidth(18); // Tanggal
+            $sheet->getColumnDimension('K')->setWidth(18); // Cara
+            $sheet->getColumnDimension('L')->setWidth(20); // Status
+            $sheet->getColumnDimension('M')->setWidth(30); // Keterangan
+        } else {
             $sheet->getColumnDimension('G')->setWidth(14); // Luas(m2)
             $sheet->getColumnDimension('H')->setWidth(20); // Nilai(Rp)
             $sheet->getColumnDimension('I')->setWidth(18); // Tanggal
             $sheet->getColumnDimension('J')->setWidth(18); // Cara
-            $sheet->getColumnDimension('K')->setWidth(20); // Status
+            $sheet->getColumnDimension('K')->setWidth(22); // Status
             $sheet->getColumnDimension('L')->setWidth(30); // Keterangan
-        } else {
-            $sheet->getColumnDimension('F')->setWidth(14); // Luas(m2)
-            $sheet->getColumnDimension('G')->setWidth(20); // Nilai(Rp)
-            $sheet->getColumnDimension('H')->setWidth(18); // Tanggal
-            $sheet->getColumnDimension('I')->setWidth(18); // Cara
-            $sheet->getColumnDimension('J')->setWidth(22); // Status
-            $sheet->getColumnDimension('K')->setWidth(30); // Keterangan
         }
 
         $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);

@@ -191,24 +191,25 @@
         @endforeach
     </div>
 
-    <!-- TABEL DENGAN 11/12 KOLOM RESMI (NO., KODE ASET/NIBAR, NAMA BARANG, LOKASI, [BIDANG, (NO. SERTIFIKAT), LUAS, NILAI], TANGGAL PEROLEHAN, CARA PEROLEHAN, STATUS, KETERANGAN) -->
+    <!-- TABEL DENGAN 12/13 KOLOM RESMI (NO., KODE ASET/NIBAR, NAMA BARANG, LOKASI, KECAMATAN, [BIDANG, (NO. SERTIFIKAT), LUAS, NILAI], TANGGAL PEROLEHAN, CARA PEROLEHAN, STATUS, KETERANGAN) -->
     <table class="table-report">
         <thead>
             <tr>
                 <th rowspan="2" width="3%" style="vertical-align: middle; text-align: center;">NO.</th>
-                <th rowspan="2" width="{{ $isBersertifikat ? '12%' : '13%' }}" style="vertical-align: middle; text-align: center;">Kode Aset / NIBAR</th>
-                <th rowspan="2" width="11%" style="vertical-align: middle; text-align: center;">Nama Barang</th>
-                <th rowspan="2" width="{{ $isBersertifikat ? '11%' : '12%' }}" style="vertical-align: middle; text-align: center;">Lokasi</th>
+                <th rowspan="2" width="{{ $isBersertifikat ? '11%' : '12%' }}" style="vertical-align: middle; text-align: center;">Kode Aset / NIBAR</th>
+                <th rowspan="2" width="{{ $isBersertifikat ? '10%' : '11%' }}" style="vertical-align: middle; text-align: center;">Nama Barang</th>
+                <th rowspan="2" width="{{ $isBersertifikat ? '10%' : '11%' }}" style="vertical-align: middle; text-align: center;">Lokasi</th>
+                <th rowspan="2" width="{{ $isBersertifikat ? '9%' : '10%' }}" style="vertical-align: middle; text-align: center;">Kecamatan</th>
                 <th colspan="{{ $isBersertifikat ? '4' : '3' }}" style="text-align: center;">{{ $groupHeader }}</th>
                 <th rowspan="2" width="{{ $isBersertifikat ? '7%' : '8%' }}" style="vertical-align: middle; text-align: center;">Tanggal Perolehan</th>
-                <th rowspan="2" width="7%" style="vertical-align: middle; text-align: center;">Cara Perolehan</th>
-                <th rowspan="2" width="{{ $isBersertifikat ? '7%' : '8%' }}" style="vertical-align: middle; text-align: center;">Status</th>
-                <th rowspan="2" width="{{ $isBersertifikat ? '8%' : '10%' }}" style="vertical-align: middle; text-align: center;">Keterangan</th>
+                <th rowspan="2" width="6%" style="vertical-align: middle; text-align: center;">Cara Perolehan</th>
+                <th rowspan="2" width="{{ $isBersertifikat ? '6%' : '7%' }}" style="vertical-align: middle; text-align: center;">Status</th>
+                <th rowspan="2" width="{{ $isBersertifikat ? '8%' : '9%' }}" style="vertical-align: middle; text-align: center;">Keterangan</th>
             </tr>
             <tr>
-                <th width="{{ $isBersertifikat ? '10%' : '12%' }}">Bidang</th>
+                <th width="{{ $isBersertifikat ? '9%' : '10%' }}">Bidang</th>
                 @if($isBersertifikat)
-                    <th width="10%" style="text-align: center;">No. Sertifikat</th>
+                    <th width="9%" style="text-align: center;">No. Sertifikat</th>
                 @endif
                 <th width="{{ $isBersertifikat ? '6%' : '7%' }}" style="text-align: right;">Luas(m2)</th>
                 <th width="{{ $isBersertifikat ? '8%' : '9%' }}" style="text-align: right;">Nilai(Rp)</th>
@@ -229,6 +230,7 @@
                     $kodeAsetText = $row->kode_aset ?? '-';
                     $namaBarangText = $row->nama_aset ?? '-';
                     $lokasiText = $row->alamat ?? '-';
+                    $kecamatanText = $row->wilayahKecamatan?->nama ?? $row->kecamatan ?? '-';
                     $bidangText = $row->peruntukan ?? $row->nama_aset ?? '-';
                     $noSertifikatText = !empty($row->sertifikatElabel?->no_sertipikat) ? trim($row->sertifikatElabel->no_sertipikat) : '-';
                     $tglPerolehanText = !empty($row->tanggal_perolehan) ? \Carbon\Carbon::parse($row->tanggal_perolehan)->format('d/m/Y') : '-';
@@ -243,6 +245,7 @@
                     <td style="font-family: monospace; font-size: 8pt; word-break: break-all;">{{ $kodeAsetText }}</td>
                     <td>{{ $namaBarangText }}</td>
                     <td>{{ $lokasiText }}</td>
+                    <td>{{ $kecamatanText }}</td>
                     <td>{{ $bidangText }}</td>
                     @if($isBersertifikat)
                         <td class="text-center" style="font-family: monospace; font-size: 8pt;">{{ $noSertifikatText }}</td>
@@ -256,13 +259,13 @@
                 </tr>
             @empty
                 <tr>
-                    <td colspan="{{ $isBersertifikat ? '12' : '11' }}" class="text-center">Tidak ada data aset tanah untuk ditampilkan.</td>
+                    <td colspan="{{ $isBersertifikat ? '13' : '12' }}" class="text-center">Tidak ada data aset tanah untuk ditampilkan.</td>
                 </tr>
             @endforelse
         </tbody>
         <tfoot>
             <tr>
-                <td colspan="{{ $isBersertifikat ? '6' : '5' }}" class="text-center">JUMLAH / TOTAL</td>
+                <td colspan="{{ $isBersertifikat ? '7' : '6' }}" class="text-center">JUMLAH / TOTAL</td>
                 <td class="text-right">{{ number_format($totalLuas, 2, ',', '.') }}</td>
                 <td class="text-right">{{ number_format($totalNilai, 2, ',', '.') }}</td>
                 <td colspan="4"></td>
