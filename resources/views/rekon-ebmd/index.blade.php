@@ -12,16 +12,22 @@
                     <span class="badge bg-warning-subtle text-warning-emphasis fw-semibold px-2.5 py-1 rounded-pill" style="font-size: 0.75rem;">
                         <i class="bi bi-arrow-repeat me-1"></i> PUSAT REKONSILIASI TERPADU E-BMD
                     </span>
+                    <span class="badge bg-primary-subtle text-primary fw-semibold px-2.5 py-1 rounded-pill" style="font-size: 0.75rem;">
+                        <i class="bi bi-key-fill me-1"></i> BUSINESS KEY: NIBAR
+                    </span>
                 </div>
                 <h2 class="fw-bold mb-1 text-navy">Rekonsiliasi & Sinkronisasi e-BMD Kemendagri</h2>
-                <p class="text-secondary small mb-0">Impor massal & pembaruan kolom terpilih (*Selective Column Update*) untuk seluruh kategori aset daerah.</p>
+                <p class="text-secondary small mb-0">Pencocokan data aset daerah (SIPAT) terhadap data pembanding e-BMD berbasis <strong>NIBAR (Nomor Induk Barang)</strong> secara selektif & aman.</p>
             </div>
             <div class="d-flex gap-2">
                 <a href="{{ route('sipat.aset.index') }}" class="btn btn-light border fw-medium shadow-sm">
-                    <i class="bi bi-geo-alt me-1"></i> Aset Tanah
+                    <i class="bi bi-geo-alt me-1 text-success"></i> Aset Tanah
+                </a>
+                <a href="{{ route('bangunan.index') }}" class="btn btn-light border fw-medium shadow-sm">
+                    <i class="bi bi-building me-1 text-danger"></i> Bangunan
                 </a>
                 <a href="{{ route('vehicles.index') }}" class="btn btn-light border fw-medium shadow-sm">
-                    <i class="bi bi-car-front me-1"></i> Kendaraan
+                    <i class="bi bi-car-front me-1 text-warning"></i> Kendaraan
                 </a>
             </div>
         </div>
@@ -31,18 +37,6 @@
     <div class="card border-0 shadow-sm rounded-3 mb-4 overflow-hidden">
         <div class="card-body p-2 bg-light">
             <ul class="nav nav-pills nav-fill gap-2" id="assetCategoryTabs">
-                <li class="nav-item">
-                    <button class="nav-item-btn nav-link fw-bold text-start py-2.5 px-3 {{ $activeCategory === 'vehicle' ? 'active bg-primary text-white shadow-sm' : 'text-dark bg-white' }}" data-category="vehicle">
-                        <i class="bi bi-car-front me-2 text-warning fs-5 align-middle"></i>
-                        <span>Kendaraan Real (eRANDIS)</span>
-                    </button>
-                </li>
-                <li class="nav-item">
-                    <button class="nav-item-btn nav-link fw-bold text-start py-2.5 px-3 {{ $activeCategory === 'ebmd_vehicle' ? 'active bg-primary text-white shadow-sm' : 'text-dark bg-white' }}" data-category="ebmd_vehicle">
-                        <i class="bi bi-database me-2 text-info fs-5 align-middle"></i>
-                        <span>Master e-BMD Kendaraan</span>
-                    </button>
-                </li>
                 <li class="nav-item">
                     <button class="nav-item-btn nav-link fw-bold text-start py-2.5 px-3 {{ $activeCategory === 'tanah' ? 'active bg-primary text-white shadow-sm' : 'text-dark bg-white' }}" data-category="tanah">
                         <i class="bi bi-geo-alt me-2 text-success fs-5 align-middle"></i>
@@ -55,6 +49,18 @@
                         <span>Gedung & Bangunan (SIPAT)</span>
                     </button>
                 </li>
+                <li class="nav-item">
+                    <button class="nav-item-btn nav-link fw-bold text-start py-2.5 px-3 {{ $activeCategory === 'vehicle' ? 'active bg-primary text-white shadow-sm' : 'text-dark bg-white' }}" data-category="vehicle">
+                        <i class="bi bi-car-front me-2 text-warning fs-5 align-middle"></i>
+                        <span>Kendaraan Real (eRANDIS)</span>
+                    </button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-item-btn nav-link fw-bold text-start py-2.5 px-3 {{ $activeCategory === 'ebmd_vehicle' ? 'active bg-primary text-white shadow-sm' : 'text-dark bg-white' }}" data-category="ebmd_vehicle">
+                        <i class="bi bi-database me-2 text-info fs-5 align-middle"></i>
+                        <span>Master e-BMD Kendaraan</span>
+                    </button>
+                </li>
             </ul>
         </div>
     </div>
@@ -65,10 +71,9 @@
             <i class="bi bi-shield-check fs-4"></i>
         </div>
         <div>
-            <h6 class="fw-bold mb-1 text-info-emphasis">Sistem Perlindungan Data Lokal Terpadu Active</h6>
+            <h6 class="fw-bold mb-1 text-info-emphasis">Sistem Perlindungan Data & Aturan Rekonsiliasi NIBAR Aktif</h6>
             <p class="small text-secondary mb-0">
-                Fitur ini memungkinkan Anda memilih secara spesifik kolom mana saja dari e-BMD Kemendagri yang ingin diperbarui pada kategori <strong id="lblActiveCategoryName">Kendaraan Dinas</strong>. 
-                Data lokal seperti <strong>Pemetaan Sub OPD (Sekolah & Puskesmas)</strong>, <strong>Koordinat & Poligon Peta GIS</strong>, <strong>Foto Aset</strong>, dan <strong>Catatan Internal</strong> tidak akan pernah tersentuh/tertimpa selama kolom tersebut tidak dicentang.
+                Pencocokan dilakukan mutlak menggunakan <code>SIPAT.NIBAR = eBMD.NIBAR</code>. Data lokal penting seperti <strong>Pemetaan Sub OPD (Sekolah & Puskesmas)</strong>, <strong>Koordinat & Poligon GIS</strong>, serta <strong>Foto Fisik</strong> tidak akan tertimpa. Nilai kosong dari e-BMD tidak akan menghapus data terisi di SIPAT.
             </p>
         </div>
     </div>
@@ -114,16 +119,54 @@
                 <div class="row g-4">
                     <div class="col-md-6">
                         <div class="p-3 border rounded-3 bg-light text-dark h-100">
-                            <label class="form-label fw-bold text-navy"><i class="bi bi-tag-fill me-1 text-primary"></i> Target Modul Aset Selected:</label>
-                            <div class="fs-5 fw-bold text-primary mb-1" id="lblTargetCategoryTitle">Kendaraan Real (eRANDIS)</div>
-                            <p class="small text-muted mb-0">File Excel akan dicocokkan dan diperbarui secara selektif ke modul database target ini.</p>
+                            <label class="form-label fw-bold text-navy"><i class="bi bi-tag-fill me-1 text-primary"></i> Target Modul Aset SIPAT:</label>
+                            <div class="fs-5 fw-bold text-primary mb-1" id="lblTargetCategoryTitle">Aset Tanah (SIPAT)</div>
+                            <p class="small text-muted mb-0">File Excel akan dicocokkan berdasarkan NIBAR ke modul database target ini.</p>
                         </div>
                     </div>
 
                     <div class="col-md-6">
                         <label class="form-label fw-bold">File Excel / CSV Ekspor e-BMD <span class="text-danger">*</span></label>
                         <input type="file" class="form-control form-control-lg" name="file" id="inputFile" accept=".xlsx,.xls,.csv" required>
-                        <small class="text-muted mt-1 d-block"><i class="bi bi-info-circle me-1"></i>Format yang didukung: .xlsx, .xls, .csv (Maksimal 10 MB)</small>
+                        <small class="text-muted mt-1 d-block"><i class="bi bi-info-circle me-1"></i>Format: .xlsx, .xls, .csv (Maksimal 10 MB)</small>
+                    </div>
+
+                    <!-- Cakupan Wilayah / Filter OPD Rekonsiliasi -->
+                    <div class="col-12">
+                        <div class="p-3 border rounded-3 bg-light">
+                            <label class="form-label fw-bold text-navy mb-2"><i class="bi bi-diagram-3-fill me-1 text-primary"></i> Cakupan Wilayah Rekonsiliasi Data:</label>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <div class="form-check p-3 border rounded-3 bg-white h-100 shadow-sm">
+                                        <input class="form-check-input" type="radio" name="scope_type" id="scopeAll" value="all" checked>
+                                        <label class="form-check-label fw-bold cursor-pointer text-dark w-100" for="scopeAll">
+                                            <i class="bi bi-globe2 text-primary me-1"></i> Seluruh OPD (Semua Data Daerah)
+                                            <span class="d-block small text-muted font-normal mt-1">Pencocokan NIBAR dilakukan ke seluruh aset daerah di semua instansi / OPD secara terpadu.</span>
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-check p-3 border rounded-3 bg-white h-100 shadow-sm">
+                                        <input class="form-check-input" type="radio" name="scope_type" id="scopeOpd" value="opd">
+                                        <label class="form-check-label fw-bold cursor-pointer text-dark w-100" for="scopeOpd">
+                                            <i class="bi bi-building text-warning-emphasis me-1"></i> Per OPD Tertentu (Filter OPD)
+                                            <span class="d-block small text-muted font-normal mt-1">Pencocokan NIBAR difokuskan khusus pada aset milik OPD yang dipilih.</span>
+                                        </label>
+                                        <div class="mt-2.5 pt-2 border-top" id="wrapperOpdSelect" style="display: none;">
+                                            <label class="form-label small fw-bold text-navy mb-1">Pilih OPD Target Rekonsiliasi:</label>
+                                            <select class="form-select form-select-sm" name="opd_id" id="selectOpd">
+                                                <option value="">-- Pilih OPD / Satuan Kerja --</option>
+                                                @foreach($opds as $opd)
+                                                    <option value="{{ $opd->id }}" {{ ($userOpdId == $opd->id) ? 'selected' : '' }}>
+                                                        {{ $opd->nama }} {{ $opd->singkatan ? "({$opd->singkatan})" : '' }}
+                                                    </option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -139,34 +182,35 @@
     <!-- STEP 2: PEMETAAN KOLOM & KUNCI PENCOCOKAN (HIDDEN INITIALLY) -->
     <div class="card border-0 shadow-sm rounded-3 mb-4 d-none" id="sectionStep2">
         <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center border-bottom-0">
-            <h5 class="fw-bold text-navy mb-0"><i class="bi bi-key-fill text-warning me-2"></i>Langkah 2: Kunci Acuan & Pemetaan Kolom</h5>
+            <div>
+                <h5 class="fw-bold text-navy mb-1"><i class="bi bi-key-fill text-warning me-2"></i>Langkah 2: Pemetaan Kolom e-BMD ke SIPAT</h5>
+                <span class="small text-secondary">Kunci Bisnis Utama: <strong class="text-primary">NIBAR (Nomor Induk Barang)</strong></span>
+            </div>
             <span class="badge bg-success-subtle text-success px-3 py-1 rounded-pill" id="badgeActiveSheet">Sheet 1</span>
         </div>
         <div class="card-body p-4">
-            <!-- Choice of Matching Key -->
+            <!-- NIBAR Key Notice -->
             <div class="alert alert-warning border-0 shadow-sm mb-4">
-                <div class="row align-items-center g-3">
-                    <div class="col-md-7">
-                        <h6 class="fw-bold text-warning-emphasis mb-1"><i class="bi bi-key me-1"></i>Tentukan Kolom Kunci Acuan (*Unique Identifier*)</h6>
-                        <p class="small text-secondary mb-0">Kolom ini digunakan oleh sistem untuk menemukan data aset yang sama antara file Excel dan Database SIPAT.</p>
+                <div class="d-flex align-items-center gap-3">
+                    <div class="p-2 bg-warning bg-opacity-25 rounded-circle text-warning-emphasis">
+                        <i class="bi bi-key-fill fs-3"></i>
                     </div>
-                    <div class="col-md-5">
-                        <select class="form-select form-select-lg fw-bold border-warning" id="selectMatchingKey">
-                            <!-- Dynamic options -->
-                        </select>
+                    <div>
+                        <h6 class="fw-bold text-warning-emphasis mb-1">Kunci Acuan Tunggal: NIBAR (Nomor Induk Barang)</h6>
+                        <p class="small text-secondary mb-0">Pastikan baris pertama pada tabel di bawah memetakan kolom Excel yang berisi <strong>NIBAR</strong> secara tepat. NIBAR akan digunakan sebagai identitas pencocokan eksak antar sistem.</p>
                     </div>
                 </div>
             </div>
 
             <!-- Mapping Table -->
-            <h6 class="fw-bold mb-3"><i class="bi bi-table me-1"></i>Pemetaan Kolom Excel ke Database Target:</h6>
+            <h6 class="fw-bold mb-3"><i class="bi bi-table me-1"></i>Pemetaan Kolom Excel ke Kolom Database SIPAT:</h6>
             <div class="table-responsive mb-4">
                 <table class="table table-hover align-middle border">
                     <thead class="table-light">
                         <tr>
-                            <th style="width: 30%;">Kolom Database Target</th>
-                            <th style="width: 45%;">Kolom Excel Asli</th>
-                            <th style="width: 25%;">Contoh Nilai Data</th>
+                            <th style="width: 30%;">Kolom Database SIPAT</th>
+                            <th style="width: 45%;">Kolom Excel e-BMD</th>
+                            <th style="width: 25%;">Sampel Nilai e-BMD</th>
                         </tr>
                     </thead>
                     <tbody id="tbodyMapping">
@@ -202,7 +246,7 @@
                     <i class="bi bi-currency-dollar me-1"></i> Nilai & Luas / Kondisi Saja
                 </button>
                 <button type="button" class="btn btn-sm btn-outline-warning rounded-pill px-3" id="presetIdentitas">
-                    <i class="bi bi-fingerprint me-1"></i> Identitas & Kode Saja
+                    <i class="bi bi-fingerprint me-1"></i> Identitas & Dokumen Saja
                 </button>
                 <button type="button" class="btn btn-sm btn-outline-danger rounded-pill px-3" id="presetNone">
                     <i class="bi bi-x-lg me-1"></i> Hapus Semua Pilihan
@@ -217,11 +261,11 @@
             <!-- Additional Settings -->
             <div class="p-3 bg-light rounded-3 mb-4 border">
                 <div class="form-check form-switch">
-                    <input class="form-check-input" type="checkbox" id="switchCreateNew" checked>
+                    <input class="form-check-input" type="checkbox" id="switchCreateNew">
                     <label class="form-check-label fw-bold text-dark cursor-pointer" for="switchCreateNew">
-                        Tambahkan Data Baru Jika Kunci Acuan Tidak Ditemukan di Database
+                        Tambahkan Data Baru Jika NIBAR Tidak Ditemukan di SIPAT
                     </label>
-                    <small class="d-block text-muted">Jika dicentang, baris Excel yang tidak cocok dengan data di database akan dimasukkan sebagai data baru.</small>
+                    <small class="d-block text-muted">Secara default tidak dicentang (Data e-BMD yang tidak ditemukan di SIPAT hanya akan dilaporkan sebagai <em>Tidak Ditemukan di SIPAT</em> tanpa dimasukkan otomatis).</small>
                 </div>
             </div>
 
@@ -238,59 +282,105 @@
 
     <!-- STEP 4: DIFF PREVIEW & EXECUTE (HIDDEN INITIALLY) -->
     <div class="card border-0 shadow-sm rounded-3 mb-4 d-none" id="sectionStep4">
-        <div class="card-header bg-white py-3 border-bottom-0">
-            <h5 class="fw-bold text-navy mb-0"><i class="bi bi-speedometer2 text-info me-2"></i>Langkah 4: Pratinjau Perbedaan Data & Eksekusi</h5>
+        <div class="card-header bg-white py-3 border-bottom-0 d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <div>
+                <h5 class="fw-bold text-navy mb-0"><i class="bi bi-speedometer2 text-info me-2"></i>Langkah 4: Pratinjau Rekonsiliasi & Eksekusi</h5>
+                <span class="small text-secondary">
+                    Kunci Rekonsiliasi: <strong class="text-primary">NIBAR</strong> | 
+                    Target Modul: <strong class="text-navy" id="lblStep4CategoryName">Aset Tanah</strong> | 
+                    Cakupan: <span class="badge bg-primary-subtle text-primary fw-semibold" id="lblStep4OpdScope"><i class="bi bi-globe2 me-1"></i>Seluruh OPD</span>
+                </span>
+            </div>
+            <div class="d-flex gap-2">
+                <button type="button" class="btn btn-sm btn-outline-success fw-semibold" id="btnExportCsv">
+                    <i class="bi bi-download me-1"></i> Download Hasil Rekonsiliasi (.CSV)
+                </button>
+            </div>
         </div>
         <div class="card-body p-4">
-            <!-- Stats Counters -->
+            <!-- 7 Stats Counters Sesuai Spesifikasi -->
             <div class="row g-3 mb-4">
-                <div class="col-md-3">
-                    <div class="card border-0 bg-primary bg-opacity-10 rounded-3 p-3">
-                        <div class="small text-primary fw-bold text-uppercase">Total Baris Excel</div>
-                        <div class="fs-2 fw-bold text-primary font-monospace" id="statTotalRows">0</div>
+                <div class="col-6 col-md-3 col-lg">
+                    <div class="card border-0 bg-secondary bg-opacity-10 rounded-3 p-3 text-center h-100">
+                        <div class="small text-secondary fw-bold text-uppercase" style="font-size: 0.72rem;">TOTAL e-BMD</div>
+                        <div class="fs-3 fw-bold text-dark font-monospace mt-1" id="statTotalRows">0</div>
                     </div>
                 </div>
-                <div class="col-md-3">
-                    <div class="card border-0 bg-success bg-opacity-10 rounded-3 p-3">
-                        <div class="small text-success fw-bold text-uppercase">Cocok di Database</div>
-                        <div class="fs-2 fw-bold text-success font-monospace" id="statMatchedCount">0</div>
+                <div class="col-6 col-md-3 col-lg">
+                    <div class="card border-0 bg-primary bg-opacity-10 rounded-3 p-3 text-center h-100">
+                        <div class="small text-primary fw-bold text-uppercase" style="font-size: 0.72rem;">NIBAR DITEMUKAN</div>
+                        <div class="fs-3 fw-bold text-primary font-monospace mt-1" id="statMatchedCount">0</div>
                     </div>
                 </div>
-                <div class="col-md-3">
-                    <div class="card border-0 bg-warning bg-opacity-10 rounded-3 p-3">
-                        <div class="small text-warning-emphasis fw-bold text-uppercase">Mengalami Perubahan Data</div>
-                        <div class="fs-2 fw-bold text-warning-emphasis font-monospace" id="statChangedCount">0</div>
+                <div class="col-6 col-md-3 col-lg">
+                    <div class="card border-0 bg-success bg-opacity-10 rounded-3 p-3 text-center h-100">
+                        <div class="small text-success fw-bold text-uppercase" style="font-size: 0.72rem;">🟢 IDENTIK</div>
+                        <div class="fs-3 fw-bold text-success font-monospace mt-1" id="statIdenticalCount">0</div>
                     </div>
                 </div>
-                <div class="col-md-3">
-                    <div class="card border-0 bg-info bg-opacity-10 rounded-3 p-3">
-                        <div class="small text-info fw-bold text-uppercase">Data Baru (Unmatched)</div>
-                        <div class="fs-2 fw-bold text-info font-monospace" id="statNewCount">0</div>
+                <div class="col-6 col-md-3 col-lg">
+                    <div class="card border-0 bg-warning bg-opacity-10 rounded-3 p-3 text-center h-100">
+                        <div class="small text-warning-emphasis fw-bold text-uppercase" style="font-size: 0.72rem;">🟡 BERUBAH</div>
+                        <div class="fs-3 fw-bold text-warning-emphasis font-monospace mt-1" id="statChangedCount">0</div>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3 col-lg">
+                    <div class="card border-0 bg-info bg-opacity-10 rounded-3 p-3 text-center h-100">
+                        <div class="small text-info-emphasis fw-bold text-uppercase" style="font-size: 0.72rem;">🔵 TIDAK DI SIPAT</div>
+                        <div class="fs-3 fw-bold text-info font-monospace mt-1" id="statNotFoundSipat">0</div>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3 col-lg">
+                    <div class="card border-0 bg-danger bg-opacity-10 rounded-3 p-3 text-center h-100">
+                        <div class="small text-danger fw-bold text-uppercase" style="font-size: 0.72rem;">🟠 DUPLIKAT</div>
+                        <div class="fs-3 fw-bold text-danger font-monospace mt-1" id="statDuplicateCount">0</div>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3 col-lg">
+                    <div class="card border-0 bg-dark bg-opacity-10 rounded-3 p-3 text-center h-100">
+                        <div class="small text-dark fw-bold text-uppercase" style="font-size: 0.72rem;">⚠️ INVALID</div>
+                        <div class="fs-3 fw-bold text-dark font-monospace mt-1" id="statInvalidCount">0</div>
                     </div>
                 </div>
             </div>
 
-            <!-- Rincian Utama Perbedaan per Atribut/Kolom -->
+            <!-- Rincian Atribut Berubah Breakdown -->
             <div class="card border-0 bg-light rounded-3 p-3.5 mb-4 border shadow-sm">
                 <h6 class="fw-bold text-navy mb-2.5 d-flex align-items-center">
-                    <i class="bi bi-pie-chart-fill text-warning me-2 fs-5"></i> Rincian Utama Perbedaan Data per Atribut / Kolom:
+                    <i class="bi bi-pie-chart-fill text-warning me-2 fs-5"></i> Rincian Perubahan Data per Kolom Terpilih:
                 </h6>
                 <div class="d-flex align-items-center gap-2 flex-wrap" id="containerFieldBreakdown">
                     <span class="text-muted small">Memuat rincian perbedaan...</span>
                 </div>
             </div>
 
-            <!-- Diff Preview Samples Table -->
-            <h6 class="fw-bold mb-3"><i class="bi bi-list-nested me-1"></i>Sampel Perubahan Data (Nilai Lama vs Nilai Baru):</h6>
-            <div class="table-responsive mb-4 border rounded-3">
-                <table class="table table-striped table-hover mb-0 align-middle">
+            <!-- Filter Status & Search Bar -->
+            <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+                <div class="btn-group btn-group-sm flex-wrap" id="filterStatusGroup" role="group">
+                    <button type="button" class="btn btn-outline-secondary active fw-bold" data-filter="ALL">Semua (<span id="cntFilterAll">0</span>)</button>
+                    <button type="button" class="btn btn-outline-success fw-bold" data-filter="IDENTICAL">🟢 Identik (<span id="cntFilterIdentical">0</span>)</button>
+                    <button type="button" class="btn btn-outline-warning text-dark fw-bold" data-filter="CHANGED">🟡 Berubah (<span id="cntFilterChanged">0</span>)</button>
+                    <button type="button" class="btn btn-outline-info text-dark fw-bold" data-filter="ONLY_IN_EBMD">🔵 Hanya e-BMD (<span id="cntFilterOnlyEbmd">0</span>)</button>
+                    <button type="button" class="btn btn-outline-secondary fw-bold" data-filter="ONLY_IN_SIPAT">🔴 Hanya SIPAT (<span id="cntFilterOnlySipat">0</span>)</button>
+                    <button type="button" class="btn btn-outline-danger fw-bold" data-filter="DUPLICATE_KEY">🟠 Duplikat (<span id="cntFilterDuplicate">0</span>)</button>
+                    <button type="button" class="btn btn-outline-dark fw-bold" data-filter="INVALID">⚠️ Invalid (<span id="cntFilterInvalid">0</span>)</button>
+                </div>
+
+                <div class="input-group input-group-sm" style="max-width: 320px;">
+                    <span class="input-group-text bg-white"><i class="bi bi-search text-muted"></i></span>
+                    <input type="text" class="form-control" id="searchTable" placeholder="Cari NIBAR / Nama Aset...">
+                </div>
+            </div>
+
+            <!-- Tabel Hasil Rekonsiliasi NIBAR -->
+            <div class="table-responsive mb-4 border rounded-3 shadow-sm">
+                <table class="table table-hover mb-0 align-middle" id="tableDiffResult">
                     <thead class="table-dark">
                         <tr>
-                            <th style="width: 8%;">Baris</th>
-                            <th style="width: 22%;">Kunci / Nama Aset</th>
-                            <th style="width: 20%;">Kolom Terpilih</th>
-                            <th style="width: 25%;">Nilai Lama (SIPAT)</th>
-                            <th style="width: 25%;">Nilai Baru (e-BMD)</th>
+                            <th style="width: 20%;">NIBAR (Nomor Induk Barang)</th>
+                            <th style="width: 22%;">Nama Aset / OPD</th>
+                            <th style="width: 15%;">Status Rekonsiliasi</th>
+                            <th style="width: 43%;">Detail Perubahan (Kolom | SIPAT | e-BMD)</th>
                         </tr>
                     </thead>
                     <tbody id="tbodyDiffSamples">
@@ -299,12 +389,29 @@
                 </table>
             </div>
 
+            <!-- Dry Run Execution Summary -->
+            <div class="p-3 bg-success bg-opacity-10 border border-success border-opacity-25 rounded-3 mb-4">
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                    <div>
+                        <h6 class="fw-bold text-success-emphasis mb-1"><i class="bi bi-check-circle-fill me-2"></i>Rekap Tindakan Eksekusi</h6>
+                        <span class="small text-secondary">
+                            Akan Diperbarui: <strong class="text-success" id="summaryWillUpdate">0</strong> Aset | 
+                            Identik / Tidak Diubah: <strong class="text-secondary" id="summaryWillIdentical">0</strong> Aset | 
+                            Dilewati (Duplikat/Invalid/Unmatched): <strong class="text-danger" id="summaryWillSkip">0</strong> Aset
+                        </span>
+                    </div>
+                    <div class="small text-muted font-monospace" id="summarySelectedColsText">
+                        <!-- Populated dynamically -->
+                    </div>
+                </div>
+            </div>
+
             <div class="d-flex justify-content-between align-items-center">
                 <button type="button" class="btn btn-outline-secondary px-4" id="btnBackToStep3">
                     <i class="bi bi-arrow-left me-1"></i> Ubah Pilihan Kolom
                 </button>
                 <button type="button" class="btn btn-success px-5 py-3 fw-bold fs-6 shadow" id="btnExecuteSync">
-                    <i class="bi bi-play-circle-fill me-2"></i> Eksekusi Rekonsiliasi & Sync Data
+                    <i class="bi bi-play-circle-fill me-2"></i> Eksekusi Rekonsiliasi & Sync Database
                 </button>
             </div>
         </div>
@@ -316,19 +423,21 @@
 document.addEventListener('DOMContentLoaded', function() {
     let importToken = '';
     let previewData = null;
+    let diffResultData = null;
+    let currentFilter = 'ALL';
+    let currentSearch = '';
 
     const categoryNames = {
-        'vehicle': 'Kendaraan Real (eRANDIS)',
-        'ebmd_vehicle': 'Master e-BMD Kendaraan',
         'tanah': 'Aset Tanah (SIPAT)',
-        'bangunan': 'Gedung & Bangunan (SIPAT)'
+        'bangunan': 'Gedung & Bangunan (SIPAT)',
+        'vehicle': 'Kendaraan Real (eRANDIS)',
+        'ebmd_vehicle': 'Master e-BMD Kendaraan'
     };
 
     // Category Tabs Switching
     const categoryTabs = document.querySelectorAll('.nav-item-btn');
     const inputAssetCategory = document.getElementById('inputAssetCategory');
     const lblTargetCategoryTitle = document.getElementById('lblTargetCategoryTitle');
-    const lblActiveCategoryName = document.getElementById('lblActiveCategoryName');
 
     categoryTabs.forEach(btn => {
         btn.addEventListener('click', function() {
@@ -341,7 +450,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
             inputAssetCategory.value = cat;
             lblTargetCategoryTitle.innerText = categoryNames[cat] || cat;
-            lblActiveCategoryName.innerText = categoryNames[cat] || cat;
 
             activateStep(1);
         });
@@ -360,10 +468,28 @@ document.addEventListener('DOMContentLoaded', function() {
     const stepPill3 = document.getElementById('stepPill3');
     const stepPill4 = document.getElementById('stepPill4');
 
-    const selectMatchingKey = document.getElementById('selectMatchingKey');
     const tbodyMapping = document.getElementById('tbodyMapping');
     const gridColumns = document.getElementById('gridColumns');
     const tbodyDiffSamples = document.getElementById('tbodyDiffSamples');
+
+    // OPD Scope Selection Elements
+    const radioScopeAll = document.getElementById('scopeAll');
+    const radioScopeOpd = document.getElementById('scopeOpd');
+    const wrapperOpdSelect = document.getElementById('wrapperOpdSelect');
+    const selectOpd = document.getElementById('selectOpd');
+
+    function toggleOpdScope() {
+        if (radioScopeOpd && radioScopeOpd.checked) {
+            wrapperOpdSelect.style.display = 'block';
+        } else if (wrapperOpdSelect) {
+            wrapperOpdSelect.style.display = 'none';
+        }
+    }
+
+    if (radioScopeAll && radioScopeOpd) {
+        radioScopeAll.addEventListener('change', toggleOpdScope);
+        radioScopeOpd.addEventListener('change', toggleOpdScope);
+    }
 
     function activateStep(step) {
         [sectionStep1, sectionStep2, sectionStep3, sectionStep4].forEach((sec, idx) => {
@@ -417,7 +543,6 @@ document.addEventListener('DOMContentLoaded', function() {
             importToken = data.import_token;
             document.getElementById('badgeActiveSheet').innerText = data.active_sheet_name || 'Sheet 1';
 
-            renderMatchingKeys();
             renderMappingTable();
             renderColumnGrid();
             activateStep(2);
@@ -429,19 +554,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // Render Matching Keys Dropdown
-    function renderMatchingKeys() {
-        selectMatchingKey.innerHTML = '';
-        const keys = previewData.matching_keys || {};
-        Object.keys(keys).forEach(k => {
-            const opt = document.createElement('option');
-            opt.value = k;
-            opt.innerText = keys[k];
-            selectMatchingKey.appendChild(opt);
-        });
-    }
-
-    // Render Step 2: Mapping Table
+    // Render Step 2: Mapping Table (With NIBAR prioritized as key #1)
     function renderMappingTable() {
         tbodyMapping.innerHTML = '';
         const targetCols = previewData.updatable_columns || {};
@@ -449,6 +562,32 @@ document.addEventListener('DOMContentLoaded', function() {
         const samples = previewData.samples || [];
         const suggested = previewData.suggested_mapping || {};
 
+        // 1. Baris NIBAR (Wajib & Prioritas Utama)
+        const trNibar = document.createElement('tr');
+        trNibar.className = 'table-warning';
+
+        let nibarSelectHtml = `<select class="form-select mapping-select fw-bold border-warning" data-col="nibar">`;
+        nibarSelectHtml += `<option value="">-- Wajib Pilih Kolom NIBAR --</option>`;
+        headers.forEach((h, idx) => {
+            const isSelected = (suggested['nibar'] === idx) ? 'selected' : '';
+            nibarSelectHtml += `<option value="${idx}" ${isSelected}>${h}</option>`;
+        });
+        nibarSelectHtml += `</select>`;
+
+        const nibarSampleVal = (suggested['nibar'] !== undefined && samples[0]) ? (samples[0][suggested['nibar']] || '-') : '-';
+
+        trNibar.innerHTML = `
+            <td>
+                <span class="badge bg-warning text-dark me-1"><i class="bi bi-key-fill"></i> KUNCI UTAMA</span>
+                <strong class="text-navy">NIBAR (Nomor Induk Barang)</strong>
+                <code class="small text-muted d-block">nibar</code>
+            </td>
+            <td>${nibarSelectHtml}</td>
+            <td><span class="fw-bold font-monospace text-primary text-break">${nibarSampleVal}</span></td>
+        `;
+        tbodyMapping.appendChild(trNibar);
+
+        // 2. Baris Kolom-Kolom Lainnya
         Object.keys(targetCols).forEach(dbCol => {
             const label = targetCols[dbCol];
             const tr = document.createElement('tr');
@@ -484,7 +623,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const colDiv = document.createElement('div');
             colDiv.className = 'col-md-4';
 
-            const colDefaultChecked = ['nilai_perolehan', 'harga_perolehan', 'luas', 'kondisi', 'merk', 'tipe', 'pemegang', 'luas_lantai'].includes(dbCol);
+            const colDefaultChecked = ['harga_perolehan', 'nilai_perolehan', 'luas', 'luas_lantai', 'kondisi', 'peruntukan', 'nama_aset', 'nama_bangunan', 'merk'].includes(dbCol);
 
             colDiv.innerHTML = `
                 <div class="form-check card-select p-3 border rounded-3 bg-white hover-shadow transition">
@@ -508,17 +647,24 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     document.getElementById('presetNilaiKondisi').addEventListener('click', () => {
         document.querySelectorAll('.col-checkbox').forEach(c => {
-            c.checked = ['nilai_perolehan', 'harga_perolehan', 'luas', 'luas_lantai', 'kondisi'].includes(c.value);
+            c.checked = ['nilai_perolehan', 'harga_perolehan', 'luas', 'luas_lantai', 'luas_dasar', 'kondisi'].includes(c.value);
         });
     });
     document.getElementById('presetIdentitas').addEventListener('click', () => {
         document.querySelectorAll('.col-checkbox').forEach(c => {
-            c.checked = ['kode_barang', 'kode_aset', 'kode_bangunan', 'nama_aset', 'nama_bangunan', 'merk', 'tipe', 'nibar'].includes(c.value);
+            c.checked = ['nama_aset', 'nama_bangunan', 'peruntukan', 'alamat', 'dasar_perolehan', 'nomor_dokumen_pbg', 'merk', 'tipe'].includes(c.value);
         });
     });
 
     // Step Switch Buttons
-    document.getElementById('btnGoToStep3').addEventListener('click', () => activateStep(3));
+    document.getElementById('btnGoToStep3').addEventListener('click', () => {
+        const nibarSelect = document.querySelector('.mapping-select[data-col="nibar"]');
+        if (!nibarSelect || nibarSelect.value === '') {
+            Swal.fire('Perhatian!', 'Kolom NIBAR (Nomor Induk Barang) wajib dipilih untuk melanjutkan.', 'warning');
+            return;
+        }
+        activateStep(3);
+    });
     document.getElementById('btnBackToStep1').addEventListener('click', () => activateStep(1));
     document.getElementById('btnBackToStep2').addEventListener('click', () => activateStep(2));
     document.getElementById('btnBackToStep3').addEventListener('click', () => activateStep(3));
@@ -539,11 +685,25 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
 
-        const matchingKey = selectMatchingKey.value;
+        if (mapping['nibar'] === undefined) {
+            Swal.fire('Perhatian!', 'Kolom NIBAR wajib dipetakan.', 'warning');
+            return;
+        }
+
         const assetCategory = inputAssetCategory.value;
+        document.getElementById('lblStep4CategoryName').innerText = categoryNames[assetCategory] || assetCategory;
+
+        let selectedOpdId = null;
+        if (radioScopeOpd && radioScopeOpd.checked) {
+            if (!selectOpd.value) {
+                Swal.fire('Perhatian!', 'Silakan pilih OPD target pada Langkah 1 terlebih dahulu.', 'warning');
+                return;
+            }
+            selectedOpdId = parseInt(selectOpd.value);
+        }
 
         btnGoToStep4.disabled = true;
-        btnGoToStep4.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Menganalisis Perbedaan Data...';
+        btnGoToStep4.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Menganalisis Perbedaan NIBAR...';
 
         fetch("{{ route('rekon-ebmd.diff-preview') }}", {
             method: 'POST',
@@ -553,10 +713,10 @@ document.addEventListener('DOMContentLoaded', function() {
             },
             body: JSON.stringify({
                 import_token: importToken,
-                matching_key: matchingKey,
                 selected_columns: selectedCols,
                 asset_category: assetCategory,
                 mapping: mapping,
+                opd_id: selectedOpdId,
                 header_row_index: previewData.header_row_index || 0
             })
         })
@@ -570,11 +730,33 @@ document.addEventListener('DOMContentLoaded', function() {
                 return;
             }
 
-            document.getElementById('statTotalRows').innerText = data.total_rows;
-            document.getElementById('statMatchedCount').innerText = data.matched_count;
-            document.getElementById('statChangedCount').innerText = data.changed_count;
-            document.getElementById('statNewCount').innerText = data.new_count;
+            diffResultData = data;
 
+            // Update Cakupan OPD Badge
+            const lblStep4OpdScope = document.getElementById('lblStep4OpdScope');
+            if (lblStep4OpdScope) {
+                if (data.opd_name) {
+                    lblStep4OpdScope.className = 'badge bg-warning-subtle text-warning-emphasis fw-semibold';
+                    lblStep4OpdScope.innerHTML = '<i class="bi bi-building me-1"></i>OPD: ' + data.opd_name;
+                } else {
+                    lblStep4OpdScope.className = 'badge bg-primary-subtle text-primary fw-semibold';
+                    lblStep4OpdScope.innerHTML = '<i class="bi bi-globe2 me-1"></i>Seluruh OPD';
+                }
+            }
+
+            // Render 7 Metrics
+            document.getElementById('statTotalRows').innerText = data.total_ebmd;
+            document.getElementById('statMatchedCount').innerText = data.nibar_matched;
+            document.getElementById('statIdenticalCount').innerText = data.identical_count;
+            document.getElementById('statChangedCount').innerText = data.changed_count;
+            document.getElementById('statNotFoundSipat').innerText = data.not_found_sipat;
+            document.getElementById('statDuplicateCount').innerText = data.duplicate_count;
+            document.getElementById('statInvalidCount').innerText = data.invalid_count;
+
+            // Update Counts in Filter Buttons
+            updateFilterCounts(data);
+
+            // Field Breakdown
             const containerBreakdown = document.getElementById('containerFieldBreakdown');
             containerBreakdown.innerHTML = '';
             if (data.field_breakdown && data.field_breakdown.length > 0) {
@@ -585,55 +767,17 @@ document.addEventListener('DOMContentLoaded', function() {
                     containerBreakdown.appendChild(badge);
                 });
             } else {
-                containerBreakdown.innerHTML = '<span class="text-muted small">Tidak ada rincian perbedaan atribut.</span>';
+                containerBreakdown.innerHTML = '<span class="text-muted small">Tidak ada perbedaan data pada kolom yang Anda pilih.</span>';
             }
 
-            tbodyDiffSamples.innerHTML = '';
-            if (!data.diff_samples || data.diff_samples.length === 0) {
-                tbodyDiffSamples.innerHTML = '<tr><td colspan="5" class="text-center py-5 text-muted"><i class="bi bi-check-circle-fill text-success fs-1 d-block mb-2"></i><strong>Tidak Ditemukan Perbedaan Data</strong><div class="small">Seluruh kolom yang Anda pilih pada file e-BMD sudah cocok persis dengan database SIPAT.</div></td></tr>';
-            } else {
-                const colLabels = previewData.updatable_columns || {};
-                data.diff_samples.forEach(function(sample) {
-                    if (sample.differences && sample.differences.length > 0) {
-                        sample.differences.forEach(function(diff, dIdx) {
-                            const tr = document.createElement('tr');
-                            
-                            const cellRow = (dIdx === 0) ? '<span class="badge bg-dark bg-opacity-75 font-monospace px-2.5 py-1">Row ' + sample.row + '</span>' : '';
-                            
-                            let cellName = '';
-                            if (dIdx === 0) {
-                                cellName = '<div class="fw-bold text-navy mb-1.5 fs-6">' + sample.name + '</div>';
-                                cellName += '<div class="d-flex align-items-center gap-1.5 flex-wrap">';
-                                cellName += '<code class="small text-muted bg-light px-2 py-0.5 rounded border me-1"><i class="bi bi-key me-1"></i>' + sample.key + '</code>';
-                                if (sample.opd) {
-                                    cellName += '<span class="badge bg-info-subtle text-info-emphasis me-1"><i class="bi bi-building me-1"></i>' + sample.opd + '</span>';
-                                }
-                                if (sample.sub_opd) {
-                                    cellName += '<span class="badge bg-secondary-subtle text-secondary-emphasis"><i class="bi bi-geo-alt me-1"></i>' + sample.sub_opd + '</span>';
-                                }
-                                cellName += '</div>';
-                            }
+            // Summary Execution Box
+            document.getElementById('summaryWillUpdate').innerText = data.changed_count;
+            document.getElementById('summaryWillIdentical').innerText = data.identical_count;
+            document.getElementById('summaryWillSkip').innerText = (data.not_found_sipat + data.duplicate_count + data.invalid_count);
+            document.getElementById('summarySelectedColsText').innerText = 'Kolom Update: [' + selectedCols.join(', ') + ']';
 
-                            const colTitle = colLabels[diff.column] || diff.column;
-                            const cellCol = '<div class="fw-semibold text-dark mb-0.5">' + colTitle + '</div><code class="small text-muted font-normal">' + diff.column + '</code>';
-                            const cellOld = '<div class="p-2 bg-danger bg-opacity-10 rounded-3 border border-danger border-opacity-25 text-danger font-monospace small"><i class="bi bi-x-circle me-1"></i><s>' + diff.old + '</s></div>';
-                            const cellNew = '<div class="p-2 bg-success bg-opacity-10 rounded-3 border border-success border-opacity-25 text-success fw-bold font-monospace small"><i class="bi bi-check-circle me-1"></i>' + diff.new + '</div>';
-
-                            if (dIdx === 0) {
-                                tr.style.borderTop = '2px solid #dee2e6';
-                            }
-                            tr.className = 'align-middle';
-                            tr.innerHTML = '<td class="align-top py-3">' + cellRow + '</td>' +
-                                           '<td class="align-top py-3">' + cellName + '</td>' +
-                                           '<td class="align-middle py-3">' + cellCol + '</td>' +
-                                           '<td class="align-middle py-3">' + cellOld + '</td>' +
-                                           '<td class="align-middle py-3">' + cellNew + '</td>';
-                            tbodyDiffSamples.appendChild(tr);
-                        });
-                    }
-                });
-            }
-
+            // Render Table
+            renderDiffTable();
             activateStep(4);
         })
         .catch(err => {
@@ -643,10 +787,170 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
+    function updateFilterCounts(data) {
+        const items = data.items || [];
+        document.getElementById('cntFilterAll').innerText = items.length;
+        document.getElementById('cntFilterIdentical').innerText = data.identical_count;
+        document.getElementById('cntFilterChanged').innerText = data.changed_count;
+        document.getElementById('cntFilterOnlyEbmd').innerText = data.not_found_sipat;
+        document.getElementById('cntFilterOnlySipat').innerText = data.only_in_sipat;
+        document.getElementById('cntFilterDuplicate').innerText = data.duplicate_count;
+        document.getElementById('cntFilterInvalid').innerText = data.invalid_count;
+    }
+
+    // Filter Buttons Handler
+    document.querySelectorAll('#filterStatusGroup button').forEach(btn => {
+        btn.addEventListener('click', function() {
+            document.querySelectorAll('#filterStatusGroup button').forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            currentFilter = this.dataset.filter;
+            renderDiffTable();
+        });
+    });
+
+    // Search Input Handler
+    document.getElementById('searchTable').addEventListener('input', function(e) {
+        currentSearch = e.target.value.toLowerCase().trim();
+        renderDiffTable();
+    });
+
+    // Render Table based on Filter & Search
+    function renderDiffTable() {
+        if (!diffResultData || !diffResultData.items) return;
+
+        tbodyDiffSamples.innerHTML = '';
+        const items = diffResultData.items;
+
+        const filtered = items.filter(item => {
+            // Status filter
+            if (currentFilter !== 'ALL' && item.status !== currentFilter) {
+                return false;
+            }
+            // Text search
+            if (currentSearch !== '') {
+                const nibarMatch = item.nibar.toLowerCase().includes(currentSearch);
+                const nameMatch = item.name.toLowerCase().includes(currentSearch);
+                const opdMatch = (item.opd || '').toLowerCase().includes(currentSearch);
+                return nibarMatch || nameMatch || opdMatch;
+            }
+            return true;
+        });
+
+        if (filtered.length === 0) {
+            tbodyDiffSamples.innerHTML = '<tr><td colspan="4" class="text-center py-5 text-muted"><i class="bi bi-info-circle fs-2 d-block mb-2"></i>Tidak ada data yang sesuai dengan filter atau pencarian Anda.</td></tr>';
+            return;
+        }
+
+        // Limit render to first 100 for smooth DOM performance
+        const displayItems = filtered.slice(0, 100);
+
+        displayItems.forEach(item => {
+            const tr = document.createElement('tr');
+            tr.className = 'align-top';
+
+            // 1. NIBAR Column
+            let cellNibar = `<div class="fw-bold font-monospace text-primary fs-6">${item.nibar}</div>`;
+            if (item.row_num !== '-') {
+                cellNibar += `<span class="badge bg-dark bg-opacity-75 font-monospace small">Baris Excel: ${item.row_num}</span>`;
+            }
+
+            // 2. Name & OPD Column
+            let cellName = `<div class="fw-bold text-navy mb-1">${item.name}</div>`;
+            if (item.opd && item.opd !== '-') {
+                cellName += `<span class="badge bg-light text-dark border me-1"><i class="bi bi-building me-1"></i>${item.opd}</span>`;
+            }
+            if (item.sub_opd && item.sub_opd !== '-') {
+                cellName += `<span class="badge bg-secondary-subtle text-secondary-emphasis"><i class="bi bi-geo-alt me-1"></i>${item.sub_opd}</span>`;
+            }
+
+            // 3. Status Badge Column
+            let badgeClass = 'bg-secondary';
+            if (item.status === 'IDENTICAL') badgeClass = 'bg-success';
+            if (item.status === 'CHANGED') badgeClass = 'bg-warning text-dark';
+            if (item.status === 'ONLY_IN_EBMD') badgeClass = 'bg-info text-dark';
+            if (item.status === 'ONLY_IN_SIPAT') badgeClass = 'bg-secondary';
+            if (item.status === 'DUPLICATE_KEY') badgeClass = 'bg-danger';
+            if (item.status === 'INVALID') badgeClass = 'bg-dark';
+
+            let cellStatus = `<span class="badge ${badgeClass} px-2.5 py-1.5 fw-semibold d-inline-block">${item.status_label}</span>`;
+            if (item.notes) {
+                cellStatus += `<div class="small text-muted mt-1 lh-sm">${item.notes}</div>`;
+            }
+
+            // 4. Differences Details Column
+            let cellDetails = '';
+            if (item.status === 'CHANGED' && item.changed_columns && item.changed_columns.length > 0) {
+                cellDetails += '<div class="table-responsive border rounded-2 p-1 bg-white"><table class="table table-sm table-bordered mb-0 small">';
+                cellDetails += '<thead class="table-light"><tr><th>Kolom</th><th>Nilai SIPAT</th><th>Nilai e-BMD</th></tr></thead><tbody>';
+                item.changed_columns.forEach(diff => {
+                    cellDetails += `<tr>
+                        <td class="fw-semibold text-dark">${diff.label}</td>
+                        <td class="text-danger font-monospace"><s>${diff.old}</s></td>
+                        <td class="text-success fw-bold font-monospace">${diff.new}</td>
+                    </tr>`;
+                });
+                cellDetails += '</tbody></table></div>';
+            } else if (item.status === 'IDENTICAL') {
+                cellDetails = '<span class="text-success small fw-medium"><i class="bi bi-check2-all me-1"></i>Seluruh kolom yang dipilih identik dengan database.</span>';
+            } else if (item.status === 'ONLY_IN_EBMD') {
+                cellDetails = '<span class="text-info small fw-medium"><i class="bi bi-plus-circle me-1"></i>Aset belum terdaftar di SIPAT.</span>';
+            } else if (item.status === 'ONLY_IN_SIPAT') {
+                cellDetails = '<span class="text-secondary small fw-medium"><i class="bi bi-eye me-1"></i>Aset hanya tercatat di database SIPAT.</span>';
+            } else if (item.status === 'DUPLICATE_KEY') {
+                cellDetails = '<span class="text-danger small fw-medium"><i class="bi bi-exclamation-triangle-fill me-1"></i>NIBAR ambigu / terdaftar lebih dari 1 kali.</span>';
+            } else {
+                cellDetails = '<span class="text-muted small">-</span>';
+            }
+
+            tr.innerHTML = `
+                <td class="py-3">${cellNibar}</td>
+                <td class="py-3">${cellName}</td>
+                <td class="py-3">${cellStatus}</td>
+                <td class="py-3">${cellDetails}</td>
+            `;
+
+            tbodyDiffSamples.appendChild(tr);
+        });
+
+        if (filtered.length > 100) {
+            const trMore = document.createElement('tr');
+            trMore.innerHTML = `<td colspan="4" class="text-center py-3 bg-light text-muted small"><i class="bi bi-info-circle me-1"></i>Menampilkan 100 dari ${filtered.length} baris. Gunakan pencarian atau ekspor CSV untuk melihat seluruh data.</td>`;
+            tbodyDiffSamples.appendChild(trMore);
+        }
+    }
+
+    // Export CSV Handler
+    document.getElementById('btnExportCsv').addEventListener('click', function() {
+        if (!importToken) return;
+
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = "{{ route('rekon-ebmd.export-preview') }}";
+        form.target = '_blank';
+
+        const tokenInput = document.createElement('input');
+        tokenInput.type = 'hidden';
+        tokenInput.name = 'import_token';
+        tokenInput.value = importToken;
+        form.appendChild(tokenInput);
+
+        const csrfInput = document.createElement('input');
+        csrfInput.type = 'hidden';
+        csrfInput.name = '_token';
+        csrfInput.value = '{{ csrf_token() }}';
+        form.appendChild(csrfInput);
+
+        document.body.appendChild(form);
+        form.submit();
+        document.body.removeChild(form);
+    });
+
     // Step 4: Execute Sync
     const btnExecuteSync = document.getElementById('btnExecuteSync');
     btnExecuteSync.addEventListener('click', function() {
-        const selectedCols = Array.from(document.querySelectorAll('.col-checkbox:checked')).map(c => c.value);
+        if (!diffResultData) return;
+
+        const selectedCols = diffResultData.selected_columns || [];
         const mapping = {};
         document.querySelectorAll('.mapping-select').forEach(sel => {
             if (sel.value !== '') {
@@ -654,13 +958,22 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
 
-        const matchingKey = selectMatchingKey.value;
         const assetCategory = inputAssetCategory.value;
         const createNew = document.getElementById('switchCreateNew').checked;
+        const changedCount = diffResultData.changed_count || 0;
+
+        const opdScopeLabel = diffResultData.opd_name ? `OPD: ${diffResultData.opd_name}` : 'Seluruh OPD (Semua Data Daerah)';
 
         Swal.fire({
-            title: 'Konfirmasi Eksekusi',
-            html: `Apakah Anda yakin ingin mengeksekusi Pembaruan Selektif e-BMD untuk kategori <strong>${categoryNames[assetCategory]}</strong>?<br><br><strong>${selectedCols.length} Kolom</strong> akan diperbarui pada database. Kolom lainnya tetap utuh.`,
+            title: 'Konfirmasi Eksekusi Rekonsiliasi',
+            html: `Apakah Anda yakin ingin mengeksekusi Pembaruan Data e-BMD untuk kategori <strong>${categoryNames[assetCategory]}</strong>?<br><br>
+                   <div class="text-start p-3 bg-light rounded border small">
+                       <div>• Cakupan Wilayah: <strong class="text-primary">${opdScopeLabel}</strong></div>
+                       <div>• Sebanyak <strong>${changedCount} aset</strong> dengan status <em>BERUBAH</em> akan diperbarui.</div>
+                       <div>• Sebanyak <strong>${selectedCols.length} kolom terpilih</strong> akan di-update: <code>[${selectedCols.join(', ')}]</code>.</div>
+                       <div>• NIBAR yang <em>Duplikat</em> atau <em>Invalid</em> akan otomatis dilindungi/dilewati.</div>
+                       <div>• Transaksi dilindungi oleh <em>Atomic Database Transaction & Audit Trail</em>.</div>
+                   </div>`,
             icon: 'question',
             showCancelButton: true,
             confirmButtonText: 'Ya, Eksekusi Sekarang!',
@@ -669,7 +982,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }).then((result) => {
             if (result.isConfirmed) {
                 btnExecuteSync.disabled = true;
-                btnExecuteSync.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Memproses Update Database...';
+                btnExecuteSync.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Memproses Transaksi Database...';
 
                 fetch("{{ route('rekon-ebmd.execute') }}", {
                     method: 'POST',
@@ -680,11 +993,11 @@ document.addEventListener('DOMContentLoaded', function() {
                     },
                     body: JSON.stringify({
                         import_token: importToken,
-                        matching_key: matchingKey,
                         selected_columns: selectedCols,
                         asset_category: assetCategory,
                         mapping: mapping,
                         create_new: createNew,
+                        opd_id: (diffResultData && diffResultData.opd_id) ? diffResultData.opd_id : null,
                         header_row_index: previewData.header_row_index || 0
                     })
                 })
@@ -700,19 +1013,16 @@ document.addEventListener('DOMContentLoaded', function() {
                 })
                 .then(data => {
                     btnExecuteSync.disabled = false;
-                    btnExecuteSync.innerHTML = '<i class="bi bi-play-circle-fill me-2"></i> Eksekusi Rekonsiliasi & Sync Data';
+                    btnExecuteSync.innerHTML = '<i class="bi bi-play-circle-fill me-2"></i> Eksekusi Rekonsiliasi & Sync Database';
 
                     if (!data.success) {
-                        const errMsg = (typeof data.message === 'string' && data.message.length > 0)
-                            ? data.message
-                            : 'Sesi impor telah kadaluwarsa. Silakan muat ulang halaman (F5) dan unggah kembali berkas Excel Anda.';
-                        Swal.fire('Perhatian', errMsg, 'warning');
+                        Swal.fire('Gagal!', data.message || 'Gagal mengeksekusi rekonsiliasi.', 'error');
                         return;
                     }
 
                     Swal.fire({
-                        title: 'Berhasil!',
-                        text: data.message,
+                        title: 'Rekonsiliasi Berhasil!',
+                        html: `${data.message}<br><br><small class="text-muted">Batch Correlation ID: <code>${data.correlation_id}</code></small>`,
                         icon: 'success',
                         confirmButtonText: 'Selesai'
                     }).then(() => {
@@ -721,7 +1031,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 })
                 .catch(err => {
                     btnExecuteSync.disabled = false;
-                    btnExecuteSync.innerHTML = '<i class="bi bi-play-circle-fill me-2"></i> Eksekusi Rekonsiliasi & Sync Data';
+                    btnExecuteSync.innerHTML = '<i class="bi bi-play-circle-fill me-2"></i> Eksekusi Rekonsiliasi & Sync Database';
                     Swal.fire('Error!', err.message || 'Terjadi kesalahan sistem.', 'error');
                 });
             }
@@ -731,4 +1041,3 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 @endpush
 @endsection
-

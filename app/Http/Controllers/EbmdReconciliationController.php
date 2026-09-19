@@ -7,6 +7,8 @@ use App\Models\Activity;
 use App\Models\AsetTanah;
 use App\Models\Bangunan;
 use App\Models\EbmdVehicle;
+use App\Models\IntegrationAuditLog;
+use App\Models\Opd;
 use App\Models\Vehicle;
 use App\Services\Erandis\VehicleImportService;
 use App\Services\Erandis\VehicleService;
@@ -15,8 +17,11 @@ use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use PhpOffice\PhpSpreadsheet\IOFactory;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class EbmdReconciliationController extends Controller implements HasMiddleware
 {
@@ -42,42 +47,46 @@ class EbmdReconciliationController extends Controller implements HasMiddleware
      */
     public function index(Request $request)
     {
-        $activeCategory = $request->query('category', 'vehicle');
+        $activeCategory = $request->query('category', 'tanah');
 
         $categories = [
-            'vehicle' => [
-                'name' => 'Kendaraan Dinas Real (eRANDIS)',
-                'icon' => 'bi-car-front',
-                'model' => Vehicle::class,
-            ],
-            'ebmd_vehicle' => [
-                'name' => 'Master e-BMD Kendaraan',
-                'icon' => 'bi-database',
-                'model' => EbmdVehicle::class,
-            ],
             'tanah' => [
-                'name' => 'Aset Tanah (SIPAT)',
-                'icon' => 'bi-geo-alt',
+                'name'  => 'Aset Tanah (SIPAT)',
+                'icon'  => 'bi-geo-alt',
                 'model' => AsetTanah::class,
             ],
             'bangunan' => [
-                'name' => 'Gedung & Bangunan (SIPAT)',
-                'icon' => 'bi-building',
+                'name'  => 'Gedung & Bangunan (SIPAT)',
+                'icon'  => 'bi-building',
                 'model' => Bangunan::class,
+            ],
+            'vehicle' => [
+                'name'  => 'Kendaraan Dinas Real (eRANDIS)',
+                'icon'  => 'bi-car-front',
+                'model' => Vehicle::class,
+            ],
+            'ebmd_vehicle' => [
+                'name'  => 'Master e-BMD Kendaraan',
+                'icon'  => 'bi-database',
+                'model' => EbmdVehicle::class,
             ],
         ];
 
-        return view('rekon-ebmd.index', compact('activeCategory', 'categories'));
+        $opds = Opd::orderBy('nama', 'asc')->get();
+        $userOpdId = auth()->user()?->opd_id;
+        $isSuperAdmin = (auth()->user()?->role === 'superadmin' || auth()->user()?->role === \App\Enums\UserRole::SUPERADMIN);
+
+        return view('rekon-ebmd.index', compact('activeCategory', 'categories', 'opds', 'userOpdId', 'isSuperAdmin'));
     }
 
     /**
-     * Membaca file Excel yang diunggah dan mengembalikan daftar kolom & opsi matching key sesuai kategori aset.
+     * Membaca file Excel yang diunggah dan mengembalikan daftar kolom & pemetaan NIBAR sesuai kategori aset.
      */
     public function uploadPreview(Request $request): JsonResponse
     {
         $request->validate([
             'file'          => 'required|file|mimes:xlsx,xls,csv,txt|max:10240',
-            'asset_category'=> 'required|in:vehicle,ebmd_vehicle,tanah,bangunan',
+            'asset_category'=> 'required|in:tanah,bangunan,vehicle,ebmd_vehicle',
         ], [
             'file.required' => 'File Excel wajib dipilih.',
             'file.mimes'    => 'Format file harus berupa .xlsx, .xls, atau .csv.',
@@ -94,7 +103,7 @@ class EbmdReconciliationController extends Controller implements HasMiddleware
                 auth()->id()
             );
 
-            // Konfigurasi kolom & matching keys per kategori
+            // Konfigurasi kolom & matching keys (NIBAR adalah kunci mutlak)
             $config = $this->getCategoryConfig($category);
             
             // Rekomendasi mapping cerdas spesifik kategori
@@ -105,6 +114,7 @@ class EbmdReconciliationController extends Controller implements HasMiddleware
                 'matching_keys'     => $config['matching_keys'],
                 'suggested_mapping' => $suggestedMapping,
                 'asset_category'    => $category,
+                'nibar_column'      => $this->getNibarColumn($category),
             ]));
         } catch (\Throwable $e) {
             return response()->json([
@@ -115,16 +125,18 @@ class EbmdReconciliationController extends Controller implements HasMiddleware
     }
 
     /**
-     * Menganalisis perbedaan data (Diff Preview) sebelum eksekusi rekonsiliasi.
+     * Menganalisis perbedaan data (Diff Preview) berbasis Business Key NIBAR.
+     * Logika: SIPAT.NIBAR = eBMD.NIBAR
+     * Status: IDENTICAL, CHANGED, ONLY_IN_EBMD, ONLY_IN_SIPAT, DUPLICATE_KEY, INVALID
      */
     public function diffPreview(Request $request): JsonResponse
     {
         $request->validate([
             'import_token'     => 'required|string',
-            'matching_key'     => 'required|string',
             'selected_columns' => 'required|array|min:1',
-            'asset_category'   => 'required|in:vehicle,ebmd_vehicle,tanah,bangunan',
+            'asset_category'   => 'required|in:tanah,bangunan,vehicle,ebmd_vehicle',
             'mapping'          => 'required|array',
+            'opd_id'           => 'nullable|integer|exists:opds,id',
         ]);
 
         try {
@@ -136,154 +148,267 @@ class EbmdReconciliationController extends Controller implements HasMiddleware
             $fullPath = Storage::disk('local')->path($tokenData['file_path']);
             $category = $request->input('asset_category');
             $modelClass = $this->getModelClass($category);
-            $matchingKey = $request->input('matching_key');
+            $nibarDbCol = $this->getNibarColumn($category);
             $selectedColumns = $request->input('selected_columns');
             $mapping = $request->input('mapping');
             $headerRowIndex = (int) $request->input('header_row_index', 0);
+
+            $opdId = $request->input('opd_id');
+            $opdName = null;
+            if (!empty($opdId)) {
+                $opdObj = Opd::find($opdId);
+                $opdName = $opdObj ? ($opdObj->nama . ($opdObj->singkatan ? ' (' . $opdObj->singkatan . ')' : '')) : null;
+            }
+
+            // NIBAR index di file Excel
+            $nibarExcelIdx = $mapping['nibar'] ?? $mapping[$nibarDbCol] ?? null;
+            if ($nibarExcelIdx === null) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Kolom NIBAR (Nomor Induk Barang) wajib dipetakan pada Langkah 2.',
+                ], 422);
+            }
 
             $reader = IOFactory::createReaderForFile($fullPath);
             $spreadsheet = $reader->load($fullPath);
             $worksheet = $spreadsheet->getActiveSheet();
             $rows = $worksheet->toArray();
 
-            $totalRows = 0;
-            $matchedCount = 0;
-            $changedCount = 0;
-            $newCount = 0;
-            $diffSamples = [];
-            $columnCounts = [];
-
             $startRow = $headerRowIndex + 1;
+
+            // 1. Kumpulkan semua NIBAR dari e-BMD untuk deteksi duplikat & validasi
+            $excelRows = [];
+            $excelNibarCounts = [];
+            $totalEbmd = 0;
 
             for ($i = $startRow; $i < count($rows); $i++) {
                 $row = $rows[$i];
-                if (empty(array_filter($row))) continue;
-
-                $totalRows++;
-
-                $keyColIndex = $mapping[$matchingKey] ?? null;
-                if ($keyColIndex === null || !isset($row[$keyColIndex])) {
-                    $newCount++;
+                if (empty(array_filter($row, fn($v) => !is_null($v) && trim((string)$v) !== ''))) {
                     continue;
                 }
 
-                $keyValue = trim((string) $row[$keyColIndex]);
-                if (empty($keyValue)) {
-                    $newCount++;
-                    continue;
-                }
+                $totalEbmd++;
+                $rawNibar = isset($row[$nibarExcelIdx]) ? trim((string)$row[$nibarExcelIdx]) : '';
+                
+                $excelRows[] = [
+                    'row_num'   => $i + 1,
+                    'raw_nibar' => $rawNibar,
+                    'row_data'  => $row,
+                ];
 
-                // Query database tanpa global scope tenant agar rekonsiliasi lintas OPD akurat
-                $query = $modelClass::withoutGlobalScopes();
-
-                if ($matchingKey === 'no_polisi') {
-                    $keyValueClean = preg_replace('/[^A-Za-z0-9]/', '', strtoupper($keyValue));
-                    $existingModel = $query->whereRaw("REPLACE(REPLACE(REPLACE(UPPER(no_polisi), ' ', ''), '.', ''), '-', '') = ?", [$keyValueClean])->first();
-                } else {
-                    $existingModel = $query->where($matchingKey, $keyValue)->first();
-                    if (!$existingModel) {
-                        $cleanKey = preg_replace('/[^A-Za-z0-9]/', '', strtoupper($keyValue));
-                        if (!empty($cleanKey)) {
-                            $existingModel = $modelClass::withoutGlobalScopes()->whereRaw("REPLACE(REPLACE(REPLACE(UPPER({$matchingKey}), ' ', ''), '.', ''), '-', '') = ?", [$cleanKey])->first();
-                        }
-                    }
-                }
-
-                if (!$existingModel) {
-                    $newCount++;
-                    continue;
-                }
-
-                $matchedCount++;
-                $hasDiff = false;
-                $rowDiffs = [];
-
-                foreach ($selectedColumns as $col) {
-                    if (!isset($mapping[$col])) continue;
-                    $excelColIdx = $mapping[$col];
-                    if (!isset($row[$excelColIdx])) continue;
-
-                    $newVal = trim((string) $row[$excelColIdx]);
-                    $oldVal = trim((string) ($existingModel->$col ?? ''));
-
-                    $isColDiff = false;
-
-                    // Formatting & Comparison Logic
-                    if (in_array($col, ['nilai_perolehan', 'harga_perolehan'])) {
-                        $oldValParsed = $this->parseNumericToDatabase($oldVal);
-                        $newValParsed = $this->parseNumericToDatabase($newVal, $oldValParsed);
-                        if (abs($newValParsed - $oldValParsed) > 0.01) {
-                            $isColDiff = true;
-                            $rowDiffs[] = [
-                                'column'    => $col,
-                                'old'       => 'Rp ' . number_format($oldValParsed, 0, ',', '.'),
-                                'new'       => 'Rp ' . number_format($newValParsed, 0, ',', '.'),
-                                'raw_old'   => $oldValParsed,
-                                'raw_new'   => $newValParsed,
-                            ];
-                        }
-                    } else if (in_array($col, ['luas', 'luas_lantai', 'luas_dasar'])) {
-                        $oldValParsed = $this->parseNumericToDatabase($oldVal);
-                        $newValParsed = $this->parseNumericToDatabase($newVal, $oldValParsed);
-                        if (abs($newValParsed - $oldValParsed) > 0.01) {
-                            $isColDiff = true;
-                            $rowDiffs[] = [
-                                'column'    => $col,
-                                'old'       => number_format($oldValParsed, 0, ',', '.') . ' m²',
-                                'new'       => number_format($newValParsed, 0, ',', '.') . ' m²',
-                                'raw_old'   => $oldValParsed,
-                                'raw_new'   => $newValParsed,
-                            ];
-                        }
-                    } else if (in_array($col, ['tanggal_perolehan', 'tgl_perolehan'])) {
-                        $dbDateOld = $this->parseDateToDatabase($oldVal);
-                        $dbDateNew = $this->parseDateToDatabase($newVal);
-
-                        if ($dbDateOld !== $dbDateNew && strtolower($oldVal) !== strtolower($newVal)) {
-                            $isColDiff = true;
-                            $rowDiffs[] = [
-                                'column'    => $col,
-                                'old'       => $this->formatDateString($oldVal) ?: ($oldVal ?: '(Kosong)'),
-                                'new'       => $this->formatDateString($newVal) ?: ($newVal ?: '(Kosong)'),
-                                'raw_old'   => $oldVal,
-                                'raw_new'   => $newVal,
-                            ];
-                        }
-                    } else if (strtolower($oldVal) !== strtolower($newVal)) {
-                        $isColDiff = true;
-                        $rowDiffs[] = [
-                            'column'    => $col,
-                            'old'       => $oldVal ?: '(Kosong)',
-                            'new'       => $newVal ?: '(Kosong)',
-                            'raw_old'   => $oldVal,
-                            'raw_new'   => $newVal,
-                        ];
-                    }
-
-                    if ($isColDiff) {
-                        $hasDiff = true;
-                        $columnCounts[$col] = ($columnCounts[$col] ?? 0) + 1;
-                    }
-                }
-
-                if ($hasDiff) {
-                    $changedCount++;
-                    if (count($diffSamples) < 30) {
-                        $nameAttr = $existingModel->nama_aset ?? $existingModel->nama_bangunan ?? $existingModel->merk ?? $existingModel->pemegang ?? 'Aset Data';
-                        $opdInfo = $existingModel->opdRelation?->nama ?? $existingModel->opdRelation?->nama_opd ?? $existingModel->opd ?? '';
-                        $subOpdInfo = $existingModel->subOpd?->nama ?? $existingModel->subOpd?->nama_sub_opd ?? $existingModel->pemegang ?? '';
-
-                        $diffSamples[] = [
-                            'row'        => $i + 1,
-                            'key'        => $keyValue,
-                            'name'       => $nameAttr,
-                            'opd'        => $opdInfo,
-                            'sub_opd'    => $subOpdInfo,
-                            'differences'=> $rowDiffs,
-                        ];
-                    }
+                if ($rawNibar !== '' && $rawNibar !== '-') {
+                    $excelNibarCounts[$rawNibar] = ($excelNibarCounts[$rawNibar] ?? 0) + 1;
                 }
             }
+
+            // 2. Kumpulkan seluruh data SIPAT untuk active category
+            // Query without global scopes agar pencocokan NIBAR akurat, atau difilter berdasarkan OPD jika dipilih
+            $sipatQuery = $modelClass::withoutGlobalScopes();
+            if (!empty($opdId)) {
+                $sipatQuery->where('opd_id', $opdId);
+            }
+            $sipatRecords = $sipatQuery->get();
+            $sipatByNibar = [];
+            $sipatNibarSet = [];
+
+            foreach ($sipatRecords as $rec) {
+                $recNibar = trim((string)($rec->$nibarDbCol ?? ''));
+                if ($recNibar !== '') {
+                    $sipatByNibar[$recNibar][] = $rec;
+                    $sipatNibarSet[$recNibar] = true;
+                }
+            }
+
+            // 3. Proses Analisis Matching e-BMD -> SIPAT
+            $reconciliationItems = [];
+            $columnCounts = [];
+            $seenEbmdNibars = [];
+
+            $identicalCount = 0;
+            $changedCount = 0;
+            $notFoundSipatCount = 0;
+            $duplicateCount = 0;
+            $invalidCount = 0;
+
+            foreach ($excelRows as $eRow) {
+                $rowNum = $eRow['row_num'];
+                $nibar = $eRow['raw_nibar'];
+                $row = $eRow['row_data'];
+
+                // VALIDASI NIBAR KOSONG / NULL
+                if ($nibar === '' || $nibar === '-' || is_null($nibar)) {
+                    $invalidCount++;
+                    $reconciliationItems[] = [
+                        'row_num'          => $rowNum,
+                        'nibar'            => '(KOSONG)',
+                        'name'             => $this->extractRowName($row, $mapping, $category),
+                        'status'           => 'INVALID',
+                        'status_label'     => 'Invalid / NIBAR Kosong',
+                        'status_badge'     => 'danger',
+                        'opd'              => '-',
+                        'sub_opd'          => '-',
+                        'changed_columns'  => [],
+                        'all_columns_diff' => [],
+                        'notes'            => 'Baris e-BMD tidak memiliki NIBAR valid.',
+                    ];
+                    continue;
+                }
+
+                // VALIDASI NIBAR DUPLIKAT DI FILE e-BMD
+                if (($excelNibarCounts[$nibar] ?? 0) > 1) {
+                    $duplicateCount++;
+                    $reconciliationItems[] = [
+                        'row_num'          => $rowNum,
+                        'nibar'            => $nibar,
+                        'name'             => $this->extractRowName($row, $mapping, $category),
+                        'status'           => 'DUPLICATE_KEY',
+                        'status_label'     => 'Duplikat di e-BMD',
+                        'status_badge'     => 'warning',
+                        'opd'              => '-',
+                        'sub_opd'          => '-',
+                        'changed_columns'  => [],
+                        'all_columns_diff' => [],
+                        'notes'            => "NIBAR [{$nibar}] muncul {$excelNibarCounts[$nibar]} kali di berkas Excel e-BMD.",
+                    ];
+                    continue;
+                }
+
+                // VALIDASI NIBAR DUPLIKAT DI SIPAT
+                if (isset($sipatByNibar[$nibar]) && count($sipatByNibar[$nibar]) > 1) {
+                    $duplicateCount++;
+                    $sipatDuplicatesCount = count($sipatByNibar[$nibar]);
+                    $existingModel = $sipatByNibar[$nibar][0];
+                    $nameAttr = $this->getModelDisplayName($existingModel);
+
+                    $reconciliationItems[] = [
+                        'row_num'          => $rowNum,
+                        'nibar'            => $nibar,
+                        'name'             => $nameAttr,
+                        'status'           => 'DUPLICATE_KEY',
+                        'status_label'     => 'Duplikat di SIPAT',
+                        'status_badge'     => 'warning',
+                        'opd'              => $this->getModelOpdName($existingModel),
+                        'sub_opd'          => $this->getModelSubOpdName($existingModel),
+                        'changed_columns'  => [],
+                        'all_columns_diff' => [],
+                        'notes'            => "NIBAR [{$nibar}] terdaftar {$sipatDuplicatesCount} kali di database SIPAT (Perlu Review Manual).",
+                    ];
+                    continue;
+                }
+
+                // NIBAR DITEMUKAN SECARA UNIK DI SIPAT
+                if (isset($sipatByNibar[$nibar]) && count($sipatByNibar[$nibar]) === 1) {
+                    $seenEbmdNibars[$nibar] = true;
+                    $existingModel = $sipatByNibar[$nibar][0];
+                    $nameAttr = $this->getModelDisplayName($existingModel);
+                    $opdInfo = $this->getModelOpdName($existingModel);
+                    $subOpdInfo = $this->getModelSubOpdName($existingModel);
+
+                    $rowDiffs = [];
+                    $allColumnsDiff = [];
+                    $hasDiff = false;
+
+                    foreach ($selectedColumns as $col) {
+                        if (!isset($mapping[$col])) continue;
+                        $excelColIdx = $mapping[$col];
+                        if (!isset($row[$excelColIdx])) continue;
+
+                        $rawNewVal = trim((string)$row[$excelColIdx]);
+                        $rawOldVal = trim((string)($existingModel->$col ?? ''));
+
+                        $colConfig = $this->compareColumnValue($col, $rawOldVal, $rawNewVal);
+
+                        $allColumnsDiff[] = [
+                            'column'   => $col,
+                            'label'    => $this->getColumnLabel($category, $col),
+                            'old'      => $colConfig['formatted_old'],
+                            'new'      => $colConfig['formatted_new'],
+                            'is_diff'  => $colConfig['is_diff'],
+                            'status'   => $colConfig['is_diff'] ? 'BERUBAH' : 'IDENTIK',
+                        ];
+
+                        if ($colConfig['is_diff']) {
+                            $hasDiff = true;
+                            $rowDiffs[] = $allColumnsDiff[count($allColumnsDiff) - 1];
+                            $columnCounts[$col] = ($columnCounts[$col] ?? 0) + 1;
+                        }
+                    }
+
+                    if ($hasDiff) {
+                        $changedCount++;
+                        $reconciliationItems[] = [
+                            'row_num'          => $rowNum,
+                            'nibar'            => $nibar,
+                            'name'             => $nameAttr,
+                            'status'           => 'CHANGED',
+                            'status_label'     => 'Berubah',
+                            'status_badge'     => 'warning',
+                            'opd'              => $opdInfo,
+                            'sub_opd'          => $subOpdInfo,
+                            'changed_columns'  => $rowDiffs,
+                            'all_columns_diff' => $allColumnsDiff,
+                            'notes'            => count($rowDiffs) . ' atribut mengalami perubahan.',
+                        ];
+                    } else {
+                        $identicalCount++;
+                        $reconciliationItems[] = [
+                            'row_num'          => $rowNum,
+                            'nibar'            => $nibar,
+                            'name'             => $nameAttr,
+                            'status'           => 'IDENTICAL',
+                            'status_label'     => 'Identik',
+                            'status_badge'     => 'success',
+                            'opd'              => $opdInfo,
+                            'sub_opd'          => $subOpdInfo,
+                            'changed_columns'  => [],
+                            'all_columns_diff' => $allColumnsDiff,
+                            'notes'            => 'Seluruh kolom terpilih identik dengan database.',
+                        ];
+                    }
+                } else {
+                    // NIBAR TIDAK DITEMUKAN DI SIPAT (ONLY_IN_EBMD)
+                    $notFoundSipatCount++;
+                    $rowName = $this->extractRowName($row, $mapping, $category);
+
+                    $reconciliationItems[] = [
+                        'row_num'          => $rowNum,
+                        'nibar'            => $nibar,
+                        'name'             => $rowName,
+                        'status'           => 'ONLY_IN_EBMD',
+                        'status_label'     => 'Tidak Ditemukan di SIPAT',
+                        'status_badge'     => 'info',
+                        'opd'              => '-',
+                        'sub_opd'          => '-',
+                        'changed_columns'  => [],
+                        'all_columns_diff' => [],
+                        'notes'            => 'NIBAR terdaftar di e-BMD namun belum ada di database SIPAT.',
+                    ];
+                }
+            }
+
+            // 4. Deteksi Aset Dua Arah (ONLY_IN_SIPAT - Ada di SIPAT tetapi tidak ada di e-BMD)
+            $onlyInSipatCount = 0;
+            foreach ($sipatByNibar as $sNibar => $records) {
+                if (!isset($seenEbmdNibars[$sNibar]) && !isset($excelNibarCounts[$sNibar])) {
+                    $onlyInSipatCount += count($records);
+                    $firstRec = $records[0];
+                    $reconciliationItems[] = [
+                        'row_num'          => '-',
+                        'nibar'            => $sNibar,
+                        'name'             => $this->getModelDisplayName($firstRec),
+                        'status'           => 'ONLY_IN_SIPAT',
+                        'status_label'     => 'Hanya di SIPAT',
+                        'status_badge'     => 'secondary',
+                        'opd'              => $this->getModelOpdName($firstRec),
+                        'sub_opd'          => $this->getModelSubOpdName($firstRec),
+                        'changed_columns'  => [],
+                        'all_columns_diff' => [],
+                        'notes'            => 'Aset tercatat di SIPAT namun tidak ada dalam file e-BMD ini.',
+                    ];
+                }
+            }
+
+            $nibarMatched = $identicalCount + $changedCount;
 
             $config = $this->getCategoryConfig($category);
             $fieldBreakdown = [];
@@ -295,39 +420,136 @@ class EbmdReconciliationController extends Controller implements HasMiddleware
                 ];
             }
 
-            return response()->json([
-                'success'         => true,
-                'total_rows'      => $totalRows,
-                'matched_count'   => $matchedCount,
-                'changed_count'   => $changedCount,
-                'new_count'       => $newCount,
-                'field_breakdown' => $fieldBreakdown,
-                'diff_samples'    => $diffSamples,
-            ]);
+            // Simpan hasil komparasi ke Cache untuk ekspor & eksekusi cepat
+            $resultPayload = [
+                'total_ebmd'         => $totalEbmd,
+                'nibar_matched'      => $nibarMatched,
+                'identical_count'    => $identicalCount,
+                'changed_count'      => $changedCount,
+                'not_found_sipat'    => $notFoundSipatCount,
+                'only_in_sipat'      => $onlyInSipatCount,
+                'duplicate_count'    => $duplicateCount,
+                'invalid_count'      => $invalidCount,
+                'field_breakdown'    => $fieldBreakdown,
+                'items'              => $reconciliationItems,
+                'selected_columns'   => $selectedColumns,
+                'asset_category'     => $category,
+                'opd_id'             => $opdId,
+                'opd_name'           => $opdName,
+            ];
+
+            Cache::put('rekon_result_' . $request->input('import_token'), $resultPayload, now()->addMinutes(30));
+
+            return response()->json(array_merge([
+                'success' => true,
+            ], $resultPayload));
+
         } catch (\Throwable $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Gagal memproses pratinjau perbedaan data: ' . $e->getMessage(),
+                'message' => 'Gagal memproses pratinjau rekonsiliasi NIBAR: ' . $e->getMessage(),
             ], 500);
         }
     }
 
     /**
-     * Mengeksekusi impor selektif / update kolom yang dicentang.
+     * Mengekspor hasil analisis rekonsiliasi ke file CSV / Excel.
+     */
+    public function exportPreview(Request $request): StreamedResponse|JsonResponse
+    {
+        $request->validate([
+            'import_token' => 'required|string',
+        ]);
+
+        $cachedResult = Cache::get('rekon_result_' . $request->input('import_token'));
+        if (!$cachedResult || empty($cachedResult['items'])) {
+            return response()->json(['success' => false, 'message' => 'Data hasil rekonsiliasi tidak ditemukan atau sudah kadaluwarsa.'], 404);
+        }
+
+        $items = $cachedResult['items'];
+        $category = $cachedResult['asset_category'] ?? 'aset';
+        $opdSlug = !empty($cachedResult['opd_name']) ? '_' . Str::slug($cachedResult['opd_name']) : '';
+        $fileName = "Hasil_Rekonsiliasi_eBMD_{$category}{$opdSlug}_" . date('Ymd_His') . ".csv";
+
+        $headers = [
+            "Content-type"        => "text/csv; charset=UTF-8",
+            "Content-Disposition" => "attachment; filename={$fileName}",
+            "Pragma"              => "no-cache",
+            "Cache-Control"       => "must-revalidate, post-check=0, pre-check=0",
+            "Expires"             => "0"
+        ];
+
+        $columns = [
+            'No',
+            'NIBAR',
+            'Nama Aset',
+            'Status Rekonsiliasi',
+            'OPD / Instansi',
+            'Kolom Berubah',
+            'Nilai SIPAT (Lama)',
+            'Nilai e-BMD (Baru)',
+            'Keterangan'
+        ];
+
+        return response()->stream(function () use ($items, $columns) {
+            $file = fopen('php://output', 'w');
+            // Add UTF-8 BOM for Excel compatibility
+            fprintf($file, chr(0xEF).chr(0xBB).chr(0xBF));
+            fputcsv($file, $columns);
+
+            $no = 1;
+            foreach ($items as $item) {
+                if (!empty($item['changed_columns'])) {
+                    foreach ($item['changed_columns'] as $diff) {
+                        fputcsv($file, [
+                            $no++,
+                            " " . $item['nibar'], // Keep leading zero in Excel
+                            $item['name'],
+                            $item['status_label'],
+                            $item['opd'],
+                            $diff['label'] . " (" . $diff['column'] . ")",
+                            $diff['old'],
+                            $diff['new'],
+                            $item['notes'],
+                        ]);
+                    }
+                } else {
+                    fputcsv($file, [
+                        $no++,
+                        " " . $item['nibar'],
+                        $item['name'],
+                        $item['status_label'],
+                        $item['opd'],
+                        '-',
+                        '-',
+                        '-',
+                        $item['notes'],
+                    ]);
+                }
+            }
+
+            fclose($file);
+        }, 200, $headers);
+    }
+
+    /**
+     * Mengeksekusi impor selektif / update kolom yang dicentang secara atomic dengan transaksi database & audit trail.
      */
     public function execute(Request $request): JsonResponse
     {
         $request->validate([
             'import_token'     => 'required|string',
-            'matching_key'     => 'required|string',
             'selected_columns' => 'required|array|min:1',
-            'asset_category'   => 'required|in:vehicle,ebmd_vehicle,tanah,bangunan',
+            'asset_category'   => 'required|in:tanah,bangunan,vehicle,ebmd_vehicle',
             'mapping'          => 'required|array',
             'create_new'       => 'nullable|boolean',
+            'opd_id'           => 'nullable|integer|exists:opds,id',
         ]);
 
         ini_set('memory_limit', '512M');
         ini_set('max_execution_time', '300');
+
+        $correlationId = 'RC-' . date('Ymd') . '-' . strtoupper(Str::random(6));
 
         try {
             $tokenData = Cache::get($request->input('import_token'));
@@ -338,83 +560,163 @@ class EbmdReconciliationController extends Controller implements HasMiddleware
             $fullPath = Storage::disk('local')->path($tokenData['file_path']);
             $category = $request->input('asset_category');
             $modelClass = $this->getModelClass($category);
-            $matchingKey = $request->input('matching_key');
+            $nibarDbCol = $this->getNibarColumn($category);
             $selectedColumns = $request->input('selected_columns');
             $mapping = $request->input('mapping');
             $headerRowIndex = (int) $request->input('header_row_index', 0);
             $createNew = (bool) $request->input('create_new', false);
+
+            $opdId = $request->input('opd_id');
+            $opdName = null;
+            if (!empty($opdId)) {
+                $opdObj = Opd::find($opdId);
+                $opdName = $opdObj ? ($opdObj->nama . ($opdObj->singkatan ? ' (' . $opdObj->singkatan . ')' : '')) : null;
+            }
+
+            $nibarExcelIdx = $mapping['nibar'] ?? $mapping[$nibarDbCol] ?? null;
+            if ($nibarExcelIdx === null) {
+                return response()->json(['success' => false, 'message' => 'Kolom NIBAR wajib dipetakan.'], 422);
+            }
 
             $reader = IOFactory::createReaderForFile($fullPath);
             $spreadsheet = $reader->load($fullPath);
             $worksheet = $spreadsheet->getActiveSheet();
             $rows = $worksheet->toArray();
 
+            $startRow = $headerRowIndex + 1;
+
+            // 1. Hitung frekuensi NIBAR e-BMD
+            $excelNibarCounts = [];
+            for ($i = $startRow; $i < count($rows); $i++) {
+                $row = $rows[$i];
+                if (empty(array_filter($row, fn($v) => !is_null($v) && trim((string)$v) !== ''))) continue;
+                $rawNibar = isset($row[$nibarExcelIdx]) ? trim((string)$row[$nibarExcelIdx]) : '';
+                if ($rawNibar !== '' && $rawNibar !== '-') {
+                    $excelNibarCounts[$rawNibar] = ($excelNibarCounts[$rawNibar] ?? 0) + 1;
+                }
+            }
+
+            // 2. Kumpulkan seluruh record SIPAT
+            $sipatQuery = $modelClass::withoutGlobalScopes();
+            if (!empty($opdId)) {
+                $sipatQuery->where('opd_id', $opdId);
+            }
+            $sipatRecords = $sipatQuery->get();
+            $sipatByNibar = [];
+            foreach ($sipatRecords as $rec) {
+                $recNibar = trim((string)($rec->$nibarDbCol ?? ''));
+                if ($recNibar !== '') {
+                    $sipatByNibar[$recNibar][] = $rec;
+                }
+            }
+
             $updatedCount = 0;
             $insertedCount = 0;
             $skippedCount = 0;
+            $auditLogsToInsert = [];
 
-            $startRow = $headerRowIndex + 1;
+            // MEMULAI TRANSAKSI DATABASE UNTUK MENJAMIN ATOMICITY
+            DB::beginTransaction();
 
             for ($i = $startRow; $i < count($rows); $i++) {
                 $row = $rows[$i];
-                if (empty(array_filter($row))) continue;
+                if (empty(array_filter($row, fn($v) => !is_null($v) && trim((string)$v) !== ''))) continue;
 
-                $keyColIndex = $mapping[$matchingKey] ?? null;
-                if ($keyColIndex === null || !isset($row[$keyColIndex])) {
+                $rawNibar = isset($row[$nibarExcelIdx]) ? trim((string)$row[$nibarExcelIdx]) : '';
+                
+                // Lewati NIBAR kosong
+                if ($rawNibar === '' || $rawNibar === '-') {
                     $skippedCount++;
                     continue;
                 }
 
-                $keyValue = trim((string) $row[$keyColIndex]);
-                if (empty($keyValue)) {
+                // Lewati jika NIBAR duplikat di e-BMD
+                if (($excelNibarCounts[$rawNibar] ?? 0) > 1) {
                     $skippedCount++;
                     continue;
                 }
 
-                // Query database tanpa global scope tenant
-                $query = $modelClass::withoutGlobalScopes();
-
-                if ($matchingKey === 'no_polisi') {
-                    $cleanKey = preg_replace('/[^A-Za-z0-9]/', '', strtoupper($keyValue));
-                    $existingModel = $query->whereRaw("REPLACE(REPLACE(REPLACE(UPPER(no_polisi), ' ', ''), '.', ''), '-', '') = ?", [$cleanKey])->first();
-                } else {
-                    $existingModel = $query->where($matchingKey, $keyValue)->first();
-                    if (!$existingModel) {
-                        $cleanKey = preg_replace('/[^A-Za-z0-9]/', '', strtoupper($keyValue));
-                        if (!empty($cleanKey)) {
-                            $existingModel = $modelClass::withoutGlobalScopes()->whereRaw("REPLACE(REPLACE(REPLACE(UPPER({$matchingKey}), ' ', ''), '.', ''), '-', '') = ?", [$cleanKey])->first();
-                        }
-                    }
+                // Lewati jika NIBAR duplikat di SIPAT
+                if (isset($sipatByNibar[$rawNibar]) && count($sipatByNibar[$rawNibar]) > 1) {
+                    $skippedCount++;
+                    continue;
                 }
 
-                if ($existingModel) {
+                // DATA DITEMUKAN DI SIPAT SECARA UNIK
+                if (isset($sipatByNibar[$rawNibar]) && count($sipatByNibar[$rawNibar]) === 1) {
+                    $existingModel = $sipatByNibar[$rawNibar][0];
                     $updateData = [];
+                    $changesLog = [];
+
                     foreach ($selectedColumns as $col) {
                         if (!isset($mapping[$col])) continue;
                         $excelColIdx = $mapping[$col];
                         if (!isset($row[$excelColIdx])) continue;
 
-                        $rawVal = trim((string) $row[$excelColIdx]);
+                        $rawVal = trim((string)$row[$excelColIdx]);
+
+                        // PERLINDUNGAN NILAI KOSONG: Nilai kosong dari e-BMD TIDAK BOLEH menghapus data SIPAT
+                        if ($rawVal === '' || $rawVal === '(Kosong)') {
+                            continue;
+                        }
+
+                        $oldVal = trim((string)($existingModel->$col ?? ''));
+
                         if (in_array($col, ['nilai_perolehan', 'harga_perolehan', 'luas', 'luas_lantai', 'luas_dasar'])) {
-                            $oldVal = trim((string) ($existingModel->$col ?? ''));
                             $refVal = $this->parseNumericToDatabase($oldVal);
-                            $updateData[$col] = $this->parseNumericToDatabase($rawVal, $refVal);
+                            $parsedVal = $this->parseNumericToDatabase($rawVal, $refVal);
+                            
+                            if (abs($parsedVal - $refVal) > 0.01) {
+                                $updateData[$col] = $parsedVal;
+                                $changesLog[$col] = ['old' => $oldVal, 'new' => $parsedVal];
+                            }
                         } else if (in_array($col, ['tanggal_perolehan', 'tgl_perolehan'])) {
-                            $updateData[$col] = $this->parseDateToDatabase($rawVal);
+                            $parsedDate = $this->parseDateToDatabase($rawVal);
+                            if ($parsedDate && $parsedDate !== $oldVal) {
+                                $updateData[$col] = $parsedDate;
+                                $changesLog[$col] = ['old' => $oldVal, 'new' => $parsedDate];
+                            }
                         } else {
-                            $updateData[$col] = $rawVal;
+                            if (strtolower($rawVal) !== strtolower($oldVal)) {
+                                $updateData[$col] = $rawVal;
+                                $changesLog[$col] = ['old' => $oldVal, 'new' => $rawVal];
+                            }
                         }
                     }
 
                     if (!empty($updateData)) {
                         $existingModel->update($updateData);
                         $updatedCount++;
+
+                        $opdScopeText = $opdName ? " [OPD: {$opdName}]" : " [Seluruh OPD]";
+                        $auditLogsToInsert[] = [
+                            'event_id'       => (string) Str::uuid(),
+                            'correlation_id' => $correlationId,
+                            'nibar'          => $rawNibar,
+                            'event_name'     => 'EBMD_RECONCILIATION_UPDATE',
+                            'source_system'  => 'EBMD',
+                            'direction'      => 'INBOUND',
+                            'changes'        => json_encode($changesLog),
+                            'reason'         => "Rekonsiliasi e-BMD Kategori {$category}{$opdScopeText} (" . implode(', ', array_keys($updateData)) . ")",
+                            'sync_status'    => 'SUCCESS',
+                            'created_by'     => auth()->user()?->username ?? auth()->user()?->name ?? 'system',
+                            'created_at'     => now(),
+                        ];
+                    } else {
+                        $skippedCount++;
                     }
                 } else if ($createNew) {
-                    $newData = [];
+                    // Penambahan data baru (jika switch create_new diaktifkan)
+                    $newData = [$nibarDbCol => $rawNibar];
+                    if (!empty($opdId)) {
+                        $newData['opd_id'] = $opdId;
+                    }
+
                     foreach ($mapping as $col => $excelColIdx) {
                         if (isset($row[$excelColIdx])) {
-                            $rawVal = trim((string) $row[$excelColIdx]);
+                            $rawVal = trim((string)$row[$excelColIdx]);
+                            if ($rawVal === '' || $rawVal === '(Kosong)') continue;
+
                             if (in_array($col, ['nilai_perolehan', 'harga_perolehan', 'luas', 'luas_lantai', 'luas_dasar'])) {
                                 $newData[$col] = $this->parseNumericToDatabase($rawVal);
                             } else if (in_array($col, ['tanggal_perolehan', 'tgl_perolehan'])) {
@@ -425,40 +727,139 @@ class EbmdReconciliationController extends Controller implements HasMiddleware
                         }
                     }
 
-                    if (!empty($newData)) {
-                        $modelClass::create($newData);
-                        $insertedCount++;
-                    } else {
-                        $skippedCount++;
-                    }
+                    $modelClass::create($newData);
+                    $insertedCount++;
+
+                    $opdScopeText = $opdName ? " [OPD: {$opdName}]" : "";
+                    $auditLogsToInsert[] = [
+                        'event_id'       => (string) Str::uuid(),
+                        'correlation_id' => $correlationId,
+                        'nibar'          => $rawNibar,
+                        'event_name'     => 'EBMD_RECONCILIATION_INSERT',
+                        'source_system'  => 'EBMD',
+                        'direction'      => 'INBOUND',
+                        'changes'        => json_encode($newData),
+                        'reason'         => "Penambahan Aset Baru dari Rekonsiliasi e-BMD {$category}{$opdScopeText}",
+                        'sync_status'    => 'SUCCESS',
+                        'created_by'     => auth()->user()?->username ?? auth()->user()?->name ?? 'system',
+                        'created_at'     => now(),
+                    ];
                 } else {
                     $skippedCount++;
                 }
             }
 
+            // Simpan batch audit logs ke database
+            if (!empty($auditLogsToInsert)) {
+                IntegrationAuditLog::insert($auditLogsToInsert);
+            }
+
+            // COMMIT TRANSAKSI
+            DB::commit();
+
+            // Bersihkan file temporer dan cache
             Storage::disk('local')->delete($tokenData['file_path']);
             Cache::forget($request->input('import_token'));
+            Cache::forget('rekon_result_' . $request->input('import_token'));
 
             if (in_array($category, ['vehicle', 'ebmd_vehicle'])) {
                 $this->vehicleService->invalidateDashboardStats(invalidateAllOpd: true);
             }
 
             $columnListStr = implode(', ', $selectedColumns);
-            Activity::log("Melakukan Rekonsiliasi e-BMD Kategori ({$category}) secara selektif. Diperbarui: {$updatedCount}, Ditambahkan: {$insertedCount}. Kolom: [{$columnListStr}]", 'success');
+            Activity::log("Rekonsiliasi e-BMD NIBAR [{$correlationId}] Kategori ({$category}). Diperbarui: {$updatedCount}, Ditambahkan: {$insertedCount}, Dilewati: {$skippedCount}. Kolom: [{$columnListStr}]", 'success');
 
             return response()->json([
-                'success' => true,
-                'message' => "Proses rekonsiliasi data e-BMD selesai! Berhasil memperbarui {$updatedCount} data dan menambahkan {$insertedCount} data baru.",
+                'success'        => true,
+                'message'        => "Rekonsiliasi data e-BMD berhasil dieksekusi! Diperbarui: {$updatedCount} aset, Ditambahkan: {$insertedCount} aset baru.",
+                'correlation_id' => $correlationId,
                 'updated_count'  => $updatedCount,
                 'inserted_count' => $insertedCount,
                 'skipped_count'  => $skippedCount,
             ]);
+
         } catch (\Throwable $e) {
+            DB::rollBack();
             return response()->json([
                 'success' => false,
-                'message' => 'Gagal mengeksekusi rekonsiliasi data: ' . $e->getMessage(),
+                'message' => 'Gagal mengeksekusi rekonsiliasi data (Transaksi dibatalkan): ' . $e->getMessage(),
             ], 500);
         }
+    }
+
+    /**
+     * Membandingkan nilai kolom lama dan nilai kolom baru dengan normalisasi lengkap.
+     */
+    protected function compareColumnValue(string $col, string $oldVal, string $newVal): array
+    {
+        // Default: jika e-BMD kosong, lindungi SIPAT (tidak dianggap berbeda yang merusak)
+        if ($newVal === '' || $newVal === '(Kosong)') {
+            return [
+                'is_diff'       => false,
+                'formatted_old' => $oldVal ?: '(Kosong)',
+                'formatted_new' => '(Kosong / Dilindungi)',
+            ];
+        }
+
+        if (in_array($col, ['nilai_perolehan', 'harga_perolehan'])) {
+            $oldParsed = $this->parseNumericToDatabase($oldVal);
+            $newParsed = $this->parseNumericToDatabase($newVal, $oldParsed);
+
+            $isDiff = abs($newParsed - $oldParsed) > 0.01;
+            return [
+                'is_diff'       => $isDiff,
+                'formatted_old' => 'Rp ' . number_format($oldParsed, 0, ',', '.'),
+                'formatted_new' => 'Rp ' . number_format($newParsed, 0, ',', '.'),
+            ];
+        }
+
+        if (in_array($col, ['luas', 'luas_lantai', 'luas_dasar'])) {
+            $oldParsed = $this->parseNumericToDatabase($oldVal);
+            $newParsed = $this->parseNumericToDatabase($newVal, $oldParsed);
+
+            $isDiff = abs($newParsed - $oldParsed) > 0.01;
+            return [
+                'is_diff'       => $isDiff,
+                'formatted_old' => number_format($oldParsed, 0, ',', '.') . ' m²',
+                'formatted_new' => number_format($newParsed, 0, ',', '.') . ' m²',
+            ];
+        }
+
+        if (in_array($col, ['tanggal_perolehan', 'tgl_perolehan'])) {
+            $dbOld = $this->parseDateToDatabase($oldVal);
+            $dbNew = $this->parseDateToDatabase($newVal);
+
+            $isDiff = ($dbOld !== $dbNew && strtolower($oldVal) !== strtolower($newVal));
+            return [
+                'is_diff'       => $isDiff,
+                'formatted_old' => $this->formatDateString($oldVal) ?: ($oldVal ?: '(Kosong)'),
+                'formatted_new' => $this->formatDateString($newVal) ?: ($newVal ?: '(Kosong)'),
+            ];
+        }
+
+        // String / Text Normalization: trim & case-insensitive comparison
+        $cleanOld = preg_replace('/\s+/', ' ', strtolower(trim($oldVal)));
+        $cleanNew = preg_replace('/\s+/', ' ', strtolower(trim($newVal)));
+
+        $isDiff = ($cleanOld !== $cleanNew);
+        return [
+            'is_diff'       => $isDiff,
+            'formatted_old' => $oldVal ?: '(Kosong)',
+            'formatted_new' => $newVal ?: '(Kosong)',
+        ];
+    }
+
+    /**
+     * Mengambil kolom basis data yang berfungsi sebagai NIBAR untuk kategori aset.
+     */
+    protected function getNibarColumn(string $category): string
+    {
+        return match ($category) {
+            'tanah'        => 'kode_aset',
+            'bangunan'     => 'kode_bangunan',
+            'ebmd_vehicle' => 'nomor_register',
+            default        => 'nomor_register',
+        };
     }
 
     /**
@@ -475,14 +876,79 @@ class EbmdReconciliationController extends Controller implements HasMiddleware
     }
 
     /**
+     * Mengambil nama label tampilan model.
+     */
+    protected function getModelDisplayName($model): string
+    {
+        return $model->nama_aset 
+            ?? $model->nama_bangunan 
+            ?? $model->merk 
+            ?? $model->pemegang 
+            ?? 'Aset Data';
+    }
+
+    /**
+     * Mengambil nama OPD model.
+     */
+    protected function getModelOpdName($model): string
+    {
+        return $model->opdRelation?->nama 
+            ?? $model->opdRelation?->nama_opd 
+            ?? $model->opd 
+            ?? '-';
+    }
+
+    /**
+     * Mengambil nama Sub-OPD model.
+     */
+    protected function getModelSubOpdName($model): string
+    {
+        return $model->subOpd?->nama 
+            ?? $model->subOpd?->nama_sub_opd 
+            ?? $model->pemegang 
+            ?? '-';
+    }
+
+    /**
+     * Ekstraksi nama aset dari baris Excel untuk tampilan baris tanpa record DB.
+     */
+    protected function extractRowName(array $row, array $mapping, string $category): string
+    {
+        $nameCols = match ($category) {
+            'tanah'        => ['nama_aset', 'peruntukan'],
+            'bangunan'     => ['nama_bangunan', 'kode_barang'],
+            default        => ['merk', 'tipe', 'jenis', 'no_polisi'],
+        };
+
+        foreach ($nameCols as $col) {
+            if (isset($mapping[$col]) && isset($row[$mapping[$col]]) && trim((string)$row[$mapping[$col]]) !== '') {
+                return trim((string)$row[$mapping[$col]]);
+            }
+        }
+
+        return 'Data e-BMD';
+    }
+
+    /**
+     * Mengambil label kolom tampilan.
+     */
+    protected function getColumnLabel(string $category, string $col): string
+    {
+        $config = $this->getCategoryConfig($category);
+        return $config['updatable_columns'][$col] ?? $col;
+    }
+
+    /**
      * Mendapatkan konfigurasi kolom & matching keys per kategori aset.
      */
     protected function getCategoryConfig(string $category): array
     {
         return match ($category) {
             'tanah' => [
+                'matching_keys' => [
+                    'nibar' => 'NIBAR (Nomor Induk Barang / Kode Aset)',
+                ],
                 'updatable_columns' => [
-                    'kode_aset'         => 'Kode Aset Tanah',
                     'nama_aset'         => 'Nama Aset',
                     'peruntukan'        => 'Peruntukan / Penggunaan',
                     'luas'              => 'Luas Tanah (m²)',
@@ -492,16 +958,14 @@ class EbmdReconciliationController extends Controller implements HasMiddleware
                     'tanggal_perolehan' => 'Tanggal Perolehan Aset',
                     'keterangan'        => 'Keterangan Tambahan',
                 ],
-                'matching_keys' => [
-                    'kode_aset' => 'Kode Aset Tanah',
-                    'nama_aset' => 'Nama Aset',
-                ],
             ],
             'bangunan' => [
+                'matching_keys' => [
+                    'nibar' => 'NIBAR (Nomor Induk Barang / Kode Bangunan)',
+                ],
                 'updatable_columns' => [
-                    'kode_bangunan'     => 'Kode Bangunan',
-                    'kode_barang'       => 'Kode Barang',
                     'nama_bangunan'     => 'Nama Gedung / Bangunan',
+                    'kode_barang'       => 'Kode Barang',
                     'nomor_register'    => 'Nomor Register',
                     'luas_lantai'       => 'Luas Lantai (m²)',
                     'luas_dasar'        => 'Luas Dasar (m²)',
@@ -513,17 +977,13 @@ class EbmdReconciliationController extends Controller implements HasMiddleware
                     'harga_perolehan'   => 'Harga / Nilai Perolehan',
                     'keterangan'        => 'Keterangan Tambahan',
                 ],
-                'matching_keys' => [
-                    'kode_bangunan'  => 'Kode Bangunan',
-                    'kode_barang'    => 'Kode Barang',
-                    'nama_bangunan'  => 'Nama Bangunan',
-                    'nomor_register' => 'Nomor Register',
-                ],
             ],
             default => [
+                'matching_keys' => [
+                    'nibar' => 'NIBAR (Nomor Induk Barang / Register)',
+                ],
                 'updatable_columns' => [
                     'no_polisi'       => 'Nomor Polisi (Plat)',
-                    'nomor_register'  => 'Nomor Register',
                     'jenis'           => 'Jenis Kendaraan',
                     'merk'            => 'Merk / Pabrikan',
                     'tipe'            => 'Tipe / Model',
@@ -538,25 +998,18 @@ class EbmdReconciliationController extends Controller implements HasMiddleware
                     'pemegang'        => 'Nama Pemegang',
                     'keterangan'      => 'Keterangan',
                 ],
-                'matching_keys' => [
-                    'no_polisi'      => 'Nomor Polisi (Plat)',
-                    'nomor_register' => 'Nomor Register',
-                    'no_rangka'      => 'Nomor Rangka',
-                    'no_mesin'       => 'Nomor Mesin',
-                ],
             ],
         };
     }
 
     /**
-     * Merekomendasikan pemetaan kolom (suggested mapping) berbasis sinonim semantik per kategori aset.
-     * Mengembalikan associative array [ 'db_column_name' => int_header_index ].
+     * Merekomendasikan pemetaan kolom semantik cerdas per kategori aset.
      */
     protected function suggestCategoryColumnMapping(array $headers, string $category): array
     {
         $synonyms = match ($category) {
             'tanah' => [
-                'kode_aset'         => ['kode aset', 'kode_aset', 'kode barang', 'kodefikasi', 'nibar', 'nomor kode barang', 'kode tanah', 'penggolongan dan kodefikasi barang'],
+                'nibar'             => ['nibar', 'nomor induk barang', 'no nibar', 'no. nibar', 'kode aset', 'kode_aset', 'kode barang', 'kodefikasi', 'nomor kode barang', 'kode tanah', 'penggolongan dan kodefikasi barang', 'nib'],
                 'nama_aset'         => ['nama aset', 'nama_aset', 'nama barang', 'jenis barang', 'spesifikasi nama barang', 'uraian nama barang', 'tanah'],
                 'peruntukan'        => ['peruntukan', 'penggunaan', 'status peruntukan', 'fungsi', 'peruntukan tanah'],
                 'luas'              => ['luas', 'luas tanah', 'luas m2', 'luas (m2)', 'luas bidang', 'luas perolehan', 'luas keseluruhan'],
@@ -567,9 +1020,9 @@ class EbmdReconciliationController extends Controller implements HasMiddleware
                 'keterangan'        => ['keterangan', 'ket', 'note', 'notes', 'keterangan aset'],
             ],
             'bangunan' => [
-                'kode_bangunan'     => ['kode bangunan', 'kode_bangunan', 'kode gedung', 'id bangunan'],
-                'kode_barang'       => ['kode barang', 'kode_barang', 'penggolongan dan kodefikasi barang', 'kode aset', 'nomor kode barang'],
+                'nibar'             => ['nibar', 'nomor induk barang', 'kode bangunan', 'kode_bangunan', 'kode gedung', 'id bangunan', 'kode aset', 'kode barang', 'kode_barang', 'nib'],
                 'nama_bangunan'     => ['nama bangunan', 'nama gedung', 'nama aset', 'nama barang', 'spesifikasi nama barang', 'uraian nama barang'],
+                'kode_barang'       => ['kode barang', 'kode_barang', 'penggolongan dan kodefikasi barang', 'nomor kode barang'],
                 'nomor_register'    => ['nomor register', 'no register', 'no. register', 'register', 'noreg', 'register number', 'reg number'],
                 'luas_lantai'       => ['luas lantai', 'luas lantai (m2)', 'luas lantai m2', 'luas bangunan', 'luas m2'],
                 'luas_dasar'        => ['luas dasar', 'luas dasar (m2)', 'luas tapak', 'luas dasar bangunan'],
@@ -582,8 +1035,8 @@ class EbmdReconciliationController extends Controller implements HasMiddleware
                 'keterangan'        => ['keterangan', 'ket', 'note', 'notes', 'keterangan tambahan'],
             ],
             default => [
+                'nibar'           => ['nibar', 'nomor induk barang', 'no nibar', 'no. nibar', 'nomor register', 'no register', 'no. register', 'nomer register', 'register', 'register number', 'reg number', 'nib'],
                 'no_polisi'       => ['no polisi', 'no. polisi', 'nomor polisi', 'plat', 'no plat', 'no. plat', 'nomor plat', 'nopol', 'plat nomor', 'plate', 'plate number'],
-                'nomor_register'  => ['nomor register', 'no register', 'no. register', 'nomer register', 'register', 'register number', 'reg number', 'no_register', 'no reg'],
                 'jenis'           => ['jenis', 'jenis kendaraan', 'kategori', 'kategori kendaraan', 'roda', 'class', 'category', 'jenis roda'],
                 'merk'            => ['merk', 'merek', 'brand', 'pabrikan', 'nama aset', 'nama kendaraan', 'make', 'spesifikasi nama barang', 'nama barang', 'spesifikasi'],
                 'tipe'            => ['tipe', 'type', 'model', 'jenis tipe', 'tipe kendaraan', 'spesifikasi lainnya', 'spesifikasi barang'],
@@ -644,7 +1097,7 @@ class EbmdReconciliationController extends Controller implements HasMiddleware
     }
 
     /**
-     * Memformat string tanggal (misal: 2001-09-12 atau 12/31/1981 atau 31/12/1970) menjadi format tanggal Indonesia yang rapi.
+     * Memformat string tanggal menjadi format Indonesia.
      */
     protected function formatDateString(string $dateStr): string
     {
@@ -674,8 +1127,7 @@ class EbmdReconciliationController extends Controller implements HasMiddleware
     }
 
     /**
-     * Memparsing string angka / harga / luas menjadi float murni untuk simpan ke DB.
-     * Mendukung deteksi otomatis skala Ribuan (x1.000) dan Jutaan (x1.000.000) dari ekspor e-BMD.
+     * Memparsing string angka / harga / luas menjadi float murni.
      */
     protected function parseNumericToDatabase(string $rawVal, ?float $referenceVal = null): float
     {
@@ -705,15 +1157,12 @@ class EbmdReconciliationController extends Controller implements HasMiddleware
 
         // Deteksi otomatis skala Ribuan (x1.000) atau Jutaan (x1.000.000) dari ekspor e-BMD
         if ($referenceVal !== null && $referenceVal > 1000 && $val > 0 && $val < 1000000) {
-            // Uji skala Ribuan (x1.000) - contoh: 493.5 * 1000 = 493500, 575.52 * 1000 = 575520
             if (abs(($val * 1000) - $referenceVal) < 2) {
                 return $val * 1000;
             }
-            // Uji skala Jutaan (x1.000.000) - contoh: 2.3 * 1000000 = 2300000, 1.47 * 1000000 = 1470000
             if (abs(($val * 1000000) - $referenceVal) < 2) {
                 return $val * 1000000;
             }
-            // Toleransi estimasi (jika nilai e-BMD dibulatkan)
             if ($val < 10000 && ($referenceVal / 1000) >= ($val - 1) && ($referenceVal / 1000) <= ($val + 1)) {
                 return $val * 1000;
             }
@@ -726,7 +1175,7 @@ class EbmdReconciliationController extends Controller implements HasMiddleware
     }
 
     /**
-     * Memparsing string tanggal (US MM/DD/YYYY, ID DD/MM/YYYY, YYYY-MM-DD) secara akurat menjadi format MySQL YYYY-MM-DD.
+     * Memparsing string tanggal secara akurat menjadi format MySQL YYYY-MM-DD.
      */
     protected function parseDateToDatabase(string $rawVal): ?string
     {
@@ -735,30 +1184,24 @@ class EbmdReconciliationController extends Controller implements HasMiddleware
         $str = trim($rawVal);
 
         try {
-            // Check numeric/slash pattern (e.g. 12/31/1981 or 31/12/1970)
             if (preg_match('/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/', $str, $m)) {
                 $n1 = (int) $m[1];
                 $n2 = (int) $m[2];
                 $year = (int) $m[3];
 
                 if ($n1 > 12) {
-                    // n1 is Day -> DD/MM/YYYY
                     return sprintf('%04d-%02d-%02d', $year, $n2, $n1);
                 } elseif ($n2 > 12) {
-                    // n2 is Day -> MM/DD/YYYY
                     return sprintf('%04d-%02d-%02d', $year, $n1, $n2);
                 } else {
-                    // Default to ID format DD/MM/YYYY
                     return sprintf('%04d-%02d-%02d', $year, $n2, $n1);
                 }
             }
 
-            // Check ISO pattern (e.g. 1981-12-31)
             if (preg_match('/^(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})$/', $str, $m)) {
                 return sprintf('%04d-%02d-%02d', (int)$m[1], (int)$m[2], (int)$m[3]);
             }
 
-            // Textual month format (e.g. 12-Jul-1983)
             $ts = strtotime($str);
             if ($ts !== false && $ts > 0) {
                 $year = (int) date('Y', $ts);
@@ -771,4 +1214,3 @@ class EbmdReconciliationController extends Controller implements HasMiddleware
         return null;
     }
 }
-
