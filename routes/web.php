@@ -14,6 +14,7 @@ use App\Http\Controllers\Erandis\ReportController;
 use App\Http\Controllers\HealthCheckController;
 
 use App\Http\Controllers\LandingPageController;
+use App\Http\Controllers\EbmdReconciliationController;
 
 /*
 |--------------------------------------------------------------------------
@@ -55,6 +56,17 @@ Route::put('profile', [ProfileController::class, 'update'])->name('profile.updat
 
 // Master Data Hub
 Route::get('master-data', [MasterDataController::class, 'index'])->name('master-data.index');
+
+// Pusat Rekonsiliasi & Sinkronisasi e-BMD Terpadu Lintas Modul
+Route::prefix('rekon-ebmd')->name('rekon-ebmd.')->group(function () {
+    Route::get('/', [EbmdReconciliationController::class, 'index'])->name('index');
+    Route::post('upload-preview', [EbmdReconciliationController::class, 'uploadPreview'])->name('upload-preview');
+    Route::post('diff-preview', [EbmdReconciliationController::class, 'diffPreview'])->name('diff-preview');
+    Route::post('execute', [EbmdReconciliationController::class, 'execute'])->name('execute');
+});
+
+// Backward Compatibility Aliases
+Route::get('vehicles/rekon-ebmd', [EbmdReconciliationController::class, 'index'])->name('vehicles.rekon-ebmd.index');
 
 // Pengaturan & Manajemen User
 Route::get('settings', [SettingController::class, 'index'])->name('settings.index');

@@ -396,7 +396,7 @@ document.addEventListener('DOMContentLoaded', function() {
         btnUpload.disabled = true;
         btnUpload.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Mengunggah & Membaca...';
 
-        fetch("{{ route('vehicles.rekon-ebmd.upload-preview') }}", {
+        fetch("{{ route('rekon-ebmd.upload-preview') }}", {
             method: 'POST',
             headers: {
                 'X-CSRF-TOKEN': '{{ csrf_token() }}',
@@ -545,7 +545,7 @@ document.addEventListener('DOMContentLoaded', function() {
         btnGoToStep4.disabled = true;
         btnGoToStep4.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Menganalisis Perbedaan Data...';
 
-        fetch("{{ route('vehicles.rekon-ebmd.diff-preview') }}", {
+        fetch("{{ route('rekon-ebmd.diff-preview') }}", {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -671,7 +671,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 btnExecuteSync.disabled = true;
                 btnExecuteSync.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Memproses Update Database...';
 
-                fetch("{{ route('vehicles.rekon-ebmd.execute') }}", {
+                fetch("{{ route('rekon-ebmd.execute') }}", {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -731,3 +731,4 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 @endpush
 @endsection
+

@@ -79,15 +79,15 @@
             </div>
         </div>
 
-        <!-- 4. Status Kendaraan -->
+        <!-- 4. Pusat Rekonsiliasi e-BMD -->
         <div class="col-md-6 col-lg-3">
             <div class="admin-card h-100 p-4 text-center border-0 shadow-sm transition-all">
                 <div class="bg-light text-primary rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 70px; height: 70px;">
-                    <i class="bi bi-check-circle fs-1"></i>
+                    <i class="bi bi-arrow-repeat fs-1"></i>
                 </div>
-                <h5 class="fw-bold text-navy">Status Kendaraan</h5>
-                <p class="text-secondary small mb-4">Konfigurasi status operasional (Aktif, Maintenance, dll).</p>
-                <a href="#" class="btn btn-outline-primary btn-sm rounded-pill px-4">Buka Data</a>
+                <h5 class="fw-bold text-navy">Rekonsiliasi e-BMD</h5>
+                <p class="text-secondary small mb-4">Pusat rekonsiliasi & sinkronisasi e-BMD terpadu lintas seluruh modul aset.</p>
+                <a href="{{ route('rekon-ebmd.index') }}" class="btn btn-outline-primary btn-sm rounded-pill px-4">Buka Fitur</a>
             </div>
         </div>
     </div>

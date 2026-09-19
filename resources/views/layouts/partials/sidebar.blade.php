@@ -132,8 +132,8 @@
                                         <span>Laporan Aset Tanah</span>
                                     </a>
                                 </li>
-                                <li class="{{ Request::is('vehicles/rekon-ebmd*') && request('category') === 'tanah' ? 'active' : '' }}">
-                                    <a href="{{ route('vehicles.rekon-ebmd.index', ['category' => 'tanah']) }}" data-bs-toggle="tooltip" data-bs-placement="right" title="Rekonsiliasi & Sinkronisasi e-BMD Tanah">
+                                <li class="{{ (Request::is('rekon-ebmd*') || Request::is('vehicles/rekon-ebmd*')) && request('category') === 'tanah' ? 'active' : '' }}">
+                                    <a href="{{ route('rekon-ebmd.index', ['category' => 'tanah']) }}" data-bs-toggle="tooltip" data-bs-placement="right" title="Rekonsiliasi & Sinkronisasi e-BMD Tanah">
                                         <i class="bi bi-arrow-repeat text-info"></i>
                                         <span>Rekonsiliasi e-BMD Tanah</span>
                                     </a>
@@ -208,6 +208,12 @@
                                 <span>Laporan KIB C</span>
                             </a>
                         </li>
+                        <li class="{{ (Request::is('rekon-ebmd*') || Request::is('vehicles/rekon-ebmd*')) && request('category') === 'bangunan' ? 'active' : '' }}">
+                            <a href="{{ route('rekon-ebmd.index', ['category' => 'bangunan']) }}" data-bs-toggle="tooltip" data-bs-placement="right" title="Rekonsiliasi & Sinkronisasi e-BMD Bangunan">
+                                <i class="bi bi-arrow-repeat text-info"></i>
+                                <span>Rekonsiliasi e-BMD Bangunan</span>
+                            </a>
+                        </li>
                     </ul>
                 </div>
             </div>
@@ -251,8 +257,8 @@
                                         <span>Laporan Kendaraan Dinas</span>
                                     </a>
                                 </li>
-                                <li class="{{ Request::is('vehicles/rekon-ebmd*') ? 'active' : '' }}">
-                                    <a href="{{ route('vehicles.rekon-ebmd.index') }}" data-bs-toggle="tooltip" data-bs-placement="right" title="Rekonsiliasi & Sinkronisasi Fleksibel e-BMD Kemendagri">
+                                <li class="{{ (Request::is('rekon-ebmd*') || Request::is('vehicles/rekon-ebmd*')) && (request('category') === 'vehicle' || !request()->has('category')) ? 'active' : '' }}">
+                                    <a href="{{ route('rekon-ebmd.index', ['category' => 'vehicle']) }}" data-bs-toggle="tooltip" data-bs-placement="right" title="Rekonsiliasi & Sinkronisasi Fleksibel e-BMD Kemendagri">
                                         <i class="bi bi-arrow-repeat text-warning"></i>
                                         <span>Rekonsiliasi e-BMD</span>
                                     </a>
@@ -603,6 +609,12 @@
                                         <a href="{{ route('master.import.index') }}" data-bs-toggle="tooltip" data-bs-placement="right" title="Import Data Aset Tanah & Status Proses">
                                             <i class="bi bi-file-earmark-arrow-up"></i>
                                             <span>Import Data SIPAT</span>
+                                        </a>
+                                    </li>
+                                    <li class="{{ Request::is('rekon-ebmd*') ? 'active' : '' }}">
+                                        <a href="{{ route('rekon-ebmd.index') }}" data-bs-toggle="tooltip" data-bs-placement="right" title="Pusat Rekonsiliasi e-BMD Terpadu Lintas Modul">
+                                            <i class="bi bi-arrow-repeat text-primary"></i>
+                                            <span>Pusat Rekonsiliasi e-BMD</span>
                                         </a>
                                     </li>
                                 </ul>

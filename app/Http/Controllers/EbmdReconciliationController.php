@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Erandis;
+namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Models\Activity;
@@ -38,7 +38,7 @@ class EbmdReconciliationController extends Controller implements HasMiddleware
     }
 
     /**
-     * Tampilan utama Halaman Rekonsiliasi Data e-BMD Terpadu Lintas Modul.
+     * Tampilan utama Halaman Rekonsiliasi Data e-BMD Terpadu Lintas Seluruh Modul.
      */
     public function index(Request $request)
     {
@@ -67,7 +67,7 @@ class EbmdReconciliationController extends Controller implements HasMiddleware
             ],
         ];
 
-        return view('vehicles.rekon-ebmd.index', compact('activeCategory', 'categories'));
+        return view('rekon-ebmd.index', compact('activeCategory', 'categories'));
     }
 
     /**
@@ -94,12 +94,16 @@ class EbmdReconciliationController extends Controller implements HasMiddleware
                 auth()->id()
             );
 
-            // Configure columns & keys by asset category
+            // Konfigurasi kolom & matching keys per kategori
             $config = $this->getCategoryConfig($category);
+            
+            // Rekomendasi mapping cerdas spesifik kategori
+            $suggestedMapping = $this->suggestCategoryColumnMapping($preview['headers'] ?? [], $category);
 
             return response()->json(array_merge($preview, [
                 'updatable_columns' => $config['updatable_columns'],
                 'matching_keys'     => $config['matching_keys'],
+                'suggested_mapping' => $suggestedMapping,
                 'asset_category'    => $category,
             ]));
         } catch (\Throwable $e) {
@@ -111,7 +115,7 @@ class EbmdReconciliationController extends Controller implements HasMiddleware
     }
 
     /**
-     * Menganalisis perbedaan data (Diff Preview) sebelum eksekusi.
+     * Menganalisis perbedaan data (Diff Preview) sebelum eksekusi rekonsiliasi.
      */
     public function diffPreview(Request $request): JsonResponse
     {
@@ -169,15 +173,18 @@ class EbmdReconciliationController extends Controller implements HasMiddleware
                     continue;
                 }
 
+                // Query database tanpa global scope tenant agar rekonsiliasi lintas OPD akurat
+                $query = $modelClass::withoutGlobalScopes();
+
                 if ($matchingKey === 'no_polisi') {
                     $keyValueClean = preg_replace('/[^A-Za-z0-9]/', '', strtoupper($keyValue));
-                    $existingModel = $modelClass::whereRaw("REPLACE(REPLACE(REPLACE(UPPER(no_polisi), ' ', ''), '.', ''), '-', '') = ?", [$keyValueClean])->first();
+                    $existingModel = $query->whereRaw("REPLACE(REPLACE(REPLACE(UPPER(no_polisi), ' ', ''), '.', ''), '-', '') = ?", [$keyValueClean])->first();
                 } else {
-                    $existingModel = $modelClass::where($matchingKey, $keyValue)->first();
+                    $existingModel = $query->where($matchingKey, $keyValue)->first();
                     if (!$existingModel) {
                         $cleanKey = preg_replace('/[^A-Za-z0-9]/', '', strtoupper($keyValue));
                         if (!empty($cleanKey)) {
-                            $existingModel = $modelClass::whereRaw("REPLACE(REPLACE(REPLACE(UPPER({$matchingKey}), ' ', ''), '.', ''), '-', '') = ?", [$cleanKey])->first();
+                            $existingModel = $modelClass::withoutGlobalScopes()->whereRaw("REPLACE(REPLACE(REPLACE(UPPER({$matchingKey}), ' ', ''), '.', ''), '-', '') = ?", [$cleanKey])->first();
                         }
                     }
                 }
@@ -263,8 +270,8 @@ class EbmdReconciliationController extends Controller implements HasMiddleware
                     $changedCount++;
                     if (count($diffSamples) < 30) {
                         $nameAttr = $existingModel->nama_aset ?? $existingModel->nama_bangunan ?? $existingModel->merk ?? $existingModel->pemegang ?? 'Aset Data';
-                        $opdInfo = $existingModel->opdRelation?->nama_opd ?? $existingModel->opd ?? '';
-                        $subOpdInfo = $existingModel->subOpd?->nama_sub_opd ?? $existingModel->pemegang ?? '';
+                        $opdInfo = $existingModel->opdRelation?->nama ?? $existingModel->opdRelation?->nama_opd ?? $existingModel->opd ?? '';
+                        $subOpdInfo = $existingModel->subOpd?->nama ?? $existingModel->subOpd?->nama_sub_opd ?? $existingModel->pemegang ?? '';
 
                         $diffSamples[] = [
                             'row'        => $i + 1,
@@ -364,15 +371,18 @@ class EbmdReconciliationController extends Controller implements HasMiddleware
                     continue;
                 }
 
+                // Query database tanpa global scope tenant
+                $query = $modelClass::withoutGlobalScopes();
+
                 if ($matchingKey === 'no_polisi') {
                     $cleanKey = preg_replace('/[^A-Za-z0-9]/', '', strtoupper($keyValue));
-                    $existingModel = $modelClass::whereRaw("REPLACE(REPLACE(REPLACE(UPPER(no_polisi), ' ', ''), '.', ''), '-', '') = ?", [$cleanKey])->first();
+                    $existingModel = $query->whereRaw("REPLACE(REPLACE(REPLACE(UPPER(no_polisi), ' ', ''), '.', ''), '-', '') = ?", [$cleanKey])->first();
                 } else {
-                    $existingModel = $modelClass::where($matchingKey, $keyValue)->first();
+                    $existingModel = $query->where($matchingKey, $keyValue)->first();
                     if (!$existingModel) {
                         $cleanKey = preg_replace('/[^A-Za-z0-9]/', '', strtoupper($keyValue));
                         if (!empty($cleanKey)) {
-                            $existingModel = $modelClass::whereRaw("REPLACE(REPLACE(REPLACE(UPPER({$matchingKey}), ' ', ''), '.', ''), '-', '') = ?", [$cleanKey])->first();
+                            $existingModel = $modelClass::withoutGlobalScopes()->whereRaw("REPLACE(REPLACE(REPLACE(UPPER({$matchingKey}), ' ', ''), '.', ''), '-', '') = ?", [$cleanKey])->first();
                         }
                     }
                 }
@@ -500,18 +510,18 @@ class EbmdReconciliationController extends Controller implements HasMiddleware
                     'nama_penghuni'     => 'Nama Penghuni / Pemakai',
                     'alamat'            => 'Alamat Lokasi',
                     'nomor_dokumen_pbg' => 'Nomor Dokumen PBG / IMB',
+                    'harga_perolehan'   => 'Harga / Nilai Perolehan',
                     'keterangan'        => 'Keterangan Tambahan',
                 ],
                 'matching_keys' => [
-                    'kode_bangunan' => 'Kode Bangunan',
-                    'kode_barang'   => 'Kode Barang',
-                    'nama_bangunan' => 'Nama Bangunan',
+                    'kode_bangunan'  => 'Kode Bangunan',
+                    'kode_barang'    => 'Kode Barang',
+                    'nama_bangunan'  => 'Nama Bangunan',
+                    'nomor_register' => 'Nomor Register',
                 ],
             ],
             default => [
                 'updatable_columns' => [
-                    'kode_barang'     => 'Kode Barang e-BMD',
-                    'nibar'           => 'NIBAR (Nomor Induk Barang)',
                     'no_polisi'       => 'Nomor Polisi (Plat)',
                     'nomor_register'  => 'Nomor Register',
                     'jenis'           => 'Jenis Kendaraan',
@@ -529,14 +539,108 @@ class EbmdReconciliationController extends Controller implements HasMiddleware
                     'keterangan'      => 'Keterangan',
                 ],
                 'matching_keys' => [
-                    'kode_barang' => 'Kode Barang',
-                    'nibar'       => 'NIBAR',
-                    'no_polisi'   => 'Nomor Polisi (Plat)',
-                    'no_rangka'   => 'Nomor Rangka',
-                    'no_mesin'    => 'Nomor Mesin',
+                    'no_polisi'      => 'Nomor Polisi (Plat)',
+                    'nomor_register' => 'Nomor Register',
+                    'no_rangka'      => 'Nomor Rangka',
+                    'no_mesin'       => 'Nomor Mesin',
                 ],
             ],
         };
+    }
+
+    /**
+     * Merekomendasikan pemetaan kolom (suggested mapping) berbasis sinonim semantik per kategori aset.
+     * Mengembalikan associative array [ 'db_column_name' => int_header_index ].
+     */
+    protected function suggestCategoryColumnMapping(array $headers, string $category): array
+    {
+        $synonyms = match ($category) {
+            'tanah' => [
+                'kode_aset'         => ['kode aset', 'kode_aset', 'kode barang', 'kodefikasi', 'nibar', 'nomor kode barang', 'kode tanah', 'penggolongan dan kodefikasi barang'],
+                'nama_aset'         => ['nama aset', 'nama_aset', 'nama barang', 'jenis barang', 'spesifikasi nama barang', 'uraian nama barang', 'tanah'],
+                'peruntukan'        => ['peruntukan', 'penggunaan', 'status peruntukan', 'fungsi', 'peruntukan tanah'],
+                'luas'              => ['luas', 'luas tanah', 'luas m2', 'luas (m2)', 'luas bidang', 'luas perolehan', 'luas keseluruhan'],
+                'alamat'            => ['alamat', 'lokasi', 'letak', 'letak / alamat', 'letak alamat', 'alamat tanah'],
+                'dasar_perolehan'   => ['dasar perolehan', 'asal usul', 'status hak', 'dasar', 'hak tanah', 'asal usul perolehan'],
+                'harga_perolehan'   => ['harga', 'harga perolehan', 'nilai perolehan', 'nilai', 'nilai aset', 'harga satuan perolehan', 'nilai perolehan rp', 'rp', 'jumlah perolehan'],
+                'tanggal_perolehan' => ['tanggal perolehan', 'tgl perolehan', 'tgl beli', 'tanggal beli', 'tahun perolehan', 'tgl perolehan aset', 'acquisition date'],
+                'keterangan'        => ['keterangan', 'ket', 'note', 'notes', 'keterangan aset'],
+            ],
+            'bangunan' => [
+                'kode_bangunan'     => ['kode bangunan', 'kode_bangunan', 'kode gedung', 'id bangunan'],
+                'kode_barang'       => ['kode barang', 'kode_barang', 'penggolongan dan kodefikasi barang', 'kode aset', 'nomor kode barang'],
+                'nama_bangunan'     => ['nama bangunan', 'nama gedung', 'nama aset', 'nama barang', 'spesifikasi nama barang', 'uraian nama barang'],
+                'nomor_register'    => ['nomor register', 'no register', 'no. register', 'register', 'noreg', 'register number', 'reg number'],
+                'luas_lantai'       => ['luas lantai', 'luas lantai (m2)', 'luas lantai m2', 'luas bangunan', 'luas m2'],
+                'luas_dasar'        => ['luas dasar', 'luas dasar (m2)', 'luas tapak', 'luas dasar bangunan'],
+                'jumlah_lantai'     => ['jumlah lantai', 'bertingkat', 'tingkat', 'jml lantai', 'lantai'],
+                'kondisi'           => ['kondisi', 'kondisi bangunan', 'keadaan', 'status kondisi', 'kondisi fisik'],
+                'nama_penghuni'     => ['nama penghuni', 'penghuni', 'pemakai', 'penanggung jawab', 'nama pemakai'],
+                'alamat'            => ['alamat', 'lokasi', 'letak', 'letak / alamat', 'alamat bangunan'],
+                'nomor_dokumen_pbg' => ['nomor dokumen pbg', 'no pbg', 'no imb', 'nomor imb', 'dokumen pbg', 'surat izin'],
+                'harga_perolehan'   => ['harga', 'harga perolehan', 'nilai perolehan', 'nilai', 'nilai aset', 'harga satuan perolehan', 'nilai perolehan rp', 'rp', 'jumlah perolehan'],
+                'keterangan'        => ['keterangan', 'ket', 'note', 'notes', 'keterangan tambahan'],
+            ],
+            default => [
+                'no_polisi'       => ['no polisi', 'no. polisi', 'nomor polisi', 'plat', 'no plat', 'no. plat', 'nomor plat', 'nopol', 'plat nomor', 'plate', 'plate number'],
+                'nomor_register'  => ['nomor register', 'no register', 'no. register', 'nomer register', 'register', 'register number', 'reg number', 'no_register', 'no reg'],
+                'jenis'           => ['jenis', 'jenis kendaraan', 'kategori', 'kategori kendaraan', 'roda', 'class', 'category', 'jenis roda'],
+                'merk'            => ['merk', 'merek', 'brand', 'pabrikan', 'nama aset', 'nama kendaraan', 'make', 'spesifikasi nama barang', 'nama barang', 'spesifikasi'],
+                'tipe'            => ['tipe', 'type', 'model', 'jenis tipe', 'tipe kendaraan', 'spesifikasi lainnya', 'spesifikasi barang'],
+                'no_mesin'        => ['no mesin', 'no. mesin', 'nomor mesin', 'engine number', 'engine no', 'nomer mesin'],
+                'no_rangka'       => ['no rangka', 'no. rangka', 'nomor rangka', 'chassis number', 'vin', 'chassis no', 'nomer rangka'],
+                'tahun_pembuatan' => ['tahun', 'tahun pembuatan', 'thn', 'tahun rakit', 'tahun buat', 'year', 'thn pembuatan', 'thn buat'],
+                'tgl_perolehan'   => ['tgl perolehan', 'tanggal perolehan', 'tgl beli', 'tanggal beli', 'tanggal perolehan aset', 'acquisition date', 'tgl perolehan aset'],
+                'nilai_perolehan' => ['harga', 'nilai perolehan', 'harga perolehan', 'nilai', 'nilai aset', 'harga beli', 'price', 'value', 'jumlah perolehan', 'harga satuan perolehan', 'nilai perolehan rp', 'harga satuan perolehan rp', 'rp'],
+                'stnk_ada'        => ['stnk', 'status stnk', 'kelengkapan stnk', 'ada stnk', 'surat stnk'],
+                'bpkb_ada'        => ['bpkb', 'status bpkb', 'kelengkapan bpkb', 'ada bpkb', 'surat bpkb', 'bukti kepemilikan'],
+                'kondisi'         => ['kondisi', 'kondisi fisik', 'keadaan', 'status kondisi', 'condition', 'kondisi aset', 'kondisi kendaraan', 'status penggunaan'],
+                'pemegang'        => ['pemegang', 'nama pemegang', 'penanggung jawab', 'peminjam', 'user', 'driver', 'nama pemakai', 'penggunaan', 'pengguna', 'nama kepemilikan dalam dokumen'],
+                'keterangan'      => ['keterangan', 'ket', 'note', 'notes', 'keterangan tambahan', 'keterangan aset'],
+            ],
+        };
+
+        $suggestedMapping = [];
+        $usedIndices = [];
+
+        // 1. Exact match on synonyms
+        foreach ($synonyms as $dbCol => $synList) {
+            foreach ($headers as $idx => $header) {
+                if (in_array($idx, $usedIndices)) continue;
+                $cleanHeader = strtolower(trim((string)$header));
+                $cleanHeader = preg_replace('/[^a-z0-9\s]/', '', $cleanHeader);
+                $cleanHeader = preg_replace('/\s+/', ' ', $cleanHeader);
+
+                foreach ($synList as $syn) {
+                    if ($cleanHeader === $syn) {
+                        $suggestedMapping[$dbCol] = $idx;
+                        $usedIndices[] = $idx;
+                        break 2;
+                    }
+                }
+            }
+        }
+
+        // 2. Partial / Substring match
+        foreach ($synonyms as $dbCol => $synList) {
+            if (isset($suggestedMapping[$dbCol])) continue;
+            foreach ($headers as $idx => $header) {
+                if (in_array($idx, $usedIndices)) continue;
+                $cleanHeader = strtolower(trim((string)$header));
+                $cleanHeader = preg_replace('/[^a-z0-9\s]/', '', $cleanHeader);
+                $cleanHeader = preg_replace('/\s+/', ' ', $cleanHeader);
+
+                foreach ($synList as $syn) {
+                    if (strlen($syn) >= 4 && (str_contains($cleanHeader, $syn) || str_contains($syn, $cleanHeader))) {
+                        $suggestedMapping[$dbCol] = $idx;
+                        $usedIndices[] = $idx;
+                        break 2;
+                    }
+                }
+            }
+        }
+
+        return $suggestedMapping;
     }
 
     /**
@@ -667,3 +771,4 @@ class EbmdReconciliationController extends Controller implements HasMiddleware
         return null;
     }
 }
+

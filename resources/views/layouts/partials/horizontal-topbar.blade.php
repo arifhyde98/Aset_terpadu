@@ -52,6 +52,7 @@
                         <li><a class="dropdown-item py-2 px-3 small d-flex align-items-center gap-2 {{ Request::is('sipat/laporan*') ? 'active fw-bold' : '' }}" href="{{ Route::has('sipat.laporan.index') ? route('sipat.laporan.index') : '#' }}"><i class="bi bi-file-earmark-bar-graph-fill text-success"></i> Laporan Pertanahan</a></li>
                         <li><a class="dropdown-item py-2 px-3 small d-flex align-items-center gap-2 {{ Request::is('sipat/surat*') ? 'active fw-bold' : '' }}" href="{{ Route::has('sipat.surat.skpt') ? route('sipat.surat.skpt') : '#' }}"><i class="bi bi-file-earmark-pdf-fill text-danger"></i> Cetak Dokumen SKPT</a></li>
                         <li><a class="dropdown-item py-2 px-3 small d-flex align-items-center gap-2 {{ Request::is('sipat/rekonsiliasi*') ? 'active fw-bold' : '' }}" href="{{ Route::has('sipat.rekonsiliasi.index') ? route('sipat.rekonsiliasi.index') : '#' }}"><i class="bi bi-intersect text-secondary"></i> Rekonsiliasi Arsip</a></li>
+                        <li><a class="dropdown-item py-2 px-3 small d-flex align-items-center gap-2 {{ Request::is('rekon-ebmd*') && request('category') === 'tanah' ? 'active fw-bold' : '' }}" href="{{ route('rekon-ebmd.index', ['category' => 'tanah']) }}"><i class="bi bi-arrow-repeat text-info"></i> Rekonsiliasi e-BMD</a></li>
                     </ul>
                 </div>
 
@@ -67,6 +68,7 @@
                         <li><a class="dropdown-item py-2 px-3 small d-flex align-items-center gap-2 {{ Request::is('bangunan') ? 'active fw-bold' : '' }}" href="{{ Route::has('bangunan.index') ? route('bangunan.index') : '#' }}"><i class="bi bi-building-fill text-danger"></i> Data Gedung & Bangunan</a></li>
                         <li><a class="dropdown-item py-2 px-3 small d-flex align-items-center gap-2 {{ Request::is('bangunan/peta*') ? 'active fw-bold' : '' }}" href="{{ Route::has('bangunan.peta.index') ? route('bangunan.peta.index') : '#' }}"><i class="bi bi-geo-fill text-info"></i> Peta GIS Gedung</a></li>
                         <li><a class="dropdown-item py-2 px-3 small d-flex align-items-center gap-2 {{ Request::is('bangunan/laporan*') ? 'active fw-bold' : '' }}" href="{{ Route::has('bangunan.laporan.index') ? route('bangunan.laporan.index') : '#' }}"><i class="bi bi-file-earmark-spreadsheet-fill text-success"></i> Laporan KIB C</a></li>
+                        <li><a class="dropdown-item py-2 px-3 small d-flex align-items-center gap-2 {{ Request::is('rekon-ebmd*') && request('category') === 'bangunan' ? 'active fw-bold' : '' }}" href="{{ route('rekon-ebmd.index', ['category' => 'bangunan']) }}"><i class="bi bi-arrow-repeat text-danger"></i> Rekonsiliasi e-BMD</a></li>
                     </ul>
                 </div>
 
@@ -83,6 +85,7 @@
                         <li><a class="dropdown-item py-2 px-3 small d-flex align-items-center gap-2 {{ Request::is('reports*') ? 'active fw-bold' : '' }}" href="{{ Route::has('reports.index') ? route('reports.index') : '#' }}"><i class="bi bi-bar-chart-line-fill text-primary"></i> Laporan Kendaraan</a></li>
                         <li><a class="dropdown-item py-2 px-3 small d-flex align-items-center gap-2 {{ Request::is('vehicles/rekon-bpkb*') ? 'active fw-bold' : '' }}" href="{{ Route::has('vehicles.rekon-bpkb') ? route('vehicles.rekon-bpkb') : '#' }}"><i class="bi bi-intersect text-info"></i> Rekonsiliasi BPKB</a></li>
                         <li><a class="dropdown-item py-2 px-3 small d-flex align-items-center gap-2 {{ Request::is('vehicles/pinjam-pakai*') ? 'active fw-bold' : '' }}" href="{{ Route::has('vehicles.pinjam-pakai.index') ? route('vehicles.pinjam-pakai.index') : '#' }}"><i class="bi bi-journal-arrow-up text-danger"></i> Pinjam Pakai Kendaraan</a></li>
+                        <li><a class="dropdown-item py-2 px-3 small d-flex align-items-center gap-2 {{ Request::is('rekon-ebmd*') && (request('category') === 'vehicle' || !request()->has('category')) ? 'active fw-bold' : '' }}" href="{{ route('rekon-ebmd.index', ['category' => 'vehicle']) }}"><i class="bi bi-arrow-repeat text-warning"></i> Rekonsiliasi e-BMD</a></li>
                     </ul>
                 </div>
 
@@ -118,6 +121,7 @@
                         <li><a class="dropdown-item py-2 px-3 small d-flex align-items-center gap-2 {{ Request::is('status-proses*') ? 'active fw-bold' : '' }}" href="{{ Route::has('status-proses.index') ? route('status-proses.index') : '#' }}"><i class="bi bi-hourglass-split text-warning"></i> Status Proses</a></li>
                         <li><a class="dropdown-item py-2 px-3 small d-flex align-items-center gap-2 {{ Request::is('vehicle-types*') ? 'active fw-bold' : '' }}" href="{{ Route::has('vehicle-types.index') ? route('vehicle-types.index') : '#' }}"><i class="bi bi-truck text-secondary"></i> Jenis Kendaraan</a></li>
                         <li><a class="dropdown-item py-2 px-3 small d-flex align-items-center gap-2 {{ Request::is('master-data/import*') ? 'active fw-bold' : '' }}" href="{{ Route::has('master-data.import.index') ? route('master-data.import.index') : '#' }}"><i class="bi bi-file-earmark-excel text-success"></i> Import Data Massal</a></li>
+                        <li><a class="dropdown-item py-2 px-3 small d-flex align-items-center gap-2 {{ Request::is('rekon-ebmd*') ? 'active fw-bold' : '' }}" href="{{ route('rekon-ebmd.index') }}"><i class="bi bi-arrow-repeat text-primary"></i> Rekonsiliasi e-BMD</a></li>
                     </ul>
                 </div>
 
