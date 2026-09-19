@@ -63,6 +63,7 @@ Route::prefix('rekon-ebmd')->name('rekon-ebmd.')->group(function () {
     Route::post('upload-preview', [EbmdReconciliationController::class, 'uploadPreview'])->name('upload-preview');
     Route::post('diff-preview', [EbmdReconciliationController::class, 'diffPreview'])->name('diff-preview');
     Route::post('export-preview', [EbmdReconciliationController::class, 'exportPreview'])->name('export-preview');
+    Route::post('adjust-opd', [EbmdReconciliationController::class, 'adjustOpd'])->name('adjust-opd');
     Route::post('execute', [EbmdReconciliationController::class, 'execute'])->name('execute');
 });
 

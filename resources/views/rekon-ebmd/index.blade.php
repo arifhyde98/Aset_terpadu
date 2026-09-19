@@ -298,48 +298,60 @@
             </div>
         </div>
         <div class="card-body p-4">
-            <!-- 7 Stats Counters Sesuai Spesifikasi -->
-            <div class="row g-3 mb-4">
+            <!-- Stats Counters Sesuai Spesifikasi -->
+            <div class="row g-2 mb-4">
                 <div class="col-6 col-md-3 col-lg">
                     <div class="card border-0 bg-secondary bg-opacity-10 rounded-3 p-3 text-center h-100">
-                        <div class="small text-secondary fw-bold text-uppercase" style="font-size: 0.72rem;">TOTAL e-BMD</div>
-                        <div class="fs-3 fw-bold text-dark font-monospace mt-1" id="statTotalRows">0</div>
+                        <div class="small text-secondary fw-bold text-uppercase" style="font-size: 0.70rem;">TOTAL e-BMD</div>
+                        <div class="fs-4 fw-bold text-dark font-monospace mt-1" id="statTotalRows">0</div>
                     </div>
                 </div>
                 <div class="col-6 col-md-3 col-lg">
                     <div class="card border-0 bg-primary bg-opacity-10 rounded-3 p-3 text-center h-100">
-                        <div class="small text-primary fw-bold text-uppercase" style="font-size: 0.72rem;">NIBAR DITEMUKAN</div>
-                        <div class="fs-3 fw-bold text-primary font-monospace mt-1" id="statMatchedCount">0</div>
+                        <div class="small text-primary fw-bold text-uppercase" style="font-size: 0.70rem;">NIBAR DITEMUKAN</div>
+                        <div class="fs-4 fw-bold text-primary font-monospace mt-1" id="statMatchedCount">0</div>
                     </div>
                 </div>
                 <div class="col-6 col-md-3 col-lg">
                     <div class="card border-0 bg-success bg-opacity-10 rounded-3 p-3 text-center h-100">
-                        <div class="small text-success fw-bold text-uppercase" style="font-size: 0.72rem;">🟢 IDENTIK</div>
-                        <div class="fs-3 fw-bold text-success font-monospace mt-1" id="statIdenticalCount">0</div>
+                        <div class="small text-success fw-bold text-uppercase" style="font-size: 0.70rem;">🟢 IDENTIK</div>
+                        <div class="fs-4 fw-bold text-success font-monospace mt-1" id="statIdenticalCount">0</div>
                     </div>
                 </div>
                 <div class="col-6 col-md-3 col-lg">
                     <div class="card border-0 bg-warning bg-opacity-10 rounded-3 p-3 text-center h-100">
-                        <div class="small text-warning-emphasis fw-bold text-uppercase" style="font-size: 0.72rem;">🟡 BERUBAH</div>
-                        <div class="fs-3 fw-bold text-warning-emphasis font-monospace mt-1" id="statChangedCount">0</div>
+                        <div class="small text-warning-emphasis fw-bold text-uppercase" style="font-size: 0.70rem;">🟡 BERUBAH</div>
+                        <div class="fs-4 fw-bold text-warning-emphasis font-monospace mt-1" id="statChangedCount">0</div>
                     </div>
                 </div>
                 <div class="col-6 col-md-3 col-lg">
-                    <div class="card border-0 bg-info bg-opacity-10 rounded-3 p-3 text-center h-100">
-                        <div class="small text-info-emphasis fw-bold text-uppercase" style="font-size: 0.72rem;">🔵 TIDAK DI SIPAT</div>
-                        <div class="fs-3 fw-bold text-info font-monospace mt-1" id="statNotFoundSipat">0</div>
+                    <div class="card border-0 rounded-3 p-3 text-center h-100" style="background-color: rgba(111, 66, 193, 0.1);">
+                        <div class="small fw-bold text-uppercase" style="font-size: 0.70rem; color: #6f42c1;">🟣 OPD LAIN</div>
+                        <div class="fs-4 fw-bold font-monospace mt-1" style="color: #6f42c1;" id="statOtherOpdCount">0</div>
                     </div>
                 </div>
                 <div class="col-6 col-md-3 col-lg">
                     <div class="card border-0 bg-danger bg-opacity-10 rounded-3 p-3 text-center h-100">
-                        <div class="small text-danger fw-bold text-uppercase" style="font-size: 0.72rem;">🟠 DUPLIKAT</div>
-                        <div class="fs-3 fw-bold text-danger font-monospace mt-1" id="statDuplicateCount">0</div>
+                        <div class="small text-danger fw-bold text-uppercase" style="font-size: 0.70rem;">🔴 KONFLIK OPD</div>
+                        <div class="fs-4 fw-bold text-danger font-monospace mt-1" id="statConflictCount">0</div>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3 col-lg">
+                    <div class="card border-0 bg-info bg-opacity-10 rounded-3 p-3 text-center h-100">
+                        <div class="small text-info-emphasis fw-bold text-uppercase" style="font-size: 0.70rem;">🔵 TIDAK DI SIPAT</div>
+                        <div class="fs-4 fw-bold text-info font-monospace mt-1" id="statNotFoundSipat">0</div>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3 col-lg">
+                    <div class="card border-0 bg-danger bg-opacity-10 rounded-3 p-3 text-center h-100">
+                        <div class="small text-danger fw-bold text-uppercase" style="font-size: 0.70rem;">🟠 DUPLIKAT</div>
+                        <div class="fs-4 fw-bold text-danger font-monospace mt-1" id="statDuplicateCount">0</div>
                     </div>
                 </div>
                 <div class="col-6 col-md-3 col-lg">
                     <div class="card border-0 bg-dark bg-opacity-10 rounded-3 p-3 text-center h-100">
-                        <div class="small text-dark fw-bold text-uppercase" style="font-size: 0.72rem;">⚠️ INVALID</div>
-                        <div class="fs-3 fw-bold text-dark font-monospace mt-1" id="statInvalidCount">0</div>
+                        <div class="small text-dark fw-bold text-uppercase" style="font-size: 0.70rem;">⚠️ INVALID</div>
+                        <div class="fs-4 fw-bold text-dark font-monospace mt-1" id="statInvalidCount">0</div>
                     </div>
                 </div>
             </div>
@@ -360,8 +372,10 @@
                     <button type="button" class="btn btn-outline-secondary active fw-bold" data-filter="ALL">Semua (<span id="cntFilterAll">0</span>)</button>
                     <button type="button" class="btn btn-outline-success fw-bold" data-filter="IDENTICAL">🟢 Identik (<span id="cntFilterIdentical">0</span>)</button>
                     <button type="button" class="btn btn-outline-warning text-dark fw-bold" data-filter="CHANGED">🟡 Berubah (<span id="cntFilterChanged">0</span>)</button>
-                    <button type="button" class="btn btn-outline-info text-dark fw-bold" data-filter="ONLY_IN_EBMD">🔵 Hanya e-BMD (<span id="cntFilterOnlyEbmd">0</span>)</button>
-                    <button type="button" class="btn btn-outline-secondary fw-bold" data-filter="ONLY_IN_SIPAT">🔴 Hanya SIPAT (<span id="cntFilterOnlySipat">0</span>)</button>
+                    <button type="button" class="btn btn-outline-secondary fw-bold" style="color: #6f42c1; border-color: #6f42c1;" data-filter="EXISTS_OTHER_OPD">🟣 Di OPD Lain (<span id="cntFilterOtherOpd">0</span>)</button>
+                    <button type="button" class="btn btn-outline-danger fw-bold" data-filter="GLOBAL_NIBAR_CONFLICT">🔴 Konflik OPD (<span id="cntFilterConflict">0</span>)</button>
+                    <button type="button" class="btn btn-outline-info text-dark fw-bold" data-filter="ONLY_IN_EBMD">🔵 Tidak di SIPAT (<span id="cntFilterOnlyEbmd">0</span>)</button>
+                    <button type="button" class="btn btn-outline-secondary fw-bold" data-filter="ONLY_IN_SIPAT">⚪ Hanya SIPAT (<span id="cntFilterOnlySipat">0</span>)</button>
                     <button type="button" class="btn btn-outline-danger fw-bold" data-filter="DUPLICATE_KEY">🟠 Duplikat (<span id="cntFilterDuplicate">0</span>)</button>
                     <button type="button" class="btn btn-outline-dark fw-bold" data-filter="INVALID">⚠️ Invalid (<span id="cntFilterInvalid">0</span>)</button>
                 </div>
@@ -406,13 +420,18 @@
                 </div>
             </div>
 
-            <div class="d-flex justify-content-between align-items-center">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
                 <button type="button" class="btn btn-outline-secondary px-4" id="btnBackToStep3">
                     <i class="bi bi-arrow-left me-1"></i> Ubah Pilihan Kolom
                 </button>
-                <button type="button" class="btn btn-success px-5 py-3 fw-bold fs-6 shadow" id="btnExecuteSync">
-                    <i class="bi bi-play-circle-fill me-2"></i> Eksekusi Rekonsiliasi & Sync Database
-                </button>
+                <div class="d-flex align-items-center gap-2">
+                    <button type="button" class="btn text-white px-5 py-3 fw-bold fs-6 shadow d-none" style="background-color: #6f42c1;" id="btnAdjustOpd">
+                        <i class="bi bi-arrow-left-right me-2"></i> Sesuaikan OPD (<span id="cntAdjustOpdBtn">0</span> Aset)
+                    </button>
+                    <button type="button" class="btn btn-success px-5 py-3 fw-bold fs-6 shadow" id="btnExecuteSync">
+                        <i class="bi bi-play-circle-fill me-2"></i> Eksekusi Rekonsiliasi & Sync Database
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -744,11 +763,17 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             }
 
-            // Render 7 Metrics
+            // Render 9 Metrics
             document.getElementById('statTotalRows').innerText = data.total_ebmd;
             document.getElementById('statMatchedCount').innerText = data.nibar_matched;
             document.getElementById('statIdenticalCount').innerText = data.identical_count;
             document.getElementById('statChangedCount').innerText = data.changed_count;
+            if (document.getElementById('statOtherOpdCount')) {
+                document.getElementById('statOtherOpdCount').innerText = data.other_opd_count || 0;
+            }
+            if (document.getElementById('statConflictCount')) {
+                document.getElementById('statConflictCount').innerText = data.conflict_count || 0;
+            }
             document.getElementById('statNotFoundSipat').innerText = data.not_found_sipat;
             document.getElementById('statDuplicateCount').innerText = data.duplicate_count;
             document.getElementById('statInvalidCount').innerText = data.invalid_count;
@@ -773,7 +798,7 @@ document.addEventListener('DOMContentLoaded', function() {
             // Summary Execution Box
             document.getElementById('summaryWillUpdate').innerText = data.changed_count;
             document.getElementById('summaryWillIdentical').innerText = data.identical_count;
-            document.getElementById('summaryWillSkip').innerText = (data.not_found_sipat + data.duplicate_count + data.invalid_count);
+            document.getElementById('summaryWillSkip').innerText = (data.not_found_sipat + data.duplicate_count + data.invalid_count + (data.other_opd_count || 0) + (data.conflict_count || 0));
             document.getElementById('summarySelectedColsText').innerText = 'Kolom Update: [' + selectedCols.join(', ') + ']';
 
             // Render Table
@@ -792,10 +817,36 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('cntFilterAll').innerText = items.length;
         document.getElementById('cntFilterIdentical').innerText = data.identical_count;
         document.getElementById('cntFilterChanged').innerText = data.changed_count;
+        if (document.getElementById('cntFilterOtherOpd')) {
+            document.getElementById('cntFilterOtherOpd').innerText = data.other_opd_count || 0;
+        }
+        if (document.getElementById('cntFilterConflict')) {
+            document.getElementById('cntFilterConflict').innerText = data.conflict_count || 0;
+        }
         document.getElementById('cntFilterOnlyEbmd').innerText = data.not_found_sipat;
         document.getElementById('cntFilterOnlySipat').innerText = data.only_in_sipat;
         document.getElementById('cntFilterDuplicate').innerText = data.duplicate_count;
         document.getElementById('cntFilterInvalid').innerText = data.invalid_count;
+        updateActionButtonState();
+    }
+
+    function updateActionButtonState() {
+        const btnAdjustOpd = document.getElementById('btnAdjustOpd');
+        const btnExecuteSync = document.getElementById('btnExecuteSync');
+        const cntAdjustOpdBtn = document.getElementById('cntAdjustOpdBtn');
+
+        if (!btnAdjustOpd || !btnExecuteSync) return;
+
+        if (currentFilter === 'EXISTS_OTHER_OPD') {
+            btnAdjustOpd.classList.remove('d-none');
+            btnExecuteSync.classList.add('d-none');
+            const otherOpdCount = (diffResultData && diffResultData.other_opd_count) ? diffResultData.other_opd_count : 0;
+            if (cntAdjustOpdBtn) cntAdjustOpdBtn.innerText = otherOpdCount;
+            btnAdjustOpd.disabled = (otherOpdCount === 0);
+        } else {
+            btnAdjustOpd.classList.add('d-none');
+            btnExecuteSync.classList.remove('d-none');
+        }
     }
 
     // Filter Buttons Handler
@@ -804,6 +855,7 @@ document.addEventListener('DOMContentLoaded', function() {
             document.querySelectorAll('#filterStatusGroup button').forEach(b => b.classList.remove('active'));
             this.classList.add('active');
             currentFilter = this.dataset.filter;
+            updateActionButtonState();
             renderDiffTable();
         });
     });
@@ -865,14 +917,20 @@ document.addEventListener('DOMContentLoaded', function() {
 
             // 3. Status Badge Column
             let badgeClass = 'bg-secondary';
+            let badgeStyle = '';
             if (item.status === 'IDENTICAL') badgeClass = 'bg-success';
             if (item.status === 'CHANGED') badgeClass = 'bg-warning text-dark';
+            if (item.status === 'EXISTS_OTHER_OPD') {
+                badgeClass = 'text-white';
+                badgeStyle = 'style="background-color: #6f42c1;"';
+            }
+            if (item.status === 'GLOBAL_NIBAR_CONFLICT') badgeClass = 'bg-danger text-white';
             if (item.status === 'ONLY_IN_EBMD') badgeClass = 'bg-info text-dark';
             if (item.status === 'ONLY_IN_SIPAT') badgeClass = 'bg-secondary';
             if (item.status === 'DUPLICATE_KEY') badgeClass = 'bg-danger';
             if (item.status === 'INVALID') badgeClass = 'bg-dark';
 
-            let cellStatus = `<span class="badge ${badgeClass} px-2.5 py-1.5 fw-semibold d-inline-block">${item.status_label}</span>`;
+            let cellStatus = `<span class="badge ${badgeClass} px-2.5 py-1.5 fw-semibold d-inline-block" ${badgeStyle}>${item.status_label}</span>`;
             if (item.notes) {
                 cellStatus += `<div class="small text-muted mt-1 lh-sm">${item.notes}</div>`;
             }
@@ -892,6 +950,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 cellDetails += '</tbody></table></div>';
             } else if (item.status === 'IDENTICAL') {
                 cellDetails = '<span class="text-success small fw-medium"><i class="bi bi-check2-all me-1"></i>Seluruh kolom yang dipilih identik dengan database.</span>';
+            } else if (item.status === 'EXISTS_OTHER_OPD') {
+                cellDetails = `<span class="small fw-medium" style="color: #6f42c1;"><i class="bi bi-geo-alt-fill me-1"></i>Aset terdaftar di OPD lain (${item.opd}). Data dilewati demi keamanan & integritas OPD.</span>`;
+            } else if (item.status === 'GLOBAL_NIBAR_CONFLICT') {
+                cellDetails = `<span class="text-danger small fw-medium"><i class="bi bi-exclamation-triangle-fill me-1"></i>NIBAR ditemukan di beberapa OPD (${item.opd}). Data dilewati karena konflik integritas.</span>`;
             } else if (item.status === 'ONLY_IN_EBMD') {
                 cellDetails = '<span class="text-info small fw-medium"><i class="bi bi-plus-circle me-1"></i>Aset belum terdaftar di SIPAT.</span>';
             } else if (item.status === 'ONLY_IN_SIPAT') {
@@ -944,6 +1006,108 @@ document.addEventListener('DOMContentLoaded', function() {
         form.submit();
         document.body.removeChild(form);
     });
+
+    // Step 4: Adjust / Transfer OPD
+    const btnAdjustOpd = document.getElementById('btnAdjustOpd');
+    if (btnAdjustOpd) {
+        btnAdjustOpd.addEventListener('click', function() {
+            if (!diffResultData) return;
+
+            const otherOpdCount = diffResultData.other_opd_count || 0;
+            if (otherOpdCount === 0) {
+                Swal.fire('Informasi', 'Tidak ada data aset dari OPD lain yang perlu disesuaikan.', 'info');
+                return;
+            }
+
+            const targetOpdName = diffResultData.opd_name || 'OPD Terpilih';
+            const targetOpdId = diffResultData.opd_id;
+
+            if (!targetOpdId) {
+                Swal.fire('Perhatian!', 'Fitur Penyesuaian OPD hanya berlaku pada rekonsiliasi mode Per OPD.', 'warning');
+                return;
+            }
+
+            const mapping = {};
+            document.querySelectorAll('.mapping-select').forEach(sel => {
+                if (sel.value !== '') {
+                    mapping[sel.dataset.col] = parseInt(sel.value);
+                }
+            });
+
+            const assetCategory = inputAssetCategory.value;
+
+            Swal.fire({
+                title: 'Sesuaikan Kepemilikan OPD?',
+                html: `Apakah Anda ingin memindahkan <strong>${otherOpdCount} aset</strong> yang tercatat di OPD lain ke <strong>${targetOpdName}</strong>?<br><br>
+                       <div class="text-start p-3 bg-light rounded border small">
+                           <div>• Target OPD Baru: <strong class="text-primary">${targetOpdName}</strong></div>
+                           <div>• Riwayat penyesuaian/mutasi OPD akan tercatat dalam <em>Audit Trail</em>.</div>
+                           <div>• Setelah disesuaikan, sistem akan otomatis menganalisis ulang rekonsiliasi sehingga aset tersebut langsung masuk ke daftar <em>Identik / Berubah</em> pada OPD ini.</div>
+                       </div>`,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: '<i class="bi bi-arrow-left-right me-1"></i> Ya, Sesuaikan OPD Sekarang',
+                cancelButtonText: 'Batal',
+                confirmButtonColor: '#6f42c1'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    btnAdjustOpd.disabled = true;
+                    btnAdjustOpd.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Menyesuaikan OPD...';
+
+                    fetch("{{ route('rekon-ebmd.adjust-opd') }}", {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json',
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        },
+                        body: JSON.stringify({
+                            import_token: importToken,
+                            asset_category: assetCategory,
+                            opd_id: targetOpdId,
+                            mapping: mapping,
+                            header_row_index: previewData.header_row_index || 0
+                        })
+                    })
+                    .then(async res => {
+                        const contentType = res.headers.get('content-type') || '';
+                        if (!contentType.includes('application/json')) {
+                            if (res.status === 419) {
+                                throw new Error('Sesi halaman telah kadaluwarsa (419). Silakan muat ulang halaman (F5) dan coba kembali.');
+                            }
+                            throw new Error('Server mengembalikan respon non-JSON (' + res.status + ').');
+                        }
+                        return res.json();
+                    })
+                    .then(data => {
+                        btnAdjustOpd.disabled = false;
+                        btnAdjustOpd.innerHTML = '<i class="bi bi-arrow-left-right me-2"></i> Sesuaikan OPD (<span id="cntAdjustOpdBtn">0</span> Aset)';
+
+                        if (!data.success) {
+                            Swal.fire('Gagal!', data.message || 'Gagal menyesuaikan OPD.', 'error');
+                            return;
+                        }
+
+                        Swal.fire({
+                            title: 'OPD Berhasil Disesuaikan!',
+                            text: data.message + ' Sistem sedang menganalisis ulang perbedaan data...',
+                            icon: 'success',
+                            timer: 2000,
+                            showConfirmButton: false
+                        });
+
+                        // Otomatis jalankan ulang analisis perbedaan data (Diff Preview)
+                        btnGoToStep4.click();
+                    })
+                    .catch(err => {
+                        btnAdjustOpd.disabled = false;
+                        btnAdjustOpd.innerHTML = '<i class="bi bi-arrow-left-right me-2"></i> Sesuaikan OPD (<span id="cntAdjustOpdBtn">0</span> Aset)';
+                        Swal.fire('Error!', err.message || 'Terjadi kesalahan sistem.', 'error');
+                    });
+                }
+            });
+        });
+    }
 
     // Step 4: Execute Sync
     const btnExecuteSync = document.getElementById('btnExecuteSync');

@@ -145,6 +145,10 @@ class EbmdReconciliationController extends Controller implements HasMiddleware
                 return response()->json(['success' => false, 'message' => 'Sesi impor tidak valid atau berkas temporer telah kadaluwarsa.'], 400);
             }
 
+            if (isset($tokenData['user_id']) && $tokenData['user_id'] !== auth()->id() && auth()->user()?->role !== 'superadmin') {
+                return response()->json(['success' => false, 'message' => 'Akses ditolak: Sesi impor ini milik pengguna lain.'], 403);
+            }
+
             $fullPath = Storage::disk('local')->path($tokenData['file_path']);
             $category = $request->input('asset_category');
             $modelClass = $this->getModelClass($category);
@@ -201,23 +205,22 @@ class EbmdReconciliationController extends Controller implements HasMiddleware
                 }
             }
 
-            // 2. Kumpulkan seluruh data SIPAT untuk active category
-            // Query without global scopes agar pencocokan NIBAR akurat, atau difilter berdasarkan OPD jika dipilih
-            $sipatQuery = $modelClass::withoutGlobalScopes();
-            if (!empty($opdId)) {
-                $sipatQuery->where('opd_id', $opdId);
-            }
-            $sipatRecords = $sipatQuery->get();
-            $sipatByNibar = [];
-            $sipatNibarSet = [];
+            // 2. Kumpulkan seluruh data SIPAT secara global dan per OPD untuk active category
+            $allSipatRecords = $modelClass::withoutGlobalScopes()->get();
+            $allSipatByNibar = [];
+            $scopedSipatByNibar = [];
 
-            foreach ($sipatRecords as $rec) {
+            foreach ($allSipatRecords as $rec) {
                 $recNibar = trim((string)($rec->$nibarDbCol ?? ''));
                 if ($recNibar !== '') {
-                    $sipatByNibar[$recNibar][] = $rec;
-                    $sipatNibarSet[$recNibar] = true;
+                    $allSipatByNibar[$recNibar][] = $rec;
+                    if (!empty($opdId) && (int)($rec->opd_id ?? 0) === (int)$opdId) {
+                        $scopedSipatByNibar[$recNibar][] = $rec;
+                    }
                 }
             }
+
+            $activeSipatByNibar = !empty($opdId) ? $scopedSipatByNibar : $allSipatByNibar;
 
             // 3. Proses Analisis Matching e-BMD -> SIPAT
             $reconciliationItems = [];
@@ -226,7 +229,9 @@ class EbmdReconciliationController extends Controller implements HasMiddleware
 
             $identicalCount = 0;
             $changedCount = 0;
+            $otherOpdCount = 0;
             $notFoundSipatCount = 0;
+            $conflictCount = 0;
             $duplicateCount = 0;
             $invalidCount = 0;
 
@@ -273,11 +278,11 @@ class EbmdReconciliationController extends Controller implements HasMiddleware
                     continue;
                 }
 
-                // VALIDASI NIBAR DUPLIKAT DI SIPAT
-                if (isset($sipatByNibar[$nibar]) && count($sipatByNibar[$nibar]) > 1) {
+                // VALIDASI NIBAR DUPLIKAT DI OPD REKONSILIASI TARGET
+                if (isset($activeSipatByNibar[$nibar]) && count($activeSipatByNibar[$nibar]) > 1) {
                     $duplicateCount++;
-                    $sipatDuplicatesCount = count($sipatByNibar[$nibar]);
-                    $existingModel = $sipatByNibar[$nibar][0];
+                    $sipatDuplicatesCount = count($activeSipatByNibar[$nibar]);
+                    $existingModel = $activeSipatByNibar[$nibar][0];
                     $nameAttr = $this->getModelDisplayName($existingModel);
 
                     $reconciliationItems[] = [
@@ -296,10 +301,10 @@ class EbmdReconciliationController extends Controller implements HasMiddleware
                     continue;
                 }
 
-                // NIBAR DITEMUKAN SECARA UNIK DI SIPAT
-                if (isset($sipatByNibar[$nibar]) && count($sipatByNibar[$nibar]) === 1) {
+                // TAHAP 1: NIBAR DITEMUKAN SECARA UNIK DI OPD AKTIF
+                if (isset($activeSipatByNibar[$nibar]) && count($activeSipatByNibar[$nibar]) === 1) {
                     $seenEbmdNibars[$nibar] = true;
-                    $existingModel = $sipatByNibar[$nibar][0];
+                    $existingModel = $activeSipatByNibar[$nibar][0];
                     $nameAttr = $this->getModelDisplayName($existingModel);
                     $opdInfo = $this->getModelOpdName($existingModel);
                     $subOpdInfo = $this->getModelSubOpdName($existingModel);
@@ -366,29 +371,91 @@ class EbmdReconciliationController extends Controller implements HasMiddleware
                         ];
                     }
                 } else {
-                    // NIBAR TIDAK DITEMUKAN DI SIPAT (ONLY_IN_EBMD)
-                    $notFoundSipatCount++;
-                    $rowName = $this->extractRowName($row, $mapping, $category);
+                    // TAHAP 2: JIKA TIDAK DITEMUKAN DI OPD AKTIF, CARI SECARA GLOBAL KE SELURUH DATA SIPAT
+                    if (!empty($opdId)) {
+                        $globalMatches = $allSipatByNibar[$nibar] ?? [];
 
-                    $reconciliationItems[] = [
-                        'row_num'          => $rowNum,
-                        'nibar'            => $nibar,
-                        'name'             => $rowName,
-                        'status'           => 'ONLY_IN_EBMD',
-                        'status_label'     => 'Tidak Ditemukan di SIPAT',
-                        'status_badge'     => 'info',
-                        'opd'              => '-',
-                        'sub_opd'          => '-',
-                        'changed_columns'  => [],
-                        'all_columns_diff' => [],
-                        'notes'            => 'NIBAR terdaftar di e-BMD namun belum ada di database SIPAT.',
-                    ];
+                        if (count($globalMatches) === 1) {
+                            // Ditemukan tepat di 1 OPD lain
+                            $otherOpdCount++;
+                            $otherModel = $globalMatches[0];
+                            $foundOpdName = $this->getModelOpdName($otherModel);
+
+                            $reconciliationItems[] = [
+                                'row_num'          => $rowNum,
+                                'nibar'            => $nibar,
+                                'name'             => $this->getModelDisplayName($otherModel),
+                                'status'           => 'EXISTS_OTHER_OPD',
+                                'status_label'     => 'Terdaftar di OPD Lain',
+                                'status_badge'     => 'purple',
+                                'opd'              => $foundOpdName,
+                                'sub_opd'          => $this->getModelSubOpdName($otherModel),
+                                'changed_columns'  => [],
+                                'all_columns_diff' => [],
+                                'notes'            => "NIBAR tidak ditemukan pada {$opdName}, tetapi terdaftar pada {$foundOpdName} (ID: #{$otherModel->getKey()}). Data perlu diverifikasi/mutasi.",
+                            ];
+                        } elseif (count($globalMatches) > 1) {
+                            // Ditemukan di lebih dari 1 OPD (Konflik Global)
+                            $conflictCount++;
+                            $opdListStr = collect($globalMatches)->map(fn($m) => $this->getModelOpdName($m))->unique()->implode(', ');
+
+                            $reconciliationItems[] = [
+                                'row_num'          => $rowNum,
+                                'nibar'            => $nibar,
+                                'name'             => $this->getModelDisplayName($globalMatches[0]),
+                                'status'           => 'GLOBAL_NIBAR_CONFLICT',
+                                'status_label'     => 'Konflik NIBAR Antar OPD',
+                                'status_badge'     => 'danger',
+                                'opd'              => $opdListStr,
+                                'sub_opd'          => '-',
+                                'changed_columns'  => [],
+                                'all_columns_diff' => [],
+                                'notes'            => "NIBAR ditemukan di " . count($globalMatches) . " OPD di SIPAT: [{$opdListStr}]. Terdeteksi konflik integritas data.",
+                            ];
+                        } else {
+                            // Tidak ditemukan di OPD aktif dan tidak ditemukan di seluruh SIPAT
+                            $notFoundSipatCount++;
+                            $rowName = $this->extractRowName($row, $mapping, $category);
+
+                            $reconciliationItems[] = [
+                                'row_num'          => $rowNum,
+                                'nibar'            => $nibar,
+                                'name'             => $rowName,
+                                'status'           => 'ONLY_IN_EBMD',
+                                'status_label'     => 'Tidak Ditemukan di SIPAT',
+                                'status_badge'     => 'info',
+                                'opd'              => '-',
+                                'sub_opd'          => '-',
+                                'changed_columns'  => [],
+                                'all_columns_diff' => [],
+                                'notes'            => 'NIBAR tidak ditemukan di seluruh database SIPAT (Kandidat Aset Baru / Perlu Verifikasi).',
+                            ];
+                        }
+                    } else {
+                        // Mode Seluruh OPD: NIBAR tidak ditemukan di seluruh database SIPAT
+                        $notFoundSipatCount++;
+                        $rowName = $this->extractRowName($row, $mapping, $category);
+
+                        $reconciliationItems[] = [
+                            'row_num'          => $rowNum,
+                            'nibar'            => $nibar,
+                            'name'             => $rowName,
+                            'status'           => 'ONLY_IN_EBMD',
+                            'status_label'     => 'Tidak Ditemukan di SIPAT',
+                            'status_badge'     => 'info',
+                            'opd'              => '-',
+                            'sub_opd'          => '-',
+                            'changed_columns'  => [],
+                            'all_columns_diff' => [],
+                            'notes'            => 'NIBAR tidak ditemukan di database SIPAT (Kandidat Aset Baru / Perlu Verifikasi).',
+                        ];
+                    }
                 }
             }
 
             // 4. Deteksi Aset Dua Arah (ONLY_IN_SIPAT - Ada di SIPAT tetapi tidak ada di e-BMD)
             $onlyInSipatCount = 0;
-            foreach ($sipatByNibar as $sNibar => $records) {
+            foreach ($activeSipatByNibar as $sNibar => $records) {
                 if (!isset($seenEbmdNibars[$sNibar]) && !isset($excelNibarCounts[$sNibar])) {
                     $onlyInSipatCount += count($records);
                     $firstRec = $records[0];
@@ -426,8 +493,10 @@ class EbmdReconciliationController extends Controller implements HasMiddleware
                 'nibar_matched'      => $nibarMatched,
                 'identical_count'    => $identicalCount,
                 'changed_count'      => $changedCount,
+                'other_opd_count'    => $otherOpdCount,
                 'not_found_sipat'    => $notFoundSipatCount,
                 'only_in_sipat'      => $onlyInSipatCount,
+                'conflict_count'     => $conflictCount,
                 'duplicate_count'    => $duplicateCount,
                 'invalid_count'      => $invalidCount,
                 'field_breakdown'    => $fieldBreakdown,
@@ -436,6 +505,7 @@ class EbmdReconciliationController extends Controller implements HasMiddleware
                 'asset_category'     => $category,
                 'opd_id'             => $opdId,
                 'opd_name'           => $opdName,
+                'user_id'            => auth()->id(),
             ];
 
             Cache::put('rekon_result_' . $request->input('import_token'), $resultPayload, now()->addMinutes(30));
@@ -464,6 +534,10 @@ class EbmdReconciliationController extends Controller implements HasMiddleware
         $cachedResult = Cache::get('rekon_result_' . $request->input('import_token'));
         if (!$cachedResult || empty($cachedResult['items'])) {
             return response()->json(['success' => false, 'message' => 'Data hasil rekonsiliasi tidak ditemukan atau sudah kadaluwarsa.'], 404);
+        }
+
+        if (isset($cachedResult['user_id']) && $cachedResult['user_id'] !== auth()->id() && auth()->user()?->role !== 'superadmin') {
+            return response()->json(['success' => false, 'message' => 'Akses ditolak: Hasil rekonsiliasi ini milik pengguna lain.'], 403);
         }
 
         $items = $cachedResult['items'];
@@ -533,6 +607,150 @@ class EbmdReconciliationController extends Controller implements HasMiddleware
     }
 
     /**
+     * Menyesuaikan/memutasikan OPD dari aset-aset yang terdeteksi EXISTS_OTHER_OPD
+     * ke OPD target yang sedang direkonsiliasi.
+     */
+    public function adjustOpd(Request $request): JsonResponse
+    {
+        $request->validate([
+            'import_token'     => 'required|string',
+            'asset_category'   => 'required|in:tanah,bangunan,vehicle,ebmd_vehicle',
+            'opd_id'           => 'required|integer|exists:opds,id',
+            'mapping'          => 'required|array',
+            'header_row_index' => 'nullable|integer',
+        ]);
+
+        $correlationId = 'ADJ-OPD-' . date('Ymd') . '-' . strtoupper(Str::random(6));
+
+        try {
+            $tokenData = Cache::get($request->input('import_token'));
+            if (!$tokenData || !Storage::disk('local')->exists($tokenData['file_path'])) {
+                return response()->json(['success' => false, 'message' => 'Sesi impor telah kadaluwarsa. Silakan unggah kembali berkas Anda.'], 400);
+            }
+
+            if (isset($tokenData['user_id']) && $tokenData['user_id'] !== auth()->id() && auth()->user()?->role !== 'superadmin') {
+                return response()->json(['success' => false, 'message' => 'Akses ditolak: Sesi impor ini milik pengguna lain.'], 403);
+            }
+
+            $fullPath = Storage::disk('local')->path($tokenData['file_path']);
+            $category = $request->input('asset_category');
+            $modelClass = $this->getModelClass($category);
+            $nibarDbCol = $this->getNibarColumn($category);
+            $mapping = $request->input('mapping');
+            $headerRowIndex = (int) $request->input('header_row_index', 0);
+            $targetOpdId = (int) $request->input('opd_id');
+
+            $targetOpd = Opd::findOrFail($targetOpdId);
+            $targetOpdName = $targetOpd->nama . ($targetOpd->singkatan ? ' (' . $targetOpd->singkatan . ')' : '');
+
+            $nibarExcelIdx = $mapping['nibar'] ?? $mapping[$nibarDbCol] ?? null;
+            if ($nibarExcelIdx === null) {
+                return response()->json(['success' => false, 'message' => 'Kolom NIBAR wajib dipetakan.'], 422);
+            }
+
+            $reader = IOFactory::createReaderForFile($fullPath);
+            $spreadsheet = $reader->load($fullPath);
+            $worksheet = $spreadsheet->getActiveSheet();
+            $rows = $worksheet->toArray();
+
+            $startRow = $headerRowIndex + 1;
+
+            // Kumpulkan NIBAR unik dari file e-BMD
+            $excelNibars = [];
+            for ($i = $startRow; $i < count($rows); $i++) {
+                $row = $rows[$i];
+                if (empty(array_filter($row, fn($v) => !is_null($v) && trim((string)$v) !== ''))) continue;
+                $rawNibar = isset($row[$nibarExcelIdx]) ? trim((string)$row[$nibarExcelIdx]) : '';
+                if ($rawNibar !== '' && $rawNibar !== '-') {
+                    $excelNibars[$rawNibar] = true;
+                }
+            }
+
+            // Kumpulkan seluruh record SIPAT
+            $allSipatRecords = $modelClass::withoutGlobalScopes()->get();
+            $allSipatByNibar = [];
+            foreach ($allSipatRecords as $rec) {
+                $recNibar = trim((string)($rec->$nibarDbCol ?? ''));
+                if ($recNibar !== '') {
+                    $allSipatByNibar[$recNibar][] = $rec;
+                }
+            }
+
+            $adjustedCount = 0;
+            $auditLogsToInsert = [];
+
+            DB::beginTransaction();
+
+            foreach (array_keys($excelNibars) as $nibar) {
+                $matches = $allSipatByNibar[$nibar] ?? [];
+                
+                // Hanya proses jika ditemukan tepat 1 di SIPAT dan BUKAN di OPD target (EXISTS_OTHER_OPD)
+                if (count($matches) === 1) {
+                    $model = $matches[0];
+                    if ((int)$model->opd_id !== $targetOpdId) {
+                        $oldOpdId = $model->opd_id;
+                        $oldOpdName = $this->getModelOpdName($model);
+
+                        $updateData = ['opd_id' => $targetOpdId];
+                        if (in_array('opd', $model->getFillable())) {
+                            $updateData['opd'] = $targetOpdName;
+                        }
+
+                        $model->update($updateData);
+                        $adjustedCount++;
+
+                        $changesLog = [
+                            'opd_id' => ['old' => $oldOpdId, 'new' => $targetOpdId],
+                            'opd'    => ['old' => $oldOpdName, 'new' => $targetOpdName],
+                        ];
+
+                        $auditLogsToInsert[] = [
+                            'event_id'       => (string) Str::uuid(),
+                            'correlation_id' => $correlationId,
+                            'nibar'          => $nibar,
+                            'event_name'     => 'EBMD_RECONCILIATION_OPD_TRANSFER',
+                            'source_system'  => 'EBMD',
+                            'direction'      => 'INBOUND',
+                            'changes'        => json_encode($changesLog),
+                            'reason'         => "Penyesuaian/Mutasi OPD Rekonsiliasi NIBAR [{$nibar}] dari [{$oldOpdName}] ke [{$targetOpdName}]",
+                            'sync_status'    => 'SUCCESS',
+                            'created_by'     => auth()->user()?->username ?? auth()->user()?->name ?? 'system',
+                            'created_at'     => now(),
+                        ];
+                    }
+                }
+            }
+
+            if (!empty($auditLogsToInsert)) {
+                IntegrationAuditLog::insert($auditLogsToInsert);
+            }
+
+            DB::commit();
+
+            if (in_array($category, ['vehicle', 'ebmd_vehicle'])) {
+                $this->vehicleService->invalidateDashboardStats(invalidateAllOpd: true);
+            }
+
+            Activity::log("Penyesuaian OPD Rekonsiliasi NIBAR [{$correlationId}] Kategori ({$category}). Total {$adjustedCount} aset dipindahkan ke {$targetOpdName}.", 'info');
+
+            return response()->json([
+                'success'        => true,
+                'message'        => "Berhasil menyesuaikan OPD: {$adjustedCount} aset telah dipindahkan ke {$targetOpdName}.",
+                'adjusted_count' => $adjustedCount,
+                'correlation_id' => $correlationId,
+                'target_opd'     => $targetOpdName,
+            ]);
+
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal menyesuaikan OPD aset: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
      * Mengeksekusi impor selektif / update kolom yang dicentang secara atomic dengan transaksi database & audit trail.
      */
     public function execute(Request $request): JsonResponse
@@ -555,6 +773,10 @@ class EbmdReconciliationController extends Controller implements HasMiddleware
             $tokenData = Cache::get($request->input('import_token'));
             if (!$tokenData || !Storage::disk('local')->exists($tokenData['file_path'])) {
                 return response()->json(['success' => false, 'message' => 'Sesi impor telah kadaluwarsa. Silakan unggah kembali berkas Anda.'], 400);
+            }
+
+            if (isset($tokenData['user_id']) && $tokenData['user_id'] !== auth()->id() && auth()->user()?->role !== 'superadmin') {
+                return response()->json(['success' => false, 'message' => 'Akses ditolak: Sesi impor ini milik pengguna lain.'], 403);
             }
 
             $fullPath = Storage::disk('local')->path($tokenData['file_path']);
@@ -596,17 +818,22 @@ class EbmdReconciliationController extends Controller implements HasMiddleware
                 }
             }
 
-            // 2. Kumpulkan seluruh record SIPAT
-            $sipatQuery = $modelClass::withoutGlobalScopes();
-            if (!empty($opdId)) {
-                $sipatQuery->where('opd_id', $opdId);
-            }
-            $sipatRecords = $sipatQuery->get();
-            $sipatByNibar = [];
-            foreach ($sipatRecords as $rec) {
+            // 2. Kumpulkan seluruh record SIPAT secara Global & Per OPD
+            $allSipatRecords = $modelClass::withoutGlobalScopes()->get();
+            $allSipatByNibar = [];
+            $scopedSipatByNibar = [];
+
+            foreach ($allSipatRecords as $rec) {
                 $recNibar = trim((string)($rec->$nibarDbCol ?? ''));
                 if ($recNibar !== '') {
-                    $sipatByNibar[$recNibar][] = $rec;
+                    $allSipatByNibar[$recNibar][] = $rec;
+                    if (!empty($opdId)) {
+                        if ($rec->opd_id == $opdId) {
+                            $scopedSipatByNibar[$recNibar][] = $rec;
+                        }
+                    } else {
+                        $scopedSipatByNibar[$recNibar][] = $rec;
+                    }
                 }
             }
 
@@ -636,15 +863,15 @@ class EbmdReconciliationController extends Controller implements HasMiddleware
                     continue;
                 }
 
-                // Lewati jika NIBAR duplikat di SIPAT
-                if (isset($sipatByNibar[$rawNibar]) && count($sipatByNibar[$rawNibar]) > 1) {
+                // Lewati jika NIBAR duplikat di scope aktif
+                if (isset($scopedSipatByNibar[$rawNibar]) && count($scopedSipatByNibar[$rawNibar]) > 1) {
                     $skippedCount++;
                     continue;
                 }
 
-                // DATA DITEMUKAN DI SIPAT SECARA UNIK
-                if (isset($sipatByNibar[$rawNibar]) && count($sipatByNibar[$rawNibar]) === 1) {
-                    $existingModel = $sipatByNibar[$rawNibar][0];
+                // DATA DITEMUKAN DI SCOPE AKTIF SECARA UNIK
+                if (isset($scopedSipatByNibar[$rawNibar]) && count($scopedSipatByNibar[$rawNibar]) === 1) {
+                    $existingModel = $scopedSipatByNibar[$rawNibar][0];
                     $updateData = [];
                     $changesLog = [];
 
@@ -705,8 +932,11 @@ class EbmdReconciliationController extends Controller implements HasMiddleware
                     } else {
                         $skippedCount++;
                     }
-                } else if ($createNew) {
-                    // Penambahan data baru (jika switch create_new diaktifkan)
+                } elseif (!empty($opdId) && isset($allSipatByNibar[$rawNibar]) && count($allSipatByNibar[$rawNibar]) > 0) {
+                    // NIBAR terdaftar di OPD lain atau memiliki konflik global -> JANGAN UPDATE, JANGAN PINDAHKAN OPD, JANGAN INSERT BARU
+                    $skippedCount++;
+                } elseif ($createNew) {
+                    // Penambahan data baru (hanya jika NIBAR benar-benar tidak terdaftar di seluruh database SIPAT)
                     $newData = [$nibarDbCol => $rawNibar];
                     if (!empty($opdId)) {
                         $newData['opd_id'] = $opdId;
