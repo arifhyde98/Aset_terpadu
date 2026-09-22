@@ -305,6 +305,58 @@ class AsetTanahService
     }
 
     /**
+     * Memperbarui data riwayat proses pengurusan BPN.
+     *
+     * @param int $idProses
+     * @param array $data
+     * @return ProsesAset
+     */
+    public function updateProsesBpn(int $idProses, array $data): ProsesAset
+    {
+        $proses = ProsesAset::findOrFail($idProses);
+        $oldData = $proses->toArray();
+        $tglProses = $data['tanggal_proses'] ?? ($data['tgl_mulai'] ?? $proses->tanggal_proses ?? date('Y-m-d'));
+
+        $proses->update([
+            'id_status'      => $data['id_status'] ?? $proses->id_status,
+            'tanggal_proses' => $tglProses,
+            'tgl_mulai'      => $tglProses,
+            'tgl_selesai'    => array_key_exists('tgl_selesai', $data) ? $data['tgl_selesai'] : $proses->tgl_selesai,
+            'keterangan'     => array_key_exists('keterangan', $data) ? $data['keterangan'] : $proses->keterangan,
+        ]);
+
+        $proses->load(['statusProses', 'aset']);
+        $this->sipatService->invalidateDashboardCache();
+
+        $namaStatus = $proses->statusProses->nama_status ?? 'Status BPN';
+        $namaAset = $proses->aset->nama_aset ?? 'Aset Tanah';
+
+        Activity::logSipat("Memperbarui riwayat status pengurusan BPN ({$namaStatus}) untuk aset tanah: {$namaAset}", 'info', $oldData, $proses->toArray());
+
+        return $proses;
+    }
+
+    /**
+     * Menghapus data riwayat proses pengurusan BPN.
+     *
+     * @param int $idProses
+     * @return void
+     */
+    public function deleteProsesBpn(int $idProses): void
+    {
+        $proses = ProsesAset::with(['statusProses', 'aset'])->findOrFail($idProses);
+        $oldData = $proses->toArray();
+        $namaStatus = $proses->statusProses->nama_status ?? 'Status BPN';
+        $namaAset = $proses->aset->nama_aset ?? 'Aset Tanah';
+
+        $proses->delete();
+
+        $this->sipatService->invalidateDashboardCache();
+
+        Activity::logSipat("Menghapus riwayat status pengurusan BPN ({$namaStatus}) untuk aset tanah: {$namaAset}", 'warning', $oldData, null);
+    }
+
+    /**
      * Menyimpan atau memperbarui data pengamanan fisik aset.
      *
      * @param int $id
