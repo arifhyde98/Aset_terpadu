@@ -299,7 +299,55 @@
                                                 {{ $proses->tanggal_proses ?? $proses->tgl_mulai ?? '-' }}
                                             </div>
                                         </div>
+                                        @if($canManageAset)
+                                        <div class="d-flex align-items-center gap-1">
+                                            <button type="button" class="btn btn-sm btn-outline-warning rounded-circle p-1 px-2" data-bs-toggle="collapse" data-bs-target="#formEditProses-{{ $proses->id_proses }}" title="Edit Status">
+                                                <i class="bi bi-pencil-square"></i>
+                                            </button>
+                                            <form action="{{ route('sipat.aset.destroyProses', [$aset->id_aset, $proses->id_proses]) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin menghapus riwayat status proses BPN ini?');">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="btn btn-sm btn-outline-danger rounded-circle p-1 px-2" title="Hapus Status">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
+                                            </form>
+                                        </div>
+                                        @endif
                                     </div>
+
+                                    @if($canManageAset)
+                                    <!-- Form Edit Status BPN (Collapse) -->
+                                    <div class="collapse mt-3 pt-3 border-top" id="formEditProses-{{ $proses->id_proses }}">
+                                        <h6 class="fw-bold mb-2 small text-body"><i class="bi bi-pencil-square me-1 text-warning"></i>Edit Log Tahapan BPN</h6>
+                                        <form action="{{ route('sipat.aset.updateProses', [$aset->id_aset, $proses->id_proses]) }}" method="POST">
+                                            @csrf
+                                            @method('PUT')
+                                            <div class="row g-2">
+                                                <div class="col-md-6">
+                                                    <label class="form-label small text-secondary mb-1">Status Tahapan BPN <span class="text-danger">*</span></label>
+                                                    <select name="id_status" class="form-select form-select-sm" required>
+                                                        <option value="">-- Pilih Status --</option>
+                                                        @foreach($statusList as $st)
+                                                            <option value="{{ $st->id_status }}" {{ (int)$proses->id_status === (int)$st->id_status ? 'selected' : '' }}>{{ $st->nama_status }}</option>
+                                                        @endforeach
+                                                    </select>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <label class="form-label small text-secondary mb-1">Tanggal Proses <span class="text-danger">*</span></label>
+                                                    <input type="date" name="tanggal_proses" class="form-control form-control-sm" value="{{ $proses->tanggal_proses ?? $proses->tgl_mulai ?? date('Y-m-d') }}" required>
+                                                </div>
+                                                <div class="col-12">
+                                                    <label class="form-label small text-secondary mb-1">Catatan / Keterangan</label>
+                                                    <input type="text" name="keterangan" class="form-control form-control-sm" value="{{ $proses->keterangan }}" placeholder="Contoh: Pengukuran ulang oleh BPN">
+                                                </div>
+                                            </div>
+                                            <div class="text-end mt-2">
+                                                <button type="button" class="btn btn-sm btn-secondary rounded-pill me-1" data-bs-toggle="collapse" data-bs-target="#formEditProses-{{ $proses->id_proses }}">Batal</button>
+                                                <button type="submit" class="btn btn-sm btn-warning text-dark rounded-pill px-3"><i class="bi bi-check-lg me-1"></i>Simpan Perubahan</button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                    @endif
                                 </div>
                             </li>
                         @endforeach

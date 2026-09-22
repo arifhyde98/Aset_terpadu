@@ -73,8 +73,8 @@ Dokumen ini merupakan sumber kebenaran tunggal (*Single Source of Truth*) mengen
   - Operator OPD dibatasi hanya dapat melihat dan mengelola bidang tanah milik instansinya (`opd_id`). Operator KPB dibatasi ketat pada unit kerjanya (`sub_opd_id`).
   - *Pertahanan Berlapis (Double Defense):*
     1. **Layer Global Scope:** Route model binding otomatis menghasilkan `404 Not Found` jika akun OPD mencoba mengakses aset instansi lain lewat URL.
-    2. **Layer Controller Authorization (`checkAsetOwnership()`):** Memeriksa kepemilikan aset secara eksplisit pada aksi `show()`, `edit()`, `update()`, `destroy()`, `storeProses()`, `bulkStoreProses()`, `storePengamanan()`, dan `storeDokumen()`, melempar `403 Forbidden` jika ada indikasi pelanggaran akses.
-    3. **Layer Form Request (`prepareForValidation` & `authorize`):** Pada `StoreAsetTanahRequest` dan `UpdateAsetTanahRequest`, field `opd_id` dan `sub_opd_id` otomatis dipaksa (*locked*) ke identitas akun `auth()->user()`, menggagalkan upaya manipulasi/spoofing parameter request. Pada `BulkStoreProsesRequest`, sistem memverifikasi seluruh `aset_ids` terpilih berasal dari instansi pengguna.
+    2. **Layer Controller Authorization (`checkAsetOwnership()`):** Memeriksa kepemilikan aset secara eksplisit pada aksi `show()`, `edit()`, `update()`, `destroy()`, `storeProses()`, `updateProses()`, `destroyProses()`, `bulkStoreProses()`, `storePengamanan()`, dan `storeDokumen()`, melempar `403 Forbidden` jika ada indikasi pelanggaran akses.
+    3. **Layer Form Request (`prepareForValidation` & `authorize`):** Pada `StoreAsetTanahRequest` dan `UpdateAsetTanahRequest`, field `opd_id` dan `sub_opd_id` otomatis dipaksa (*locked*) ke identitas akun `auth()->user()`, menggagalkan upaya manipulasi/spoofing parameter request. Pada `BulkStoreProsesRequest`, `StoreProsesAsetRequest`, dan `UpdateProsesAsetRequest`, sistem memverifikasi seluruh entri terpilih berasal dari instansi pengguna.
     4. **Layer UI Blade:** Pada formulir penambahan dan pengeditan aset tanah (`create.blade.php`, `edit.blade.php`, `tanah_tak_tercatat/index.blade.php`), dropdown instansi digantikan dengan kotak informasi *read-only* berlatar abu-abu terang dengan badge *"Terkunci (Sesuai Akun)"* dan `<input type="hidden" name="opd_id">`. Tombol aksi mutasi pada modal aset (`modal.blade.php`) otomatis disembunyikan/dinonaktifkan jika aset bukan milik instansi yang bersangkutan.
   - *Query Agregat Publik/Sistem:* Seluruh kalkulasi dashboard global dan mesin pencarian portal publik (`UnifiedAssetSearchService`, `SipatService::computeDashboardStats`) secara eksplisit membungkus query dengan `AsetTanah::withoutGlobalScopes()` agar statistik kabupaten tetap akurat 100%.
 - **Master OPD Tunggal Terpadu (`opds`):**
@@ -639,6 +639,9 @@ Diimplementasikan arsitektur *Admin Template Switcher* yang memungkinkan penggun
 | **E-RANDIS** | GET | `/reports/pdf` | `Erandis\ReportController@pdf` | Auth | Unduh PDF formal laporan mPDF |
 | **E-RANDIS** | GET | `/reports/settings` | `Erandis\ReportSettingController@index` | Superadmin | Pengaturan KOP, TTD, & Ekspor Laporan |
 | **SIPAT** | GET | `/sipat/aset` | `Sipat\AsetTanahController@index` | Auth | Daftar Master Aset Tanah KIB A |
+| **SIPAT** | POST | `/sipat/aset/{aset}/proses` | `Sipat\AsetTanahController@storeProses` | Auth | Tambah entri riwayat status proses BPN |
+| **SIPAT** | PUT | `/sipat/aset/{aset}/proses/{proses}` | `Sipat\AsetTanahController@updateProses` | Auth | Perbarui entri riwayat status proses BPN |
+| **SIPAT** | DELETE | `/sipat/aset/{aset}/proses/{proses}` | `Sipat\AsetTanahController@destroyProses` | Auth | Hapus entri riwayat status proses BPN |
 | **SIPAT** | POST | `/sipat/aset/bulk-proses` | `Sipat\AsetTanahController@bulkStoreProses` | Auth | Pembaruan status proses BPN massal |
 | **SIPAT** | GET | `/sipat/aset/check-duplicates` | `Sipat\AsetTanahController@checkDuplicates` | Auth | Diagnosis duplikasi data aset tanah |
 | **SIPAT** | POST | `/sipat/aset/resolve-duplicate-aset` | `Sipat\AsetTanahController@resolveDuplicateAset` | Auth | Resolusi penggabungan aset tanah duplikat |

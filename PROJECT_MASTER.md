@@ -247,7 +247,7 @@ Seluruh fitur berikut telah selesai diimplementasikan (**DONE**) dan beroperasi 
 | **Tanah Belum / Tak Tercatat** | `DONE` | Pengelolaan tanah usulan non-KIB A, generate NIBAR sementara format `DRAFT-YYYYMMDD-XXXX`, dan promosi status ke NIBAR resmi oleh Superadmin/Admin. |
 | **Target Pensertifikatan & GIS Map** | `DONE` | Penetapan KPI target sertifikasi tahunan, 5 kotak metrik ringkasan (Total Target, Belum Diproses, Sedang Proses, Realisasi, Capaian %), filter 3 arah, ekspor Excel & PDF resmi, dan visualisasi spasial Leaflet GIS. |
 | **Rekonsiliasi Sertifikat SIPAT vs eLABEL** | `DONE` | Audit silang pencocokan NIBAR aset tanah bersertifikat di SIPAT dengan fisik berkas sertifikat yang tersimpan di eLABEL (`/sipat/rekonsiliasi`). |
-| **Progres Pensertifikatan BPN** | `DONE` | Pencatatan rekam jejak tahapan pengurusan sertifikat BPN (Pengukuran, PBT, SK, hingga Terbit Sertifikat) dengan dokumen lampiran. |
+| **Progres Pensertifikatan BPN (CRUD)** | `DONE` | Pencatatan, pembaruan, dan penghapusan rekam jejak tahapan pengurusan sertifikat BPN (Pengukuran, PBT, SK, hingga Terbit Sertifikat) dengan otorisasi multi-tenancy OPD/KPB dan audit trail. |
 | **Modul Surat Tanah (SKPT)** | `DONE` | Pembuatan Surat Keterangan Pendaftaran Tanah resmi dengan integrasi data pejabat pengesah (camat & kepala desa) serta ekspor mPDF, Word (.docx), dan cetak langsung. |
 | **Peta Interaktif Spasial** | `DONE` | Visualisasi interaktif sebaran marker aset tanah dan rendering batas poligon bidang tanah di peta wilayah Kabupaten Donggala. |
 | **Impor Aset Tanah & Status BPN** | `DONE` | Modal impor 2 tab: Unggah aset baru dan pembaruan massal tahapan status proses sertifikasi BPN via template Excel resmi. |

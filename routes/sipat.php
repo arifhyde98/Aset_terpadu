@@ -23,6 +23,8 @@ Route::prefix('sipat')->name('sipat.')->group(function () {
         Route::put('/{aset}', [\App\Http\Controllers\Sipat\AsetTanahController::class, 'update'])->name('update');
         Route::delete('/{aset}', [\App\Http\Controllers\Sipat\AsetTanahController::class, 'destroy'])->name('destroy');
         Route::post('/{aset}/proses', [\App\Http\Controllers\Sipat\AsetTanahController::class, 'storeProses'])->name('storeProses');
+        Route::put('/{aset}/proses/{proses}', [\App\Http\Controllers\Sipat\AsetTanahController::class, 'updateProses'])->name('updateProses');
+        Route::delete('/{aset}/proses/{proses}', [\App\Http\Controllers\Sipat\AsetTanahController::class, 'destroyProses'])->name('destroyProses');
         Route::post('/{aset}/pengamanan', [\App\Http\Controllers\Sipat\AsetTanahController::class, 'storePengamanan'])->name('storePengamanan');
         Route::post('/{aset}/dokumen', [\App\Http\Controllers\Sipat\AsetTanahController::class, 'storeDokumen'])->name('storeDokumen');
     });

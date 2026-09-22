@@ -6,11 +6,13 @@ use App\Http\Controllers\Controller;
 use App\Models\AsetTanah;
 use App\Models\Opd;
 use App\Models\StatusProses;
+use App\Models\ProsesAset;
 use App\Services\Sipat\SipatService;
 use App\Services\Sipat\AsetTanahService;
 use App\Http\Requests\Sipat\StoreAsetTanahRequest;
 use App\Http\Requests\Sipat\UpdateAsetTanahRequest;
 use App\Http\Requests\Sipat\StoreProsesAsetRequest;
+use App\Http\Requests\Sipat\UpdateProsesAsetRequest;
 use App\Http\Requests\Sipat\BulkStoreProsesRequest;
 use App\Http\Requests\Sipat\StoreDokumenAsetRequest;
 use App\Http\Requests\Sipat\StorePengamananFisikRequest;
@@ -370,6 +372,45 @@ class AsetTanahController extends Controller implements HasMiddleware
         $this->asetTanahService->addProsesBpn($aset->id_aset, $request->validated());
 
         return $this->redirectWithFilters('Riwayat Proses BPN berhasil ditambahkan.');
+    }
+
+    /**
+     * Memperbarui data riwayat proses BPN.
+     *
+     * @param UpdateProsesAsetRequest $request
+     * @param AsetTanah $aset
+     * @param ProsesAset $proses
+     * @return RedirectResponse
+     */
+    public function updateProses(UpdateProsesAsetRequest $request, AsetTanah $aset, ProsesAset $proses): RedirectResponse
+    {
+        $this->checkAsetOwnership($aset);
+        if ((int)$proses->id_aset !== (int)$aset->id_aset) {
+            abort(404, 'Riwayat proses tidak sesuai dengan aset tanah ini.');
+        }
+
+        $this->asetTanahService->updateProsesBpn($proses->id_proses, $request->validated());
+
+        return $this->redirectWithFilters('Riwayat Proses BPN berhasil diperbarui.');
+    }
+
+    /**
+     * Menghapus entri riwayat proses BPN.
+     *
+     * @param AsetTanah $aset
+     * @param ProsesAset $proses
+     * @return RedirectResponse
+     */
+    public function destroyProses(AsetTanah $aset, ProsesAset $proses): RedirectResponse
+    {
+        $this->checkAsetOwnership($aset);
+        if ((int)$proses->id_aset !== (int)$aset->id_aset) {
+            abort(404, 'Riwayat proses tidak sesuai dengan aset tanah ini.');
+        }
+
+        $this->asetTanahService->deleteProsesBpn($proses->id_proses);
+
+        return $this->redirectWithFilters('Riwayat Proses BPN berhasil dihapus.');
     }
 
     /**
