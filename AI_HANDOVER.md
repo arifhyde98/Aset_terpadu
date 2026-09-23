@@ -113,6 +113,12 @@ Sesuai hasil audit keamanan, seluruh controller wajib menggunakan interface `Has
 - **Penyimpanan Terenkripsi Dua Arah:** Password akun disimpan terenkripsi dua arah (AES-256 via cast `encrypted` pada kolom `plain_password`), memungkinkan Superadmin melihat kredensial resmi untuk distribusi akun ke OPD tanpa menyimpan teks terbuka di database mentah/dump.
 - **Sanitasi Kredensial Log:** `UserObserver` secara ketat membersihkan atribut sensitif (`password`, `plain_password`, `remember_token`) agar tidak pernah bocor ke tabel audit log.
 
+### 2.6 Isolasi Multi-Tenancy & Pembersihan Fallback Dashboard
+- **Helper Scoping Terpusat (`SipatService::getAsetQuery`):** Menyaring query aset secara otomatis sesuai peran (`UserRole::OPD` berdasarkan `opd_id`, `UserRole::KPB` berdasarkan `sub_opd_id`, fail-safe `whereRaw('1 = 0')`, dan tanpa filter untuk Superadmin/Admin).
+- **Isolasi Cache Dashboard:** Key cache dipisahkan secara dinamis (`sipat_dashboard_stats_global`, `sipat_dashboard_stats_opd_{id}`, `sipat_dashboard_stats_kpb_{id}`) untuk mencegah race condition atau penimpaan cache antar-tenant.
+- **Isolasi Log Aktivitas (`HomeController`):** Feed `Activity` disaring berdasarkan `user.opd_id` / `user.sub_opd_id` agar akun OPD/KPB tidak melihat audit trail instansi lain.
+- **Pembersihan Fallback Hardcoded:** Seluruh sisa angka *dummy* masa prototipe awal (`1188`, `1`, `89`) dan pengkondisian fallback ke `ElabelSertifikat::count()` telah dibersihkan menjadi default aman (`0`), memastikan dashboard selalu merefleksikan data riil database.
+
 ---
 
 ## 3. 🛡️ Integritas Data, Transaksi & Relasi Lintas Modul

@@ -44,20 +44,14 @@ class HomeController extends Controller implements HasMiddleware
         // 1. STATISTIK MODUL SIPAT (Aset Tanah & Progres BPN)
         $sipatStats = $this->sipatService->getDashboardStats(auth()->user());
         
-        $sipatTotalTanah = $sipatStats['totalAset'];
-        $sipatTanahTercatat = $sipatStats['totalTanahTercatat'] ?? 1188;
-        $sipatTanahTakTercatat = $sipatStats['totalTanahTakTercatat'] ?? 1;
+        $sipatTotalTanah = $sipatStats['totalAset'] ?? 0;
+        $sipatTanahTercatat = $sipatStats['totalTanahTercatat'] ?? 0;
+        $sipatTanahTakTercatat = $sipatStats['totalTanahTakTercatat'] ?? 0;
         $sipatTotalLuas = $sipatStats['totalLuas'] ?? 0;
-        
-        $sipatSertifikatCount = $sipatStats['asetBersertifikat'];
-
-        if ($sipatSertifikatCount == 0) {
-            $sipatSertifikatCount = \App\Models\Elabel\ElabelSertifikat::count();
-        }
-
-        $sipatProsesBpnCount = $sipatStats['asetProses'];
-        $sipatKendalaCount = $sipatStats['asetKendala'];
-        $sipatBelumSertifikatCount = $sipatStats['totalBelumBersertifikat'] ?? max(0, $sipatTotalTanah - $sipatSertifikatCount - $sipatKendalaCount - ($sipatStats['asetTargetCount'] ?? 89));
+        $sipatSertifikatCount = $sipatStats['asetBersertifikat'] ?? 0;
+        $sipatProsesBpnCount = $sipatStats['asetProses'] ?? 0;
+        $sipatKendalaCount = $sipatStats['asetKendala'] ?? 0;
+        $sipatBelumSertifikatCount = $sipatStats['totalBelumBersertifikat'] ?? max(0, $sipatTotalTanah - $sipatSertifikatCount - $sipatKendalaCount - ($sipatStats['asetTargetCount'] ?? 0));
 
         // 2. STATISTIK MODUL eLABEL (Khusus Superadmin & Admin Aset)
         $user = auth()->user();
