@@ -394,9 +394,23 @@ function copyJson(elementId) {
             return;
         }
 
-        const beforeObj = isObject(before) ? before : {};
-        const afterObj = isObject(after) ? after : {};
-        const allKeys = Array.from(new Set([...Object.keys(beforeObj), ...Object.keys(afterObj)]));
+        const beforeObj = isObject(before) ? { ...before } : {};
+        const afterObj = isObject(after) ? { ...after } : {};
+
+        // Fallback otomatis jika hanya ada kode_aset tetapi belum ada nibar
+        if (beforeObj.kode_aset && !beforeObj.nibar) beforeObj.nibar = beforeObj.kode_aset;
+        if (afterObj.kode_aset && !afterObj.nibar) afterObj.nibar = afterObj.kode_aset;
+
+        const priorityKeys = ['nibar', 'kode_aset', 'nama_aset', 'id_aset', 'id_proses'];
+        const allKeys = Array.from(new Set([...Object.keys(beforeObj), ...Object.keys(afterObj)]))
+            .sort((a, b) => {
+                const idxA = priorityKeys.indexOf(a);
+                const idxB = priorityKeys.indexOf(b);
+                if (idxA !== -1 && idxB !== -1) return idxA - idxB;
+                if (idxA !== -1) return -1;
+                if (idxB !== -1) return 1;
+                return a.localeCompare(b);
+            });
 
         if (allKeys.length === 0) {
             container.innerHTML = `
@@ -419,19 +433,36 @@ function copyJson(elementId) {
                 <tbody>
         `;
 
+        const keyMap = {
+            'nibar': '<i class="bi bi-qr-code me-1 text-primary"></i>NIBAR',
+            'kode_aset': 'NIBAR (KODE ASET)',
+            'nama_aset': 'NAMA ASET',
+            'id_aset': 'ID ASET',
+            'id_proses': 'ID PROSES',
+            'id_status': 'ID STATUS',
+            'tanggal_proses': 'TANGGAL PROSES',
+            'jenis_dokumen': 'JENIS DOKUMEN',
+            'status_dokumen': 'STATUS DOKUMEN',
+            'status_pencatatan': 'STATUS PENCATATAN',
+        };
+
         allKeys.forEach(key => {
             const valBefore = beforeObj[key] !== undefined ? String(beforeObj[key]) : '<span class="text-secondary opacity-50">(Kosong)</span>';
             const valAfter = afterObj[key] !== undefined ? String(afterObj[key]) : '<span class="text-secondary opacity-50">(Kosong)</span>';
             const isChanged = beforeObj[key] !== afterObj[key];
 
-            const rowClass = isChanged ? 'bg-warning-subtle bg-opacity-10' : '';
-            const keyLabel = key.replace(/_/g, ' ').toUpperCase();
+            const isNibarRow = key === 'nibar';
+            const rowClass = isNibarRow 
+                ? 'bg-primary-subtle bg-opacity-25 border-start border-3 border-primary' 
+                : (isChanged ? 'bg-warning-subtle bg-opacity-10' : '');
+
+            const keyLabel = keyMap[key] || key.replace(/_/g, ' ').toUpperCase();
 
             html += `
                 <tr class="${rowClass}">
-                    <td class="ps-3 py-2 fw-semibold text-dark font-monospace">${keyLabel}</td>
-                    <td class="py-2 text-break font-monospace ${isChanged && beforeObj[key] !== undefined ? 'text-danger fw-medium' : 'text-secondary'}">${valBefore}</td>
-                    <td class="py-2 text-break font-monospace ${isChanged && afterObj[key] !== undefined ? 'text-success fw-bold' : 'text-secondary'}">${valAfter}</td>
+                    <td class="ps-3 py-2 fw-semibold ${isNibarRow ? 'text-primary fw-bold' : 'text-dark'} font-monospace">${keyLabel}</td>
+                    <td class="py-2 text-break font-monospace ${isChanged && beforeObj[key] !== undefined ? 'text-danger fw-medium' : (isNibarRow ? 'text-dark fw-bold' : 'text-secondary')}">${valBefore}</td>
+                    <td class="py-2 text-break font-monospace ${isChanged && afterObj[key] !== undefined ? 'text-success fw-bold' : (isNibarRow ? 'text-dark fw-bold' : 'text-secondary')}">${valAfter}</td>
                 </tr>
             `;
         });

@@ -219,13 +219,13 @@ Didukung penuh oleh kolom `old_data` dan `new_data` bertipe `longText` pada tabe
   - `deleted` / `deleting`: Mencatat snapshot data lama (`old_data`).
   - `updated`: Mengekstrak diff kolom sebelum (`getOriginal`) dan sesudah (`getChanges`), secara cerdas mengabaikan timestamp internal `updated_at`.
 - **Sanitasi Kredensial:** Atribut `password`, `plain_password`, dan `remember_token` dieliminasi otomatis dari payload sebelum disimpan.
-- **Helper SIPAT:** Method `Activity::logSipat($description, $model, $oldData, $newData)` mendukung pencatatan data sebelum dan sesudah yang dimanfaatkan oleh `AsetTanahService` pada operasi pembuatan, pembaruan, penghapusan aset, serta pencatatan proses BPN dan lampiran.
+- **Helper SIPAT:** Method `Activity::logSipat($description, $model, $oldData, $newData)` mendukung pencatatan data sebelum dan sesudah yang dimanfaatkan oleh `AsetTanahService` dan `TanahTakTercatatController` pada operasi pembuatan, pembaruan, penghapusan aset, serta pencatatan proses BPN, pengamanan fisik, dan lampiran dengan menyertakan atribut `nibar` (kode aset) dan `nama_aset` secara konsisten.
 
 ### 4.3 UI/UX Tabel Log & Modal Diff Dual-Mode
 - **Tabel Ramping:** Menggabungkan kolom Modul & Aksi dengan indikator dot warna, kolom pengguna & waktu dua baris yang proporsional, serta micro-badge payload (`Perubahan Data`, `Data Baru`, `Data Dihapus`).
 - **Toolbar Filter:** Dilengkapi filter tab modul berkounter dinamis dan pencarian teks cepat (`search`).
 - **Modal Diff Dual-Mode:**
-  1. **Tabel Perbandingan Kolom:** Membandingkan nilai lama vs nilai baru kolom per kolom dengan highlight penanda warna diff.
+  1. **Tabel Perbandingan Kolom:** Membandingkan nilai lama vs nilai baru kolom per kolom dengan highlight penanda warna diff, menampilkan `NIBAR` di baris teratas dengan highlight khusus serta fallback otomatis dari `kode_aset`.
   2. **JSON Mentah:** Menampilkan format raw JSON terstruktur lengkap dengan tombol 1-klik salin ke clipboard.
 - **Keamanan Render Blade:** Payload JSON di-escape menggunakan `{{ json_encode(...) }}` dengan decoding entitas HTML otomatis pada browser untuk mencegah kerusakan struktur DOM akibat karakter kutip.
 

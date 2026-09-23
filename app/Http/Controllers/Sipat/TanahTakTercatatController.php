@@ -153,7 +153,8 @@ class TanahTakTercatatController extends Controller implements HasMiddleware
         });
 
         if (class_exists(Activity::class)) {
-            Activity::logSipat("Mendaftarkan tanah belum tercatat baru '{$aset->nama_aset}' [Kode: {$kodeAset}]", 'success');
+            $newPayload = array_merge(['nibar' => $aset->kode_aset, 'nama_aset' => $aset->nama_aset], $aset->toArray());
+            Activity::logSipat("Mendaftarkan tanah belum tercatat baru '{$aset->nama_aset}' [Kode: {$kodeAset}]", 'success', null, $newPayload);
         }
 
         return redirect()->route('sipat.tanah-tak-tercatat.index')
@@ -181,14 +182,18 @@ class TanahTakTercatatController extends Controller implements HasMiddleware
         $oldCode = $aset->kode_aset;
         $newCode = trim($validated['kode_aset']);
 
+        $oldPayload = ['nibar' => $oldCode, 'kode_aset' => $oldCode, 'nama_aset' => $aset->nama_aset, 'status_pencatatan' => $aset->status_pencatatan];
+
         $aset->update([
             'kode_aset' => $newCode,
             'status_pencatatan' => 'TERCATAT_KIB_A',
             'keterangan' => $validated['keterangan'] ?? $aset->keterangan,
         ]);
 
+        $newPayload = ['nibar' => $newCode, 'kode_aset' => $newCode, 'nama_aset' => $aset->nama_aset, 'status_pencatatan' => 'TERCATAT_KIB_A'];
+
         if (class_exists(Activity::class)) {
-            Activity::logSipat("Memperbarui NIBAR sementara aset '{$aset->nama_aset}' dari '{$oldCode}' menjadi NIBAR resmi '{$newCode}'", 'success');
+            Activity::logSipat("Memperbarui NIBAR sementara aset '{$aset->nama_aset}' dari '{$oldCode}' menjadi NIBAR resmi '{$newCode}'", 'success', $oldPayload, $newPayload);
         }
 
         return redirect()->route('sipat.tanah-tak-tercatat.index')

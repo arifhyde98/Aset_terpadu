@@ -174,7 +174,8 @@ class AsetTanahService
 
             $this->sipatService->invalidateDashboardCache();
 
-            Activity::logSipat("Menambahkan data aset tanah baru: {$aset->nama_aset} (NIB: {$aset->kode_aset})", 'success', null, $aset->toArray());
+            $newPayload = array_merge(['nibar' => $aset->kode_aset], $aset->toArray());
+            Activity::logSipat("Menambahkan data aset tanah baru: {$aset->nama_aset} (NIB: {$aset->kode_aset})", 'success', null, $newPayload);
 
             return $aset;
         });
@@ -221,9 +222,9 @@ class AsetTanahService
     {
         $this->syncLegacyOpdLabel($data);
         $aset = AsetTanah::findOrFail($id);
-        $oldData = $aset->toArray();
+        $oldData = array_merge(['nibar' => $aset->kode_aset], $aset->toArray());
         $aset->update($data);
-        $newData = $aset->toArray();
+        $newData = array_merge(['nibar' => $aset->kode_aset], $aset->toArray());
 
         $konteks = $aset->peruntukan ? "Peruntukan: {$aset->peruntukan}" : "Peruntukan: -";
         
@@ -244,7 +245,7 @@ class AsetTanahService
     {
         DB::transaction(function () use ($id) {
             $aset = AsetTanah::findOrFail($id);
-            $oldData = $aset->toArray();
+            $oldData = array_merge(['nibar' => $aset->kode_aset], $aset->toArray());
             $kodeAset = $aset->kode_aset;
             $namaAset = $aset->nama_aset;
 
@@ -299,7 +300,8 @@ class AsetTanahService
 
         $this->sipatService->invalidateDashboardCache();
 
-        Activity::logSipat("Memperbarui status pengurusan BPN (Status baru: {$proses->statusProses->nama_status}) untuk aset tanah: {$aset->nama_aset}", 'success', null, $proses->toArray());
+        $newPayload = array_merge(['nibar' => $aset->kode_aset, 'nama_aset' => $aset->nama_aset], $proses->toArray());
+        Activity::logSipat("Memperbarui status pengurusan BPN (Status baru: {$proses->statusProses->nama_status}) untuk aset tanah: {$aset->nama_aset}", 'success', null, $newPayload);
 
         return $proses;
     }
@@ -330,8 +332,12 @@ class AsetTanahService
 
         $namaStatus = $proses->statusProses->nama_status ?? 'Status BPN';
         $namaAset = $proses->aset->nama_aset ?? 'Aset Tanah';
+        $nibar = $proses->aset->kode_aset ?? null;
 
-        Activity::logSipat("Memperbarui riwayat status pengurusan BPN ({$namaStatus}) untuk aset tanah: {$namaAset}", 'info', $oldData, $proses->toArray());
+        $oldPayload = array_merge(['nibar' => $nibar, 'nama_aset' => $namaAset], $oldData);
+        $newPayload = array_merge(['nibar' => $nibar, 'nama_aset' => $namaAset], $proses->toArray());
+
+        Activity::logSipat("Memperbarui riwayat status pengurusan BPN ({$namaStatus}) untuk aset tanah: {$namaAset}", 'info', $oldPayload, $newPayload);
 
         return $proses;
     }
@@ -348,12 +354,14 @@ class AsetTanahService
         $oldData = $proses->toArray();
         $namaStatus = $proses->statusProses->nama_status ?? 'Status BPN';
         $namaAset = $proses->aset->nama_aset ?? 'Aset Tanah';
+        $nibar = $proses->aset->kode_aset ?? null;
 
         $proses->delete();
 
         $this->sipatService->invalidateDashboardCache();
 
-        Activity::logSipat("Menghapus riwayat status pengurusan BPN ({$namaStatus}) untuk aset tanah: {$namaAset}", 'warning', $oldData, null);
+        $oldPayload = array_merge(['nibar' => $nibar, 'nama_aset' => $namaAset], $oldData);
+        Activity::logSipat("Menghapus riwayat status pengurusan BPN ({$namaStatus}) untuk aset tanah: {$namaAset}", 'warning', $oldPayload, null);
     }
 
     /**
@@ -386,7 +394,11 @@ class AsetTanahService
 
         $this->sipatService->invalidateDashboardCache();
 
-        Activity::logSipat("Mencatat laporan pengamanan fisik lapangan untuk aset tanah: {$aset->nama_aset}", 'info', $oldData, $payload);
+        $nibarMeta = ['nibar' => $aset->kode_aset, 'nama_aset' => $aset->nama_aset];
+        $oldPayload = $oldData ? array_merge($nibarMeta, $oldData) : null;
+        $newPayload = array_merge($nibarMeta, $payload);
+
+        Activity::logSipat("Mencatat laporan pengamanan fisik lapangan untuk aset tanah: {$aset->nama_aset}", 'info', $oldPayload, $newPayload);
     }
 
     /**
@@ -416,7 +428,9 @@ class AsetTanahService
 
         DB::table('dokumen_aset')->insert($docPayload);
 
-        Activity::logSipat("Mengunggah dokumen pendukung ({$data['jenis_dokumen']}) untuk aset tanah: {$aset->nama_aset}", 'success', null, $docPayload);
+        $newPayload = array_merge(['nibar' => $aset->kode_aset, 'nama_aset' => $aset->nama_aset], $docPayload);
+
+        Activity::logSipat("Mengunggah dokumen pendukung ({$data['jenis_dokumen']}) untuk aset tanah: {$aset->nama_aset}", 'success', null, $newPayload);
     }
 
     /**
