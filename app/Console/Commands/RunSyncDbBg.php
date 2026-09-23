@@ -30,29 +30,33 @@ class RunSyncDbBg extends Command
      */
     public function handle()
     {
+        $srcDb = config('database.connections.mysql.database', 'db_sipat_terpadu');
+        $srcUser = config('database.connections.mysql.username', 'bpkad.aset');
+        $srcPass = config('database.connections.mysql.password', 'admin123');
+
         Cache::put('sync_db_progress', [
             'status' => 'running',
             'step' => 'Menginisialisasi replikasi database...',
             'percentage' => 15,
-            'log' => "Memulai proses sinkronisasi dari db_sipat_terpadu ke db_sipat_staging...\n"
+            'log' => "Memulai proses sinkronisasi dari {$srcDb} ke db_sipat_staging...\n"
         ], 600);
 
         try {
             Cache::put('sync_db_progress', [
                 'status' => 'running',
-                'step' => 'Mengekspor dan menyalin seluruh 48 tabel database...',
+                'step' => 'Mengekspor dan menyalin seluruh tabel database...',
                 'percentage' => 45,
                 'log' => "Mengeksekusi mysqldump --single-transaction --quick --add-drop-table...\nSedang menimpa seluruh tabel di database staging...\n"
             ], 600);
 
-            $command = "mysqldump -u bpkad.aset -padmin123 --single-transaction --quick --no-tablespaces --add-drop-table db_sipat_terpadu | mysql --force -u bpkad.aset -padmin123 db_sipat_staging 2>&1";
+            $command = "mysqldump -u " . escapeshellarg($srcUser) . " -p" . escapeshellarg($srcPass) . " --single-transaction --quick --no-tablespaces --add-drop-table " . escapeshellarg($srcDb) . " | mysql --force -u " . escapeshellarg($srcUser) . " -p" . escapeshellarg($srcPass) . " db_sipat_staging 2>&1";
             
             $process = Process::fromShellCommandline($command, null, null, null, 600);
             $process->run();
 
             if ($process->isSuccessful()) {
                 if (class_exists('\App\Models\Activity')) {
-                    \App\Models\Activity::log("Menyinkronkan data penuh (100% replace) dari db_sipat_terpadu ke db_sipat_staging", 'info');
+                    \App\Models\Activity::log("Menyinkronkan data penuh (100% replace) dari {$srcDb} ke db_sipat_staging", 'info');
                 }
 
                 Cache::put('sync_db_progress', [

@@ -42,7 +42,7 @@ class HomeController extends Controller implements HasMiddleware
     public function index()
     {
         // 1. STATISTIK MODUL SIPAT (Aset Tanah & Progres BPN)
-        $sipatStats = $this->sipatService->getDashboardStats();
+        $sipatStats = $this->sipatService->getDashboardStats(auth()->user());
         
         $sipatTotalTanah = $sipatStats['totalAset'];
         $sipatTanahTercatat = $sipatStats['totalTanahTercatat'] ?? 1188;
@@ -59,14 +59,30 @@ class HomeController extends Controller implements HasMiddleware
         $sipatKendalaCount = $sipatStats['asetKendala'];
         $sipatBelumSertifikatCount = $sipatStats['totalBelumBersertifikat'] ?? max(0, $sipatTotalTanah - $sipatSertifikatCount - $sipatKendalaCount - ($sipatStats['asetTargetCount'] ?? 89));
 
-        // 2. STATISTIK MODUL eLABEL (Digital Label & Box Gudang)
-        $elabelTotalBpkb = \App\Models\Elabel\ElabelBpkb::where('status', '!=', 'Dihapus')->count();
-        $elabelBpkbR4 = \App\Models\Elabel\ElabelBpkb::where('status', '!=', 'Dihapus')->whereIn('vehicle_type', ['R4', 'mobil'])->count();
-        $elabelBpkbR2 = \App\Models\Elabel\ElabelBpkb::where('status', '!=', 'Dihapus')->whereIn('vehicle_type', ['R2', 'motor'])->count();
-        $elabelTotalSertifikat = \App\Models\Elabel\ElabelSertifikat::count();
-        $elabelTotalSurat = \App\Models\Elabel\ElabelSuratPenyerahan::count();
-        $elabelTotalBoxes = \App\Models\Elabel\ElabelBox::count() + \App\Models\Elabel\ElabelSertifikatBox::count() + \App\Models\Elabel\ElabelSuratPenyerahanBox::count();
-        $elabelPeminjamanAktif = \App\Models\Elabel\ElabelLoan::where('status', 'Dipinjam')->count();
+        // 2. STATISTIK MODUL eLABEL (Khusus Superadmin & Admin Aset)
+        $user = auth()->user();
+        $roleValue = $user ? (is_object($user->role) ? ($user->role->value ?? (string)$user->role) : (string)$user->role) : '';
+        $isElabelAdmin = in_array($roleValue, ['superadmin', 'admin']);
+
+        if ($isElabelAdmin) {
+            $elabelTotalBpkb = \App\Models\Elabel\ElabelBpkb::where('status', '!=', 'Dihapus')->count();
+            $elabelBpkbR4 = \App\Models\Elabel\ElabelBpkb::where('status', '!=', 'Dihapus')->whereIn('vehicle_type', ['R4', 'mobil'])->count();
+            $elabelBpkbR2 = \App\Models\Elabel\ElabelBpkb::where('status', '!=', 'Dihapus')->whereIn('vehicle_type', ['R2', 'motor'])->count();
+            $elabelTotalSertifikat = \App\Models\Elabel\ElabelSertifikat::count();
+            $elabelTotalSurat = \App\Models\Elabel\ElabelSuratPenyerahan::count();
+            $elabelTotalBoxes = \App\Models\Elabel\ElabelBox::count() + \App\Models\Elabel\ElabelSertifikatBox::count() + \App\Models\Elabel\ElabelSuratPenyerahanBox::count();
+            $elabelPeminjamanAktif = \App\Models\Elabel\ElabelLoan::where('status', 'Dipinjam')->count();
+            $elabelLogs = \App\Models\Elabel\ElabelActivityLog::latest()->take(8)->get();
+        } else {
+            $elabelTotalBpkb = 0;
+            $elabelBpkbR4 = 0;
+            $elabelBpkbR2 = 0;
+            $elabelTotalSertifikat = 0;
+            $elabelTotalSurat = 0;
+            $elabelTotalBoxes = 0;
+            $elabelPeminjamanAktif = 0;
+            $elabelLogs = collect();
+        }
 
         // 3. STATISTIK MODUL eRANDIS (Kendaraan Dinas & Servis)
         $erandisStats = $this->vehicleService->getDashboardStats();
@@ -84,8 +100,23 @@ class HomeController extends Controller implements HasMiddleware
             ->get();
 
         // 5. LIVE ACTIVITIES & ALERTS
-        $activities = \App\Models\Activity::with('user')->latest()->take(8)->get();
-        $elabelLogs = \App\Models\Elabel\ElabelActivityLog::latest()->take(8)->get();
+        $activitiesQuery = \App\Models\Activity::with('user');
+
+        if ($user && !in_array($roleValue, ['superadmin', 'admin'])) {
+            if (($roleValue === 'opd' || $roleValue === \App\Enums\UserRole::OPD->value) && $user->opd_id) {
+                $activitiesQuery->whereHas('user', function ($q) use ($user) {
+                    $q->where('opd_id', $user->opd_id);
+                });
+            } elseif (($roleValue === 'kpb' || $roleValue === \App\Enums\UserRole::KPB->value) && $user->sub_opd_id) {
+                $activitiesQuery->whereHas('user', function ($q) use ($user) {
+                    $q->where('sub_opd_id', $user->sub_opd_id);
+                });
+            } else {
+                $activitiesQuery->where('user_id', $user->id);
+            }
+        }
+
+        $activities = $activitiesQuery->latest()->take(8)->get();
 
         return view('home', compact(
             'sipatTotalTanah',
@@ -107,7 +138,8 @@ class HomeController extends Controller implements HasMiddleware
             'latestVehicles',
             'topOpds',
             'activities',
-            'elabelLogs'
+            'elabelLogs',
+            'isElabelAdmin'
         ));
     }
 

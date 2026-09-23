@@ -21,9 +21,11 @@
             <a href="{{ route('sipat.aset.index') }}" class="btn btn-sm btn-outline-primary fw-semibold border shadow-sm text-nowrap px-2.5 py-1.5">
                 <i class="bi bi-geo-alt me-1"></i> Aset Tanah
             </a>
+            @if($isElabelAdmin ?? false)
             <a href="{{ route('elabel.dashboard') }}" class="btn btn-sm btn-outline-info fw-semibold border shadow-sm text-nowrap px-2.5 py-1.5">
                 <i class="bi bi-archive me-1"></i> Katalog eLABEL
             </a>
+            @endif
             <a href="{{ route('erandis.dashboard') }}" class="btn btn-sm btn-outline-warning fw-semibold text-dark border shadow-sm text-nowrap px-2.5 py-1.5">
                 <i class="bi bi-car-front me-1"></i> Kendaraan eRANDIS
             </a>
@@ -118,6 +120,7 @@
         </div>
 
         <!-- Card 3: eLABEL Box & Digital Arsip (Cyan/Teal Accent) -->
+        @if($isElabelAdmin ?? false)
         <div class="col-sm-6 col-xl-3">
             <div class="card border-0 shadow-sm rounded-4 h-100 border-start border-4 border-info">
                 <div class="card-body p-3 p-xxl-4">
@@ -150,6 +153,7 @@
                 </div>
             </div>
         </div>
+        @endif
 
         <!-- Card 4: Status Peminjaman & Layanan Aktif (Purple Accent) -->
         <div class="col-sm-6 col-xl-3">
@@ -282,6 +286,7 @@
         <!-- Right Side Column (Live Activity Log & Alerts) -->
         <div class="col-xl-4 d-flex flex-column gap-4">
             <!-- Box eLABEL Quick Monitor -->
+            @if($isElabelAdmin ?? false)
             <div class="card border-0 shadow-sm rounded-4 p-4">
                 <h6 class="fw-bold text-navy mb-3"><i class="bi bi-box-seam text-info me-2"></i> Ringkasan Box Gudang (eLABEL)</h6>
                 <div class="row g-2">
@@ -299,6 +304,7 @@
                     </div>
                 </div>
             </div>
+            @endif
 
             <!-- Real-time Activity Timeline -->
             <div class="card border-0 shadow-sm rounded-4 p-4 flex-grow-1">

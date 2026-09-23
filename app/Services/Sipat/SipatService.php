@@ -6,6 +6,8 @@ use App\Models\AsetTanah;
 use App\Models\Opd;
 use App\Models\ProsesAset;
 use App\Models\StatusProses;
+use App\Models\User;
+use App\Enums\UserRole;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Cache;
@@ -81,33 +83,86 @@ class SipatService
     }
 
     /**
+     * Mendapatkan query AsetTanah terisolasi tenant sesuai peran pengguna.
+     */
+    private function getAsetQuery(?User $user = null)
+    {
+        $user = $user ?? auth()->user();
+        if ($user) {
+            $role = $user->role instanceof UserRole ? $user->role->value : (string) $user->role;
+            if ($role === UserRole::OPD->value || $role === 'opd') {
+                if ($user->opd_id) {
+                    return AsetTanah::withoutGlobalScopes()->where('opd_id', $user->opd_id);
+                }
+                return AsetTanah::withoutGlobalScopes()->whereRaw('1 = 0');
+            }
+            if ($role === UserRole::KPB->value || $role === 'kpb') {
+                if ($user->sub_opd_id) {
+                    return AsetTanah::withoutGlobalScopes()->where('sub_opd_id', $user->sub_opd_id);
+                }
+                return AsetTanah::withoutGlobalScopes()->whereRaw('1 = 0');
+            }
+        }
+        return AsetTanah::withoutGlobalScopes();
+    }
+
+    /**
+     * Mendapatkan key cache dashboard dinamis berdasarkan peran dan OPD pengguna.
+     */
+    private function getDashboardCacheKey(?User $user = null): string
+    {
+        $user = $user ?? auth()->user();
+        if ($user) {
+            $role = $user->role instanceof UserRole ? $user->role->value : (string) $user->role;
+            if (($role === UserRole::OPD->value || $role === 'opd') && $user->opd_id) {
+                return "sipat_dashboard_stats_opd_{$user->opd_id}";
+            }
+            if (($role === UserRole::KPB->value || $role === 'kpb') && $user->sub_opd_id) {
+                return "sipat_dashboard_stats_kpb_{$user->sub_opd_id}";
+            }
+        }
+        return 'sipat_dashboard_stats_global';
+    }
+
+    /**
      * Menghapus cache dashboard SIPAT.
      */
-    public function invalidateDashboardCache(): void
+    public function invalidateDashboardCache(?int $opdId = null): void
     {
+        Cache::forget('sipat_dashboard_stats_global');
         Cache::forget('sipat_dashboard_stats');
+        if ($opdId) {
+            Cache::forget("sipat_dashboard_stats_opd_{$opdId}");
+        } else {
+            $user = auth()->user();
+            if ($user && $user->opd_id) {
+                Cache::forget("sipat_dashboard_stats_opd_{$user->opd_id}");
+            }
+        }
     }
 
     /**
      * Mengambil statistik dashboard, dengan caching 10 menit (otomatis reset jika ada update).
      */
-    public function getDashboardStats(): array
+    public function getDashboardStats(?User $user = null): array
     {
-        return Cache::remember('sipat_dashboard_stats', 600, function () {
-            return $this->computeDashboardStats();
+        $user = $user ?? auth()->user();
+        $cacheKey = $this->getDashboardCacheKey($user);
+        return Cache::remember($cacheKey, 600, function () use ($user) {
+            return $this->computeDashboardStats($user);
         });
     }
 
-    private function computeDashboardStats(): array
+    private function computeDashboardStats(?User $user = null): array
     {
-        $totalAset = AsetTanah::withoutGlobalScopes()->count();
-        $totalTanahTercatat = AsetTanah::withoutGlobalScopes()->where(function($q) {
+        $totalAset = $this->getAsetQuery($user)->count();
+        $totalTanahTercatat = $this->getAsetQuery($user)->where(function($q) {
             $q->where('status_pencatatan', 'TERCATAT_KIB_A')
               ->orWhereNull('status_pencatatan')
               ->orWhere('status_pencatatan', '!=', 'USULAN_BELUM_TERCATAT');
         })->count();
-        $totalTanahTakTercatat = AsetTanah::withoutGlobalScopes()->where('status_pencatatan', 'USULAN_BELUM_TERCATAT')->count();
-        $totalLuas = AsetTanah::withoutGlobalScopes()->sum('luas');
+        $totalTanahTakTercatat = $this->getAsetQuery($user)->where('status_pencatatan', 'USULAN_BELUM_TERCATAT')->count();
+        $totalLuas = $this->getAsetQuery($user)->sum('luas');
         $statusMaster = StatusProses::orderBy('urutan', 'asc')->get();
 
         $statusMap = [];
@@ -138,7 +193,7 @@ class SipatService
             ];
         }
 
-        $asetRows = AsetTanah::withoutGlobalScopes()->with(['opdSipat', 'wilayahKecamatan'])->select('id_aset', 'opd', 'opd_id', 'kecamatan_id', 'luas', 'alamat')->get();
+        $asetRows = $this->getAsetQuery($user)->with(['opdSipat', 'wilayahKecamatan'])->select('id_aset', 'opd', 'opd_id', 'kecamatan_id', 'luas', 'alamat')->get();
         $asetBersertifikat = 0;
         $asetKendala       = 0;
         $asetProses        = 0;
@@ -358,11 +413,19 @@ class SipatService
         $chartProses  = array_fill(0, 12, 0);
         $chartBelum   = array_fill(0, 12, 0);
 
-        $allAsetsForChart = DB::table('aset_tanah')->select('id_aset', 'created_at')->get();
-        $allProses = DB::table('proses_aset')
+        $allAsetsForChart = $this->getAsetQuery($user)->select('id_aset', 'created_at')->get();
+        $scopedAsetIds = $allAsetsForChart->pluck('id_aset')->toArray();
+
+        $allProsesQuery = DB::table('proses_aset')
             ->select('id_aset', 'id_status', DB::raw('COALESCE(tanggal_proses, tgl_mulai) as tgl_mulai'), 'created_at')
-            ->orderBy(DB::raw('COALESCE(tanggal_proses, tgl_mulai)'), 'asc')
-            ->get();
+            ->orderBy(DB::raw('COALESCE(tanggal_proses, tgl_mulai)'), 'asc');
+
+        if (!empty($scopedAsetIds)) {
+            $allProsesQuery->whereIn('id_aset', $scopedAsetIds);
+        } else {
+            $allProsesQuery->whereRaw('1 = 0');
+        }
+        $allProses = $allProsesQuery->get();
 
         $prosesByAset = [];
         foreach ($allProses as $p) {
@@ -404,20 +467,46 @@ class SipatService
 
         $recentLogs = [];
         if (Schema::hasTable('audit_logs')) {
-            $recentLogs = DB::table('audit_logs')
+            $auditLogsQuery = DB::table('audit_logs')
                 ->leftJoin('users', 'users.id', '=', 'audit_logs.user_id')
-                ->whereIn('audit_logs.entity', ['aset_tanah', 'proses_aset', 'status_proses', 'dokumen_aset', 'pengamanan_fisik', 'opd', 'users'])
-                ->select('audit_logs.*', 'users.name as user_name')
+                ->whereIn('audit_logs.entity', ['aset_tanah', 'proses_aset', 'status_proses', 'dokumen_aset', 'pengamanan_fisik', 'opd', 'users']);
+
+            if ($user) {
+                $role = $user->role instanceof UserRole ? $user->role->value : (string) $user->role;
+                if (($role === UserRole::OPD->value || $role === 'opd') && $user->opd_id) {
+                    $auditLogsQuery->where(function($q) use ($user) {
+                        $q->where('users.opd_id', $user->opd_id)
+                          ->orWhere('audit_logs.user_id', $user->id);
+                    });
+                } elseif (($role === UserRole::KPB->value || $role === 'kpb') && $user->sub_opd_id) {
+                    $auditLogsQuery->where(function($q) use ($user) {
+                        $q->where('users.sub_opd_id', $user->sub_opd_id)
+                          ->orWhere('audit_logs.user_id', $user->id);
+                    });
+                }
+            }
+
+            $recentLogs = $auditLogsQuery->select('audit_logs.*', 'users.name as user_name')
                 ->orderBy('audit_logs.id', 'desc')
                 ->limit(5)
                 ->get();
         }
 
         if (empty($recentLogs) || count($recentLogs) == 0) {
-            $recentLogs = DB::table('proses_aset as p')
+            $fallbackQuery = DB::table('proses_aset as p')
                 ->join('status_proses as s', 'p.id_status', '=', 's.id_status')
-                ->join('aset_tanah as a', 'p.id_aset', '=', 'a.id_aset')
-                ->select(
+                ->join('aset_tanah as a', 'p.id_aset', '=', 'a.id_aset');
+
+            if ($user) {
+                $role = $user->role instanceof UserRole ? $user->role->value : (string) $user->role;
+                if (($role === UserRole::OPD->value || $role === 'opd') && $user->opd_id) {
+                    $fallbackQuery->where('a.opd_id', $user->opd_id);
+                } elseif (($role === UserRole::KPB->value || $role === 'kpb') && $user->sub_opd_id) {
+                    $fallbackQuery->where('a.sub_opd_id', $user->sub_opd_id);
+                }
+            }
+
+            $recentLogs = $fallbackQuery->select(
                     'p.id_proses as id',
                     DB::raw("'update' as action"),
                     DB::raw("'proses_aset' as entity"),
@@ -433,8 +522,12 @@ class SipatService
                 ->get();
         }
 
-        $targetAsetIds = DB::table('sipat_target_sertifikat')->pluck('aset_tanah_id')->filter()->toArray();
-        $targetBelumSertifikatIds = AsetTanah::withoutGlobalScopes()->whereIn('id_aset', $targetAsetIds)
+        $targetAsetIds = $this->getAsetQuery($user)
+            ->join('sipat_target_sertifikat', 'sipat_target_sertifikat.aset_tanah_id', '=', 'aset_tanah.id_aset')
+            ->pluck('aset_tanah.id_aset')
+            ->filter()
+            ->toArray();
+        $targetBelumSertifikatIds = $this->getAsetQuery($user)->whereIn('id_aset', $targetAsetIds)
             ->where(function($q) {
                 $q->doesntHave('latestProses')
                   ->orWhereHas('latestProses', function($lq) {

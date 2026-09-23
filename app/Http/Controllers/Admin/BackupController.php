@@ -207,15 +207,19 @@ class BackupController extends Controller implements HasMiddleware
             };
 
             try {
+                $srcDb = config('database.connections.mysql.database', 'db_sipat_terpadu');
+                $srcUser = config('database.connections.mysql.username', 'bpkad.aset');
+                $srcPass = config('database.connections.mysql.password', 'admin123');
+
                 $sendEvent([
                     'status' => 'running',
                     'percentage' => 5,
                     'step' => 'Menganalisis tabel database sumber...',
-                    'log' => "Memulai koneksi Server-Sent Events (SSE)...\n[INFO] Mengambil skema database db_sipat_terpadu...\n"
+                    'log' => "Memulai koneksi Server-Sent Events (SSE)...\n[INFO] Mengambil skema database {$srcDb}...\n"
                 ]);
 
-                // Ambil daftar tabel dari db_sipat_terpadu
-                $tablesQuery = \Illuminate\Support\Facades\DB::select("SHOW TABLES FROM db_sipat_terpadu");
+                // Ambil daftar tabel dari database aktif
+                $tablesQuery = \Illuminate\Support\Facades\DB::select("SHOW TABLES FROM `{$srcDb}`");
                 $tables = [];
                 foreach ($tablesQuery as $row) {
                     $val = (array) $row;
@@ -227,8 +231,8 @@ class BackupController extends Controller implements HasMiddleware
                     $sendEvent([
                         'status' => 'failed',
                         'percentage' => 100,
-                        'step' => 'Tidak ada tabel yang ditemukan di db_sipat_terpadu.',
-                        'log' => "[ERROR] Database db_sipat_terpadu kosong atau tidak dapat diakses.\n"
+                        'step' => "Tidak ada tabel yang ditemukan di {$srcDb}.",
+                        'log' => "[ERROR] Database {$srcDb} kosong atau tidak dapat diakses.\n"
                     ]);
                     return;
                 }
@@ -252,7 +256,7 @@ class BackupController extends Controller implements HasMiddleware
                     ]);
 
                     // Eksekusi per tabel dengan opsi cepat
-                    $command = "mysqldump -u bpkad.aset -padmin123 --single-transaction --quick --extended-insert --no-tablespaces --add-drop-table db_sipat_terpadu {$tableName} | mysql --force -u bpkad.aset -padmin123 db_sipat_staging 2>&1";
+                    $command = "mysqldump -u " . escapeshellarg($srcUser) . " -p" . escapeshellarg($srcPass) . " --single-transaction --quick --extended-insert --no-tablespaces --add-drop-table " . escapeshellarg($srcDb) . " " . escapeshellarg($tableName) . " | mysql --force -u " . escapeshellarg($srcUser) . " -p" . escapeshellarg($srcPass) . " db_sipat_staging 2>&1";
                     exec($command, $output, $returnCode);
 
                     if ($returnCode !== 0) {
@@ -267,7 +271,7 @@ class BackupController extends Controller implements HasMiddleware
                 }
 
                 if (class_exists('\App\Models\Activity')) {
-                    \App\Models\Activity::log("Menyinkronkan data penuh (100% replace) dari db_sipat_terpadu ke db_sipat_staging via SSE Stream", 'info');
+                    \App\Models\Activity::log("Menyinkronkan data penuh (100% replace) dari {$srcDb} ke db_sipat_staging via SSE Stream", 'info');
                 }
 
                 $sendEvent([
