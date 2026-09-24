@@ -119,6 +119,11 @@ Sesuai hasil audit keamanan, seluruh controller wajib menggunakan interface `Has
 - **Isolasi Log Aktivitas (`HomeController`):** Feed `Activity` disaring berdasarkan `user.opd_id` / `user.sub_opd_id` agar akun OPD/KPB tidak melihat audit trail instansi lain.
 - **Pembersihan Fallback Hardcoded:** Seluruh sisa angka *dummy* masa prototipe awal (`1188`, `1`, `89`) dan pengkondisian fallback ke `ElabelSertifikat::count()` telah dibersihkan menjadi default aman (`0`), memastikan dashboard selalu merefleksikan data riil database.
 
+### 2.7 Hotfix Keamanan & Pengerasan Autentikasi (Audit 24 September 2026)
+- **Registrasi Publik Dinonaktifkan (`routes/web.php`):** Registrasi mandiri via `/register` ditutup (`Auth::routes(['register' => false, 'reset' => true])`). Akun dibuat terpusat oleh Superadmin/Admin.
+- **Rate Limiting / Throttle:** Ditambahkan `new Middleware('throttle:5,1')` pada `LoginController`, `ForgotPasswordController`, dan `ResetPasswordController` untuk memutus serangan brute-force credential stuffing.
+- **Sanitasi Kredensial Superadmin:** Password default `admin123` dihapus dari `DatabaseSeeder.php` dan migrasi. Disediakan artisan command `php artisan sipat:reset-superadmin` untuk merotasi password superadmin secara aman.
+
 ---
 
 ## 3. 🛡️ Integritas Data, Transaksi & Relasi Lintas Modul

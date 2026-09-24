@@ -40,8 +40,8 @@ Route::get('/api/public/search/vehicles', [LandingPageController::class, 'search
 Route::get('/api/public/search/land', [LandingPageController::class, 'searchLand']);
 Route::get('/api/public/search/archives', [LandingPageController::class, 'searchArchives']);
 
-// Otentikasi (Bawaan Laravel UI/Fortify)
-Auth::routes();
+// Otentikasi (Bawaan Laravel UI - Registrasi Publik Dinonaktifkan demi Keamanan)
+Auth::routes(['register' => false, 'reset' => true]);
 
 // Rute Dashboard & Internal (Middleware dikelola di Controller)
 Route::get('/home', [HomeController::class, 'index'])->name('home');

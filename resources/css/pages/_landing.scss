@@ -1,19 +1,16 @@
 /*
- * SIPAT TERPADU - VIBRANT & HIGHLY INTERACTIVE LANDING PAGE STYLES
- * High Contrast, Crisp Typography, Colorful Micro-interactions & Floating Aurora
+ * SIPAT TERPADU - CLEAN INSTITUTIONAL PORTAL STYLES
+ * High Contrast, Crisp Typography, Structured Layout (Anti-Slop)
  */
 
 :root {
     --landing-navy: #0F172A;
     --landing-navy-deep: #1E3A8A;
     --landing-navy-light: #2563EB;
-    --landing-blue-cyan: linear-gradient(135deg, #2563EB 0%, #06B6D4 100%);
-    --landing-emerald-mint: linear-gradient(135deg, #059669 0%, #10B981 100%);
-    --landing-amber-orange: linear-gradient(135deg, #D97706 0%, #F59E0B 100%);
-    --landing-purple-indigo: linear-gradient(135deg, #6366F1 0%, #8B5CF6 100%);
     --landing-bg-body: #F8FAFC;
     --landing-card-bg: #FFFFFF;
     --landing-text-muted: #64748B;
+    --landing-border-subtle: #E2E8F0;
 }
 
 .landing-body {
@@ -94,82 +91,28 @@
     }
 }
 
-/* 2. HERO SECTION & FLOATING AURORA BLOBS */
+/* 2. HERO SECTION */
 .landing-hero {
-    background: radial-gradient(circle at 50% 0%, #1E3A8A 0%, #0F172A 70%, #080D1A 100%);
-    padding-top: 8.5rem;
-    padding-bottom: 6rem;
+    background: linear-gradient(180deg, #0F172A 0%, #1E3A8A 100%);
+    padding-top: 8rem;
+    padding-bottom: 5.5rem;
     position: relative;
     overflow: hidden;
 
-    /* Floating Aurora Orbs */
-    .aurora-blob {
-        position: absolute;
-        border-radius: 50%;
-        filter: blur(70px);
-        opacity: 0.45;
-        pointer-events: none;
-        z-index: 1;
-    }
-
-    .aurora-blob-1 {
-        top: 5%;
-        left: 10%;
-        width: 380px;
-        height: 380px;
-        background: radial-gradient(circle, #2563EB 0%, rgba(37, 99, 235, 0) 70%);
-        animation: floatAurora1 14s infinite alternate ease-in-out;
-    }
-
-    .aurora-blob-2 {
-        top: 20%;
-        right: 10%;
-        width: 420px;
-        height: 420px;
-        background: radial-gradient(circle, #10B981 0%, rgba(16, 185, 129, 0) 70%);
-        animation: floatAurora2 18s infinite alternate ease-in-out;
-    }
-
-    .aurora-blob-3 {
-        bottom: 10%;
-        left: 40%;
-        width: 340px;
-        height: 340px;
-        background: radial-gradient(circle, #F59E0B 0%, rgba(245, 158, 11, 0) 70%);
-        animation: floatAurora3 16s infinite alternate ease-in-out;
-    }
-
     .hero-headline {
-        font-size: clamp(2rem, 4.5vw, 3.25rem);
+        font-size: clamp(2rem, 4vw, 3rem);
         letter-spacing: -0.025em;
-        line-height: 1.15;
+        line-height: 1.2;
         color: #FFFFFF !important;
         font-weight: 800;
-        text-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
     }
 
     .hero-subheadline {
-        font-size: clamp(1rem, 1.5vw, 1.2rem);
+        font-size: clamp(0.95rem, 1.4vw, 1.15rem);
         max-width: 680px;
-        line-height: 1.65;
-        color: #F8FAFC !important;
-        text-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+        line-height: 1.6;
+        color: #E2E8F0 !important;
     }
-}
-
-@keyframes floatAurora1 {
-    0% { transform: translate(0, 0) scale(1); }
-    100% { transform: translate(60px, 40px) scale(1.15); }
-}
-
-@keyframes floatAurora2 {
-    0% { transform: translate(0, 0) scale(1); }
-    100% { transform: translate(-50px, 60px) scale(1.1); }
-}
-
-@keyframes floatAurora3 {
-    0% { transform: translate(0, 0) scale(1); }
-    100% { transform: translate(40px, -40px) scale(1.2); }
 }
 
 .hero-wave {
@@ -186,41 +129,23 @@
     }
 }
 
-/* 3. COLORFUL MODULE CHIPS */
+/* 3. MODULE CHIPS */
 .module-chip {
     display: inline-flex;
     align-items: center;
-    gap: 0.45rem;
-    padding: 0.45rem 1rem;
-    background: rgba(255, 255, 255, 0.12);
-    border: 1px solid rgba(255, 255, 255, 0.25);
-    border-radius: 9999px;
-    color: #FFFFFF !important;
-    font-size: clamp(0.78rem, 1vw, 0.88rem);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    gap: 0.4rem;
+    padding: 0.4rem 0.9rem;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    border-radius: 8px;
+    color: #F8FAFC !important;
+    font-size: 0.85rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
 
     &:hover {
-        background: rgba(255, 255, 255, 0.22);
-        transform: translateY(-3px) scale(1.04);
-        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
-    }
-
-    &.chip-vehicle {
-        border-color: rgba(6, 182, 212, 0.5);
-        &:hover { box-shadow: 0 8px 25px rgba(6, 182, 212, 0.4); }
-    }
-
-    &.chip-land {
-        border-color: rgba(16, 185, 129, 0.5);
-        &:hover { box-shadow: 0 8px 25px rgba(16, 185, 129, 0.4); }
-    }
-
-    &.chip-archive {
-        border-color: rgba(245, 158, 11, 0.5);
-        &:hover { box-shadow: 0 8px 25px rgba(245, 158, 11, 0.4); }
+        background: rgba(255, 255, 255, 0.16);
+        border-color: rgba(255, 255, 255, 0.3);
     }
 }
 
@@ -233,14 +158,14 @@
 }
 
 .unified-search-card {
-    border-radius: 1.5rem;
-    box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.18), 0 0 1px 1px rgba(0, 0, 0, 0.05);
+    border-radius: 12px;
+    box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.08), 0 0 0 1px rgba(226, 232, 240, 0.8);
     background: #FFFFFF;
-    transition: box-shadow 0.35s ease, transform 0.35s ease;
-    border: 1px solid rgba(226, 232, 240, 0.8);
+    transition: box-shadow 0.2s ease, border-color 0.2s ease;
+    border: 1px solid #E2E8F0;
 
     &:hover {
-        box-shadow: 0 30px 60px -15px rgba(15, 23, 42, 0.22);
+        box-shadow: 0 15px 30px -10px rgba(15, 23, 42, 0.12);
     }
 }
 

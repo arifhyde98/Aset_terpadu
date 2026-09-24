@@ -283,6 +283,7 @@ Seluruh fitur berikut telah selesai diimplementasikan (**DONE**) dan beroperasi 
 | **Manajemen Pengguna & Kredensial** | `DONE` | Pengelolaan akun pengguna, modal kredensial interaktif dengan tombol mata (`bi-eye`), penyimpanan terenkripsi dua arah (AES-256 via cast `encrypted`), 1-klik salin akun, dan reset password otomatis. |
 | **Master KOP Surat & Pejabat Pemda** | `DONE` | Pengaturan terpusat KOP surat resmi instansi, spesimen nama/NIP dua pejabat penanda tangan, titimangsa, dan logo daerah di `/master-data/kop-surat`. |
 | **Monitoring API & Health Check** | `DONE` | Endpoint pengecekan status server dan kesehatan koneksi basis data di `/api/health-check`. |
+| **Pengerasan Keamanan & Otentikasi** | `DONE` | Penutupan rute registrasi publik (`/register`), pemasangan rate-limiting throttle (5 req/menit) pada login & reset password, pembersihan password default `admin123` dari seeder & migrasi, serta penyediaan CLI command `sipat:reset-superadmin`. |
 
 ---
 

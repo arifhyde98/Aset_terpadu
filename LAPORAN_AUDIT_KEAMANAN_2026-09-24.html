@@ -1,0 +1,1111 @@
+<!DOCTYPE html>
+<html lang="id"><head><meta charset="utf-8">
+<title>Laporan Audit Keamanan - SIPAT Terpadu</title>
+<style>
+@page { size: A4; margin: 18mm 16mm 20mm 16mm; }
+* { box-sizing: border-box; }
+body {
+  font-family: "DejaVu Sans", "Liberation Sans", Arial, sans-serif;
+  font-size: 10.2pt; line-height: 1.55; color: #1e293b;
+  margin: 0; padding: 0; background: #fff;
+}
+.wrap { max-width: 980px; margin: 0 auto; padding: 0 6mm 24mm; }
+h1 { font-size: 19pt; color: #0f2c52; margin: 0 0 2mm; line-height: 1.25; }
+h1 + h2 { font-size: 13pt; color: #33527d; font-weight: 600; margin: 0 0 6mm;
+          border: 0; padding: 0; }
+h2 { font-size: 13.5pt; color: #0f2c52; margin: 9mm 0 3mm; padding-bottom: 1.6mm;
+     border-bottom: 1.6pt solid #0f2c52; page-break-after: avoid; }
+h3 { font-size: 11.6pt; color: #14386a; margin: 6.5mm 0 2mm; page-break-after: avoid; }
+h4 { font-size: 10.6pt; color: #1e293b; margin: 4mm 0 1.5mm; }
+p, li { text-align: justify; }
+p { margin: 0 0 2.6mm; }
+ul, ol { margin: 0 0 3mm; padding-left: 6.5mm; }
+li { margin-bottom: 1.2mm; }
+hr { border: 0; border-top: 1pt solid #cbd5e1; margin: 7mm 0; }
+strong { color: #0f2c52; }
+code { font-family: "DejaVu Sans Mono", "Liberation Mono", monospace; font-size: 8.9pt;
+       background: #f1f5f9; border: 0.5pt solid #dbe3ec; border-radius: 2px;
+       padding: 0.3mm 1mm; color: #14386a; }
+pre { background: #0f2c52; color: #e8eef7; border-radius: 3px; padding: 3mm 3.5mm;
+      overflow-wrap: anywhere; white-space: pre-wrap; page-break-inside: avoid;
+      margin: 0 0 3.5mm; }
+pre code { background: none; border: 0; color: inherit; font-size: 8.4pt; padding: 0; }
+table { width: 100%; border-collapse: collapse; margin: 0 0 4mm; font-size: 9.2pt;
+        page-break-inside: avoid; }
+th { background: #0f2c52; color: #fff; text-align: left; padding: 2mm 2.2mm;
+     font-size: 9pt; border: 0.5pt solid #0f2c52; }
+td { padding: 1.8mm 2.2mm; border: 0.5pt solid #cbd5e1; vertical-align: top; }
+tbody tr:nth-child(even) td { background: #f6f8fb; }
+blockquote { margin: 0 0 3mm; padding: 2mm 3mm; border-left: 2.5pt solid #33527d;
+             background: #f6f8fb; }
+blockquote p { margin: 0; }
+.sev { display: inline-block; padding: 0.2mm 1.4mm; border-radius: 2px; font-size: 8.4pt;
+       font-weight: 700; letter-spacing: 0.2pt; color: #fff; }
+.sev-kritis { background: #a4161a; }
+.sev-tinggi { background: #c2410c; }
+.sev-sedang { background: #a16207; }
+.sev-rendah { background: #334155; }
+h3 .sev { font-size: 9.6pt; vertical-align: middle; }
+.cover { border: 1.6pt solid #0f2c52; padding: 7mm; margin: 0 0 8mm; }
+.cover .klasifikasi { display: inline-block; background: #a4161a; color: #fff;
+  font-weight: 700; font-size: 9pt; padding: 0.8mm 2.4mm; letter-spacing: 0.6pt;
+  margin-bottom: 4mm; }
+.footer { margin-top: 10mm; padding-top: 3mm; border-top: 1pt solid #cbd5e1;
+  font-size: 8.6pt; color: #475569; text-align: center; }
+table.meta td { vertical-align: top; }
+table.meta td:first-child { width: 26%; font-weight: 600; color: #0f2c52;
+  background: #eef2f7; }
+table.meta tbody tr:nth-child(even) td { background: #fff; }
+table.meta tbody tr:nth-child(even) td:first-child { background: #eef2f7; }
+h2#7-rantai-serangan-gabungan-skenario-paling-realistis,
+h2#6-detail-temuan { page-break-before: always; }
+</style></head>
+<body><div class="wrap">
+<h1 id="laporan-audit-keamanan-aplikasi">LAPORAN AUDIT KEAMANAN APLIKASI</h1>
+<h2 id="sipat-terpadu-e-randis-e-label-sipat">SIPAT TERPADU (E-RANDIS · E-LABEL · SIPAT)</h2>
+<hr />
+<table class="meta">
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Sasaran audit</strong></td>
+<td>Aplikasi SIPAT Terpadu — https://terpadu.sipat-donggala.my.id</td>
+</tr>
+<tr>
+<td><strong>Lokasi kode</strong></td>
+<td><code>/home/arif/Projek/SIPAT_Terpadu</code></td>
+</tr>
+<tr>
+<td><strong>Teknologi</strong></td>
+<td>Laravel 12.67 · PHP 8.3 · MySQL · Blade + Bootstrap</td>
+</tr>
+<tr>
+<td><strong>Tanggal pelaksanaan</strong></td>
+<td>24 September 2026</td>
+</tr>
+<tr>
+<td><strong>Jenis audit</strong></td>
+<td>Uji keamanan aplikasi web (grey-box: review kode sumber + uji HTTP non-destruktif)</td>
+</tr>
+<tr>
+<td><strong>Klasifikasi dokumen</strong></td>
+<td><strong>TERBATAS — mengandung detail celah yang belum diperbaiki</strong></td>
+</tr>
+<tr>
+<td><strong>Jumlah temuan</strong></td>
+<td>14 (4 Kritis · 4 Tinggi · 5 Sedang · 1 Rendah)</td>
+</tr>
+<tr>
+<td><strong>Status</strong></td>
+<td><strong>BELUM AMAN</strong> — 4 temuan kritis dapat dieksploitasi dari internet</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="1-ringkasan-eksekutif">1. Ringkasan Eksekutif</h2>
+<p>Aplikasi SIPAT Terpadu mengelola data Barang Milik Daerah berupa arsip BPKB
+kendaraan dinas, sertifikat tanah, dan dokumen penyerahan aset. Audit ini
+menemukan <strong>empat celah berkategori kritis yang seluruhnya dapat diakses dari
+internet tanpa kredensial apa pun atau dengan kredensial yang mudah diperoleh.</strong></p>
+<p>Tiga hal terpenting:</p>
+<ol>
+<li>
+<p><strong>Seluruh arsip dokumen dapat diunduh siapa saja.</strong> 718 berkas BPKB dan
+   sertifikat (±1,2 GB) tersimpan pada direktori yang dilayani langsung oleh web
+   server. Penulis memverifikasi dua berkas nyata terunduh dari internet dengan
+   status HTTP 200, <strong>tanpa login</strong>. Nama berkas berpola dan dapat diprediksi
+   sehingga penyerang dapat menyusun daftar URL secara otomatis. Dokumen ini
+   memuat nama pemegang, alamat, NIK, nomor rangka, dan nomor mesin kendaraan.</p>
+</li>
+<li>
+<p><strong>Kontrol akses modul arsip (e-LABEL) hanya memeriksa status login, bukan
+   peran pengguna.</strong> 65 endpoint yang bersifat mengubah data — termasuk menghapus
+   catatan BPKB, menyetujui peminjaman arsip, dan mengubah pengaturan situs —
+   dapat dijalankan oleh pengguna mana pun yang berhasil login. Pemisahan data
+   per-OPD juga tidak diterapkan pada modul ini, sehingga satu akun OPD dapat
+   membaca arsip OPD lain.</p>
+</li>
+<li>
+<p><strong>Registrasi akun terbuka untuk publik di server produksi.</strong> Siapa pun dapat
+   membuat akun pada halaman <code>/register</code> dan langsung memperoleh akses ke aplikasi
+   internal. Temuan ini menggandakan dampak temuan nomor 2. Ditambah kenyataan
+   bahwa kata sandi akun superadmin masih bernilai bawaan (<code>admin123</code>, terverifikasi
+   dari hash pada dump basis data) dan halaman login tidak memiliki pembatas
+   percobaan, jalur menuju pengambilalihan penuh aplikasi bersifat langsung.</p>
+</li>
+</ol>
+<p><strong>Perhatian terhadap audit sebelumnya.</strong> Dokumen <code>audit.md</code> tertanggal 22 Agustus
+2026 menyatakan <em>"SEMUA TEMUAN BERHASIL DIPERBAIKI (RESOLVED / COMPLIANT)"</em>.
+Kesimpulan tersebut tidak dapat dipertahankan. Audit lama hanya memeriksa
+<strong>keberadaan</strong> middleware <code>auth</code> pada controller, dan tidak menguji hal-hal yang
+menentukan pada sistem ini: otorisasi per-peran, pemisahan data antar-OPD,
+paparan berkas pada direktori publik, jalur registrasi, serta pengelolaan kredensial.
+Seluruh temuan dalam laporan ini berada pada ranah yang tidak tercakup audit lama.</p>
+<p><strong>Kesimpulan.</strong> Aplikasi belum layak dinyatakan aman. Empat temuan kritis perlu
+ditutup sebelum laporan ini disebarkan lebih lanjut, dan asumsi harus diambil
+bahwa seluruh dokumen arsip yang pernah dapat diakses publik telah bocor.</p>
+<hr />
+<h2 id="2-ruang-lingkup-dan-metodologi">2. Ruang Lingkup dan Metodologi</h2>
+<p><strong>Termasuk dalam lingkup (in-scope):</strong></p>
+<ul>
+<li>Seluruh route aplikasi (384 route terdaftar) beserta middleware efektifnya.</li>
+<li>Controller, Form Request, Model, Service, dan konfigurasi middleware.</li>
+<li>Konfigurasi penyimpanan berkas (disk <code>public</code> vs <code>local</code>), symlink <code>public/storage</code>.</li>
+<li>Dependensi PHP (<code>composer audit</code>) dan riwayat Git untuk kebocoran kredensial.</li>
+<li>Uji HTTP langsung ke server produksi: <strong>hanya metode GET/HEAD</strong>, non-destruktif,
+  pada 9 URL; tidak ada upaya autentikasi, tidak ada pembuatan akun, tidak ada
+  pengunggahan berkas, dan tidak ada pengujian yang mengubah data.</li>
+</ul>
+<p><strong>Di luar lingkup (out-of-scope):</strong></p>
+<ul>
+<li>Pengujian penetrasi terhadap server web/OS, jaringan, dan basis data secara langsung.</li>
+<li>Aplikasi SSO pada <code>auth.sipat-donggala.my.id</code> (hanya diperiksa dari sisi SIPAT Terpadu).</li>
+<li>Pengujian beban, failover, dan pemulihan bencana.</li>
+<li>Audit kepatuhan formal (UU PDP / ISO 27001) — hanya catatan keterkaitan.</li>
+</ul>
+<p><strong>Metode:</strong></p>
+<ol>
+<li>Pemetaan route dan middleware efektif (<code>php artisan route:list --json</code>).</li>
+<li>Analisis statis: pencarian pola berisiko (raw SQL, mass assignment, <code>{!! !!}</code>,
+   <code>exec</code>, validasi unggahan, hardcoded secret).</li>
+<li>Verifikasi terarah terhadap bukti yang dapat diamati (HTTP status, isi berkas, hash).</li>
+<li>Verifikasi kredensial bawaan secara <strong>offline</strong> terhadap hash pada dump basis data.</li>
+</ol>
+<p><strong>Asumsi dan keterbatasan:</strong></p>
+<ul>
+<li>Uji HTTP dilakukan dari luar tanpa kredensial, sehingga dampak akhir bagi
+  pengguna ber-role tertentu sebagian disimpulkan dari pembacaan kode.</li>
+<li>Bukti temuan kritis nomor 2 dan 3 (rantai registrasi → akses modul arsip)
+  dinyatakan <strong>terverifikasi secara kode</strong>; pembuktian dengan akun uji pada server
+  produksi belum dilakukan karena memerlukan izin tertulis pemilik sistem.</li>
+<li>Dump basis data yang dianalisis bertanggal 16 September 2026; status kredensial
+  perlu dikonfirmasi ulang oleh pemilik sistem.</li>
+</ul>
+<hr />
+<h2 id="3-profil-permukaan-serangan">3. Profil Permukaan Serangan</h2>
+<p>Dari 384 route yang terdaftar, sebaran proteksi efektifnya:</p>
+<table>
+<thead>
+<tr>
+<th>Middleware efektif</th>
+<th style="text-align: right;">Jumlah route</th>
+<th>Keterangan</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>web</code>, <code>auth</code></td>
+<td style="text-align: right;"><strong>167</strong></td>
+<td>Hanya butuh login — termasuk seluruh modul e-LABEL</td>
+</tr>
+<tr>
+<td><code>web</code>, <code>auth</code>, <code>role:superadmin,admin</code></td>
+<td style="text-align: right;">94</td>
+<td>Sudah benar</td>
+</tr>
+<tr>
+<td><code>web</code> (tanpa autentikasi)</td>
+<td style="text-align: right;">29</td>
+<td>Portal publik, health check, alias pencarian</td>
+</tr>
+<tr>
+<td><code>web</code>, <code>auth</code>, <code>role:superadmin</code></td>
+<td style="text-align: right;">26</td>
+<td>Sudah benar</td>
+</tr>
+<tr>
+<td><code>web</code>, <code>guest</code></td>
+<td style="text-align: right;">4</td>
+<td>Login, register, lupa sandi</td>
+</tr>
+<tr>
+<td>Tanpa middleware</td>
+<td style="text-align: right;">3</td>
+<td>Rute internal penyajian berkas sementara</td>
+</tr>
+</tbody>
+</table>
+<p>Dua hal yang langsung terlihat dari tabel ini: (a) kelompok terbesar route
+terproteksi hanya memerlukan status login, dan (b) <strong>65 dari 167 route tersebut
+adalah endpoint yang mengubah data</strong> (POST/PUT/DELETE), tanpa pemeriksaan peran.</p>
+<hr />
+<h2 id="4-klasifikasi-tingkat-risiko">4. Klasifikasi Tingkat Risiko</h2>
+<table>
+<thead>
+<tr>
+<th>Tingkat</th>
+<th>Kriteria yang dipakai dalam laporan ini</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong><span class="sev sev-kritis">KRITIS</span></strong></td>
+<td>Dapat dieksploitasi dari internet tanpa kredensial, atau memberi dampak langsung pada kerahasiaan/integritas data pribadi dalam skala besar, atau berujung pada pengambilalihan aplikasi. Wajib ditangani ≤ 24 jam.</td>
+</tr>
+<tr>
+<td><strong><span class="sev sev-tinggi">TINGGI</span></strong></td>
+<td>Dapat dieksploitasi oleh pengguna berakun (termasuk akun yang dapat dibuat sendiri), atau merusak integritas data/kepercayaan publik. Tangani ≤ 1 minggu.</td>
+</tr>
+<tr>
+<td><strong><span class="sev sev-sedang">SEDANG</span></strong></td>
+<td>Memerlukan prasyarat tertentu, namun menaikkan risiko secara nyata bila digabungkan dengan temuan lain. Tangani ≤ 1 bulan.</td>
+</tr>
+<tr>
+<td><strong><span class="sev sev-rendah">RENDAH</span></strong></td>
+<td>Praktik yang menyimpang dari kaidah keamanan; belum dieksploitasi secara langsung pada kondisi saat ini.</td>
+</tr>
+</tbody>
+</table>
+<p>Referensi yang dipakai untuk kategorisasi: OWASP Top 10 (2021), CWE, serta
+relevansi terhadap UU No. 27 Tahun 2022 tentang Pelindungan Data Pribadi.</p>
+<hr />
+<h2 id="5-daftar-temuan">5. Daftar Temuan</h2>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Temuan</th>
+<th>Tingkat</th>
+<th>Kategori OWASP</th>
+<th>Bukti</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>K-01</td>
+<td>Arsip BPKB &amp; sertifikat dapat diunduh tanpa autentikasi</td>
+<td> <span class="sev sev-kritis">KRITIS</span></td>
+<td>A01 Broken Access Control · CWE-284, CWE-548</td>
+<td>Terverifikasi dari internet</td>
+</tr>
+<tr>
+<td>K-02</td>
+<td>Registrasi akun terbuka untuk publik di produksi</td>
+<td> <span class="sev sev-kritis">KRITIS</span></td>
+<td>A01 · CWE-287, CWE-1188</td>
+<td>Terverifikasi dari internet</td>
+</tr>
+<tr>
+<td>K-03</td>
+<td>Modul e-LABEL tanpa pemeriksaan peran &amp; tanpa pemisahan OPD</td>
+<td> <span class="sev sev-kritis">KRITIS</span></td>
+<td>A01 · CWE-862, CWE-639</td>
+<td>Terverifikasi dari kode</td>
+</tr>
+<tr>
+<td>K-04</td>
+<td>Kata sandi superadmin masih bernilai bawaan</td>
+<td> <span class="sev sev-kritis">KRITIS</span></td>
+<td>A07 · CWE-798, CWE-521</td>
+<td>Terverifikasi (hash)</td>
+</tr>
+<tr>
+<td>K-05</td>
+<td>Pengaturan situs dapat diubah oleh pengguna mana pun yang login</td>
+<td> <span class="sev sev-tinggi">TINGGI</span></td>
+<td>A01 · CWE-862</td>
+<td>Terverifikasi dari kode</td>
+</tr>
+<tr>
+<td>K-06</td>
+<td>Unggahan SVG pada pengaturan → XSS tersimpan</td>
+<td> <span class="sev sev-tinggi">TINGGI</span></td>
+<td>A03 · CWE-79</td>
+<td>Terverifikasi dari kode</td>
+</tr>
+<tr>
+<td>K-07</td>
+<td>Kata sandi tersimpan secara reversibel dan ditampilkan di HTML</td>
+<td> <span class="sev sev-tinggi">TINGGI</span></td>
+<td>A02 · CWE-257, CWE-312</td>
+<td>Terverifikasi dari kode</td>
+</tr>
+<tr>
+<td>K-08</td>
+<td>Tidak ada pembatas percobaan pada login/registrasi</td>
+<td> <span class="sev sev-tinggi">TINGGI</span></td>
+<td>A07 · CWE-307</td>
+<td>Terverifikasi dari kode</td>
+</tr>
+<tr>
+<td>K-09</td>
+<td>5 kerentanan dependensi (1 kritis, 4 tinggi)</td>
+<td> <span class="sev sev-tinggi">TINGGI</span></td>
+<td>A06 · CWE-1104</td>
+<td><code>composer audit</code></td>
+</tr>
+<tr>
+<td>K-10</td>
+<td>Secret JWT SSO tertulis keras di dalam kode</td>
+<td> <span class="sev sev-sedang">SEDANG</span></td>
+<td>A02 · CWE-798</td>
+<td>Terverifikasi dari kode</td>
+</tr>
+<tr>
+<td>K-11</td>
+<td>Endpoint health check publik membocorkan versi &amp; status basis data</td>
+<td> <span class="sev sev-sedang">SEDANG</span></td>
+<td>A05 · CWE-200</td>
+<td>Terverifikasi dari internet</td>
+</tr>
+<tr>
+<td>K-12</td>
+<td>Seluruh proxy dipercaya (<code>trustProxies(at: '*')</code>)</td>
+<td> <span class="sev sev-sedang">SEDANG</span></td>
+<td>A05 · CWE-348</td>
+<td>Terverifikasi dari kode</td>
+</tr>
+<tr>
+<td>K-13</td>
+<td>Pencarian publik menampilkan data pribadi &amp; dapat dipanen otomatis</td>
+<td> <span class="sev sev-sedang">SEDANG</span></td>
+<td>A01 · CWE-359</td>
+<td>Terverifikasi</td>
+</tr>
+<tr>
+<td>K-14</td>
+<td>Berkas <code>.env.laragon</code> (termasuk APP_KEY dev) ter-commit di Git</td>
+<td> <span class="sev sev-rendah">RENDAH</span></td>
+<td>A05 · CWE-538</td>
+<td>Terverifikasi dari Git</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="6-detail-temuan">6. Detail Temuan</h2>
+<h3 id="k-01-kritis-arsip-bpkb-sertifikat-dapat-diunduh-tanpa-autentikasi">K-01  <span class="sev sev-kritis">KRITIS</span> — Arsip BPKB &amp; Sertifikat Dapat Diunduh Tanpa Autentikasi</h3>
+<p><strong>Kategori:</strong> A01 Broken Access Control · CWE-284 (Improper Access Control), CWE-548 (Exposure of Information Through Directory Listing)</p>
+<p><strong>Deskripsi.</strong> Dokumen arsip e-LABEL disimpan pada disk <code>public</code>
+(<code>storage/app/public/elabel/</code>), yang diakses web server melalui symlink
+<code>public/storage</code>. Berkas pada disk ini dilayani langsung sebagai berkas statis,
+sehingga <strong>tidak melewati middleware autentikasi apa pun</strong>. Nama berkas dibentuk
+dari data aset itu sendiri dan berpola konsisten, sehingga daftar URL dapat
+disusun secara otomatis dari data yang juga tersedia publik.</p>
+<p><strong>Lokasi:</strong></p>
+<ul>
+<li><code>public/storage</code> → symlink ke <code>/home/arif/Projek/SIPAT_Terpadu/storage/app/public</code></li>
+<li><code>storage/app/public/elabel/</code> — 718 berkas (bpkb, bpkb_penjualan, sertifikat,
+  surat_penyerahan, bpkb_delete), total 774 berkas / 1,2 GB seluruhnya</li>
+<li><code>config/filesystems.php</code> — disk <code>public</code>, root <code>storage/app/public</code></li>
+<li>Penyimpanan berkas: <code>ElabelBpkbController</code>, <code>ElabelSertifikatController</code>,
+  <code>ElabelSmartBpkbExtractorController</code> (<code>-&gt;store(..., 'public')</code>)</li>
+</ul>
+<p><strong>Bukti (uji langsung, tanpa login, 24 September 2026):</strong></p>
+<pre><code>GET https://terpadu.sipat-donggala.my.id/storage/elabel/bpkb/b1216shx_2011_R405.pdf
+    → HTTP 200 · Content-Type: application/pdf · 584.131 byte
+
+GET https://terpadu.sipat-donggala.my.id/storage/elabel/bpkb/dn1b_2025_R409.pdf
+    → HTTP 200 · application/pdf · 1.278.245 byte
+
+GET https://terpadu.sipat-donggala.my.id/storage/elabel/sertifikat/09-01-05-03-4-00169_Mess-Mahasiswa-Donggala-Jakarta.pdf
+    → HTTP 200 · 2.794.298 byte
+</code></pre>
+<p>Pola nama berkas yang memudahkan enumerasi:</p>
+<table>
+<thead>
+<tr>
+<th>Jenis</th>
+<th>Pola</th>
+<th>Contoh nyata</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>BPKB</td>
+<td><code>{nomor_rangka}_{tahun}_{id}.pdf</code></td>
+<td><code>b1216shx_2011_R405.pdf</code></td>
+</tr>
+<tr>
+<td>Sertifikat</td>
+<td><code>{nibar}_{nama-aset}.pdf</code></td>
+<td><code>09-01-05-03-4-00169_Mess-Mahasiswa-Donggala-Jakarta.pdf</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Dampak.</strong> Data pribadi dalam skala besar: nama pemegang kendaraan, alamat, NIK,
+nomor rangka, dan nomor mesin dari 718 dokumen; juga identitas aset tanah milik
+pemda (termasuk aset yang digunakan ASN seperti Mess Mahasiswa). Risiko lanjutan
+meliputi pemalsuan identitas kendaraan, penipuan berbasis data aset, penyalahgunaan
+dokumen resmi, dan pelanggaran kewajiban pelindungan data pribadi. Karena berkas
+dapat dienumerasi otomatis, dampaknya tidak terbatas pada kebocoran insidental.</p>
+<p><strong>Perbaikan:</strong></p>
+<ol>
+<li>Pindahkan seluruh dokumen ke disk <strong>privat</strong> (<code>local</code>, root <code>storage/app/private</code>),
+   bukan <code>public</code>. Ubah setiap pemanggilan <code>store(..., 'public')</code> dan
+   <code>Storage::disk('public')</code> pada modul e-LABEL menjadi disk privat.</li>
+<li>Layani berkas melalui controller ber-otorisasi yang sudah ada (<code>viewPdf</code>,
+   <code>viewSupportDoc</code>), dengan tambahan pemeriksaan peran dan kepemilikan OPD.</li>
+<li>Bila akses langsung tetap diperlukan, gunakan <em>signed temporary URL</em>
+   (<code>Storage::disk('local')-&gt;temporaryUrl($path, now()-&gt;addMinutes(5))</code>).</li>
+<li>Pindahkan berkas lama dan samakan nilai kolom path pada basis data
+   (<code>pdf_path</code>, <code>support_doc_path</code>, dsb.).</li>
+<li>Blokir sementara di web server: <code>location ^~ /storage/elabel/ { deny all; }</code>
+   sebagai tindakan penghentian darurat sebelum migrasi selesai.</li>
+<li>Perlakukan seluruh berkas tersebut sebagai <strong>telah bocor</strong>: susun daftar aset
+   terdampak, evaluasi kewajiban pemberitahuan, dan pertimbangkan perubahan
+   penamaan berkas agar tidak lagi memuat data aset.</li>
+</ol>
+<hr />
+<h3 id="k-02-kritis-registrasi-akun-terbuka-untuk-publik-di-produksi">K-02  <span class="sev sev-kritis">KRITIS</span> — Registrasi Akun Terbuka untuk Publik di Produksi</h3>
+<p><strong>Kategori:</strong> A01 Broken Access Control · CWE-287 (Improper Authentication), CWE-1188 (Insecure Default Initialization)</p>
+<p><strong>Deskripsi.</strong> Rute registrasi bawaan Laravel UI aktif di server produksi dan
+hanya dilindungi middleware <code>guest</code> — tidak ada verifikasi email, tidak ada
+persetujuan administrator, dan tidak ada pembatasan domain. Akun yang terbentuk
+langsung memperoleh peran <code>opd</code> (nilai default kolom <code>role</code>).</p>
+<p><strong>Lokasi:</strong></p>
+<ul>
+<li><code>routes/web.php:44</code> — <code>Auth::routes();</code></li>
+<li><code>app/Http/Controllers/Auth/RegisterController.php</code> — middleware hanya <code>guest</code></li>
+<li><code>app/Models/User.php</code> — <code>MustVerifyEmail</code> dinonaktifkan (dikomentari)</li>
+<li><code>database/migrations/2026_05_15_102006_add_role_and_opd_id_to_users_table.php:15</code>
+  — <code>$table-&gt;string('role')-&gt;default('opd');</code></li>
+</ul>
+<p><strong>Bukti (uji langsung):</strong></p>
+<pre><code>GET https://terpadu.sipat-donggala.my.id/register → HTTP 200
+
+php artisan route:list -v --path=register
+  GET|HEAD  register  Auth\RegisterController@showRegistrationForm  ⇂ web ⇂ guest
+  POST      register  Auth\RegisterController@register             ⇂ web ⇂ guest
+</code></pre>
+<p><strong>Dampak.</strong> Siapa pun di internet dapat menjadi pengguna sah aplikasi internal
+pemerintah daerah tanpa sepengetahuan pengelola. Akun tersebut memperoleh akses
+ke 167 endpoint ber-middleware <code>auth</code>, termasuk seluruh modul arsip e-LABEL
+(lihat K-03) dan endpoint pengubah pengaturan situs (K-05).</p>
+<p><strong>Perbaikan:</strong></p>
+<pre><code class="language-php">// routes/web.php
+Auth::routes(['register' =&gt; false, 'reset' =&gt; true]);
+</code></pre>
+<p>Bila pendaftaran mandiri memang dibutuhkan, tambahkan kolom <code>is_active</code>
+(default <code>false</code>) dan alur persetujuan oleh superadmin; jangan pernah memberikan
+akses aplikasi sebelum akun disetujui. Hapus juga akun-akun hasil pendaftaran
+mandiri yang sudah ada pada basis data produksi (perlu pemeriksaan log aktivitas).</p>
+<hr />
+<h3 id="k-03-kritis-modul-e-label-tanpa-pemeriksaan-peran-dan-tanpa-pemisahan-opd">K-03  <span class="sev sev-kritis">KRITIS</span> — Modul e-LABEL Tanpa Pemeriksaan Peran dan Tanpa Pemisahan OPD</h3>
+<p><strong>Kategori:</strong> A01 Broken Access Control · CWE-862 (Missing Authorization), CWE-639 (Authorization Bypass Through User-Controlled Key)</p>
+<p><strong>Deskripsi.</strong> Berkas <code>routes/elabel.php</code> tidak membungkus route dalam grup
+middleware apa pun; seluruh proteksi bergantung pada deklarasi <code>middleware()</code> di
+masing-masing controller. Semua controller e-LABEL hanya memakai
+<code>new Middleware('auth')</code> <strong>tanpa</strong> pemeriksaan peran. Selain itu, mekanisme
+pemisahan data per-OPD (<code>TenantScope</code>) hanya dipasang pada tiga model —
+<code>AsetTanah</code>, <code>Vehicle</code>, dan <code>EbmdVehicle</code> — sementara seluruh model e-LABEL
+(<code>ElabelBpkb</code>, <code>ElabelSertifikat</code>, <code>ElabelSuratPenyerahan</code>, <code>ElabelBox</code>, dst.)
+tidak memilikinya. <code>ElabelBpkbController@index</code> pun tidak menyaring kolom <code>opd_id</code>.</p>
+<p><strong>Lokasi:</strong></p>
+<ul>
+<li><code>routes/elabel.php</code> — seluruh route e-LABEL, tanpa grup middleware</li>
+<li><code>app/Http/Controllers/Elabel/*.php</code> — <code>middleware()</code> hanya <code>auth</code></li>
+<li><code>app/Models/Scopes/TenantScope.php</code> — hanya dipakai 3 model</li>
+<li><code>app/Http/Controllers/Elabel/ElabelBpkbController.php:39</code> — <code>index()</code> tanpa filter OPD</li>
+</ul>
+<p><strong>Bukti.</strong> Hasil pemetaan <code>route:list --json</code>: <strong>65 endpoint pengubah data hanya
+memerlukan status login</strong>. Cuplikan yang paling berdampak:</p>
+<pre><code>POST   elabel/bpkb/{id}/update          POST   elabel/bpkb/{id}/delete
+POST   elabel/bpkb                      DELETE elabel/sertifikat/{id}
+POST   elabel/bpkb/import               PUT    elabel/surat-penyerahan/{id}
+POST   elabel/peminjaman/{id}/approve   DELETE elabel/peminjaman/{id}
+POST   elabel/dynamic/loans/{id}/approve POST  settings
+DELETE elabel/boxes/{id}                POST   elabel/boxes/{id}/merge
+</code></pre>
+<p><strong>Dampak.</strong> Setiap pengguna yang berhasil login — termasuk akun yang dibuat
+sendiri melalui K-02 — dapat: membaca seluruh arsip BPKB dan sertifikat <strong>dari
+semua OPD</strong> (termasuk mengunduh berkas PDF-nya melalui <code>viewPdf</code>), mengubah dan
+menghapus catatan arsip, menyetujui atau menolak peminjaman arsip, serta
+menggabungkan/memecah box penyimpanan. Kerusakan pada catatan arsip aset daerah
+berdampak langsung pada laporan BMD dan audit internal.</p>
+<p><strong>Perbaikan:</strong></p>
+<ol>
+<li>Bungkus seluruh route pada <code>routes/elabel.php</code>:
+   <code>Route::middleware(['auth'])-&gt;group(function () { ... });</code> sebagai jaring pengaman.</li>
+<li>Tambahkan <code>new Middleware('role:superadmin,admin')</code> pada semua aksi mutasi
+   (store, update, delete, import, approve, reject, restore, merge, split, cleanup).</li>
+<li>Pasang <code>TenantScope</code> pada model e-LABEL, dengan fallback gagal-tertutup
+   (fail-safe) seperti yang sudah benar diterapkan di <code>TenantScope</code> saat ini;
+   model perlu kolom <code>opd_id</code> yang konsisten.</li>
+<li>Tambahkan Policy per-model untuk aksi tulis, dan unit test otorisasi
+   (mis. pengguna <code>opd</code> harus menerima 403 pada <code>elabel/bpkb/{id}/delete</code>).</li>
+</ol>
+<hr />
+<h3 id="k-04-kritis-kata-sandi-superadmin-masih-bernilai-bawaan">K-04  <span class="sev sev-kritis">KRITIS</span> — Kata Sandi Superadmin Masih Bernilai Bawaan</h3>
+<p><strong>Kategori:</strong> A07 Identification and Authentication Failures · CWE-798 (Use of Hard-coded Credentials), CWE-521 (Weak Password Requirements)</p>
+<p><strong>Deskripsi.</strong> Akun superadmin bawaan (<code>admin@example.com</code>, <code>users.id = 1</code>)
+di-seed dengan kata sandi <code>admin123</code>. Nilai ini masih tercatat pada berkas seeder
+dan pada migrasi yang mengisi kolom <code>plain_password</code>. Verifikasi dilakukan secara
+<strong>offline</strong> terhadap hash bcrypt pada dump basis data — tidak ada percobaan login
+ke server produksi.</p>
+<p><strong>Lokasi:</strong></p>
+<ul>
+<li><code>database/seeders/DatabaseSeeder.php:32</code> — <code>Hash::make('admin123')</code></li>
+<li><code>database/migrations/2026_09_03_000001_add_plain_password_to_users_table.php:25</code>
+  — <code>Crypt::encryptString('admin123')</code></li>
+<li>Dump <code>mysql-db_sipat_terpadu.sql</code>, baris <code>users</code> id 1</li>
+</ul>
+<p><strong>Bukti (verifikasi hash, offline):</strong></p>
+<pre><code>Hash  : $2y$12$rvce3boubFcPOmor2CfcVOqBYCVJqCEr1fMjKC4jYYMgOKSxLewo6
+Uji   : password_verify(&quot;admin123&quot;, hash) → true
+        password_verify(&quot;password&quot;, ...) → false
+        password_verify(&quot;admin1234&quot;, ...) → false
+</code></pre>
+<p><strong>Dampak.</strong> Digabungkan dengan K-08 (tanpa pembatas percobaan login pada
+<code>/login</code>) dan K-02 (registrasi terbuka sebagai jalur masuk alternatif), akun
+superadmin dapat dikuasai. Akun ini berwenang penuh: manajemen pengguna, reset
+kata sandi seluruh pengguna, unduh/hapus backup basis data (berisi <code>.env</code>,
+seluruh hash sandi, dan data aset), serta penghapusan data master. Pengambilalihan
+akun superadmin berarti penguasaan penuh atas aplikasi dan basis datanya.</p>
+<p><strong>Perbaikan:</strong></p>
+<ol>
+<li>Ganti kata sandi superadmin <strong>segera</strong> dengan nilai acak kuat
+   (<code>Str::password(20)</code>), dan aktifkan kembali verifikasi email untuk akun admin.</li>
+<li>Hapus kata sandi bawaan dari seeder dan migrasi; jangan pernah menyertakan
+   kredensial di dalam kode yang di-commit.</li>
+<li>Hapus baris <code>plain_password</code> yang menyimpan nilai tersebut.</li>
+<li>Audit log aktivitas untuk mendeteksi login superadmin yang tidak dikenal,
+   khususnya sejak audit sebelumnya (22 Agustus 2026).</li>
+</ol>
+<hr />
+<h3 id="k-05-tinggi-pengaturan-situs-dapat-diubah-oleh-pengguna-mana-pun-yang-login">K-05  <span class="sev sev-tinggi">TINGGI</span> — Pengaturan Situs Dapat Diubah oleh Pengguna Mana Pun yang Login</h3>
+<p><strong>Kategori:</strong> A01 Broken Access Control · CWE-862</p>
+<p><strong>Deskripsi.</strong> <code>SettingController</code> (pengelola identitas situs: nama, subjudul,
+logo, gambar hero) hanya dilindungi middleware <code>auth</code>. Tidak ada pemeriksaan
+peran, padahal <code>MasterDataController</code> dan pengaturan lain di aplikasi yang sama
+sudah memakai <code>role:superadmin,admin</code>.</p>
+<p><strong>Lokasi:</strong> <code>app/Http/Controllers/Admin/SettingController.php</code> — <code>middleware()</code>
+mengembalikan <code>[ new Middleware('auth') ]</code>. Route terkait:
+<code>POST settings</code> (<code>routes/web.php</code>), <code>POST settings/admin-template</code>.</p>
+<p><strong>Dampak.</strong> Defacement halaman publik pemerintah daerah — penggantian nama,
+logo, dan gambar beranda yang tampil kepada masyarakat; dapat digunakan untuk
+kampanye disinformasi atau pengelabuan (mis. memasang logo/narahubung palsu).
+Setiap pengguna berakun dapat melakukannya.</p>
+<p><strong>Perbaikan.</strong> Ubah menjadi
+<code>new Middleware('role:superadmin,admin')</code>, dan untuk perubahan identitas visual
+sebaiknya dibatasi <code>role:superadmin</code>. Tambahkan pencatatan aktivitas (audit log)
+pada setiap perubahan pengaturan.</p>
+<hr />
+<h3 id="k-06-tinggi-unggahan-svg-pada-pengaturan-menyebabkan-xss-tersimpan">K-06  <span class="sev sev-tinggi">TINGGI</span> — Unggahan SVG pada Pengaturan Menyebabkan XSS Tersimpan</h3>
+<p><strong>Kategori:</strong> A03 Injection · CWE-79 (Improper Neutralization of Input During Web Page Generation)</p>
+<p><strong>Deskripsi.</strong> Berkas gambar pengaturan divalidasi dengan
+<code>mimes:jpeg,png,jpg,webp,svg</code>. SVG adalah dokumen berbasis XML yang dapat memuat
+skrip. Berkas disimpan pada <code>public/uploads/settings</code> dan disajikan dari origin
+yang sama dengan aplikasi, sehingga skrip di dalamnya dijalankan dengan konteks
+origin aplikasi.</p>
+<p><strong>Lokasi:</strong></p>
+<ul>
+<li><code>app/Http/Requests/Admin/UpdateSettingRequest.php</code> — aturan
+  <code>['nullable', 'image', 'mimes:jpeg,png,jpg,webp,svg', 'max:5120']</code></li>
+<li><code>app/Http/Controllers/Admin/SettingController.php</code> — penyimpanan ke
+  <code>public_path('uploads/settings')</code></li>
+</ul>
+<p><strong>Dampak.</strong> Digabungkan dengan K-05 (siapa pun yang login dapat mengunggah),
+penyerang dapat menempatkan skrip yang berjalan pada peramban setiap pengunjung
+halaman publik, <strong>termasuk superadmin</strong>. Skrip tersebut dapat mencuri sesi,
+melakukan aksi atas nama korban (reset kata sandi pengguna lain, mengunduh backup
+basis data), atau memodifikasi tampilan situs.</p>
+<p><strong>Perbaikan.</strong></p>
+<ol>
+<li>Hapus <code>svg</code> dari daftar tipe yang diizinkan.</li>
+<li>Bila SVG memang dibutuhkan, lakukan sanitasi (mis. <code>enshrined/svg-sanitize</code>)
+   sebelum disimpan.</li>
+<li>Tambahkan header <code>Content-Security-Policy</code> dan sajikan berkas unggahan dengan
+   <code>X-Content-Type-Options: nosniff</code>.</li>
+</ol>
+<hr />
+<h3 id="k-07-tinggi-kata-sandi-tersimpan-secara-reversibel-dan-ditampilkan-di-html">K-07  <span class="sev sev-tinggi">TINGGI</span> — Kata Sandi Tersimpan Secara Reversibel dan Ditampilkan di HTML</h3>
+<p><strong>Kategori:</strong> A02 Cryptographic Failures · CWE-257 (Storing Passwords in a Recoverable Format), CWE-312 (Cleartext Storage of Sensitive Information)</p>
+<p><strong>Deskripsi.</strong> Selain hash bcrypt yang benar, tabel <code>users</code> memiliki kolom
+<code>plain_password</code> yang di-cast <code>encrypted</code> — artinya kata sandi asli dapat
+didekripsi kembali oleh aplikasi. Nilai ini bahkan dikirim ke peramban admin pada
+halaman manajemen pengguna. Kata sandi OPD yang dibuat otomatis juga berpola
+<code>DGL-</code> diikuti 4 karakter (≈14 juta kombinasi), jauh di bawah kaidah yang lazim.</p>
+<p><strong>Lokasi:</strong></p>
+<ul>
+<li><code>app/Models/User.php:88</code> — <code>'plain_password' =&gt; 'encrypted'</code> (dan <code>$fillable</code>)</li>
+<li><code>app/Services/AccountService.php:43</code> — <code>'plain_password' =&gt; $rawPassword</code></li>
+<li><code>app/Http/Controllers/Admin/UserController.php:80, 110, 190</code></li>
+<li><code>resources/views/users/index.blade.php:155</code> — <code>data-password="{{ $user-&gt;plain_password ?? '' }}"</code></li>
+<li><code>database/migrations/2026_09_03_000001_add_plain_password_to_users_table.php</code></li>
+</ul>
+<p><strong>Dampak.</strong> Kebocoran <code>APP_KEY</code> (misalnya melalui berkas backup yang memuat
+<code>APP_KEY</code> bersama dump basis data) membuat <strong>seluruh kata sandi pengguna terbaca
+seketika</strong>, tanpa perlu memecahkan hash. Nilai <code>plain_password</code> juga harus
+dianggap telah terekspos di sisi peramban dan log.</p>
+<p><strong>Perbaikan.</strong> Hapus kolom <code>plain_password</code> beserta tampilan dan
+pengisiannya; ganti dengan alur "reset kata sandi" (kirim token satu kali pakai).
+Perpanjang kata sandi yang dibangkitkan (<code>Str::password(16)</code>). Rotasi <code>APP_KEY</code>
+setelah pembersihan, dengan memperhatikan data lain yang terenkripsi olehnya
+(<code>teams</code>/backup terenkripsi).</p>
+<hr />
+<h3 id="k-08-tinggi-tidak-ada-pembatas-percobaan-pada-login-dan-registrasi">K-08  <span class="sev sev-tinggi">TINGGI</span> — Tidak Ada Pembatas Percobaan pada Login dan Registrasi</h3>
+<p><strong>Kategori:</strong> A07 Identification and Authentication Failures · CWE-307 (Improper Restriction of Excessive Authentication Attempts)</p>
+<p><strong>Deskripsi.</strong> Rute <code>login</code> dan <code>register</code> tidak memiliki middleware <code>throttle</code>.
+Satu-satunya pembatasan di seluruh aplikasi terdapat pada <code>VerificationController</code>
+(<code>throttle:6,1</code>). Login Laravel UI tidak menyediakan pembatasan secara bawaan.</p>
+<p><strong>Lokasi:</strong> <code>app/Http/Controllers/Auth/LoginController.php</code> — <code>middleware()</code>
+hanya <code>guest</code>/<code>auth</code>; <code>routes/web.php</code> — <code>Auth::routes()</code>.</p>
+<p><strong>Bukti:</strong></p>
+<pre><code>php artisan route:list -v --path=login
+  POST  login  Auth\LoginController@login  ⇂ web ⇂ guest      ← tanpa throttle
+</code></pre>
+<p><strong>Dampak.</strong> Percobaan kata sandi dapat dilakukan tanpa batas. Digabungkan dengan
+pola kata sandi akun OPD (<code>DGL-XXXX</code>) dan ketersediaan alamat email akun yang
+berpola (<code>admin.&lt;opd&gt;@e-randis.id</code>), kekuatan akun OPD menjadi jauh lebih lemah
+daripada yang tampak.</p>
+<p><strong>Perbaikan.</strong></p>
+<pre><code class="language-php">// LoginController::middleware()
+return [
+    new Middleware('guest', except: ['logout']),
+    new Middleware('auth', only: ['logout']),
+    new Middleware('throttle:5,1', only: ['login']),
+];
+</code></pre>
+<p>Tambahkan juga pembatasan berdasarkan kombinasi email + IP (<code>RateLimiter</code>), serta
+<code>throttle:3,1</code> pada registrasi. Pertimbangkan autentikasi dua faktor untuk akun
+superadmin.</p>
+<hr />
+<h3 id="k-09-tinggi-lima-kerentanan-pada-dependensi">K-09  <span class="sev sev-tinggi">TINGGI</span> — Lima Kerentanan pada Dependensi</h3>
+<p><strong>Kategori:</strong> A06 Vulnerable and Outdated Components · CWE-1104</p>
+<p><strong>Deskripsi.</strong> <code>composer audit</code> melaporkan 5 advisori yang memengaruhi 2 paket.
+Aplikasi memproses berkas XLSX/CSV yang diunggah pengguna (impor kendaraan,
+e-LABEL, bangunan, rekonsiliasi e-BMD), sehingga kerentanan pada pustaka
+pembaca spreadsheet bersifat relevan dan bukan teoretis.</p>
+<table>
+<thead>
+<tr>
+<th>Paket</th>
+<th>Tingkat</th>
+<th>CVE</th>
+<th>Ringkasan</th>
+<th>Versi terdampak</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>phpoffice/phpspreadsheet</td>
+<td><strong>CRITICAL</strong></td>
+<td>CVE-2026-45034</td>
+<td>Bypass patch CVE-2026-34084</td>
+<td>≤ 1.30.4</td>
+</tr>
+<tr>
+<td>phpoffice/phpspreadsheet</td>
+<td>HIGH</td>
+<td>CVE-2026-59933</td>
+<td>Self-loop sektor OLE → kehabisan memori</td>
+<td>≤ 1.30.5, 2.x ≤ 2.1.17, 2.2–2.4.6, 3.3–3.10.6, 4.0–5.8.0</td>
+</tr>
+<tr>
+<td>phpoffice/phpspreadsheet</td>
+<td>HIGH</td>
+<td>CVE-2026-59932</td>
+<td>Ekspansi gzip Gnumeric tanpa batas → kehabisan memori</td>
+<td>idem</td>
+</tr>
+<tr>
+<td>phpoffice/phpspreadsheet</td>
+<td>HIGH</td>
+<td>CVE-2026-59931</td>
+<td>Bypass SSRF lewat redirect HTTP pada WEBSERVICE()</td>
+<td>idem</td>
+</tr>
+<tr>
+<td>maatwebsite/excel</td>
+<td>HIGH</td>
+<td>CVE-2026-84374</td>
+<td>Penulisan ekspor di luar disk bila path dikendalikan pemanggil</td>
+<td>≥ 3.1.8, &lt; 3.1.70</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Dampak.</strong> Dua kerentanan kehabisan memori dapat dijadikan serangan penolakan
+layanan hanya dengan satu berkas unggahan yang disusun khusus; kerentanan
+<code>maatwebsite/excel</code> berpotensi menulis berkas di luar direktori yang dimaksud
+bila ada endpoint ekspor yang menerima path dari pemanggil (perlu ditelusuri
+lebih lanjut pada kode ekspor).</p>
+<p><strong>Perbaikan.</strong></p>
+<pre><code class="language-bash">composer update maatwebsite/excel phpoffice/phpspreadsheet --with-dependencies
+# pastikan maatwebsite/excel &gt;= 3.1.70 dan phpspreadsheet pada versi yang ditambal
+</code></pre>
+<p>Jalankan <code>composer audit</code> pada pipeline CI, batasi ukuran unggahan, dan
+pertimbangkan pemrosesan impor melalui antrean agar tidak membebani proses web.</p>
+<hr />
+<h3 id="k-10-sedang-secret-jwt-sso-tertulis-keras-di-dalam-kode">K-10  <span class="sev sev-sedang">SEDANG</span> — Secret JWT SSO Tertulis Keras di Dalam Kode</h3>
+<p><strong>Kategori:</strong> A02 Cryptographic Failures · CWE-798</p>
+<p><strong>Deskripsi.</strong> Middleware <code>SsoAuthenticate</code> memverifikasi token SSO memakai kunci
+HMAC yang ditulis langsung di dalam kode sumber. Middleware ini ter-alias
+(<code>'sso'</code>) pada <code>bootstrap/app.php</code>, tetapi <strong>tidak dipakai pada route mana pun</strong>
+saat ini — sehingga belum dapat dieksploitasi. Namun nilainya berada di dalam
+repositori, dan setelah lolos verifikasi middleware tersebut membuat pengguna baru
+melalui <code>firstOrCreate</code> dengan peran yang diambil dari klaim token, tanpa
+verifikasi kata sandi.</p>
+<p><strong>Lokasi:</strong> <code>app/Http/Middleware/SsoAuthenticate.php</code> —
+<code>$secretKey = 'SIPAT_SSO_SECRET_KEY_JWT_2026_SECURE_TOKEN_DONGGALA';</code>
+(alias terdaftar di <code>bootstrap/app.php:30</code>).</p>
+<p><strong>Dampak.</strong> Bila aplikasi SSO pada <code>auth.sipat-donggala.my.id</code> memakai kunci yang
+sama (lazim pada sistem yang dikembangkan bersama), siapa pun yang pernah melihat
+repositori ini dapat <strong>memalsukan token</strong> dan masuk sebagai superadmin. Karena
+middleware belum terpasang, risiko saat ini bersifat laten — namun kuncinya sudah
+bocor dan tetap harus dirotasi.</p>
+<p><strong>Perbaikan.</strong> Pindahkan kunci ke <code>.env</code> (<code>SSO_JWT_SECRET</code>), <strong>rotasi kuncinya di
+kedua sisi</strong>, hapus middleware bila tidak dipakai, dan bila akan dipakai:
+verifikasi penerbit/audiens token, jangan memetakan peran langsung dari klaim
+tanpa pemetaan yang dikendalikan server, serta catat setiap pembuatan akun
+otomatis ke audit log.</p>
+<hr />
+<h3 id="k-11-sedang-endpoint-health-check-publik-membocorkan-versi-dan-status-basis-data">K-11  <span class="sev sev-sedang">SEDANG</span> — Endpoint Health Check Publik Membocorkan Versi dan Status Basis Data</h3>
+<p><strong>Kategori:</strong> A05 Security Misconfiguration · CWE-200 (Exposure of Sensitive Information)</p>
+<p><strong>Deskripsi.</strong> <code>/api/health-check</code> dapat diakses tanpa autentikasi dan
+mengembalikan versi framework serta status koneksi basis data. Ketika basis data
+bermasalah, pesan exception dikembalikan apa adanya.</p>
+<p><strong>Lokasi:</strong> <code>app/Http/Controllers/HealthCheckController.php</code> —
+<code>'framework' =&gt; 'Laravel ' . app()-&gt;version()</code>, <code>'database' =&gt; $dbStatus</code> dengan
+penyertaan <code>$e-&gt;getMessage()</code>.</p>
+<p><strong>Bukti:</strong></p>
+<pre><code>GET https://terpadu.sipat-donggala.my.id/api/health-check
+{&quot;project&quot;:&quot;E-RANDIS&quot;,&quot;framework&quot;:&quot;Laravel 12.67.0&quot;,&quot;status&quot;:&quot;healthy&quot;,
+ &quot;database&quot;:&quot;connected&quot;,&quot;timestamp&quot;:&quot;2026-09-24 14:14:37&quot;}
+</code></pre>
+<p><strong>Dampak.</strong> Pemetaan versi presisi memudahkan penyerang memilih eksploit yang
+sesuai (versi ini bahkan sesuai dengan kerentanan dependensi pada K-09); pesan
+error basis data dapat mengungkap host/nama basis data.</p>
+<p><strong>Perbaikan.</strong> Kembalikan hanya <code>{"status":"ok"}</code> tanpa versi, tanpa status
+internal, dan tanpa pesan exception; batasi akses ke jaringan internal atau
+lindungi dengan token pemantauan.</p>
+<hr />
+<h3 id="k-12-sedang-seluruh-proxy-dipercaya">K-12  <span class="sev sev-sedang">SEDANG</span> — Seluruh Proxy Dipercaya</h3>
+<p><strong>Kategori:</strong> A05 Security Misconfiguration · CWE-348 (Use of Less Trusted Source)</p>
+<p><strong>Deskripsi.</strong> <code>bootstrap/app.php</code> memakai <code>$middleware-&gt;trustProxies(at: '*')</code>,
+sehingga header <code>X-Forwarded-For</code> dari sumber mana pun dipercaya. Aplikasi akan
+mencatat IP palsu pada audit log, dan pembatasan berbasis IP (termasuk throttle
+yang disarankan pada K-08) dapat dilewati.</p>
+<p><strong>Perbaikan.</strong> Ganti <code>'*'</code> dengan alamat IP atau rentang CIDR reverse proxy yang
+benar-benar dipakai.</p>
+<hr />
+<h3 id="k-13-sedang-pencarian-publik-menampilkan-data-pribadi-dan-dapat-dipanen-otomatis">K-13  <span class="sev sev-sedang">SEDANG</span> — Pencarian Publik Menampilkan Data Pribadi dan Dapat Dipanen Otomatis</h3>
+<p><strong>Kategori:</strong> A01 Broken Access Control · CWE-359 (Exposure of Private Personal Information)</p>
+<p><strong>Deskripsi.</strong> Pencarian publik mengembalikan nama pemegang kendaraan
+(<code>pemegang</code>), nomor polisi, nomor register, dan foto kendaraan. Endpoint ini
+tidak memiliki pembatas laju dan membatasi 30 hasil per permintaan, sehingga
+seluruh 1.038 kendaraan dapat dipanen dengan sekitar 35 permintaan otomatis.
+Statistik agregat portal (<code>/api/public/stats</code>) juga terbuka tanpa pembatasan.</p>
+<p><strong>Lokasi:</strong> <code>app/Services/UnifiedAssetSearchService.php</code> (<code>searchVehicles</code>,
+<code>getPortalStats</code>, <code>getFilterOptions</code>); <code>routes/web.php</code> — <code>/search/*</code> dan
+<code>/api/public/*</code> tanpa <code>throttle</code>.</p>
+<p><strong>Perbaikan.</strong> Hapus atau samarkan <code>pemegang</code> untuk akses publik (tampilkan
+hanya setelah login), tambahkan <code>throttle:30,1</code> pada endpoint pencarian dan
+statistik, serta pertimbangkan CAPTCHA untuk pola permintaan berulang.</p>
+<hr />
+<h3 id="k-14-rendah-berkas-envlaragon-ter-commit-di-git">K-14  <span class="sev sev-rendah">RENDAH</span> — Berkas <code>.env.laragon</code> Ter-commit di Git</h3>
+<p><strong>Kategori:</strong> A05 Security Misconfiguration · CWE-538 (Insertion of Sensitive Information into Excluded File)</p>
+<p><strong>Deskripsi.</strong> <code>.env.laragon</code> ikut tersimpan dalam repositori dan memuat
+<code>APP_KEY=base64:nzI5W347b4p7YrwTxv5CsL1r+Vs+CNbGZ+q4roCoZm4=</code> serta kredensial
+basis data lokal (root tanpa kata sandi). Konfigurasi ini untuk lingkungan
+pengembangan, bukan produksi, sehingga risikonya rendah — namun menunjukkan
+kebiasaan yang berbahaya bila diterapkan pada <code>.env</code> produksi.</p>
+<p><strong>Perbaikan.</strong> <code>git rm --cached .env.laragon</code>, tambahkan polanya ke <code>.gitignore</code>,
+dan pastikan <code>.env</code> produksi tidak pernah masuk repositori (saat ini sudah benar).</p>
+<hr />
+<h2 id="7-rantai-serangan-gabungan-skenario-paling-realistis">7. Rantai Serangan Gabungan (Skenario Paling Realistis)</h2>
+<p>Temuan di atas tidak berdiri sendiri. Rangkaian yang paling mungkin dijalankan
+penyerang, dari luar tanpa kredensial:</p>
+<p><strong>Skenario A — Pengambilalihan akun superadmin (jalur terpendek).</strong>
+Penyerang menemukan halaman <code>/register</code> (K-02) atau langsung halaman <code>/login</code>.
+Tanpa pembatas percobaan (K-08), ia mencoba kata sandi lazim pada
+<code>admin@example.com</code> — <code>admin123</code> (K-04) berhasil. Ia memperoleh hak superadmin
+tanpa pernah menyentuh temuan lain.</p>
+<p><strong>Skenario B — Pemanenan arsip tanpa akun sama sekali.</strong>
+Penyerang tidak memerlukan akun. Ia mengumpulkan nomor rangka/NIBAR dari
+pencarian publik (K-13), membentuk nama berkas sesuai pola, dan mengunduh 718
+dokumen PDF berisi data pribadi (K-01) — seluruhnya melalui permintaan HTTP biasa
+yang tidak terautentikasi.</p>
+<p><strong>Skenario C — Kerusakan data arsip atas nama OPD.</strong>
+Penyerang membuat akun (K-02), lalu membaca dan menghapus catatan arsip BPKB/sertifikat
+seluruh OPD karena modul e-LABEL tidak memeriksa peran maupun kepemilikan data
+(K-03). Jejak tindakannya juga dapat dikaburkan dengan memalsukan IP melalui
+<code>X-Forwarded-For</code> (K-12). Secara paralel ia mengubah nama/logo situs (K-05) dan
+menanam skrip pada unggahan SVG (K-06) agar menyerang superadmin.</p>
+<p>Setiap skenario di atas hanya memerlukan satu atau dua temuan. Artinya, memperbaiki
+sebagian saja tidak menutup jalan masuk.</p>
+<hr />
+<h2 id="8-rekomendasi-dan-urutan-penanganan">8. Rekomendasi dan Urutan Penanganan</h2>
+<h3 id="tahap-1-penghentian-darurat-24-jam">Tahap 1 — Penghentian darurat (≤ 24 jam)</h3>
+<table>
+<thead>
+<tr>
+<th>No</th>
+<th>Tindakan</th>
+<th>Temuan</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>Ganti kata sandi superadmin; hapus <code>admin123</code> dari seeder dan migrasi</td>
+<td>K-04</td>
+</tr>
+<tr>
+<td>2</td>
+<td>Nonaktifkan registrasi: <code>Auth::routes(['register' =&gt; false])</code></td>
+<td>K-02</td>
+</tr>
+<tr>
+<td>3</td>
+<td>Blokir <code>/storage/elabel/</code> di web server, lalu pindahkan berkas ke disk privat</td>
+<td>K-01</td>
+</tr>
+<tr>
+<td>4</td>
+<td>Tambahkan <code>throttle:5,1</code> pada login dan <code>throttle:3,1</code> pada registrasi</td>
+<td>K-08</td>
+</tr>
+<tr>
+<td>5</td>
+<td>Periksa audit log untuk login/pembuatan akun yang tidak dikenal sejak 22 Agustus 2026</td>
+<td>K-02, K-03, K-04</td>
+</tr>
+</tbody>
+</table>
+<h3 id="tahap-2-minggu-ini">Tahap 2 — Minggu ini</h3>
+<table>
+<thead>
+<tr>
+<th>No</th>
+<th>Tindakan</th>
+<th>Temuan</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>6</td>
+<td><code>composer update maatwebsite/excel phpoffice/phpspreadsheet</code>; jalankan <code>composer audit</code> di CI</td>
+<td>K-09</td>
+</tr>
+<tr>
+<td>7</td>
+<td>Batasi endpoint mutasi e-LABEL dan pengaturan situs ke <code>role:superadmin,admin</code></td>
+<td>K-03, K-05</td>
+</tr>
+<tr>
+<td>8</td>
+<td>Pasang <code>TenantScope</code> pada seluruh model e-LABEL</td>
+<td>K-03</td>
+</tr>
+<tr>
+<td>9</td>
+<td>Hapus kolom <code>plain_password</code>, tampilan, dan pengisiannya</td>
+<td>K-07</td>
+</tr>
+<tr>
+<td>10</td>
+<td>Hapus <code>svg</code> dari daftar tipe unggahan pengaturan</td>
+<td>K-06</td>
+</tr>
+<tr>
+<td>11</td>
+<td>Tambahkan unit test otorisasi (pengguna <code>opd</code> → 403 pada aksi admin)</td>
+<td>K-02, K-03</td>
+</tr>
+</tbody>
+</table>
+<h3 id="tahap-3-bulan-ini">Tahap 3 — Bulan ini</h3>
+<table>
+<thead>
+<tr>
+<th>No</th>
+<th>Tindakan</th>
+<th>Temuan</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>12</td>
+<td>Pindahkan secret SSO ke <code>.env</code> dan rotasi kuncinya</td>
+<td>K-10</td>
+</tr>
+<tr>
+<td>13</td>
+<td>Sederhanakan respons health check</td>
+<td>K-11</td>
+</tr>
+<tr>
+<td>14</td>
+<td>Ganti <code>trustProxies(at: '*')</code> dengan IP proxy yang sebenarnya</td>
+<td>K-12</td>
+</tr>
+<tr>
+<td>15</td>
+<td>Tambahkan <code>throttle</code> pada pencarian publik; samarkan nama pemegang</td>
+<td>K-13</td>
+</tr>
+<tr>
+<td>16</td>
+<td>Bersihkan <code>.env.laragon</code> dari Git dan perbarui <code>.gitignore</code></td>
+<td>K-14</td>
+</tr>
+<tr>
+<td>17</td>
+<td>Susun daftar aset terdampak dan evaluasi kewajiban pelindungan data pribadi</td>
+<td>K-01</td>
+</tr>
+<tr>
+<td>18</td>
+<td>Pertimbangkan autentikasi dua faktor untuk akun superadmin &amp; admin</td>
+<td>K-04, K-08</td>
+</tr>
+</tbody>
+</table>
+<h3 id="daftar-periksa-validasi">Daftar periksa validasi</h3>
+<ul>
+<li>[ ] Registrasi tidak dapat diakses publik (POST <code>/register</code> → 404/403)</li>
+<li>[ ] <code>https://…/storage/elabel/bpkb/&lt;berkas&gt;</code> → 403/404 tanpa login</li>
+<li>[ ] Endpoint <code>POST elabel/*</code>, <code>DELETE elabel/*</code>, <code>POST settings</code> → 403 untuk peran <code>opd</code></li>
+<li>[ ] Pengguna <code>opd</code> hanya melihat data OPD-nya sendiri (uji lintas OPD)</li>
+<li>[ ] <code>composer audit</code> bersih</li>
+<li>[ ] <code>php artisan route:list -v --path=login</code> menampilkan <code>throttle</code></li>
+<li>[ ] Kolom <code>plain_password</code> sudah tidak ada</li>
+<li>[ ] Kata sandi superadmin bukan nilai bawaan</li>
+</ul>
+<hr />
+<h2 id="9-kontrol-yang-sudah-baik-kekuatan-aplikasi">9. Kontrol yang Sudah Baik (Kekuatan Aplikasi)</h2>
+<p>Penting dicatat agar perbaikan tidak mengganggu bagian yang sudah benar:</p>
+<ul>
+<li>Middleware <code>role</code> (<code>CheckRole</code>) bekerja dengan tepat: superadmin memiliki akses
+  penuh, perbandingan dilakukan terhadap enum, dan pengguna tanpa hak diarahkan
+  kembali dengan pesan kesalahan. Modul Master Data, Manajemen User, Audit Log,
+  dan Backup sudah terlindungi dengan benar (<code>role:superadmin</code> / <code>role:superadmin,admin</code>).</li>
+<li><code>TenantScope</code> benar secara desain — termasuk <em>fail-safe</em> yang mengunci akses
+  (<code>whereRaw('1 = 0')</code>) bila <code>opd_id</code>/<code>sub_opd_id</code> kosong. Masalahnya hanya cakupan
+  penerapannya, bukan logikanya.</li>
+<li>Kata sandi akun disimpan sebagai hash bcrypt dengan <code>BCRYPT_ROUNDS=12</code>.</li>
+<li><code>APP_DEBUG=false</code> pada produksi — jejak kesalahan tidak tampil ke publik.</li>
+<li><code>.env</code> produksi tidak dapat diakses (HTTP 403) dan dump SQL di direktori proyek
+  tidak terekspos (HTTP 404).</li>
+<li>Berkas backup tersimpan di <code>storage/app/backups</code> (privat), dan endpoint
+  unduh/hapus backup sudah dibatasi <code>role:superadmin</code>.</li>
+<li>Query memakai Eloquent/parameter binding; tidak ditemukan SQL injection pada
+  jalur yang menerima masukan pengguna (<code>whereRaw</code> yang ada memakai placeholder).</li>
+<li>Mass assignment terkendali melalui <code>$fillable</code> (satu model, <code>OpdSipat</code>, tidak
+  memakainya — perlu diperiksa namun tidak berisiko langsung).</li>
+</ul>
+<hr />
+<h2 id="10-lampiran">10. Lampiran</h2>
+<h3 id="lampiran-a-perintah-verifikasi-temuan">Lampiran A — Perintah verifikasi temuan</h3>
+<pre><code class="language-bash"># K-01 arsip publik (tanpa kredensial)
+curl -s -o /dev/null -w &quot;%{http_code} %{content_type}\n&quot; \
+  https://terpadu.sipat-donggala.my.id/storage/elabel/bpkb/b1216shx_2011_R405.pdf
+
+# K-02 registrasi terbuka
+curl -s -o /dev/null -w &quot;%{http_code}\n&quot; https://terpadu.sipat-donggala.my.id/register
+php artisan route:list -v --path=register
+
+# K-03 otorisasi: daftar route tulis yang hanya butuh login
+php artisan route:list --json | python3 -c &quot;
+import json,sys
+d=json.load(sys.stdin)
+for r in d:
+    mw=r.get('middleware') or []
+    v=r['method'].split('|')[0]
+    if 'auth' in mw and v in {'POST','PUT','PATCH','DELETE'} and not any(m.startswith('role:') for m in mw):
+        print(v, r['uri'])
+&quot;
+
+# K-04 verifikasi kata sandi bawaan (offline, terhadap hash pada dump)
+php -r 'var_dump(password_verify(&quot;admin123&quot;, &quot;\$2y\$12\$rvce3boubFcPOmor2CfcVOqBYCVJqCEr1fMjKC4jYYMgOKSxLewo6&quot;));'
+
+# K-08 pembatas percobaan login
+php artisan route:list -v --path=login
+
+# K-09 dependensi
+composer audit --no-interaction
+
+# K-11 health check
+curl -s https://terpadu.sipat-donggala.my.id/api/health-check
+
+# K-14 berkas lingkungan di Git
+git ls-files | grep -E &quot;^\.env&quot;
+</code></pre>
+<h3 id="lampiran-b-rekapitulasi-berkas-terdampak-k-01">Lampiran B — Rekapitulasi berkas terdampak K-01</h3>
+<table>
+<thead>
+<tr>
+<th>Direktori</th>
+<th style="text-align: right;">Jumlah berkas</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>storage/app/public/elabel/</code></td>
+<td style="text-align: right;">718</td>
+</tr>
+<tr>
+<td><code>storage/app/public/mpdf_temp/</code></td>
+<td style="text-align: right;">47</td>
+</tr>
+<tr>
+<td><code>storage/app/public/vehicles/</code></td>
+<td style="text-align: right;">3</td>
+</tr>
+<tr>
+<td><code>storage/app/public/kop/</code></td>
+<td style="text-align: right;">3</td>
+</tr>
+<tr>
+<td><code>storage/app/public/dynamic/</code>, <code>avatars/</code></td>
+<td style="text-align: right;">2</td>
+</tr>
+<tr>
+<td><strong>Total pada disk publik</strong></td>
+<td style="text-align: right;"><strong>774 (1,2 GB)</strong></td>
+</tr>
+</tbody>
+</table>
+<p>Subdirektori <code>elabel/</code>: <code>bpkb/</code>, <code>bpkb_penjualan/</code>, <code>bpkb_delete/</code>, <code>bpkb-deletes/</code>,
+<code>sertifikat/</code>, <code>surat_penyerahan/</code>, <code>profile_photos/</code>.</p>
+<h3 id="lampiran-c-keterkaitan-dengan-kewajiban-pengelolaan">Lampiran C — Keterkaitan dengan kewajiban pengelolaan</h3>
+<table>
+<thead>
+<tr>
+<th>Aspek</th>
+<th>Keterkaitan</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>UU No. 27/2022 (Pelindungan Data Pribadi)</td>
+<td>K-01, K-07, K-13 menyangkut data pribadi (nama pemegang, NIK, alamat). Perlu penilaian kewajiban pemberitahuan bila terbukti diakses pihak tak berhak.</td>
+</tr>
+<tr>
+<td>SPBE / keamanan informasi instansi</td>
+<td>K-02, K-03, K-04, K-05 menyangkut pengendalian akses dan manajemen kredensial yang menjadi syarat dasar pengamanan aplikasi layanan publik.</td>
+</tr>
+<tr>
+<td>Audit internal BMD</td>
+<td>K-03 berpotensi merusak integritas catatan arsip aset sehingga memengaruhi laporan barang milik daerah.</td>
+</tr>
+<tr>
+<td>Audit sebelumnya (<code>audit.md</code>, 22 Agu 2026)</td>
+<td>Perlu dikoreksi: pernyataan "seluruh temuan selesai" tidak didukung bukti pengujian otorisasi, paparan berkas, dan jalur registrasi.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="lampiran-d-pernyataan-batasan-pengujian">Lampiran D — Pernyataan batasan pengujian</h3>
+<ol>
+<li>Pengujian terhadap server produksi dibatasi pada permintaan GET/HEAD
+   non-destruktif ke 9 URL. Tidak ada upaya autentikasi, pembuatan akun,
+   penghapusan, atau perubahan data.</li>
+<li>Verifikasi kata sandi bawaan dilakukan sepenuhnya <strong>offline</strong> terhadap hash
+   pada berkas dump basis data; tidak ada percobaan login ke sistem produksi.</li>
+<li>Temuan K-02 dan K-03 diverifikasi melalui pembacaan kode dan pemetaan route.
+   Pembuktian dengan akun uji pada produksi belum dilakukan.</li>
+<li>Laporan ini memuat detail teknis yang belum ditutup dan sebaiknya tidak
+   disebarkan di luar pihak yang berwenang melakukan perbaikan.</li>
+</ol>
+<hr />
+<p><strong>Akhir laporan.</strong></p>
+<p><em>Disusun: 24 September 2026 · Berdasarkan pemeriksaan kode pada
+<code>/home/arif/Projek/SIPAT_Terpadu</code> (commit <code>7c06af2</code>) dan uji HTTP non-destruktif
+terhadap <code>https://terpadu.sipat-donggala.my.id</code>.</em></p>
+<div class="footer">Laporan Audit Keamanan SIPAT Terpadu &middot; 24 September 2026 &middot; KLASIFIKASI: TERBATAS</div>
+</div></body></html>

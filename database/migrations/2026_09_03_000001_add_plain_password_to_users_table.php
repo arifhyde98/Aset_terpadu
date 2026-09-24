@@ -16,18 +16,6 @@ return new class extends Migration
         Schema::table('users', function (Blueprint $table) {
             $table->text('plain_password')->nullable()->after('password');
         });
-
-        // Set password terenkripsi untuk superadmin bawaan jika ada
-        try {
-            $adminUser = DB::table('users')->where('email', 'admin@example.com')->first();
-            if ($adminUser) {
-                DB::table('users')->where('id', $adminUser->id)->update([
-                    'plain_password' => Crypt::encryptString('admin123'),
-                ]);
-            }
-        } catch (\Throwable $e) {
-            // Abaikan jika terjadi kendala saat encrypt seed awal
-        }
     }
 
     /**

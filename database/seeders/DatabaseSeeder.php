@@ -23,14 +23,15 @@ class DatabaseSeeder extends Seeder
             UnrecordedLandSeeder::class,
         ]);
 
-        // 2. Buat Akun Superadmin Utama agar Terhindar dari Lock Mode
-        User::firstOrCreate(
-            ['email' => 'admin@example.com'],
-            [
+        // 2. Buat Akun Superadmin Utama agar Terhindar dari Lock Mode (jika belum ada)
+        if (!User::where('email', 'admin@example.com')->exists()) {
+            $defaultPassword = env('ADMIN_DEFAULT_PASSWORD', \Illuminate\Support\Str::password(16));
+            User::create([
                 'name' => 'Admin',
+                'email' => 'admin@example.com',
                 'role' => 'superadmin',
-                'password' => Hash::make('admin123'),
-            ]
-        );
+                'password' => Hash::make($defaultPassword),
+            ]);
+        }
     }
 }
