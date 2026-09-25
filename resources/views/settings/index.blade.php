@@ -9,7 +9,12 @@
             <h3 class="fw-bold text-navy mb-1">Pengaturan Konten & Sistem</h3>
             <p class="text-secondary mb-0 small">Kelola teks, logo, halaman portal publik, serta konfigurasi dokumen cetak.</p>
         </div>
-        <div class="mt-3 mt-md-0 d-flex gap-2">
+        <div class="mt-3 mt-md-0 d-flex flex-wrap gap-2">
+            @if(auth()->user()->role?->value === 'superadmin' || auth()->user()->role === 'superadmin' || (method_exists(auth()->user(), 'isSuperAdmin') && auth()->user()->isSuperAdmin()))
+            <a href="{{ route('settings.ai.index') }}" class="btn btn-outline-primary fw-semibold rounded-3 shadow-sm d-flex align-items-center gap-2">
+                <i class="bi bi-robot text-primary"></i> Pengaturan AI Assistant
+            </a>
+            @endif
             <a href="{{ route('settings.reports.index') }}" class="btn btn-outline-primary fw-semibold rounded-3 shadow-sm d-flex align-items-center gap-2">
                 <i class="bi bi-printer-fill"></i> Pengaturan Dokumen Cetak (KOP & TTD)
             </a>

@@ -45,7 +45,9 @@ Dokumen ini merupakan sumber kebenaran tunggal (*Single Source of Truth*) mengen
   - **Laravel Excel (Maatwebsite/Excel):** Mesin utama impor dan ekspor data tabular massal (.xlsx, .csv).
   - **mPDF:** Mesin render PDF formal server-side untuk Modul Laporan, ekspor Surat SKPT, dan dokumen cetak resmi A4 Landscape/Portrait.
 - **Artificial Intelligence Engine:**
-  - **Google Gemini Cloud AI (`GeminiAiService`):** Menggunakan API model stabil Google Gemini (seperti `gemini-1.5-flash`) via `GEMINI_API_KEY` untuk asisten cerdas konsultasi BMD, tanya-jawab aset, dan pembuatan ringkasan otomatis pada floating widget interaktif.
+  - **Unified AI Gateway (`UnifiedAiService`):** Orkestrasi multi-provider AI yang mendukung penyedia OpenAI-Compatible (OpenRouter, 9router, DeepSeek, Groq, OpenAI resmi) dan Google Gemini Cloud dengan deteksi otomatis dan graceful fallback.
+  - **OpenAI-Compatible Service (`OpenAiService`):** Menggunakan API model OpenAI-Compatible (seperti OpenRouter / 9router) via `OPENAI_API_KEY`, `OPENAI_BASE_URL`, dan `OPENAI_MODEL` untuk asisten cerdas konsultasi BMD, pembersihan reasoning token `<think>`, dan pembuatan ringkasan data aset.
+  - **Google Gemini Cloud AI (`GeminiAiService`):** Menggunakan API model stabil Google Gemini (seperti `gemini-1.5-flash`) via `GEMINI_API_KEY`.
   - **Ollama Engine (`OllamaService`):** Fallback LLM lokal (seperti model `qwen2.5:7b`) untuk lingkungan tanpa koneksi internet langsung.
 - **Infrastruktur / Deployment:** Berjalan secara *native* di Linux / server lokal (Nginx + PHP-FPM 8.2+ & MySQL/MariaDB).
 - **CI/CD Automation:** Menggunakan GitHub Actions (`.github/workflows/deploy.yml`) yang memicu eksekusi remote script `deploy.sh` (Git Pull, Composer Install, Artisan Migrate, NPM Build Vite, & Artisan Optimize) via SSH Key saat ada *push* ke branch `main`.
@@ -365,7 +367,9 @@ Seluruh logika kalkulasi dan query bisnis wajib dienkapsulasi di dalam kelas Ser
 - `DynamicArchiveService` (`app/Services/Elabel/DynamicArchiveService.php`): Service layer inti **Universal Dynamic Archive Engine** untuk validasi skema form dinamis, penanganan berkas scan PDF utama & lampiran pendukung, penomoran kode box otomatis (`BOX-{KODE}-{NUM}`), audit trail aktivitas arsip dinamis, serta penyedia data menu otomatis sidebar (`getActiveTypesForSidebar`) dengan sistem caching terversi yang dilindungi `try-catch` dan *graceful database fallback*.
 - **Dynamic Archive Observer (`ArchiveTypeObserver`):** Menjamin pembaruan otomatis menu navigasi sidebar & offcanvas mobile (`invalidateSidebarCache`) secara atomik tanpa memicu `Cache::flush()` global saat jenis arsip baru ditambahkan, diubah, atau dihapus. Dokumen arsip (`ArchiveItem`) tidak memicu invalidasi cache sidebar untuk menjaga performa simpan/upload berkas yang tinggi.
 - `ElabelSmartBpkbExtractorController`: Modul isolasi pembacaan isi dokumen PDF BPKB otomatis (*Smart PDF Extractor & OCR*) pada rute `/elabel/bpkb-smart-extractor` dengan verifikasi 4 aturan presisi (Pencocokan Nopol 100% Persis, Proteksi Berkas Ganda, dan Dry-Run Audit Preview).
-- `GeminiAiService` (`app/Services/GeminiAiService.php`): Integrasi Google Gemini Cloud AI via `GEMINI_API_KEY` (dengan fallback `OllamaService`) untuk melayani endpoint asisten cerdas `/ai/ask` dan `/ai/generate-summary`.
+- `UnifiedAiService` (`app/Services/UnifiedAiService.php`): Orkestrasi multi-provider AI (OpenAI-compatible / OpenRouter / 9router & Google Gemini) yang melayani endpoint `/ai/status`, `/ai/ask`, dan `/ai/generate-summary` dengan auto-detection dan fallback.
+- `OpenAiService` (`app/Services/OpenAiService.php`): Integrasi protokol OpenAI Chat Completions untuk OpenRouter, 9router, DeepSeek, dll.
+- `GeminiAiService` (`app/Services/GeminiAiService.php`): Integrasi Google Gemini Cloud AI via `GEMINI_API_KEY`.
 
 ### 7.2 Arsitektur Modul Laporan E-RANDIS (*Strategy & Registry Pattern*)
 Dibangun secara modular dan fleksibel:
@@ -526,7 +530,7 @@ Diimplementasikan arsitektur *Admin Template Switcher* yang memungkinkan penggun
      - **Integrasi Data:** Import Data SIPAT.
    - Diproteksi secara ketat menggunakan middleware dan `@if(auth()->check() && in_array(auth()->user()->role->value, ['superadmin', 'admin']))` sehingga pengguna tingkat OPD/KPB tidak terganggu oleh opsi administratif.
 3. **Pengaturan Sistem (Global Administration):**
-   - Dikhususkan bagi **Superadmin** untuk manajemen pengguna (`/users`), konfigurasi identitas/logo aplikasi (`/settings`), format cetak & KOP surat (`/settings/reports` & `/master-data/kop-surat`), backup/restore database (`/settings/backups`), dan log aktivitas terpadu (`/activities`).
+   - Dikhususkan bagi **Superadmin** untuk manajemen pengguna (`/users`), konfigurasi identitas/logo aplikasi (`/settings`), konfigurasi mesin AI Assistant & Gateway (`/settings/ai`), format cetak & KOP surat (`/settings/reports` & `/master-data/kop-surat`), backup/restore database (`/settings/backups`), dan log aktivitas terpadu (`/activities`).
 
 ---
 
@@ -712,8 +716,10 @@ Diimplementasikan arsitektur *Admin Template Switcher* yang memungkinkan penggun
 | **System** | GET | `/activities` | `Admin\ActivityController@index` | Superadmin, Admin | Audit Trail Terpadu Tiga Modul |
 | **System** | POST | `/settings/backups/sync-db` | `Admin\BackupController@syncDb` | Auth | Trigger background sinkronisasi DB Staging |
 | **System** | GET | `/settings/backups/sync-db-status` | `Admin\BackupController@syncDbStatus` | Auth | Polling status sinkronisasi DB Staging |
-| **System** | GET | `/settings/backups/sync-db-stream` | `Admin\BackupController@syncDbStream` | Auth | Real-time SSE streaming sinkronisasi DB Staging |
 | **System** | POST | `/settings/backups/restore-sql` | `Admin\BackupController@restoreSql` | Auth | Unggah & restore dump database SQL |
+| **System** | GET | `/settings/ai` | `Admin\AiSettingController@index` | Superadmin | Antarmuka Manajemen & Konfigurasi Mesin AI Assistant |
+| **System** | POST | `/settings/ai` | `Admin\AiSettingController@update` | Superadmin | Simpan Konfigurasi AI (SSRF Guard & Credential Masking) |
+| **System** | POST | `/settings/ai/test` | `Admin\AiSettingController@testConnection` | Superadmin | Uji Koneksi Langsung (AJAX Live Test & Latency) |
 
 ---
 

@@ -15,6 +15,7 @@ use App\Http\Controllers\HealthCheckController;
 
 use App\Http\Controllers\LandingPageController;
 use App\Http\Controllers\EbmdReconciliationController;
+use App\Http\Controllers\Admin\AiSettingController;
 
 /*
 |--------------------------------------------------------------------------
@@ -79,6 +80,11 @@ Route::get('vehicles/rekon-ebmd', [EbmdReconciliationController::class, 'index']
 Route::get('settings', [SettingController::class, 'index'])->name('settings.index');
 Route::post('settings', [SettingController::class, 'update'])->name('settings.update');
 Route::post('settings/admin-template', [\App\Http\Controllers\AdminTemplateController::class, 'update'])->name('settings.admin-template');
+
+// Pengaturan AI Assistant (Super Admin Only)
+Route::get('settings/ai', [AiSettingController::class, 'index'])->name('settings.ai.index');
+Route::post('settings/ai', [AiSettingController::class, 'update'])->name('settings.ai.update');
+Route::post('settings/ai/test', [AiSettingController::class, 'testConnection'])->name('settings.ai.test')->middleware('throttle:15,1');
 
 // Manajemen Backup (Spatie Backup)
 Route::get('settings/backups', [\App\Http\Controllers\Admin\BackupController::class, 'index'])->name('settings.backups.index');
