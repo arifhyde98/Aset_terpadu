@@ -272,8 +272,13 @@ class ElabelBpkbController extends Controller implements HasMiddleware
                 (string) ($box->box_code ?? '')
             );
 
-            if ($pdfPath && $pdfPath !== $newPdfPath && Storage::disk('public')->exists($pdfPath)) {
-                Storage::disk('public')->delete($pdfPath);
+            if ($pdfPath && $pdfPath !== $newPdfPath) {
+                if (Storage::disk('local')->exists($pdfPath)) {
+                    Storage::disk('local')->delete($pdfPath);
+                }
+                if (Storage::disk('public')->exists($pdfPath)) {
+                    Storage::disk('public')->delete($pdfPath);
+                }
             }
             $pdfPath = $newPdfPath;
         }
@@ -312,11 +317,17 @@ class ElabelBpkbController extends Controller implements HasMiddleware
 
 
 
-        if (!Storage::disk('public')->exists($item->pdf_path)) {
+        $fullPath = null;
+        if (Storage::disk('local')->exists($item->pdf_path)) {
+            $fullPath = Storage::disk('local')->path($item->pdf_path);
+        } elseif (Storage::disk('public')->exists($item->pdf_path)) {
+            $fullPath = Storage::disk('public')->path($item->pdf_path);
+        }
+
+        if (!$fullPath) {
             return redirect()->back()->with('error', 'File PDF tidak tersedia di storage.');
         }
 
-        $fullPath = storage_path('app/public/' . $item->pdf_path);
         return response()->file($fullPath, [
             'Content-Type' => 'application/pdf',
             'Content-Disposition' => 'inline; filename="bpkb-' . $id . '.pdf"',
@@ -353,7 +364,7 @@ class ElabelBpkbController extends Controller implements HasMiddleware
             if (!in_array($ext, ['pdf', 'jpg', 'jpeg', 'png'], true)) {
                 return redirect()->back()->with('error', 'Dokumen pendukung harus PDF/JPG/PNG.');
             }
-            $supportPath = $request->file('support_doc')->store('elabel/bpkb_delete', 'public');
+            $supportPath = $request->file('support_doc')->store('elabel/bpkb_delete', 'local');
         }
 
         $pdfPath = $this->moveBpkbPdfToDeletedFolder($item->pdf_path, $reason);
@@ -589,8 +600,17 @@ class ElabelBpkbController extends Controller implements HasMiddleware
         $filename = basename($currentPath);
         $newPath = 'elabel/' . $targetFolder . '/' . $filename;
 
+        $moved = false;
+        if (Storage::disk('local')->exists($currentPath)) {
+            Storage::disk('local')->move($currentPath, $newPath);
+            $moved = true;
+        }
         if (Storage::disk('public')->exists($currentPath)) {
             Storage::disk('public')->move($currentPath, $newPath);
+            $moved = true;
+        }
+
+        if ($moved) {
             return $newPath;
         }
 
@@ -606,12 +626,12 @@ class ElabelBpkbController extends Controller implements HasMiddleware
 
         $path = 'elabel/bpkb/' . $newName;
         $counter = 2;
-        while (Storage::disk('public')->exists($path)) {
+        while (Storage::disk('local')->exists($path) || Storage::disk('public')->exists($path)) {
             $path = 'elabel/bpkb/' . $baseName . '_' . $counter . '.' . $extension;
             $counter++;
         }
 
-        $file->storeAs('elabel/bpkb', basename($path), 'public');
+        $file->storeAs('elabel/bpkb', basename($path), 'local');
 
 
 

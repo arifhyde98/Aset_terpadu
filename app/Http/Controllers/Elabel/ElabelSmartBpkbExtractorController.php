@@ -203,7 +203,7 @@ class ElabelSmartBpkbExtractorController extends Controller implements HasMiddle
                     $vLabel = strtoupper($targetBpkb->vehicle_type) === 'R2' ? '🏍️ Motor (R2)' : '🚗 Mobil (R4)';
 
                     // Cek apakah sudah memiliki PDF di DB
-                    if (!empty($targetBpkb->pdf_path) && Storage::disk('public')->exists($targetBpkb->pdf_path)) {
+                    if (!empty($targetBpkb->pdf_path) && (Storage::disk('local')->exists($targetBpkb->pdf_path) || Storage::disk('public')->exists($targetBpkb->pdf_path))) {
                         $auditResults['exists'][] = [
                             'filename'        => $filename,
                             'file_path'       => $pdfPath,
@@ -304,13 +304,13 @@ class ElabelSmartBpkbExtractorController extends Controller implements HasMiddle
                 $targetStoragePath = "elabel/bpkb/{$newFilename}";
 
                 $counter = 2;
-                while (Storage::disk('public')->exists($targetStoragePath)) {
+                while (Storage::disk('local')->exists($targetStoragePath) || Storage::disk('public')->exists($targetStoragePath)) {
                     $targetStoragePath = "elabel/bpkb/{$cleanPlate}_{$year}_{$cleanBox}_{$counter}.pdf";
                     $counter++;
                 }
 
-                // Copy file dari folder lokal ke public storage
-                $destFullPath = storage_path('app/public/' . $targetStoragePath);
+                // Copy file dari folder lokal ke private storage
+                $destFullPath = storage_path('app/private/' . $targetStoragePath);
                 $destDir = dirname($destFullPath);
                 if (!file_exists($destDir)) {
                     @mkdir($destDir, 0777, true);

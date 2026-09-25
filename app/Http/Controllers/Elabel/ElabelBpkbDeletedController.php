@@ -123,12 +123,22 @@ class ElabelBpkbDeletedController extends Controller implements HasMiddleware
             return redirect()->route('elabel.bpkb-deleted.index')->with('error', 'Data BPKB keluar tidak ditemukan.');
         }
 
-        if ($item->pdf_path && Storage::disk('public')->exists($item->pdf_path)) {
-            Storage::disk('public')->delete($item->pdf_path);
+        if ($item->pdf_path) {
+            if (Storage::disk('local')->exists($item->pdf_path)) {
+                Storage::disk('local')->delete($item->pdf_path);
+            }
+            if (Storage::disk('public')->exists($item->pdf_path)) {
+                Storage::disk('public')->delete($item->pdf_path);
+            }
         }
 
-        if ($item->support_doc_path && Storage::disk('public')->exists($item->support_doc_path)) {
-            Storage::disk('public')->delete($item->support_doc_path);
+        if ($item->support_doc_path) {
+            if (Storage::disk('local')->exists($item->support_doc_path)) {
+                Storage::disk('local')->delete($item->support_doc_path);
+            }
+            if (Storage::disk('public')->exists($item->support_doc_path)) {
+                Storage::disk('public')->delete($item->support_doc_path);
+            }
         }
 
         $item->delete();
@@ -153,11 +163,18 @@ class ElabelBpkbDeletedController extends Controller implements HasMiddleware
 
 
 
-        if (!Storage::disk('public')->exists($item->pdf_path)) {
+        $fullPath = null;
+        if (Storage::disk('local')->exists($item->pdf_path)) {
+            $fullPath = Storage::disk('local')->path($item->pdf_path);
+        } elseif (Storage::disk('public')->exists($item->pdf_path)) {
+            $fullPath = Storage::disk('public')->path($item->pdf_path);
+        }
+
+        if (!$fullPath) {
             return redirect()->back()->with('error', 'File PDF tidak ditemukan.');
         }
 
-        return response()->file(storage_path('app/public/' . $item->pdf_path), [
+        return response()->file($fullPath, [
             'Content-Type' => 'application/pdf',
             'Content-Disposition' => 'inline; filename="bpkb-keluar-' . $id . '.pdf"',
         ]);
@@ -172,7 +189,14 @@ class ElabelBpkbDeletedController extends Controller implements HasMiddleware
 
 
 
-        if (!Storage::disk('public')->exists($item->support_doc_path)) {
+        $fullPath = null;
+        if (Storage::disk('local')->exists($item->support_doc_path)) {
+            $fullPath = Storage::disk('local')->path($item->support_doc_path);
+        } elseif (Storage::disk('public')->exists($item->support_doc_path)) {
+            $fullPath = Storage::disk('public')->path($item->support_doc_path);
+        }
+
+        if (!$fullPath) {
             return redirect()->back()->with('error', 'Dokumen pendukung tidak ditemukan.');
         }
 
@@ -184,7 +208,7 @@ class ElabelBpkbDeletedController extends Controller implements HasMiddleware
             default => 'application/octet-stream',
         };
 
-        return response()->file(storage_path('app/public/' . $item->support_doc_path), [
+        return response()->file($fullPath, [
             'Content-Type' => $mime,
             'Content-Disposition' => 'inline; filename="dokumen-pendukung-' . $id . '.' . $ext . '"',
         ]);

@@ -217,11 +217,20 @@ class ElabelLoanController extends Controller implements HasMiddleware
         }
 
         $bpkb = $loan->bpkb;
-        if (!$bpkb || !$bpkb->pdf_path || !Storage::disk('public')->exists($bpkb->pdf_path)) {
+        if (!$bpkb || !$bpkb->pdf_path) {
             return redirect()->back()->with('error', 'File scan untuk data yang diminta belum tersedia atau tidak ditemukan.');
         }
 
-        $sourcePath = storage_path('app/public/' . $bpkb->pdf_path);
+        $sourcePath = null;
+        if (Storage::disk('local')->exists($bpkb->pdf_path)) {
+            $sourcePath = Storage::disk('local')->path($bpkb->pdf_path);
+        } elseif (Storage::disk('public')->exists($bpkb->pdf_path)) {
+            $sourcePath = Storage::disk('public')->path($bpkb->pdf_path);
+        }
+
+        if (!$sourcePath) {
+            return redirect()->back()->with('error', 'File scan untuk data yang diminta belum tersedia atau tidak ditemukan.');
+        }
         $watermarkedPath = $this->watermarkPdf($sourcePath, $loan);
 
         if ($watermarkedPath === null) {

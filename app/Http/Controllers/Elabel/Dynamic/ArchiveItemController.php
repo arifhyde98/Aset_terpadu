@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Elabel\Dynamic;
 
 use App\Http\Controllers\Controller;
+use App\Models\Elabel\Dynamic\ArchiveAttachment;
 use App\Models\Elabel\Dynamic\ArchiveBox;
 use App\Models\Elabel\Dynamic\ArchiveItem;
 use App\Models\Elabel\Dynamic\ArchiveType;
@@ -279,11 +280,20 @@ class ArchiveItemController extends Controller implements HasMiddleware
     public function viewPdf(int $id)
     {
         $item = ArchiveItem::find($id);
-        if (!$item || empty($item->file_scan_pdf) || !Storage::disk('public')->exists($item->file_scan_pdf)) {
+        if (!$item || empty($item->file_scan_pdf)) {
             abort(404, 'Berkas scan tidak ditemukan di storage server.');
         }
 
-        $filePath = Storage::disk('public')->path($item->file_scan_pdf);
+        $filePath = null;
+        if (Storage::disk('local')->exists($item->file_scan_pdf)) {
+            $filePath = Storage::disk('local')->path($item->file_scan_pdf);
+        } elseif (Storage::disk('public')->exists($item->file_scan_pdf)) {
+            $filePath = Storage::disk('public')->path($item->file_scan_pdf);
+        }
+
+        if (!$filePath) {
+            abort(404, 'Berkas scan tidak ditemukan di storage server.');
+        }
         $mimeType = mime_content_type($filePath) ?: 'application/pdf';
 
         return response()->file($filePath, [
@@ -352,5 +362,23 @@ class ArchiveItemController extends Controller implements HasMiddleware
         }, $fileName, [
             'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
         ]);
+    }
+
+    public function downloadAttachment(int $id, int $attachmentId)
+    {
+        $attachment = ArchiveAttachment::where('archive_item_id', $id)->findOrFail($attachmentId);
+        
+        $filePath = null;
+        if (Storage::disk('local')->exists($attachment->file_path)) {
+            $filePath = Storage::disk('local')->path($attachment->file_path);
+        } elseif (Storage::disk('public')->exists($attachment->file_path)) {
+            $filePath = Storage::disk('public')->path($attachment->file_path);
+        }
+
+        if (!$filePath) {
+            abort(404, 'Berkas lampiran tidak ditemukan di storage server.');
+        }
+
+        return response()->download($filePath, $attachment->file_title ?: basename($filePath));
     }
 }

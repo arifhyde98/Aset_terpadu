@@ -281,8 +281,13 @@ class ElabelSertifikatController extends Controller implements HasMiddleware
         $payload['box_id'] = $this->resolveSertifikatBoxId($payload['lokasi'] ?? null, $id, $item->box_id);
 
         if ($request->hasFile('pdf') && $request->file('pdf')->isValid()) {
-            if ($item->pdf_path && Storage::disk('public')->exists($item->pdf_path)) {
-                Storage::disk('public')->delete($item->pdf_path);
+            if ($item->pdf_path) {
+                if (Storage::disk('local')->exists($item->pdf_path)) {
+                    Storage::disk('local')->delete($item->pdf_path);
+                }
+                if (Storage::disk('public')->exists($item->pdf_path)) {
+                    Storage::disk('public')->delete($item->pdf_path);
+                }
             }
             $payload['pdf_path'] = $this->storeUploadedPdf($request->file('pdf'), $payload);
         }
@@ -304,11 +309,18 @@ class ElabelSertifikatController extends Controller implements HasMiddleware
 
 
 
-        if (!Storage::disk('public')->exists($item->pdf_path)) {
+        $fullPath = null;
+        if (Storage::disk('local')->exists($item->pdf_path)) {
+            $fullPath = Storage::disk('local')->path($item->pdf_path);
+        } elseif (Storage::disk('public')->exists($item->pdf_path)) {
+            $fullPath = Storage::disk('public')->path($item->pdf_path);
+        }
+
+        if (!$fullPath) {
             return redirect()->back()->with('error', 'File PDF sertipikat tidak ditemukan.');
         }
 
-        return response()->file(storage_path('app/public/' . $item->pdf_path), [
+        return response()->file($fullPath, [
             'Content-Type' => 'application/pdf',
             'Content-Disposition' => 'inline; filename="sertipikat-' . $id . '.pdf"',
         ]);
@@ -321,8 +333,13 @@ class ElabelSertifikatController extends Controller implements HasMiddleware
             return redirect()->route('elabel.sertifikat.index')->with('error', 'Data sertipikat tidak ditemukan.');
         }
 
-        if ($item->pdf_path && Storage::disk('public')->exists($item->pdf_path)) {
-            Storage::disk('public')->delete($item->pdf_path);
+        if ($item->pdf_path) {
+            if (Storage::disk('local')->exists($item->pdf_path)) {
+                Storage::disk('local')->delete($item->pdf_path);
+            }
+            if (Storage::disk('public')->exists($item->pdf_path)) {
+                Storage::disk('public')->delete($item->pdf_path);
+            }
         }
 
         $oldSertifikat = $item->toArray();
@@ -611,12 +628,12 @@ class ElabelSertifikatController extends Controller implements HasMiddleware
 
         $path = 'elabel/sertifikat/' . $newName;
         $counter = 2;
-        while (Storage::disk('public')->exists($path)) {
+        while (Storage::disk('local')->exists($path) || Storage::disk('public')->exists($path)) {
             $path = 'elabel/sertifikat/' . $baseName . '-' . $counter . '.' . $extension;
             $counter++;
         }
 
-        $file->storeAs('elabel/sertifikat', basename($path), 'public');
+        $file->storeAs('elabel/sertifikat', basename($path), 'local');
 
 
 

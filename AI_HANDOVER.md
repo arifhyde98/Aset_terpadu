@@ -123,6 +123,13 @@ Sesuai hasil audit keamanan, seluruh controller wajib menggunakan interface `Has
 - **Registrasi Publik Dinonaktifkan (`routes/web.php`):** Registrasi mandiri via `/register` ditutup (`Auth::routes(['register' => false, 'reset' => true])`). Akun dibuat terpusat oleh Superadmin/Admin.
 - **Rate Limiting / Throttle:** Ditambahkan `new Middleware('throttle:5,1')` pada `LoginController`, `ForgotPasswordController`, dan `ResetPasswordController` untuk memutus serangan brute-force credential stuffing.
 - **Sanitasi Kredensial Superadmin:** Password default `admin123` dihapus dari `DatabaseSeeder.php` dan migrasi. Disediakan artisan command `php artisan sipat:reset-superadmin` untuk merotasi password superadmin secara aman.
+- **Isolasi Berkas e-LABEL ke Disk Privat (`storage/app/private/`):** Seluruh controller modul e-LABEL (`ElabelBpkbController`, `ElabelSertifikatController`, `ElabelSuratPenyerahanController`, `ElabelBpkbDeletedController`, `ElabelLoanController`, `ArchiveItemController`, `DynamicArchiveService`, dan `ElabelSmartBpkbExtractorController`) kini membaca dan menyimpan berkas fisik dokumen ke disk privat `local` (`storage/app/private/elabel/...`), dengan fallback aman ke `public` jika berkas lama belum tersalin. Berkas publik lama tidak dihapus sehingga tidak ada risiko kehilangan data.
+- **Penguncian Akses Langsung Berkas Publik Lama:** Folder `storage/app/public/elabel` telah dikunci dengan pertahanan berlapis:
+  1. `public/.htaccess`: Rewrite rule `RewriteRule ^storage/elabel/ - [F,L]` (403 Forbidden).
+  2. `storage/app/public/elabel/.htaccess`: `Require all denied` (403 Forbidden).
+  3. `storage/app/public/elabel/index.php`: Skrip PHP penangkal *directory listing* dan pemblokir akses HTTP.
+  4. `routes/web.php`: Route `Route::any('storage/elabel/{path?}')` yang langsung mengembalikan `404 Not Found`.
+  5. Konfigurasi Nginx: Blokir directive `location ^~ /storage/elabel/ { deny all; return 404; }`.
 
 ---
 
@@ -570,6 +577,7 @@ Diimplementasikan arsitektur *Admin Template Switcher* yang memungkinkan penggun
 - **Katalog & Box Berkas Fisik BPKB:**
   - Pengarsipan fisik dokumen BPKB Kendaraan ke dalam box arsip berlabel barcode.
   - Paginasi dinamis dan optimasi performa query (eager loading `box`, `inputUser`, `opdSipat`, kontrol `per_page`: 15, 50, 100, Semua, serta pagination bar mirip modul SIPAT) pada rute `/elabel/bpkb`.
+  - Tabel utama menyajikan kolom identifikasi lengkap kendaraan: Nomor Polisi / Tahun, Identitas Dokumen (BPKB/NIBAR), Nomor Mesin & Nomor Rangka (font monospace), Spesifikasi (Merk/Tipe/Warna), Pemegang/Dinas, Box Fisik, Status, dan Aksi.
   - Fitur pemecahan (*split*) dan penggabungan (*merge*) box arsip.
   - Cetak label stiker barcode box fisik (`/elabel/boxes/{id}/label`).
 - **Katalog BPKB Keluar / Soft-Deleted (`/elabel/bpkb-deleted`):**

@@ -40,6 +40,11 @@ Route::get('/api/public/search/vehicles', [LandingPageController::class, 'search
 Route::get('/api/public/search/land', [LandingPageController::class, 'searchLand']);
 Route::get('/api/public/search/archives', [LandingPageController::class, 'searchArchives']);
 
+// Blokir akses langsung publik ke berkas storage elabel jika request sampai ke Laravel
+Route::any('storage/elabel/{path?}', function () {
+    abort(404, 'Dokumen arsip dilindungi.');
+})->where('path', '.*');
+
 // Otentikasi (Bawaan Laravel UI - Registrasi Publik Dinonaktifkan demi Keamanan)
 Auth::routes(['register' => false, 'reset' => true]);
 

@@ -147,7 +147,7 @@
                                             <span class="text-xs text-muted">{{ $att->formatted_size }} &bull; {{ strtoupper($att->file_type) }}</span>
                                         </div>
                                     </div>
-                                    <a href="{{ asset('storage/' . $att->file_path) }}" target="_blank" class="btn btn-sm btn-outline-primary" download>
+                                    <a href="{{ route('elabel.dynamic.items.download-attachment', ['id' => $item->id, 'attachmentId' => $att->id]) }}" class="btn btn-sm btn-outline-primary">
                                         <i class="bi bi-download"></i> Unduh
                                     </a>
                                 </div>

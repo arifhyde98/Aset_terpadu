@@ -86,6 +86,7 @@
                         <th class="py-3 px-4 text-center" style="width: 50px;">No.</th>
                         <th class="py-3">No. Polisi / Tahun</th>
                         <th class="py-3">Identitas Dokumen (BPKB/NIBAR)</th>
+                        <th class="py-3">No. Mesin / No. Rangka</th>
                         <th class="py-3">Spesifikasi (Merk/Tipe/Warna)</th>
                         <th class="py-3">Pemegang / Dinas</th>
                         <th class="py-3 text-center">Box Fisik</th>
@@ -104,6 +105,10 @@
                             <td>
                                 <div class="fw-semibold text-navy"><i class="bi bi-file-earmark-text me-1 text-primary"></i> {{ $item->no_bpkb ?: '-' }}</div>
                                 <div class="small text-secondary">NIBAR: {{ $item->nibar ?: '-' }}</div>
+                            </td>
+                            <td>
+                                <div class="small"><span class="text-secondary">Mesin:</span> <strong class="font-monospace text-navy">{{ $item->no_mesin ?: '-' }}</strong></div>
+                                <div class="small mt-0.5"><span class="text-secondary">Rangka:</span> <strong class="font-monospace text-dark">{{ $item->no_rangka ?: '-' }}</strong></div>
                             </td>
                             <td>
                                 <div class="fw-medium text-dark">{{ $item->merek ?: '-' }} {{ $item->tipe ?: '' }}</div>
@@ -197,7 +202,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="8" class="text-center py-5 text-secondary">
+                            <td colspan="9" class="text-center py-5 text-secondary">
                                 <i class="bi bi-inbox fs-2 d-block mb-2"></i> Belum ada data BPKB terdaftar.
                             </td>
                         </tr>

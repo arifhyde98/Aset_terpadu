@@ -91,8 +91,13 @@ class DynamicArchiveService
 
             // Jika ada PDF baru
             if ($pdfFile && $pdfFile->isValid()) {
-                if ($item->file_scan_pdf && Storage::disk('public')->exists($item->file_scan_pdf)) {
-                    Storage::disk('public')->delete($item->file_scan_pdf);
+                if ($item->file_scan_pdf) {
+                    if (Storage::disk('local')->exists($item->file_scan_pdf)) {
+                        Storage::disk('local')->delete($item->file_scan_pdf);
+                    }
+                    if (Storage::disk('public')->exists($item->file_scan_pdf)) {
+                        Storage::disk('public')->delete($item->file_scan_pdf);
+                    }
                 }
                 $updatePayload['file_scan_pdf'] = $this->storeUploadedFile($pdfFile, 'dynamic/' . strtolower($type->kode), $data['nomor_dokumen'] ?? 'arsip');
             }
@@ -108,7 +113,10 @@ class DynamicArchiveService
                             $oldAtt = ArchiveAttachment::where('archive_item_id', $item->id)
                                 ->where('field_name', $key)
                                 ->first();
-                            if ($oldAtt) {
+                            if ($oldAtt && $oldAtt->file_path) {
+                                if (Storage::disk('local')->exists($oldAtt->file_path)) {
+                                    Storage::disk('local')->delete($oldAtt->file_path);
+                                }
                                 if (Storage::disk('public')->exists($oldAtt->file_path)) {
                                     Storage::disk('public')->delete($oldAtt->file_path);
                                 }
@@ -145,14 +153,24 @@ class DynamicArchiveService
             $docNo = $item->nomor_dokumen;
 
             // Hapus berkas scan PDF utama
-            if ($item->file_scan_pdf && Storage::disk('public')->exists($item->file_scan_pdf)) {
-                Storage::disk('public')->delete($item->file_scan_pdf);
+            if ($item->file_scan_pdf) {
+                if (Storage::disk('local')->exists($item->file_scan_pdf)) {
+                    Storage::disk('local')->delete($item->file_scan_pdf);
+                }
+                if (Storage::disk('public')->exists($item->file_scan_pdf)) {
+                    Storage::disk('public')->delete($item->file_scan_pdf);
+                }
             }
 
             // Hapus seluruh file lampiran
             foreach ($item->attachments as $att) {
-                if ($att->file_path && Storage::disk('public')->exists($att->file_path)) {
-                    Storage::disk('public')->delete($att->file_path);
+                if ($att->file_path) {
+                    if (Storage::disk('local')->exists($att->file_path)) {
+                        Storage::disk('local')->delete($att->file_path);
+                    }
+                    if (Storage::disk('public')->exists($att->file_path)) {
+                        Storage::disk('public')->delete($att->file_path);
+                    }
                 }
                 $att->delete();
             }
@@ -197,7 +215,7 @@ class DynamicArchiveService
         $filename = $cleanPrefix . '_' . time() . '_' . substr(uniqid(), -4) . '.' . $extension;
         $path = $subfolder . '/' . $filename;
 
-        $file->storeAs($subfolder, $filename, 'public');
+        $file->storeAs($subfolder, $filename, 'local');
 
         return $path;
     }

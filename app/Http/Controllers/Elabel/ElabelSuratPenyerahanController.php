@@ -119,8 +119,13 @@ class ElabelSuratPenyerahanController extends Controller implements HasMiddlewar
         $payload['box_id'] = $this->resolveBoxId($payload['lokasi'] ?? null, $id, $item->box_id);
 
         if ($request->hasFile('pdf') && $request->file('pdf')->isValid()) {
-            if ($item->pdf_path && Storage::disk('public')->exists($item->pdf_path)) {
-                Storage::disk('public')->delete($item->pdf_path);
+            if ($item->pdf_path) {
+                if (Storage::disk('local')->exists($item->pdf_path)) {
+                    Storage::disk('local')->delete($item->pdf_path);
+                }
+                if (Storage::disk('public')->exists($item->pdf_path)) {
+                    Storage::disk('public')->delete($item->pdf_path);
+                }
             }
             $payload['pdf_path'] = $this->storeUploadedPdf($request->file('pdf'), $payload);
         }
@@ -135,11 +140,22 @@ class ElabelSuratPenyerahanController extends Controller implements HasMiddlewar
     public function pdf(int $id): \Symfony\Component\HttpFoundation\BinaryFileResponse|RedirectResponse
     {
         $item = ElabelSuratPenyerahan::find($id);
-        if (!$item || !$item->pdf_path || !Storage::disk('public')->exists($item->pdf_path)) {
+        if (!$item || !$item->pdf_path) {
             return redirect()->back()->with('error', 'Dokumen PDF surat penyerahan tidak ditemukan.');
         }
 
-        return response()->file(storage_path('app/public/' . $item->pdf_path), [
+        $fullPath = null;
+        if (Storage::disk('local')->exists($item->pdf_path)) {
+            $fullPath = Storage::disk('local')->path($item->pdf_path);
+        } elseif (Storage::disk('public')->exists($item->pdf_path)) {
+            $fullPath = Storage::disk('public')->path($item->pdf_path);
+        }
+
+        if (!$fullPath) {
+            return redirect()->back()->with('error', 'Dokumen PDF surat penyerahan tidak ditemukan.');
+        }
+
+        return response()->file($fullPath, [
             'Content-Type' => 'application/pdf',
             'Content-Disposition' => 'inline; filename="surat-penyerahan-' . $id . '.pdf"',
         ]);
@@ -152,8 +168,13 @@ class ElabelSuratPenyerahanController extends Controller implements HasMiddlewar
             return redirect()->route('elabel.surat-penyerahan.index')->with('error', 'Data surat penyerahan tidak ditemukan.');
         }
 
-        if ($item->pdf_path && Storage::disk('public')->exists($item->pdf_path)) {
-            Storage::disk('public')->delete($item->pdf_path);
+        if ($item->pdf_path) {
+            if (Storage::disk('local')->exists($item->pdf_path)) {
+                Storage::disk('local')->delete($item->pdf_path);
+            }
+            if (Storage::disk('public')->exists($item->pdf_path)) {
+                Storage::disk('public')->delete($item->pdf_path);
+            }
         }
 
         $noSurat = $item->no_surat;
@@ -298,12 +319,12 @@ class ElabelSuratPenyerahanController extends Controller implements HasMiddlewar
 
         $path = 'elabel/surat_penyerahan/' . $newName;
         $counter = 2;
-        while (Storage::disk('public')->exists($path)) {
+        while (Storage::disk('local')->exists($path) || Storage::disk('public')->exists($path)) {
             $path = 'elabel/surat_penyerahan/' . $baseName . '-' . $counter . '.' . $extension;
             $counter++;
         }
 
-        $file->storeAs('elabel/surat_penyerahan', basename($path), 'public');
+        $file->storeAs('elabel/surat_penyerahan', basename($path), 'local');
         return $path;
     }
 

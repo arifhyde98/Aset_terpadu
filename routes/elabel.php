@@ -125,6 +125,7 @@ Route::prefix('elabel')->name('elabel.')->group(function () {
         Route::put('items/{id}', [\App\Http\Controllers\Elabel\Dynamic\ArchiveItemController::class, 'update'])->name('items.update');
         Route::delete('items/{id}', [\App\Http\Controllers\Elabel\Dynamic\ArchiveItemController::class, 'destroy'])->name('items.destroy');
         Route::get('items/{id}/view-pdf', [\App\Http\Controllers\Elabel\Dynamic\ArchiveItemController::class, 'viewPdf'])->name('items.view-pdf');
+        Route::get('items/{id}/attachments/{attachmentId}/download', [\App\Http\Controllers\Elabel\Dynamic\ArchiveItemController::class, 'downloadAttachment'])->name('items.download-attachment');
 
         // Layanan Peminjaman & Scan Berkas Dinamis
         Route::get('loans', [\App\Http\Controllers\Elabel\Dynamic\ArchiveLoanController::class, 'index'])->name('loans.index');

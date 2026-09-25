@@ -5,6 +5,9 @@
 
     RewriteEngine On
 
+    # Blokir akses langsung publik ke folder arsip elabel (BPKB & Sertifikat)
+    RewriteRule ^storage/elabel/ - [F,L]
+
     # Handle Authorization Header
     RewriteCond %{HTTP:Authorization} .
     RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
