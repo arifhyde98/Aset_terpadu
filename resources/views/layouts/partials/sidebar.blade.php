@@ -656,6 +656,14 @@
                                     <span>Pengaturan Sistem</span>
                                 </a>
                             </li>
+                            @if(auth()->user()->role?->value === 'superadmin' || auth()->user()->role === 'superadmin' || (method_exists(auth()->user(), 'isSuperAdmin') && auth()->user()->isSuperAdmin()))
+                            <li class="{{ Request::is('settings/ai*') ? 'active' : '' }}">
+                                <a href="{{ route('settings.ai.index') }}" data-bs-toggle="tooltip" data-bs-placement="right" title="Pengaturan Mesin AI Assistant & Gateway">
+                                    <i class="bi bi-robot text-primary"></i>
+                                    <span>AI Assistant Engine</span>
+                                </a>
+                            </li>
+                            @endif
                             <li class="{{ Request::is('reports/settings*', 'settings/reports*') ? 'active' : '' }}">
                                 <a href="{{ route('settings.reports.index') }}" data-bs-toggle="tooltip" data-bs-placement="right" title="Pengaturan Dokumen Cetak (Format & Pejabat)">
                                     <i class="bi bi-printer-fill text-primary"></i>

@@ -14,9 +14,9 @@ class GeminiAiService
 
     public function __construct()
     {
-        $this->apiKey  = config('services.gemini.api_key') ?: env('GEMINI_API_KEY');
-        $this->model   = config('services.gemini.model', 'gemini-1.5-flash');
-        $this->timeout = (int) config('services.gemini.timeout', 30);
+        $this->apiKey  = \App\Models\Setting::get('ai_gemini_api_key') ?: (config('services.gemini.api_key') ?: env('GEMINI_API_KEY'));
+        $this->model   = \App\Models\Setting::get('ai_gemini_model') ?: config('services.gemini.model', env('GEMINI_MODEL', 'gemini-1.5-flash'));
+        $this->timeout = (int) (\App\Models\Setting::get('ai_gemini_timeout') ?: config('services.gemini.timeout', 30));
     }
 
     /**
@@ -254,5 +254,78 @@ class GeminiAiService
         $text = preg_replace('/^Jawaban:\s*/i', '', trim($text));
 
         return trim($text);
+    }
+
+    /**
+     * Uji koneksi ad-hoc ke Google Gemini API dengan parameter kustom.
+     *
+     * @param string $apiKey
+     * @param string $model
+     * @param int $timeout
+     * @return array ['success' => bool, 'latency_ms' => int, 'message' => string, 'reply' => ?string]
+     */
+    public function testCustomConnection(string $apiKey, string $model, int $timeout = 15): array
+    {
+        $startTime = microtime(true);
+        $url = "https://generativelanguage.googleapis.com/v1beta/models/{$model}:generateContent";
+
+        try {
+            $response = Http::timeout($timeout)
+                ->withHeaders([
+                    'Content-Type'   => 'application/json',
+                    'x-goog-api-key' => $apiKey,
+                ])
+                ->post($url, [
+                    'contents' => [
+                        [
+                            'role'  => 'user',
+                            'parts' => [
+                                ['text' => 'Halo! Ini uji koneksi sistem SIPAT Terpadu. Balas dengan: "Koneksi Gemini Berhasil, ' . $model . '".']
+                            ]
+                        ]
+                    ],
+                    'generationConfig' => [
+                        'temperature'     => 0.3,
+                        'maxOutputTokens' => 60,
+                    ]
+                ]);
+
+            $latency = (int) round((microtime(true) - $startTime) * 1000);
+
+            if (!$response->successful()) {
+                $status = $response->status();
+                $errBody = $response->json();
+                $msg = $errBody['error']['message'] ?? "HTTP {$status}";
+                return [
+                    'success'    => false,
+                    'latency_ms' => $latency,
+                    'message'    => "Gagal terhubung ke Gemini API (Status {$status}): {$msg}",
+                    'reply'      => null,
+                ];
+            }
+
+            $data = $response->json();
+            $reply = $data['candidates'][0]['content']['parts'][0]['text'] ?? null;
+            if ($reply) {
+                $reply = $this->cleanResponseText($reply);
+            } else {
+                $reply = "Koneksi berhasil dan handshake endpoint valid (200 OK).";
+            }
+
+            return [
+                'success'    => true,
+                'latency_ms' => $latency,
+                'message'    => "Koneksi Google Gemini Berhasil! Respons diterima dalam {$latency} ms.",
+                'reply'      => $reply,
+            ];
+        } catch (\Throwable $e) {
+            $latency = (int) round((microtime(true) - $startTime) * 1000);
+            return [
+                'success'    => false,
+                'latency_ms' => $latency,
+                'message'    => "Kesalahan Jaringan / Timeout: " . $e->getMessage(),
+                'reply'      => null,
+            ];
+        }
     }
 }

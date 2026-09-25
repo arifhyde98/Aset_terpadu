@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Services\GeminiAiService;
+use App\Services\UnifiedAiService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
@@ -10,7 +10,7 @@ use Illuminate\Routing\Controllers\Middleware;
 
 class AiAssistantController extends Controller implements HasMiddleware
 {
-    protected GeminiAiService $ai;
+    protected UnifiedAiService $ai;
 
     public static function middleware(): array
     {
@@ -19,23 +19,30 @@ class AiAssistantController extends Controller implements HasMiddleware
         ];
     }
 
-    public function __construct(GeminiAiService $ai)
+    public function __construct(UnifiedAiService $ai)
     {
         $this->ai = $ai;
     }
 
     /**
-     * Memeriksa status kesiapan layanan Google Gemini AI.
+     * Memeriksa status kesiapan layanan AI Assistant (OpenAI/Router atau Gemini).
      */
     public function status(Request $request): JsonResponse
     {
-        $isOnline = $this->ai->isAvailable();
+        $isOnline  = $this->ai->isAvailable();
+        $provider  = $this->ai->getActiveProvider();
         $modelName = $this->ai->getActiveModelName();
+
+        $providerLabel = match ($provider) {
+            'openai' => 'OpenAI Compatible / OpenRouter',
+            'gemini' => 'Google Gemini Cloud AI',
+            default  => 'AI Assistant',
+        };
 
         return response()->json([
             'status'            => $isOnline ? 'online' : 'offline',
-            'provider'          => 'google-gemini',
-            'message'           => $isOnline ? "Google Gemini Cloud AI Siap Digunakan ({$modelName})" : 'GEMINI_API_KEY belum diatur di .env',
+            'provider'          => $provider,
+            'message'           => $isOnline ? "{$providerLabel} Siap Digunakan ({$modelName})" : 'API Key AI belum diatur di .env (OPENAI_API_KEY atau GEMINI_API_KEY)',
             'default_model'     => $modelName,
             'has_default_model' => true,
         ]);
@@ -51,11 +58,13 @@ class AiAssistantController extends Controller implements HasMiddleware
             'system' => 'nullable|string|max:1000',
         ]);
 
-        $defaultSystem = "Kamu adalah Asisten Pintar Pengelolaan Barang Milik Daerah (BMD) dan Aset Terpadu (SIPAT & E-RANDIS).\n\n"
+        $configuredSystem = \App\Models\Setting::get('ai_system_prompt');
+
+        $defaultSystem = $configuredSystem ?: ("Kamu adalah Asisten Pintar Pengelolaan Barang Milik Daerah (BMD) dan Aset Terpadu (SIPAT & E-RANDIS).\n\n"
             . "PETUNJUK:\n"
             . "- Langsung berikan jawaban akhir yang rapi dan profesional untuk pengguna dalam Bahasa Indonesia.\n"
             . "- Dilarang keras menampilkan proses berpikir, catatan drafting, internal monologue, atau analisis peran.\n"
-            . "- Gunakan format poin-poin yang terstruktur, padat, dan informatif.";
+            . "- Gunakan format poin-poin yang terstruktur, padat, dan informatif.");
 
         $system = $request->input('system', $defaultSystem);
 

@@ -35,6 +35,17 @@ return [
         ],
     ],
 
+    'ai' => [
+        'provider' => env('AI_PROVIDER', 'auto'),
+    ],
+
+    'openai' => [
+        'api_key'  => env('OPENAI_API_KEY'),
+        'base_url' => env('OPENAI_BASE_URL', 'https://openrouter.ai/api/v1'),
+        'model'    => env('OPENAI_MODEL', 'deepseek/deepseek-chat'),
+        'timeout'  => (int) env('OPENAI_TIMEOUT', 35),
+    ],
+
     'gemini' => [
         'api_key' => env('GEMINI_API_KEY'),
         'model'   => env('GEMINI_MODEL', 'gemini-1.5-flash'),

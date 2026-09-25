@@ -57,7 +57,9 @@ Dokumen ini merupakan ringkasan eksekutif dan arsitektur tingkat tinggi (*High-L
   - `Bootstrap Icons`: Ikonografi antarmuka terpadu (NPM/Vite lokal).
   - `@fontsource/plus-jakarta-sans`: Tipografi utama modern.
 - **Artificial Intelligence Engine:**
-  - **Google Gemini Cloud AI (`GeminiAiService`):** Menggunakan API model stabil Google Gemini (seperti `gemini-1.5-flash`) via `GEMINI_API_KEY` untuk asisten cerdas konsultasi BMD, tanya-jawab aset, dan pembuatan ringkasan otomatis pada floating widget interaktif.
+  - **Unified AI Gateway (`UnifiedAiService`):** Orkestrasi multi-provider AI (OpenAI-Compatible / OpenRouter / 9router & Google Gemini) dengan auto-detection dan graceful fallback.
+  - **OpenAI-Compatible Service (`OpenAiService`):** Koneksi ke gateway OpenRouter / 9router / DeepSeek / OpenAI via `OPENAI_API_KEY`.
+  - **Google Gemini Cloud AI (`GeminiAiService`):** Menggunakan API model stabil Google Gemini (seperti `gemini-1.5-flash`) via `GEMINI_API_KEY`.
   - **Ollama Engine (`OllamaService`):** Fallback LLM lokal (seperti model `qwen2.5:7b`) untuk lingkungan tanpa koneksi internet langsung.
 - **Deployment Target:** Server Lokal / VPS Linux (Nginx + PHP-FPM 8.2+ & MySQL/MariaDB).
 - **CI/CD Pipeline:** GitHub Actions (`.github/workflows/deploy.yml`) memicu script `deploy.sh` via remote SSH Key pada branch `main`.
@@ -80,7 +82,7 @@ Dokumen ini merupakan ringkasan eksekutif dan arsitektur tingkat tinggi (*High-L
      - `ReportService`: Orkestrasi laporan modular E-RANDIS.
      - `LaporanService`: Mesin pengolah laporan KIB A resmi, resolusi judul 3 baris dinamis, dan penataan lembar pengesahan tanda tangan ganda.
      - `DynamicArchiveService` (`App\Services\Elabel\`): Engine formulir dan penyimpanan berkas arsip dinamis multi-lampiran.
-     - `GeminiAiService`: Integrasi Google Gemini Cloud AI untuk floating widget asisten cerdas BMD.
+     - `UnifiedAiService` & `OpenAiService`: Integrasi multi-provider AI (OpenRouter / 9router & Google Gemini) untuk floating widget asisten cerdas BMD.
   2. **Strategy & Registry Pattern (Modul Laporan E-RANDIS):**
      - Memetakan jenis laporan ke kelas strategi mandiri (`VehicleStatusReport`, `OpdAssetReport`, `DocumentValidityReport`, `DuplicateVehicleReport`) via `ReportRegistry`.
      - Mendukung pemisahan sumber data riil (`vehicles`) vs data e-BMD (`ebmd_vehicles`).
@@ -268,8 +270,8 @@ Seluruh fitur berikut telah selesai diimplementasikan (**DONE**) dan beroperasi 
 
 ### 8.4 Portal Terpadu, Asisten AI & Fitur Lintas Modul
 | Fitur | Status | Deskripsi & Implementasi |
-|---|:---:|---|
-| **Asisten Pintar AI (Google Gemini Cloud)** | `DONE` | Floating widget interaktif di seluruh halaman internal untuk Q&A seputar regulasi BMD dan pembuatan ringkasan data aset ditenagai oleh `GeminiAiService`. |
+| **Asisten Pintar AI & Gateway Hub** | `DONE` | Floating widget interaktif di seluruh halaman internal untuk Q&A regulasi BMD dan data aset via `UnifiedAiService`. Mendukung multi-provider OpenAI-Compatible (9Router, OpenRouter, DeepSeek, Groq, OpenAI resmi) dan Google Gemini Cloud dengan auto-detection & graceful fallback. |
+| **Antarmuka Pengaturan AI Terpusat (`/settings/ai`)** | `DONE` | Dedicated UI khusus Superadmin untuk konfigurasi engine AI, pilihan provider aktif, Base URL, API Key masking, nama model, timeout, kustomisasi system prompt persona, preset 1-klik (9Router, OpenRouter, DeepSeek, Groq, OpenAI), proteksi anti-SSRF, rate-limiting, dan fitur AJAX Live Test Connection langsung dari browser. |
 | **Unified Asset Portal & Search** | `DONE` | Portal pencarian publik landing page lintas 3 modul (Kendaraan, Tanah, Arsip) via `UnifiedAssetSearchService`, proteksi data privat, dan statistik live berbasis cache. |
 | **Landing Sebaran OPD & Kecamatan** | `DONE` | Dua diagram Donut interaktif berdampingan di halaman muka dengan modal pop-up interaktif full-featured (tabel 54 OPD & 16 Kecamatan tanpa memenuhi halaman). |
 | **Master OPD Terpadu (Tunggal)** | `DONE` | Konsolidasi master instansi ke tabel tunggal `opds` dengan dukungan Sub-OPD (`sub_opds`) untuk seluruh modul (SIPAT, Bangunan, Kendaraan, e-Label), badge counter terpadu, dan merger aman lintas entitas. |
