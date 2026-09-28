@@ -256,6 +256,7 @@ Seluruh fitur berikut telah selesai diimplementasikan (**DONE**) dan beroperasi 
 | **Widget Distribusi OPD (Breakdown)** | `DONE` | Widget dashboard Top 5 OPD dengan doughnut chart representasi 100%, multi-segment progress bar, breakdown status (Bersertifikat, Proses, Belum), dan link filter cepat. |
 | **Tabel Sebaran Aset per OPD & Wilayah** | `DONE` | Rekapitulasi komprehensif seluruh 54 OPD dan 16 Kecamatan di Dashboard SIPAT, dilengkapi live search JavaScript, progres bar sertifikasi, dan footer total akumulasi. |
 | **Pusat Laporan & Ekspor 11/12 Kolom** | `DONE` | Format cetak standar Pemkab Donggala 11 kolom dan 12 kolom dinamis (sub-kolom `No. Sertifikat` terhubung ke e-Label), antarmuka web modern 2-kolom (`.report-shell`) dengan kartu ringkasan dan kartu aksi ekspor, mesin judul dinamis 3 baris (mode auto/master/manual), ekspor Excel streaming, serta pengesahan penanda tangan ganda (*Dual Signatories*) berdampingan yang terintegrasi dengan Master KOP Surat Pemda (`/master-data/kop-surat`). |
+| **Ekspor Presisi Data Aset Tanah** | `DONE` | Integrasi kueri kanonikal tunggal `buildAsetQuery` pada tombol ekspor data aset tanah (`.xlsx` & `.pdf`), menjamin data hasil ekspor 100% presisi dan identik terhadap filter aktif (OPD, Kecamatan, Kategori Status, Status BPN multi-centang, Pencarian cepat, dan Urutan/Sort). |
 
 ### 8.3 Modul eLABEL (Pengarsipan Dokumen & Dynamic Archive)
 | Fitur | Status | Deskripsi & Implementasi |

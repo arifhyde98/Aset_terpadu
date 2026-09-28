@@ -5,6 +5,7 @@ namespace App\Models\Elabel;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Facades\Storage;
 
 /**
  * Model untuk Katalog Sertifikat Tanah.
@@ -85,5 +86,18 @@ class ElabelSertifikat extends Model
     public function asetTanah(): BelongsTo
     {
         return $this->belongsTo(\App\Models\AsetTanah::class, 'nibar', 'kode_aset');
+    }
+
+    /**
+     * Memeriksa ketersediaan berkas fisik scan PDF di storage privat (local) maupun publik (arsip lama).
+     */
+    public function hasPdfFile(): bool
+    {
+        if (empty($this->pdf_path)) {
+            return false;
+        }
+
+        return Storage::disk('local')->exists($this->pdf_path)
+            || Storage::disk('public')->exists($this->pdf_path);
     }
 }

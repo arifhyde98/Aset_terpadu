@@ -84,12 +84,12 @@
                 </button>
                 <ul class="dropdown-menu dropdown-menu-end shadow border-0 rounded-3">
                     <li>
-                        <a class="dropdown-item py-2 fw-medium" href="{{ route('sipat.aset.index') }}?{{ http_build_query(array_merge(request()->query(), ['export' => 'xlsx'])) }}">
+                        <a class="dropdown-item py-2 fw-medium btn-export-action" data-export-type="xlsx" href="{{ route('sipat.aset.index') }}?{{ http_build_query(array_merge(request()->except('page'), ['export' => 'xlsx'])) }}">
                             <i class="bi bi-file-earmark-excel text-success me-2 fs-5"></i> Download Excel (.xlsx)
                         </a>
                     </li>
                     <li>
-                        <a class="dropdown-item py-2 fw-medium" href="{{ route('sipat.aset.index') }}?{{ http_build_query(array_merge(request()->query(), ['export' => 'pdf'])) }}" target="_blank">
+                        <a class="dropdown-item py-2 fw-medium btn-export-action" data-export-type="pdf" href="{{ route('sipat.aset.index') }}?{{ http_build_query(array_merge(request()->except('page'), ['export' => 'pdf'])) }}" target="_blank">
                             <i class="bi bi-file-pdf text-danger me-2 fs-5"></i> Pratinjau Cetak / PDF
                         </a>
                     </li>
@@ -958,6 +958,39 @@
                 }
             });
         }
+
+        // ==========================================
+        // DYNAMIC EXPORT: MENGIKUTI FILTER AKTIF 100%
+        // ==========================================
+        document.querySelectorAll('.btn-export-action').forEach(function(btn) {
+            btn.addEventListener('click', function(e) {
+                const form = document.getElementById('filterForm');
+                if (!form) return;
+
+                e.preventDefault();
+                const exportType = this.getAttribute('data-export-type') || 'xlsx';
+
+                // Kumpulkan seluruh data form aktif secara presisi
+                const formData = new FormData(form);
+                const params = new URLSearchParams();
+
+                for (const [key, value] of formData.entries()) {
+                    if (key === 'page' || key === 'export') continue;
+                    if (value !== '') {
+                        params.append(key, value);
+                    }
+                }
+                params.set('export', exportType);
+
+                const exportUrl = form.action + '?' + params.toString();
+
+                if (exportType === 'pdf' || exportType === 'print') {
+                    window.open(exportUrl, '_blank');
+                } else {
+                    window.location.href = exportUrl;
+                }
+            });
+        });
 
         // ==========================================
         // MAGIC BUTTON: DIAGNOSIS DUPLIKASI DATA SIPAT

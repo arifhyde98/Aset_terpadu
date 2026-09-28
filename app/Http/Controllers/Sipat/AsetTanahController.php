@@ -65,7 +65,7 @@ class AsetTanahController extends Controller implements HasMiddleware
             return redirect()->route('sipat.aset.index');
         }
 
-        $filterKeys = ['opd_id', 'opd', 'status', 'kategori_status', 'search', 'per_page', 'page', 'sort_by', 'sort_order'];
+        $filterKeys = ['opd_id', 'opd', 'kecamatan_id', 'status', 'kategori_status', 'search', 'per_page', 'page', 'sort_by', 'sort_order'];
         $queryFilters = array_filter($request->only($filterKeys), function($v) {
             if (is_array($v)) return !empty(array_filter($v));
             return !is_null($v) && $v !== '';
@@ -80,7 +80,9 @@ class AsetTanahController extends Controller implements HasMiddleware
             $exportType = strtolower($request->input('export'));
             $laporanService = app(\App\Services\Sipat\LaporanService::class);
             
-            $filters = $request->all();
+            // Gabungkan filter session dan request aktif agar parameter filter tidak hilang saat ekspor
+            $filters = array_merge($this->getSessionFilters(), $request->all());
+
             if (auth()->check() && in_array(auth()->user()->role, [UserRole::OPD, UserRole::KPB])) {
                 $filters['opd_id'] = auth()->user()->opd_id;
                 $filters['opd'] = auth()->user()->opd_id;
@@ -93,7 +95,8 @@ class AsetTanahController extends Controller implements HasMiddleware
                 $filters['status_proses_id'] = $filters['status'];
             }
 
-            $rows = $laporanService->buildQuery($filters)->get();
+            // Gunakan buildAsetQuery langsung dari asetTanahService sehingga hasil export 100% presisi dan selaras dengan tabel
+            $rows = $this->asetTanahService->buildAsetQuery($filters)->get();
             $summary = $laporanService->buildSummary($rows, $filters);
             $kop = $laporanService->getKopSettings();
             $selectedTitle = $laporanService->resolveReportTitle($filters);

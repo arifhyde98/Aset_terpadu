@@ -23,17 +23,24 @@ class AsetTanahService
     }
 
     /**
-     * Mendapatkan daftar aset tanah terpaginasi beserta filter pencarian.
+     * Membangun Query Builder untuk Aset Tanah berdasarkan seluruh filter aktif.
      *
      * @param array $filters
-     * @return array
+     * @return \Illuminate\Database\Eloquent\Builder
      */
-    public function getPaginatedAset(array $filters): array
+    public function buildAsetQuery(array $filters)
     {
-        $query = AsetTanah::with(['latestProses.statusProses', 'targetSertifikat', 'opdSipat', 'wilayahKecamatan', 'wilayahDesa']);
+        $query = AsetTanah::with([
+            'latestProses.statusProses',
+            'targetSertifikat',
+            'opdSipat',
+            'wilayahKecamatan',
+            'wilayahDesa',
+            'sertifikatElabel'
+        ]);
 
-        if (!empty($filters['search'])) {
-            $search = $filters['search'];
+        $search = $filters['search'] ?? ($filters['q'] ?? null);
+        if (!empty($search)) {
             $query->where(function($q) use ($search) {
                 $q->where('kode_aset', 'LIKE', "%{$search}%")
                   ->orWhere('nama_aset', 'LIKE', "%{$search}%")
@@ -66,7 +73,6 @@ class AsetTanahService
                 $query->where(function($q) {
                     $q->whereNull('opd_id')
                       ->orWhere(function ($q2) {
-                          // Juga tangkap data yang opd_id ada tapi kolom opd kosong
                           $q2->whereNull('opd')->orWhere('opd', '');
                       });
                 });
@@ -91,9 +97,10 @@ class AsetTanahService
             $query->filterKategoriStatus($filters['kategori_status']);
         }
 
-        if (!empty($filters['status'])) {
-            $statusInput = (array) $filters['status'];
-            $statusIds = array_filter($statusInput);
+        $rawStatus = $filters['status'] ?? ($filters['status_proses_id'] ?? null);
+        if (!empty($rawStatus)) {
+            $statusInput = (array) $rawStatus;
+            $statusIds = array_filter($statusInput, fn($v) => !is_null($v) && $v !== '');
             if (!empty($statusIds)) {
                 $query->whereHas('latestProses', function($q) use ($statusIds) {
                     $q->whereIn('id_status', $statusIds);
@@ -122,7 +129,18 @@ class AsetTanahService
             $query->orderBy($sortBy, $sortOrder);
         }
 
-        $orderQuery = $query->orderBy('id_aset', 'desc');
+        return $query->orderBy('id_aset', 'desc');
+    }
+
+    /**
+     * Mendapatkan daftar aset tanah terpaginasi beserta filter pencarian.
+     *
+     * @param array $filters
+     * @return array
+     */
+    public function getPaginatedAset(array $filters): array
+    {
+        $orderQuery = $this->buildAsetQuery($filters);
 
         $perPage = $filters['per_page'] ?? 15;
         if ($perPage === 'all') {

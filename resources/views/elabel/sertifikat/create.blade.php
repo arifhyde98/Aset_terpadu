@@ -106,7 +106,10 @@
                                     {{ $kec->nama }}
                                 </option>
                             @endforeach
-                            @if(isset($item['lokasi']) && $item['lokasi'] !== '' && !$kecamatans->contains('nama', $item['lokasi']))
+                            <option value="Luar Daerah" {{ old('lokasi', $item['lokasi'] ?? '') == 'Luar Daerah' ? 'selected' : '' }}>
+                                Luar Daerah (Di luar Kab. Donggala)
+                            </option>
+                            @if(isset($item['lokasi']) && $item['lokasi'] !== '' && $item['lokasi'] !== 'Luar Daerah' && !$kecamatans->contains('nama', $item['lokasi']))
                                 <option value="{{ $item['lokasi'] }}" selected>{{ $item['lokasi'] }}</option>
                             @endif
                         </select>

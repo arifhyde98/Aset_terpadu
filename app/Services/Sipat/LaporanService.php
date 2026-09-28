@@ -49,14 +49,21 @@ class LaporanService
      */
     public function buildQuery(array $filters)
     {
-        $query = AsetTanah::with(['latestProses.statusProses', 'opdSipat', 'wilayahKecamatan', 'sertifikatElabel']);
+        $query = AsetTanah::with([
+            'latestProses.statusProses',
+            'targetSertifikat',
+            'opdSipat',
+            'wilayahKecamatan',
+            'wilayahDesa',
+            'sertifikatElabel'
+        ]);
 
-        $opdFilter = $filters['opd_id'] ?? '';
+        $opdFilter = $filters['opd_id'] ?? ($filters['opd'] ?? '');
         if ($opdFilter !== '') {
             if ($opdFilter === 'KOSONG') {
                 $query->where(function($q) {
                     $q->whereNull('opd_id')
-                      ->where(function ($q2) {
+                      ->orWhere(function ($q2) {
                           $q2->whereNull('opd')->orWhere('opd', '');
                       });
                 });
@@ -76,32 +83,69 @@ class LaporanService
             }
         }
 
-        // Filter Kategori Status (Belum Diproses, Dalam Proses, Sudah Bersertifikat, Bermasalah, Belum Bersertifikat)
+        // Filter Kategori Status (Belum Diproses, Dalam Proses, Sudah Bersertifikat, Bermasalah, Belum Bersertifikat, Target, dll)
         $kat = $filters['kategori_status'] ?? '';
         if ($kat !== '') {
             $query->filterKategoriStatus($kat);
-        } elseif (!empty($filters['status'])) {
-            $query->whereHas('latestProses', function($q) use ($filters) {
-                $q->whereIn('id_status', $filters['status']);
-            });
+        }
+
+        // Filter Status Proses BPN (Multi-select Checkbox atau Single Status ID)
+        $rawStatus = $filters['status'] ?? ($filters['status_proses_id'] ?? null);
+        if (!empty($rawStatus)) {
+            $statusInput = (array) $rawStatus;
+            $statusIds = array_filter($statusInput, fn($v) => !is_null($v) && $v !== '');
+            if (!empty($statusIds)) {
+                $query->whereHas('latestProses', function($q) use ($statusIds) {
+                    $q->whereIn('id_status', $statusIds);
+                });
+            }
         }
 
         if (!empty($filters['tanggal_perolehan'])) {
             $query->whereDate('tanggal_perolehan', $filters['tanggal_perolehan']);
         }
 
-        if (!empty($filters['q'])) {
-            $search = '%' . $filters['q'] . '%';
+        $search = $filters['search'] ?? ($filters['q'] ?? '');
+        if (!empty($search)) {
             $query->where(function($q) use ($search) {
-                $q->where('kode_aset', 'LIKE', $search)
-                  ->orWhere('nama_aset', 'LIKE', $search)
-                  ->orWhere('peruntukan', 'LIKE', $search)
-                  ->orWhere('opd', 'LIKE', $search)
+                $q->where('kode_aset', 'LIKE', "%{$search}%")
+                  ->orWhere('nama_aset', 'LIKE', "%{$search}%")
+                  ->orWhere('opd', 'LIKE', "%{$search}%")
                   ->orWhereHas('opdSipat', function ($opdQuery) use ($search) {
-                      $opdQuery->where('nama', 'LIKE', $search);
+                      $opdQuery->where('nama', 'LIKE', "%{$search}%");
                   })
-                  ->orWhere('alamat', 'LIKE', $search);
+                  ->orWhereHas('wilayahKecamatan', function ($kecQuery) use ($search) {
+                      $kecQuery->where('nama', 'LIKE', "%{$search}%");
+                  })
+                  ->orWhere('peruntukan', 'LIKE', "%{$search}%")
+                  ->orWhere('alamat', 'LIKE', "%{$search}%")
+                  ->orWhereExists(function($sub) use ($search) {
+                      $sub->select(DB::raw(1))
+                          ->from('elabel_sertifikat_tanah')
+                          ->whereColumn('elabel_sertifikat_tanah.nibar', 'aset_tanah.kode_aset')
+                          ->where(function($sub2) use ($search) {
+                              $sub2->where('nama_pemilik', 'LIKE', "%{$search}%")
+                                   ->orWhere('status_penggunaan', 'LIKE', "%{$search}%");
+                          });
+                  });
             });
+        }
+
+        // Pengurutan (Default: Abjad A-Z berdasarkan Peruntukan / Nama Aset)
+        $sortBy = $filters['sort_by'] ?? 'nama_aset';
+        $sortOrder = strtolower($filters['sort_order'] ?? 'asc') === 'desc' ? 'desc' : 'asc';
+
+        $allowedSorts = ['nama_aset', 'peruntukan', 'luas', 'opd', 'alamat', 'kode_aset', 'id_aset'];
+        if (!in_array($sortBy, $allowedSorts, true)) {
+            $sortBy = 'nama_aset';
+        }
+
+        if ($sortBy === 'nama_aset') {
+            $query->orderByRaw("COALESCE(NULLIF(TRIM(peruntukan), ''), TRIM(nama_aset)) {$sortOrder}");
+        } elseif ($sortBy === 'opd') {
+            $query->orderBy('opd', $sortOrder);
+        } else {
+            $query->orderBy($sortBy, $sortOrder);
         }
 
         return $query->orderBy('id_aset', 'desc');
@@ -154,21 +198,34 @@ class LaporanService
 
         if (!empty($filters['kategori_status'])) {
             $katLabels = [
-                'belum_diproses' => 'Belum Diproses',
-                'dalam_proses' => 'Dalam Proses',
-                'sudah_bersertifikat' => 'Sudah Bersertifikat',
-                'bermasalah' => 'Bermasalah / Sengketa',
-                'belum_bersertifikat' => 'Belum Bersertifikat (Gabungan)',
+                'belum_diproses'        => 'Belum Diproses',
+                'dalam_proses'          => 'Dalam Proses',
+                'sudah_bersertifikat'   => 'Sudah Bersertifikat',
+                'bermasalah'            => 'Bermasalah / Sengketa',
+                'belum_bersertifikat'   => 'Belum Bersertifikat (Gabungan)',
+                'target_sertifikat'     => 'Target Pensertifikatan',
+                'TERCATAT_KIB_A'        => 'KIB A (Tercatat Resmi)',
+                'USULAN_BELUM_TERCATAT' => 'Tanpa NIBAR / Belum Tercatat',
             ];
-            $katValue = $katLabels[$filters['kategori_status']] ?? $filters['kategori_status'];
+            $katValue = $katLabels[$filters['kategori_status']] ?? ucwords(str_replace('_', ' ', $filters['kategori_status']));
             $activeFilters[] = ['label' => 'Kategori Status', 'value' => $katValue];
+        }
+
+        $rawStatus = $filters['status'] ?? ($filters['status_proses_id'] ?? null);
+        if (!empty($rawStatus)) {
+            $statusIds = (array) $rawStatus;
+            $statusNames = \App\Models\StatusProses::whereIn('id_status', array_filter($statusIds))->pluck('nama_status')->toArray();
+            if (!empty($statusNames)) {
+                $activeFilters[] = ['label' => 'Status BPN', 'value' => implode(', ', $statusNames)];
+            }
         }
 
         if (!empty($filters['tanggal_perolehan'])) {
             $activeFilters[] = ['label' => 'Tanggal Perolehan', 'value' => $filters['tanggal_perolehan']];
         }
-        if (!empty($filters['q'])) {
-            $activeFilters[] = ['label' => 'Pencarian', 'value' => $filters['q']];
+        $searchVal = $filters['search'] ?? ($filters['q'] ?? null);
+        if (!empty($searchVal)) {
+            $activeFilters[] = ['label' => 'Pencarian', 'value' => $searchVal];
         }
 
         return [
@@ -223,12 +280,14 @@ class LaporanService
         // Baris 1: Kategori / Status Laporan
         $kat = $filters['kategori_status'] ?? '';
         $line1 = match ($kat) {
-            'sudah_bersertifikat' => 'LAPORAN ASET TANAH SUDAH BERSERTIFIKAT',
-            'dalam_proses'        => 'LAPORAN ASET TANAH DALAM PROSES PENSERTIFIKATAN BPN',
-            'belum_diproses'      => 'LAPORAN ASET TANAH BELUM DIPROSES PENSERTIFIKATAN',
-            'bermasalah'          => 'LAPORAN ASET TANAH BERMASALAH / SENGKETA',
-            'belum_bersertifikat' => 'LAPORAN REKAPITULASI ASET TANAH BELUM BERSERTIFIKAT (GABUNGAN)',
-            default               => 'LAPORAN REKAPITULASI ASET TANAH',
+            'sudah_bersertifikat'   => 'LAPORAN ASET TANAH SUDAH BERSERTIFIKAT',
+            'dalam_proses'          => 'LAPORAN ASET TANAH DALAM PROSES PENSERTIFIKATAN BPN',
+            'belum_diproses', 'belum_bersertifikat' => 'LAPORAN REKAPITULASI ASET TANAH BELUM BERSERTIFIKAT',
+            'bermasalah', 'kendala' => 'LAPORAN ASET TANAH BERMASALAH / SENGKETA',
+            'target_sertifikat'     => 'LAPORAN TARGET PENSERTIFIKATAN ASET TANAH',
+            'TERCATAT_KIB_A'        => 'LAPORAN ASET TANAH TERCATAT RESMI (KIB A)',
+            'USULAN_BELUM_TERCATAT' => 'LAPORAN TANAH BELUM TERCATAT / TANPA NIBAR RESMI',
+            default                 => 'LAPORAN REKAPITULASI ASET TANAH',
         };
 
         // Deteksi OPD

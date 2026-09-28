@@ -561,7 +561,7 @@
                     </div>
 
                     <div class="d-flex flex-wrap gap-2 pt-3 border-top">
-                        @if($elabelSertifikat->pdf_path && \Illuminate\Support\Facades\Storage::disk('public')->exists($elabelSertifikat->pdf_path))
+                        @if($elabelSertifikat->hasPdfFile())
                             <a href="{{ route('elabel.sertifikat.view-pdf', $elabelSertifikat->id) }}" target="_blank" class="btn btn-primary fw-medium shadow-sm">
                                 <i class="bi bi-file-earmark-pdf me-1"></i> Buka Fullscreen PDF
                             </a>
@@ -578,7 +578,7 @@
                     </div>
 
                     <!-- DIRECT LIVE PREVIEW SCAN PDF SERTIFIKAT -->
-                    @if($elabelSertifikat->pdf_path && \Illuminate\Support\Facades\Storage::disk('public')->exists($elabelSertifikat->pdf_path))
+                    @if($elabelSertifikat->hasPdfFile())
                         <div class="mt-4 pt-3 border-top">
                             <div class="d-flex align-items-center justify-content-between mb-2">
                                 <h6 class="fw-bold mb-0 text-navy"><i class="bi bi-file-earmark-pdf text-danger me-1"></i> Viewer Scan PDF Sertifikat Tanah (eLabel)</h6>
@@ -652,6 +652,7 @@
                                 'cara_perolehan' => $aset->dasar_perolehan ?? '',
                                 'tanggal_sertifikat' => $aset->latestProses?->tgl_selesai ?? $aset->latestProses?->tanggal_proses ?? '',
                                 'alamat' => $aset->alamat ?? '',
+                                'lokasi' => $aset->wilayahKecamatan->nama ?? '',
                                 'status_penggunaan' => $aset->peruntukan ?? '',
                             ]) }}" target="_blank" class="btn btn-primary fw-bold px-4 py-2 shadow-sm">
                                 <i class="bi bi-plus-lg me-1"></i> + Daftarkan ke Katalog eLabel

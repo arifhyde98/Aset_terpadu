@@ -69,7 +69,7 @@ class ElabelSertifikatController extends Controller implements HasMiddleware
         $aset = null;
 
         if (!empty($nibar)) {
-            $aset = \App\Models\AsetTanah::withoutGlobalScopes()->with(['latestProses.statusProses', 'opdSipat'])->where('kode_aset', $nibar)->first();
+            $aset = \App\Models\AsetTanah::withoutGlobalScopes()->with(['latestProses.statusProses', 'opdSipat', 'wilayahKecamatan'])->where('kode_aset', $nibar)->first();
         }
 
         // Jika role pengguna adalah admin, wajib mendaftar lewat SIPAT
@@ -135,7 +135,7 @@ class ElabelSertifikatController extends Controller implements HasMiddleware
             'nilai_perolehan'    => $request->get('nilai_perolehan') ?: ($aset ? $aset->harga_perolehan : null),
             'cara_perolehan'     => $request->get('cara_perolehan') ?: ($aset ? $aset->dasar_perolehan : null),
             'alamat'             => $request->get('alamat') ?: ($aset ? $aset->alamat : null),
-            'lokasi'             => $request->get('lokasi') ?: ($request->get('alamat') ?: ($aset ? $aset->alamat : null)),
+            'lokasi'             => $request->get('lokasi') ?: ($aset?->wilayahKecamatan?->nama ?: null),
             'status_penggunaan'  => $request->get('status_penggunaan') ?: ($request->get('peruntukan') ?: ($aset ? $aset->peruntukan : null)),
         ];
 
@@ -588,17 +588,36 @@ class ElabelSertifikatController extends Controller implements HasMiddleware
             }
         }
 
-        // 4. Buat Box Baru
-        $baseCode = $exactBoxes->isNotEmpty() ? $exactBoxes->first()->box_code : ($allBoxes->isNotEmpty() ? $allBoxes->first()->box_code : 'ST-01');
-        $newCode = $this->nextBoxCodeSuffix($baseCode);
+        // 4. Buat Box Baru jika kapasitas box sebelumnya penuh
+        $parentBox = $exactBoxes->first() ?: ($wordMatchBoxes->isNotEmpty() ? $wordMatchBoxes->first() : ($allBoxes->first() ?: null));
+        $targetLokasi = $parentBox ? $parentBox->lokasi : $lokasi;
+
+        if ($parentBox) {
+            $newCode = $this->nextBoxCodeSuffix($parentBox->box_code);
+        } else {
+            $newCode = $this->generateNextNewBoxCode();
+        }
 
         $newBox = ElabelSertifikatBox::create([
             'box_code'   => $newCode,
-            'lokasi'     => $lokasi,
+            'lokasi'     => $targetLokasi,
             'created_by' => Auth::id() ?: 1,
         ]);
 
         return $newBox->id;
+    }
+
+    private function generateNextNewBoxCode(): string
+    {
+        $boxes = ElabelSertifikatBox::select('box_code')->get();
+        $maxNum = 1;
+        foreach ($boxes as $box) {
+            if (preg_match('/^ST-(\d+)/i', (string) $box->box_code, $m)) {
+                $maxNum = max($maxNum, (int) $m[1]);
+            }
+        }
+        $nextNum = $maxNum + 1;
+        return sprintf('ST-%02d', $nextNum);
     }
 
     private function nextBoxCodeSuffix(string $baseCode): string
