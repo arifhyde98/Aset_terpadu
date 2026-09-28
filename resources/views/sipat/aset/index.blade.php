@@ -2,7 +2,13 @@
 
 @section('content')
 <style>
+    .filter-card-container {
+        position: relative;
+        z-index: 25;
+    }
     .table-container-sipat {
+        position: relative;
+        z-index: 1;
         border-radius: 1rem;
         border: 1px solid var(--border-color, rgba(0,0,0,0.08));
     }
@@ -108,7 +114,7 @@
     </div>
 
     <!-- Filter Card -->
-    <div class="card clean-card border-0 shadow-sm rounded-4 mb-4">
+    <div class="card clean-card border-0 shadow-sm rounded-4 mb-4 filter-card-container">
         <div class="card-body p-3">
             <form method="GET" action="{{ route('sipat.aset.index') }}" id="filterForm">
                 <div class="row g-2 align-items-end">
@@ -181,7 +187,7 @@
                             Status BPN <span class="badge bg-warning-subtle text-body px-1.5 py-0.5 rounded-pill" style="font-size: 0.65rem;">Centang</span>
                         </label>
                         <div class="dropdown">
-                            <button class="btn btn-outline-secondary bg-body border-0 text-start w-100 dropdown-toggle d-flex align-items-center justify-content-between py-2" type="button" id="dropdownStatusFilter" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">
+                            <button class="btn border bg-body text-start w-100 dropdown-toggle d-flex align-items-center justify-content-between text-secondary" style="min-height: 38px; padding: 0.375rem 0.75rem;" type="button" id="dropdownStatusFilter" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">
                                 <span class="text-truncate small" id="statusFilterBtnText">
                                     @php
                                         $selectedStatuses = (array) request('status');
@@ -194,7 +200,7 @@
                                     @endif
                                 </span>
                             </button>
-                            <div class="dropdown-menu p-3 shadow-lg border-0 rounded-4" style="min-width: 270px; max-height: 380px; overflow-y: auto;">
+                            <div class="dropdown-menu p-3 shadow-lg border-0 rounded-4" style="min-width: 270px; max-height: 380px; overflow-y: auto; z-index: 1050;">
                                 @php
                                     $activeKat = request('kategori_status');
                                     $katLabelMap = [

@@ -133,9 +133,16 @@
                             <td class="px-4 text-center">
                                 <div class="d-flex justify-content-center gap-1">
                                     @if($item->pdf_path)
-                                            <a href="{{ route('elabel.bpkb.view-pdf', $item->id) }}" target="_blank" class="btn btn-sm btn-light border text-danger fw-medium d-inline-flex align-items-center gap-1" title="Disimpan & Dibuka dari Harddisk Lokal">
-                                                <i class="bi bi-hdd"></i> <span class="d-none d-md-inline" style="font-size: 11px;">Lokal</span>
-                                            </a>
+                                        <a href="{{ route('elabel.bpkb.view-pdf', $item->id) }}" 
+                                           data-pdf-preview="true"
+                                           data-pdf-url="{{ route('elabel.bpkb.view-pdf', $item->id) }}"
+                                           data-pdf-title="Scan BPKB {{ $item->plate_number }}"
+                                           data-pdf-subtitle="No. BPKB: {{ $item->no_bpkb ?: '-' }} | Box: {{ $item->box->box_code ?? '-' }}"
+                                           data-pdf-badge="{{ $item->vehicle_type }}"
+                                           class="btn btn-sm btn-light border text-danger fw-medium d-inline-flex align-items-center gap-1" 
+                                           title="Pratinjau Scan BPKB">
+                                            <i class="bi bi-file-earmark-pdf"></i> <span class="d-none d-md-inline" style="font-size: 11px;">PDF</span>
+                                        </a>
                                     @endif
                                     <a href="{{ route('elabel.bpkb.show', $item->id) }}" class="btn btn-sm btn-light border text-navy" title="Detail">
                                         <i class="bi bi-eye"></i>

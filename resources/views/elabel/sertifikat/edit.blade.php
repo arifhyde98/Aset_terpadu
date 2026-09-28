@@ -17,7 +17,19 @@
             </nav>
             <h4 class="fw-bold text-navy mb-0">Edit Sertifikat Tanah {{ $item->no_sertipikat }}</h4>
         </div>
-        <div>
+        <div class="d-flex gap-2">
+            @if($item->pdf_path)
+                <button type="button" 
+                        class="btn btn-outline-danger shadow-sm fw-medium d-inline-flex align-items-center gap-1.5"
+                        data-pdf-preview="true"
+                        data-pdf-url="{{ route('elabel.sertifikat.view-pdf', $item->id) }}"
+                        data-pdf-title="Scan Sertifikat {{ $item->no_sertipikat }}"
+                        data-pdf-subtitle="Pemilik: {{ $item->nama_pemilik ?: '-' }} | Box: {{ $item->box->box_code ?? '-' }}"
+                        data-pdf-badge="Sertifikat Tanah">
+                    <i class="bi bi-file-earmark-pdf"></i>
+                    <span>Buka Scan Sertifikat</span>
+                </button>
+            @endif
             <a href="{{ route('elabel.sertifikat.index') }}" class="btn btn-light border fw-medium">
                 <i class="bi bi-arrow-left me-1"></i> Kembali
             </a>
@@ -145,7 +157,21 @@
                         <label class="form-label fw-semibold small">Ganti File Scan Sertifikat (PDF Max 50MB)</label>
                         <input type="file" name="pdf" class="form-control" accept=".pdf">
                         @if($item->pdf_path)
-                            <div class="small text-success mt-1"><i class="bi bi-file-earmark-check"></i> File scan saat ini tersedia. Upload file baru untuk mengganti.</div>
+                            <div class="d-flex align-items-center justify-content-between mt-2 p-2 bg-light rounded-3 border">
+                                <span class="small text-success fw-medium">
+                                    <i class="bi bi-file-earmark-check me-1"></i> Scan fisik tersimpan
+                                </span>
+                                <button type="button" 
+                                        class="btn btn-sm btn-outline-danger py-0 px-2 fw-medium d-inline-flex align-items-center gap-1"
+                                        style="font-size: 11.5px; height: 26px;"
+                                        data-pdf-preview="true"
+                                        data-pdf-url="{{ route('elabel.sertifikat.view-pdf', $item->id) }}"
+                                        data-pdf-title="Scan Sertifikat {{ $item->no_sertipikat }}"
+                                        data-pdf-subtitle="Pemilik: {{ $item->nama_pemilik ?: '-' }}"
+                                        data-pdf-badge="Sertifikat Tanah">
+                                    <i class="bi bi-eye"></i> Pratinjau
+                                </button>
+                            </div>
                         @endif
                     </div>
                 </div>

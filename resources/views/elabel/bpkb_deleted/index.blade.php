@@ -91,7 +91,14 @@
                             <td class="px-4 text-center">
                                 <div class="d-flex justify-content-center gap-1">
                                     @if($item->pdf_path)
-                                        <a href="{{ route('elabel.bpkb-deleted.view-pdf', $item->id) }}" target="_blank" class="btn btn-sm btn-light border text-danger" title="Lihat Scan BPKB">
+                                        <a href="{{ route('elabel.bpkb-deleted.view-pdf', $item->id) }}" 
+                                           data-pdf-preview="true"
+                                           data-pdf-url="{{ route('elabel.bpkb-deleted.view-pdf', $item->id) }}"
+                                           data-pdf-title="Scan BPKB {{ $item->plate_number }} (Keluar)"
+                                           data-pdf-subtitle="No. BPKB: {{ $item->no_bpkb ?: '-' }} | Status: Dikeluarkan"
+                                           data-pdf-badge="{{ $item->vehicle_type }}"
+                                           class="btn btn-sm btn-light border text-danger" 
+                                           title="Lihat Scan BPKB">
                                             <i class="bi bi-file-earmark-pdf"></i>
                                         </a>
                                     @endif

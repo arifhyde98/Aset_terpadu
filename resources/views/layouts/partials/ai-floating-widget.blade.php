@@ -639,7 +639,11 @@ document.addEventListener('DOMContentLoaded', function () {
                     'Accept': 'application/json',
                     'X-CSRF-TOKEN': csrfToken,
                 },
-                body: JSON.stringify({ prompt: text })
+                body: JSON.stringify({ 
+                    prompt: text,
+                    page_url: window.location.pathname,
+                    page_title: document.title
+                })
             });
 
             const result = await response.json();

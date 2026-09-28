@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Services\Ai\AiContextRetrieverService;
 use App\Services\UnifiedAiService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -11,6 +12,7 @@ use Illuminate\Routing\Controllers\Middleware;
 class AiAssistantController extends Controller implements HasMiddleware
 {
     protected UnifiedAiService $ai;
+    protected AiContextRetrieverService $retriever;
 
     public static function middleware(): array
     {
@@ -19,9 +21,10 @@ class AiAssistantController extends Controller implements HasMiddleware
         ];
     }
 
-    public function __construct(UnifiedAiService $ai)
+    public function __construct(UnifiedAiService $ai, AiContextRetrieverService $retriever)
     {
         $this->ai = $ai;
+        $this->retriever = $retriever;
     }
 
     /**
@@ -54,23 +57,35 @@ class AiAssistantController extends Controller implements HasMiddleware
     public function ask(Request $request): JsonResponse
     {
         $request->validate([
-            'prompt' => 'required|string|max:4000',
-            'system' => 'nullable|string|max:1000',
+            'prompt'     => 'required|string|max:4000',
+            'system'     => 'nullable|string|max:1000',
+            'page_url'   => 'nullable|string|max:255',
+            'page_title' => 'nullable|string|max:255',
         ]);
 
+        $prompt = trim((string) $request->input('prompt'));
         $configuredSystem = \App\Models\Setting::get('ai_system_prompt');
 
-        $defaultSystem = $configuredSystem ?: ("Kamu adalah Asisten Pintar Pengelolaan Barang Milik Daerah (BMD) dan Aset Terpadu (SIPAT & E-RANDIS).\n\n"
-            . "PETUNJUK:\n"
-            . "- Langsung berikan jawaban akhir yang rapi dan profesional untuk pengguna dalam Bahasa Indonesia.\n"
-            . "- Dilarang keras menampilkan proses berpikir, catatan drafting, internal monologue, atau analisis peran.\n"
+        $baseSystem = $configuredSystem ?: ("Kamu adalah Asisten Pintar Pengelolaan Barang Milik Daerah (BMD) dan Aset Terpadu (SIPAT, E-RANDIS, eLABEL).\n\n"
+            . "PETUNJUK UTAMA:\n"
+            . "- Langsung berikan jawaban akhir yang rapi, profesional, dan faktual sesuai data sistem dalam Bahasa Indonesia.\n"
+            . "- Gunakan data statistik dan hasil penelusuran sistem yang disertakan di bawah untuk menjawab pertanyaan spesifik tentang nopol kendaraan, tanah, sertifikat, atau instansi OPD.\n"
+            . "- Dilarang keras menampilkan proses berpikir (<think>), catatan drafting, atau internal monologue.\n"
             . "- Gunakan format poin-poin yang terstruktur, padat, dan informatif.");
 
-        $system = $request->input('system', $defaultSystem);
+        // Suntikkan data sistem secara STRICT READ-ONLY
+        $systemContext = $this->retriever->retrieveContext(
+            $prompt,
+            $request->input('page_url'),
+            $request->input('page_title')
+        );
+
+        $customSystem = $request->input('system');
+        $finalSystem = ($customSystem ?: $baseSystem) . "\n\n" . $systemContext;
 
         $result = $this->ai->generate(
-            $request->input('prompt'),
-            $system
+            $prompt,
+            $finalSystem
         );
 
         if (!$result['success']) {

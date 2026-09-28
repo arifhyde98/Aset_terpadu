@@ -368,8 +368,10 @@ Seluruh logika kalkulasi dan query bisnis wajib dienkapsulasi di dalam kelas Ser
 - **Dynamic Archive Observer (`ArchiveTypeObserver`):** Menjamin pembaruan otomatis menu navigasi sidebar & offcanvas mobile (`invalidateSidebarCache`) secara atomik tanpa memicu `Cache::flush()` global saat jenis arsip baru ditambahkan, diubah, atau dihapus. Dokumen arsip (`ArchiveItem`) tidak memicu invalidasi cache sidebar untuk menjaga performa simpan/upload berkas yang tinggi.
 - `ElabelSmartBpkbExtractorController`: Modul isolasi pembacaan isi dokumen PDF BPKB otomatis (*Smart PDF Extractor & OCR*) pada rute `/elabel/bpkb-smart-extractor` dengan verifikasi 4 aturan presisi (Pencocokan Nopol 100% Persis, Proteksi Berkas Ganda, dan Dry-Run Audit Preview).
 - `UnifiedAiService` (`app/Services/UnifiedAiService.php`): Orkestrasi multi-provider AI (OpenAI-compatible / OpenRouter / 9router & Google Gemini) yang melayani endpoint `/ai/status`, `/ai/ask`, dan `/ai/generate-summary` dengan auto-detection dan fallback.
-- `OpenAiService` (`app/Services/OpenAiService.php`): Integrasi protokol OpenAI Chat Completions untuk OpenRouter, 9router, DeepSeek, dll.
+- `OpenAiService` (`app/Services/OpenAiService.php`): Integrasi protokol OpenAI Chat Completions untuk OpenRouter, 9router, DeepSeek, Groq, OpenAI resmi, dll.
 - `GeminiAiService` (`app/Services/GeminiAiService.php`): Integrasi Google Gemini Cloud AI via `GEMINI_API_KEY`.
+- `AiContextRetrieverService` (`app/Services/Ai/AiContextRetrieverService.php`): Service RAG *read-only* terisolasi yang mengumpulkan ringkasan statistik faktual (kendaraan, tanah, BPKB, OPD) dan data spesifik berdasarkan prompt pengguna serta posisi halaman aktif, dilengkapi *guardrails* keamanan ketat yang mencegah segala bentuk manipulasi data.
+- `Admin\AiSettingController` (`app/Http/Controllers/Admin/AiSettingController.php`): Pengontrol antarmuka manajemen AI khusus Superadmin (`/settings/ai`) dengan proteksi SSRF, masking API Key, dan uji koneksi AJAX real-time.
 
 ### 7.2 Arsitektur Modul Laporan E-RANDIS (*Strategy & Registry Pattern*)
 Dibangun secara modular dan fleksibel:
@@ -550,7 +552,7 @@ Diimplementasikan arsitektur *Admin Template Switcher* yang memungkinkan penggun
 - **Katalog Aset Tanah (`/sipat/aset`):**
   - Pendataan aset tanah KIB A Pemkab Donggala, luas, peruntukan, dasar perolehan, koordinat GPS, dan batas bidang.
   - **Filter Kategori Aset Presisi:** Menyaring status pertanahan dengan sinkronisasi presisi (opsi *Belum Bersertifikat* / `belum_diproses` selaras 100% dengan metrik Dashboard Utama: Total - Bersertifikat - Kendala - Target = tepat 669 bidang).
-  - **Filter Status BPN Multi-Select Dinamis:** Checkbox status proses menyesuaikan secara dinamis dengan Kategori Aset yang sedang aktif dan otomatis reset jika kategori berganti.
+  - **Filter Status BPN Multi-Select Dinamis:** Checkbox status proses menyesuaikan secara dinamis dengan Kategori Aset yang sedang aktif dan otomatis reset jika kategori berganti. Dilengkapi isolasi lapisan z-index (`.filter-card-container` dengan `z-index: 25` dan `.dropdown-menu` `z-index: 1050`) untuk memastikan menu centang status mengapung sempurna di atas kartu tabel tanpa terpotong (*clipped*) oleh *stacking context* template *backdrop-filter*.
   - **Session Filter Persistence (User-Scoped, 15-Min TTL):** Filter aktif tersimpan per User ID dengan batas kedaluwarsa 15 menit, dibersihkan otomatis saat logout.
   - **Ekspor & Impor 2 Tab:** Ekspor Excel & PDF sesuai filter aktif, serta modal impor 2 tab (Unggah Aset Baru & Pembaruan Status BPN Massal).
 - **Target Pensertifikatan & Pemetaan Spasial GIS (`/sipat/target-pensertifikatan`):**

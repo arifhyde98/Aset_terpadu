@@ -74,6 +74,7 @@
     @include('layouts.partials.bottom-nav')
     @include('layouts.partials.ai-floating-widget')
     @include('layouts.partials.template-selector-modal')
+    @include('components.pdf-viewer-modal')
 
     @stack('modals')
     @stack('scripts')
