@@ -247,7 +247,7 @@
                                                 } elseif ($activeKat === 'dalam_proses') {
                                                     $isMatch = in_array('proses', $stCats, true) || in_array('permohonan_bpn', $stCats, true);
                                                 } elseif (in_array($activeKat, ['belum_bersertifikat', 'belum_diproses'])) {
-                                                    $isMatch = !in_array('bersertifikat', $stCats, true) && !in_array('kendala', $stCats, true);
+                                                    $isMatch = in_array('belum_diurus', $stCats, true) || in_array('belum_diproses', $stCats, true);
                                                 } elseif (in_array($activeKat, ['bermasalah', 'kendala'])) {
                                                     $isMatch = in_array('kendala', $stCats, true);
                                                 } else {
@@ -923,7 +923,7 @@
                 } else if (newKategori === 'dalam_proses') {
                     isMatch = cats.includes('proses') || cats.includes('permohonan_bpn');
                 } else if (newKategori === 'belum_bersertifikat' || newKategori === 'belum_diproses') {
-                    isMatch = !cats.includes('bersertifikat') && !cats.includes('kendala');
+                    isMatch = cats.includes('belum_diurus') || cats.includes('belum_diproses');
                 } else if (newKategori === 'bermasalah' || newKategori === 'kendala') {
                     isMatch = cats.includes('kendala');
                 } else {
