@@ -157,13 +157,28 @@
                         <select name="kategori_status" id="filterKategoriStatus" class="form-select" onchange="handleKategoriStatusChange(this.value)">
                             <option value="">-- Semua Kategori --</option>
                            
-                            <optgroup label="Status Aset Tanah PEMDA">
-                                <option value="sudah_bersertifikat" {{ request('kategori_status') === 'sudah_bersertifikat' ? 'selected' : '' }}>Sudah Bersertifikat</option>
-                                <option value="dalam_proses" {{ request('kategori_status') === 'dalam_proses' ? 'selected' : '' }}>Dalam Proses BPN</option>
-                                <option value="belum_bersertifikat" {{ in_array(request('kategori_status'), ['belum_bersertifikat', 'belum_diproses']) ? 'selected' : '' }}>Belum Bersertifikat</option>
-                                <option value="bermasalah" {{ request('kategori_status') === 'bermasalah' ? 'selected' : '' }}>Bermasalah / Sengketa</option>
-                                <option value="target_sertifikat" {{ request('kategori_status') === 'target_sertifikat' ? 'selected' : '' }}>Target Pensertifikatan</option>
-                            </optgroup>
+                            @php
+                                $dbCategories = \App\Models\KategoriProses::active()->ordered()->get();
+                            @endphp
+                            @if($dbCategories->count() > 0)
+                                <optgroup label="Status Proses BPN">
+                                    @foreach($dbCategories as $dbKat)
+                                        <option value="{{ $dbKat->kode }}" {{ (request('kategori_status') === $dbKat->kode || ($dbKat->kode === 'belum_bersertifikat' && request('kategori_status') === 'belum_diproses')) ? 'selected' : '' }}>
+                                            {{ $dbKat->nama }} {{ $dbKat->exclude_target ? '(Tanpa Target)' : '' }}
+                                        </option>
+                                    @endforeach
+                                    <option value="target_sertifikat" {{ request('kategori_status') === 'target_sertifikat' ? 'selected' : '' }}>Target Pensertifikatan</option>
+                                </optgroup>
+                            @else
+                                <optgroup label="Status Aset Tanah PEMDA">
+                                    <option value="sudah_bersertifikat" {{ request('kategori_status') === 'sudah_bersertifikat' ? 'selected' : '' }}>Sudah Bersertifikat</option>
+                                    <option value="dalam_proses" {{ request('kategori_status') === 'dalam_proses' ? 'selected' : '' }}>Dalam Proses BPN</option>
+                                    <option value="belum_diurus" {{ request('kategori_status') === 'belum_diurus' ? 'selected' : '' }}>Belum Diurus</option>
+                                    <option value="belum_bersertifikat" {{ in_array(request('kategori_status'), ['belum_bersertifikat', 'belum_diproses']) ? 'selected' : '' }}>Belum Bersertifikat</option>
+                                    <option value="bermasalah" {{ request('kategori_status') === 'bermasalah' ? 'selected' : '' }}>Bermasalah / Sengketa</option>
+                                    <option value="target_sertifikat" {{ request('kategori_status') === 'target_sertifikat' ? 'selected' : '' }}>Target Pensertifikatan</option>
+                                </optgroup>
+                            @endif
                             <optgroup label="Status Pencatatan NIBAR">
                                 <option value="TERCATAT_KIB_A" {{ request('kategori_status') === 'TERCATAT_KIB_A' ? 'selected' : '' }}>KIB A (Tercatat Resmi)</option>
                                 <option value="USULAN_BELUM_TERCATAT" {{ request('kategori_status') === 'USULAN_BELUM_TERCATAT' ? 'selected' : '' }}>Tanpa NIBAR / Belum Tercatat</option>
@@ -203,9 +218,11 @@
                             <div class="dropdown-menu p-3 shadow-lg border-0 rounded-4" style="min-width: 270px; max-height: 380px; overflow-y: auto; z-index: 1050;">
                                 @php
                                     $activeKat = request('kategori_status');
+                                    $kategoriModel = !empty($activeKat) ? \App\Models\KategoriProses::where('kode', $activeKat)->first() : null;
                                     $katLabelMap = [
                                         'sudah_bersertifikat'   => 'Sudah Bersertifikat',
                                         'dalam_proses'          => 'Dalam Proses BPN',
+                                        'belum_diurus'          => 'Belum Diurus',
                                         'belum_bersertifikat'   => 'Belum Bersertifikat',
                                         'belum_diproses'        => 'Belum Bersertifikat',
                                         'bermasalah'            => 'Bermasalah / Sengketa',
@@ -213,12 +230,13 @@
                                         'TERCATAT_KIB_A'        => 'Tercatat KIB A',
                                         'USULAN_BELUM_TERCATAT' => 'Tanpa NIBAR',
                                     ];
-                                    $isCategoryFiltered = !empty($activeKat) && !in_array($activeKat, ['target_sertifikat', 'TERCATAT_KIB_A', 'USULAN_BELUM_TERCATAT']);
+                                    $activeKatLabel = $kategoriModel ? $kategoriModel->nama : ($katLabelMap[$activeKat] ?? ucwords(str_replace('_', ' ', $activeKat)));
+                                    $isCategoryFiltered = !empty($activeKat) && !in_array($activeKat, \App\Models\StatusProses::SPECIAL_CATEGORIES, true);
                                 @endphp
                                 <div class="d-flex align-items-center justify-content-between mb-2 border-bottom pb-1">
                                     <span class="fw-semibold small text-secondary text-truncate me-1">
                                         @if($isCategoryFiltered)
-                                            Status (<span class="text-primary fw-bold">{{ $katLabelMap[$activeKat] ?? ucwords(str_replace('_', ' ', $activeKat)) }}</span>):
+                                            Status (<span class="text-primary fw-bold">{{ $activeKatLabel }}</span>):
                                         @else
                                             Centang Status BPN:
                                         @endif
@@ -239,24 +257,12 @@
                                     @endphp
                                     @foreach($statusList as $st)
                                         @php
-                                            $stCats = array_map('strtolower', $st->categories);
-                                            $isMatch = true;
-                                            if ($isCategoryFiltered) {
-                                                if ($activeKat === 'sudah_bersertifikat') {
-                                                    $isMatch = in_array('bersertifikat', $stCats, true);
-                                                } elseif ($activeKat === 'dalam_proses') {
-                                                    $isMatch = in_array('proses', $stCats, true) || in_array('permohonan_bpn', $stCats, true);
-                                                } elseif (in_array($activeKat, ['belum_bersertifikat', 'belum_diproses'])) {
-                                                    $isMatch = in_array('belum_diurus', $stCats, true) || in_array('belum_diproses', $stCats, true);
-                                                } elseif (in_array($activeKat, ['bermasalah', 'kendala'])) {
-                                                    $isMatch = in_array('kendala', $stCats, true);
-                                                } else {
-                                                    $isMatch = in_array(strtolower($activeKat), $stCats, true);
-                                                }
-                                            }
+                                            $stPivotCats = $st->kategoriProses ? $st->kategoriProses->pluck('kode')->map(fn($c) => strtolower($c))->toArray() : [];
+                                            $allStCats = array_unique(array_merge(array_map('strtolower', $st->categories), $stPivotCats));
+                                            $isMatch = \App\Models\StatusProses::isMatchCategory($activeKat, $allStCats, $st->id_status);
                                             if ($isMatch) $visibleStatusCount++;
                                         @endphp
-                                        <div class="form-check mb-1.5 status-item {{ !$isMatch ? 'd-none status-other-category' : '' }}" data-categories="{{ implode(',', $st->categories) }}">
+                                        <div class="form-check mb-1.5 status-item {{ !$isMatch ? 'd-none status-other-category' : '' }}" data-categories="{{ implode(',', $allStCats) }}" data-status-id="{{ $st->id_status }}">
                                             <input class="form-check-input status-checkbox" type="checkbox" name="status[]" value="{{ $st->id_status }}" id="status_chk_{{ $st->id_status }}"
                                             {{ (is_array(request('status')) && in_array($st->id_status, request('status'))) || request('status') == $st->id_status ? 'checked' : '' }}>
                                             <label class="form-check-label small fw-medium text-body cursor-pointer" for="status_chk_{{ $st->id_status }}">
@@ -907,6 +913,22 @@
             });
         }
 
+        // Konfigurasi Kategori Tunggal Terpusat dari Model StatusProses (SSoT)
+        const specialCategories = @json(\App\Models\StatusProses::SPECIAL_CATEGORIES);
+        const categoryMap = @json(\App\Models\StatusProses::CATEGORY_MAP);
+
+        function checkStatusMatch(newKategori, itemCategories) {
+            if (!newKategori || specialCategories.includes(newKategori)) {
+                return true;
+            }
+            const normNewKat = newKategori.toLowerCase();
+            const allowed = [...(categoryMap[newKategori] || [normNewKat])];
+            if (!allowed.includes(normNewKat)) {
+                allowed.push(normNewKat);
+            }
+            return itemCategories.some(cat => allowed.includes(cat));
+        }
+
         // Handler dinamis Kategori Status: uncheck status yang tidak sesuai kategori baru lalu submit form
         window.handleKategoriStatusChange = function(newKategori) {
             const checkboxes = document.querySelectorAll('.status-checkbox');
@@ -915,20 +937,7 @@
                 if (!item) return;
                 const cats = (item.getAttribute('data-categories') || '').split(',').map(c => c.trim().toLowerCase());
                 
-                let isMatch = true;
-                if (!newKategori || ['target_sertifikat', 'TERCATAT_KIB_A', 'USULAN_BELUM_TERCATAT'].includes(newKategori)) {
-                    isMatch = true;
-                } else if (newKategori === 'sudah_bersertifikat') {
-                    isMatch = cats.includes('bersertifikat');
-                } else if (newKategori === 'dalam_proses') {
-                    isMatch = cats.includes('proses') || cats.includes('permohonan_bpn');
-                } else if (newKategori === 'belum_bersertifikat' || newKategori === 'belum_diproses') {
-                    isMatch = cats.includes('belum_diurus') || cats.includes('belum_diproses');
-                } else if (newKategori === 'bermasalah' || newKategori === 'kendala') {
-                    isMatch = cats.includes('kendala');
-                } else {
-                    isMatch = cats.includes(newKategori.toLowerCase());
-                }
+                const isMatch = checkStatusMatch(newKategori, cats);
 
                 if (!isMatch) {
                     cb.checked = false;

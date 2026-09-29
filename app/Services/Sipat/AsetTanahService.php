@@ -155,7 +155,7 @@ class AsetTanahService
         } else {
             $opdList = Opd::where('aktif', 1)->orderBy('nama', 'asc')->get();
         }
-        $statusList = StatusProses::orderBy('urutan', 'asc')->get();
+        $statusList = StatusProses::with('kategoriProses')->orderBy('urutan', 'asc')->get();
         $kecamatanList = \App\Models\Kecamatan::orderBy('nama', 'asc')->get();
 
         return [

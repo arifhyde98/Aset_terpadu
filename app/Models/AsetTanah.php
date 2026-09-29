@@ -157,6 +157,19 @@ class AsetTanah extends Model
     }
 
     /**
+     * Scope: Hanya aset yang status prosesnya belum diurus / belum diproses di BPN.
+     */
+    public function scopeBelumDiurus($query)
+    {
+        return $query->where(function($q) {
+            $q->doesntHave('latestProses')
+              ->orWhereHas('latestProses.statusProses', function($sq) {
+                  $sq->where('kategori', 'LIKE', '%belum_diurus%');
+              });
+        });
+    }
+
+    /**
      * Scope: Aset tanah belum bersertifikat (Total Tanah - Bersertifikat - Kendala - Target).
      * Selaras 100% dengan metrik Dashboard Utama SIPAT.
      */
@@ -173,7 +186,7 @@ class AsetTanah extends Model
     }
 
     /**
-     * Scope: Filter terpadu berdasarkan parameter kategori status.
+     * Scope: Filter terpadu berdasarkan parameter kategori status (Membaca KategoriProses dinamis dengan fallback aman).
      */
     public function scopeFilterKategoriStatus($query, ?string $kategori)
     {
@@ -181,14 +194,51 @@ class AsetTanah extends Model
             return $query;
         }
 
+        // 1. Prioritaskan Kategori Program Khusus / Pencatatan NIBAR
+        if ($kategori === 'target_sertifikat') {
+            return $query->whereHas('targetSertifikat');
+        }
+        if ($kategori === 'TERCATAT_KIB_A') {
+            return $query->where('status_pencatatan', 'TERCATAT_KIB_A');
+        }
+        if ($kategori === 'USULAN_BELUM_TERCATAT') {
+            return $query->where('status_pencatatan', 'USULAN_BELUM_TERCATAT');
+        }
+
+        // 2. Baca Konfigurasi Dinamis dari Model KategoriProses
+        $katObj = \App\Models\KategoriProses::where('kode', $kategori)->where('is_active', true)->first();
+        if ($katObj) {
+            $statusIds = $katObj->statusProses()->pluck('status_proses.id_status')->toArray();
+
+            $query->where(function($q) use ($statusIds, $katObj) {
+                if ($katObj->includes_unprocessed) {
+                    $q->doesntHave('latestProses');
+                    if (!empty($statusIds)) {
+                        $q->orWhereHas('latestProses', fn($sq) => $sq->whereIn('id_status', $statusIds));
+                    }
+                } else {
+                    if (!empty($statusIds)) {
+                        $q->whereHas('latestProses', fn($sq) => $sq->whereIn('id_status', $statusIds));
+                    } else {
+                        $q->whereRaw('1 = 0');
+                    }
+                }
+            });
+
+            if ($katObj->exclude_target) {
+                $query->whereDoesntHave('targetSertifikat');
+            }
+
+            return $query;
+        }
+
+        // 3. Fallback Aman ke Logika Klasik jika belum terdaftar di tabel kategori_proses
         return match ($kategori) {
-            'target_sertifikat'                         => $query->whereHas('targetSertifikat'),
             'sudah_bersertifikat'                       => $query->sudahBersertifikat(),
             'dalam_proses'                              => $query->dalamProses(),
+            'belum_diurus'                              => $query->belumDiurus(),
             'belum_bersertifikat', 'belum_diproses'     => $query->belumBersertifikat(),
             'bermasalah', 'kendala'                     => $query->bermasalah(),
-            'TERCATAT_KIB_A'                            => $query->where('status_pencatatan', 'TERCATAT_KIB_A'),
-            'USULAN_BELUM_TERCATAT'                     => $query->where('status_pencatatan', 'USULAN_BELUM_TERCATAT'),
             default                                     => $query->whereHas('latestProses.statusProses', function($sq) use ($kategori) {
                 $sq->where('kategori', 'LIKE', "%{$kategori}%");
             }),

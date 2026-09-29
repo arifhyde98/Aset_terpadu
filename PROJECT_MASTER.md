@@ -176,6 +176,8 @@ Aset_terpadu/
 - **Pertanahan (SIPAT):**
   - `aset_tanah` terhubung ke `opds` via `opd_id` dan `sub_opds` via `sub_opd_id`, dilengkapi kolom koordinat GPS (`lat`, `lng`), `geojson` batas poligon, dan relasi wilayah `kecamatan_id` & `desa_id`.
   - `sipat_target_sertifikat` mencatat target pensertifikatan tahunan yang berelasi dengan `aset_tanah`.
+  - `status_proses` mencatat master status tahapan proses sertifikat BPN.
+  - `kategori_proses` & `kategori_status_pivot`: Pengelompokan dinamis kategori proses BPN dengan saklar pengecualian target tahunan (`exclude_target`) dan penyertaan aset belum diproses (`includes_unprocessed`).
   - `proses_aset` mencatat histori langkah pensertifikatan BPN yang menunjuk ke `aset_tanah`.
   - `surat_skpt` mencatat berkas Surat Keterangan Pendaftaran Tanah yang terhubung ke `aset_tanah` serta pejabat pengesah (camat, kepala desa, dan pemohon).
 - **Pengarsipan Berkas Fisik (eLABEL):**
@@ -257,6 +259,8 @@ Seluruh fitur berikut telah selesai diimplementasikan (**DONE**) dan beroperasi 
 | **Tabel Sebaran Aset per OPD & Wilayah** | `DONE` | Rekapitulasi komprehensif seluruh 54 OPD dan 16 Kecamatan di Dashboard SIPAT, dilengkapi live search JavaScript, progres bar sertifikasi, dan footer total akumulasi. |
 | **Pusat Laporan & Ekspor 11/12 Kolom** | `DONE` | Format cetak standar Pemkab Donggala 11 kolom dan 12 kolom dinamis (sub-kolom `No. Sertifikat` terhubung ke e-Label), antarmuka web modern 2-kolom (`.report-shell`) dengan kartu ringkasan dan kartu aksi ekspor, mesin judul dinamis 3 baris (mode auto/master/manual), ekspor Excel streaming, serta pengesahan penanda tangan ganda (*Dual Signatories*) berdampingan yang terintegrasi dengan Master KOP Surat Pemda (`/master-data/kop-surat`). |
 | **Ekspor Presisi Data Aset Tanah** | `DONE` | Integrasi kueri kanonikal tunggal `buildAsetQuery` pada tombol ekspor data aset tanah (`.xlsx` & `.pdf`), menjamin data hasil ekspor 100% presisi dan identik terhadap filter aktif (OPD, Kecamatan, Kategori Status, Status BPN multi-centang, Pencarian cepat, dan Urutan/Sort). |
+| **Filter Status Terpadu (SSoT Master Status)** | `DONE` | Sentralisasi relasi kategori filter terhadap Master Status Proses (`StatusProses::CATEGORY_MAP` & `SPECIAL_CATEGORIES`), otomatisasi sinkronisasi penambahan status baru dari master tanpa edit kode, serta proteksi integritas pengecualian Target Pensertifikatan (`whereDoesntHave('targetSertifikat')`). |
+| **Master Kategori & Status Dinamis** | `DONE` | Pengelolaan kategori proses dan status BPN dinamis 2-tab (`/master-data/status-proses`) dengan saklar `exclude_target` (mengecualikan aset target pensertifikatan tahun berjalan) dan `includes_unprocessed` (menyertakan aset tanpa riwayat proses), serta integrasi otomatis ke filter katalog aset tanah. |
 
 ### 8.3 Modul eLABEL (Pengarsipan Dokumen & Dynamic Archive)
 | Fitur | Status | Deskripsi & Implementasi |

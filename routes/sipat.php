@@ -85,6 +85,10 @@ Route::prefix('sipat')->name('sipat.')->group(function () {
 
 // Master Data SIPAT
 Route::prefix('master-data')->group(function () {
+    // Master Status & Kategori Proses BPN
+    Route::post('status-proses/kategori', [\App\Http\Controllers\Master\StatusProsesController::class, 'storeKategori'])->name('status-proses.kategori.store');
+    Route::put('status-proses/kategori/{id}', [\App\Http\Controllers\Master\StatusProsesController::class, 'updateKategori'])->name('status-proses.kategori.update');
+    Route::delete('status-proses/kategori/{id}', [\App\Http\Controllers\Master\StatusProsesController::class, 'destroyKategori'])->name('status-proses.kategori.destroy');
     Route::resource('status-proses', \App\Http\Controllers\Master\StatusProsesController::class)->names('status-proses');
     Route::resource('opd-sipat', \App\Http\Controllers\Master\MasterSipatOpdController::class)->names('opd-sipat');
     Route::get('opd-sipat-list', [\App\Http\Controllers\Master\MasterSipatOpdController::class, 'index'])->name('master.opd-sipat.index');

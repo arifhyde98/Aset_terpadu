@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Master;
 
 use App\Http\Controllers\Controller;
 use App\Models\StatusProses;
+use App\Models\KategoriProses;
 use App\Models\ProsesAset;
 use App\Models\Activity;
 use Illuminate\Http\Request;
@@ -24,12 +25,13 @@ class StatusProsesController extends Controller implements HasMiddleware
 
     public function index(Request $request)
     {
-        $allStatus = StatusProses::orderBy('urutan', 'asc')->get();
+        $allStatus = StatusProses::with('kategoriProses')->orderBy('urutan', 'asc')->get();
 
         $selectedCategory = $request->input('kategori');
         if (!empty($selectedCategory)) {
             $statusProses = $allStatus->filter(function ($status) use ($selectedCategory) {
-                return $status->hasCategory($selectedCategory);
+                return $status->hasCategory($selectedCategory) 
+                    || $status->kategoriProses->contains('kode', $selectedCategory);
             })->values();
         } else {
             $statusProses = $allStatus;
@@ -61,7 +63,10 @@ class StatusProsesController extends Controller implements HasMiddleware
 
         $customCategoryKeys = array_keys($customCategories);
 
-        return view('master.status_proses.index', compact('statusProses', 'counts', 'customCategoryKeys'));
+        // Kategori dinamis terpusat dari tabel kategori_proses
+        $kategoriList = KategoriProses::withCount('statusProses')->ordered()->get();
+
+        return view('master.status_proses.index', compact('statusProses', 'counts', 'customCategoryKeys', 'kategoriList'));
     }
 
     public function store(Request $request)
@@ -97,12 +102,18 @@ class StatusProsesController extends Controller implements HasMiddleware
             $urutan = (StatusProses::max('urutan') ?? 0) + 1;
         }
 
-        StatusProses::create([
+        $status = StatusProses::create([
             'nama_status' => $request->input('nama_status'),
             'urutan'      => $urutan,
             'warna'       => $request->input('warna', 'primary'),
             'kategori'    => implode(',', array_unique($categories)),
         ]);
+
+        // Sync pivot dengan model KategoriProses
+        $kategoriIds = KategoriProses::whereIn('kode', $categories)->pluck('id')->toArray();
+        if (!empty($kategoriIds)) {
+            $status->kategoriProses()->sync($kategoriIds);
+        }
 
         Cache::forget('sipat_dashboard_stats');
 
@@ -150,6 +161,10 @@ class StatusProsesController extends Controller implements HasMiddleware
 
         $status->update($data);
 
+        // Sync pivot dengan model KategoriProses
+        $kategoriIds = KategoriProses::whereIn('kode', $categories)->pluck('id')->toArray();
+        $status->kategoriProses()->sync($kategoriIds);
+
         Cache::forget('sipat_dashboard_stats');
 
         return redirect()->route('status-proses.index')->with('success', 'Status Proses berhasil diperbarui.');
@@ -167,6 +182,7 @@ class StatusProsesController extends Controller implements HasMiddleware
         }
 
         $namaStatus = $status->nama_status;
+        $status->kategoriProses()->detach();
         $status->delete();
 
         if (class_exists(Activity::class)) {
@@ -177,5 +193,112 @@ class StatusProsesController extends Controller implements HasMiddleware
         app(\App\Services\Sipat\SipatService::class)->invalidateDashboardCache();
 
         return redirect()->route('status-proses.index')->with('success', "Status Proses '{$namaStatus}' berhasil dihapus.");
+    }
+
+    /**
+     * Menyimpan Kategori Proses baru.
+     */
+    public function storeKategori(Request $request)
+    {
+        $request->validate([
+            'nama'      => 'required|string|max:100',
+            'kode'      => 'nullable|string|max:50',
+            'deskripsi' => 'nullable|string',
+            'warna'     => 'nullable|string|max:30',
+            'urutan'    => 'nullable|integer',
+        ]);
+
+        $kode = $request->filled('kode')
+            ? Str::slug($request->input('kode'), '_')
+            : Str::slug($request->input('nama'), '_');
+
+        $origKode = $kode;
+        $counter = 1;
+        while (KategoriProses::where('kode', $kode)->exists()) {
+            $kode = "{$origKode}_{$counter}";
+            $counter++;
+        }
+
+        $urutan = $request->filled('urutan')
+            ? (int) $request->input('urutan')
+            : ((KategoriProses::max('urutan') ?? 0) + 1);
+
+        $kategori = KategoriProses::create([
+            'kode'                 => $kode,
+            'nama'                 => $request->input('nama'),
+            'deskripsi'            => $request->input('deskripsi'),
+            'exclude_target'       => $request->boolean('exclude_target'),
+            'includes_unprocessed' => $request->boolean('includes_unprocessed'),
+            'warna'                => $request->input('warna', 'primary'),
+            'urutan'               => $urutan,
+            'is_system'            => false,
+            'is_active'            => true,
+        ]);
+
+        Cache::forget('sipat_dashboard_stats');
+
+        return redirect()->route('status-proses.index', ['tab' => 'kategori'])
+            ->with('success', "Kategori '{$kategori->nama}' berhasil ditambahkan.");
+    }
+
+    /**
+     * Memperbarui Kategori Proses.
+     */
+    public function updateKategori(Request $request, $id)
+    {
+        $kategori = KategoriProses::findOrFail($id);
+
+        $request->validate([
+            'nama'      => 'required|string|max:100',
+            'deskripsi' => 'nullable|string',
+            'warna'     => 'nullable|string|max:30',
+            'urutan'    => 'nullable|integer',
+        ]);
+
+        $data = [
+            'nama'                 => $request->input('nama'),
+            'deskripsi'            => $request->input('deskripsi'),
+            'exclude_target'       => $request->boolean('exclude_target'),
+            'includes_unprocessed' => $request->boolean('includes_unprocessed'),
+            'warna'                => $request->input('warna', $kategori->warna),
+            'urutan'               => $request->input('urutan', $kategori->urutan),
+            'is_active'            => $request->has('is_active') ? $request->boolean('is_active') : $kategori->is_active,
+        ];
+
+        if (!$kategori->is_system && $request->filled('kode')) {
+            $newKode = Str::slug($request->input('kode'), '_');
+            if ($newKode !== $kategori->kode && !KategoriProses::where('kode', $newKode)->where('id', '!=', $id)->exists()) {
+                $data['kode'] = $newKode;
+            }
+        }
+
+        $kategori->update($data);
+
+        Cache::forget('sipat_dashboard_stats');
+
+        return redirect()->route('status-proses.index', ['tab' => 'kategori'])
+            ->with('success', "Kategori '{$kategori->nama}' berhasil diperbarui.");
+    }
+
+    /**
+     * Menghapus Kategori Proses kustom.
+     */
+    public function destroyKategori($id)
+    {
+        $kategori = KategoriProses::findOrFail($id);
+
+        if ($kategori->is_system) {
+            return redirect()->route('status-proses.index', ['tab' => 'kategori'])
+                ->with('error', "Kategori sistem '{$kategori->nama}' tidak dapat dihapus.");
+        }
+
+        $namaKategori = $kategori->nama;
+        $kategori->statusProses()->detach();
+        $kategori->delete();
+
+        Cache::forget('sipat_dashboard_stats');
+
+        return redirect()->route('status-proses.index', ['tab' => 'kategori'])
+            ->with('success', "Kategori '{$namaKategori}' berhasil dihapus.");
     }
 }

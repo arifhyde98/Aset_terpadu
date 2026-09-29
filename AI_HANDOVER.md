@@ -323,6 +323,9 @@ Untuk mencegah penurunan performa akibat kueri agregasi berat berulang, data sta
   - `opd_id` (FK ke `opds.id`), `sub_opd_id` (FK ke `sub_opds.id`), `opd` (String raw name fallback)
   - `kecamatan_id` (FK ke `kecamatan.id`), `desa_id` (FK ke `desa.id`)
   - `dasar_perolehan`, `harga_perolehan`, `tanggal_perolehan`, `keterangan`
+- **status_proses:** Master tahapan proses sertifikat BPN (`id_status` [PK, unsignedInt], `nama_status`, `urutan`, `warna`, `kategori` [string multi-kategori legacy/sync]).
+- **kategori_proses:** Master pengelompokan kategori proses BPN dinamis (`id` [PK], `kode` [string, unique], `nama` [string], `deskripsi` [text, nullable], `exclude_target` [boolean], `includes_unprocessed` [boolean], `warna` [string], `urutan` [int], `is_system` [boolean], `is_active` [boolean]). Dilengkapi saklar saklar pengecualian target tahunan (`exclude_target`) dan penyertaan aset belum diproses (`includes_unprocessed`).
+- **kategori_status_pivot:** Tabel pivot relasi many-to-many antara kategori dinamis dan status BPN (`id`, `kategori_id` [FK ke `kategori_proses.id`], `status_id` [FK ke `status_proses.id_status`]).
 - **sipat_target_sertifikat:** Penetapan target pensertifikatan tahunan (`id`, `tahun`, `aset_tanah_id` [FK ke `aset_tanah.id_aset`], `target_jumlah`, `keterangan`, `created_at`, `updated_at`). Relasi OPD diturunkan langsung dari `asetTanah->opdRelation`.
 - **proses_aset:** Riwayat tahapan pengurusan sertifikat BPN (`id_proses`, `id_aset`, `status_proses_id`, `id_status`, `tanggal_proses`, `tgl_mulai`, `keterangan`, `dokumen`). Status aktif diambil dari relasi baris terbaru (`latestProses`).
 - **surat_skpt:** Dokumen Surat Keterangan Pendaftaran Tanah (`id`, `aset_tanah_id`, `nomor_surat`, `tanggal_surat`, `pemohon_id`, `camat_id`, `kades_id`, `keterangan`).
@@ -694,6 +697,9 @@ Diimplementasikan arsitektur *Admin Template Switcher* yang memungkinkan penggun
 | **SIPAT** | GET | `/sipat/peta` | `Sipat\PetaController@index` | Auth | Peta Interaktif Sebaran Aset Spasial |
 | **SIPAT** | POST | `/sipat/peta/import-poligon` | `Sipat\PetaController@importPoligon` | Auth | Unggah Poligon Spasial GeoJSON/Shapefile |
 | **SIPAT** | Resource | `/master-data/status-proses` | `Master\StatusProsesController` | Auth | CRUD Master Status & Kategori BPN |
+| **SIPAT** | POST | `/master-data/status-proses/kategori` | `Master\StatusProsesController@storeKategori` | Superadmin, Admin | Tambah Master Kategori Proses Baru |
+| **SIPAT** | PUT | `/master-data/status-proses/kategori/{id}` | `Master\StatusProsesController@updateKategori` | Superadmin, Admin | Perbarui Master Kategori Proses & Saklar Target |
+| **SIPAT** | DELETE | `/master-data/status-proses/kategori/{id}` | `Master\StatusProsesController@destroyKategori` | Superadmin, Admin | Hapus Kategori Proses Kustom |
 | **SIPAT** | Resource | `/master-data/opd-sipat` | `Master\MasterSipatOpdController` | Auth | CRUD Master OPD Modul SIPAT |
 | **SIPAT** | GET/POST | `/master-data/kop-surat` | `Master\KopSettingsController` | Superadmin, Admin | Pengaturan KOP Surat Resmi & Pejabat Pemda |
 | **SIPAT** | GET | `/master-data/wilayah` | `Master\MasterDataWilayahController@index` | Auth | Master Kecamatan, Desa, Camat, Kades, Pemohon |
