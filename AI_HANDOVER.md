@@ -581,7 +581,7 @@ Diimplementasikan arsitektur *Admin Template Switcher* yang memungkinkan penggun
 3. **Horizontal Floating Topbar:** Tanpa sidebar kiri, memberikan 100% lebar desktop untuk data tabel.
 4. **Glassmorphism Futuristic:** Sidebar efek kaca transparan (*backdrop blur*) dengan gradien indigo-purple.
 - Preferensi disimpan di kolom `users.admin_template`, `session('admin_template')`, dan `localStorage` (mencegah *flicker* peramban). Ditrigger melalui tombol modal navbar `<i class="bi bi-layout-text-window-reverse"></i>`.
-   - **Bangunan (KIB C):** Berfokus pada Data Bangunan, Peta GIS Bangunan, dan Laporan KIB C.
+   - **Bangunan (KIB C):** Berfokus pada Data Bangunan, Peta GIS Bangunan (dengan 4 basemap layer, loading overlay, empty state, auto-apply filter, floating stats, dark mode popup, dan tooltip marker), dan Laporan KIB C.
    - **E-RANDIS (Kendaraan Dinas):** Berfokus pada Data Kendaraan Dinas, Laporan Kendaraan, dan Rekonsiliasi BPKB.
    - **eLABEL (Arsip & Box):** Berfokus pada Dokumen BPKB, Sertifikat Tanah, Surat Penyerahan, Kategori Arsip Dinamis, dan Layanan Peminjaman.
 2. **Master Data Terpadu (`/opds`, `/sub-opds`, `/master-data/wilayah`, `/status-proses`, `/vehicle-types`, `/master-data/import`, `/elabel/dynamic/types`):**
@@ -628,7 +628,16 @@ Diimplementasikan arsitektur *Admin Template Switcher* yang memungkinkan penggun
 - **Progres Pengurusan Sertifikat BPN:** Pencatatan tahapan pengurusan sertifikat tanah (Pendaftaran, Pengukuran, PBT, Surat Keputusan, hingga Terbit Sertifikat) dengan histori lengkap.
 - **Modul Surat Tanah (SKPT & Batas):** Pembuatan Surat Keterangan Pendaftaran Tanah resmi dengan ekspor PDF mPDF, Word (.docx), dan cetak langsung.
 - **Peta Aset Tanah Spasial (`/sipat/peta`):** Visualisasi marker dan batas poligon seluruh sebaran aset tanah daerah.
-- **Pusat Laporan Aset Tanah & Ekspor Resmi 11/12 Kolom (`/sipat/laporan`):** Standardisasi format resmi Pemkab Donggala dengan dukungan sub-kolom sertifikat dinamis, mesin judul 3 baris, dan pengesahan tanda tangan ganda.
+  - **Rendering Engine (`renderMapFeatures`):** Fungsi inti yang merender data spasial sebagai poligon GeoJSON (zoom ≥15) atau circle marker (zoom <15) dengan adaptive zoom switching otomatis.
+  - **Filter Interaktif Real-time:** Filter OPD Pengelola dan Status BPN langsung merender ulang peta tanpa reload, dengan counter bidang terfilter.
+  - **Drawer Detail Aset Slide-over:** Panel geser kanan (desktop) / bottom sheet (mobile) menampilkan NIBAR, status, luas dokumen vs spasial, OPD, alamat, koordinat, dan info kecamatan dinamis.
+  - **Navigasi Rute GPS (OpenRouteService):** Rute real-time dari lokasi pengguna ke aset dengan estimasi jarak/waktu untuk 3 moda transportasi (Mobil, Sepeda, Jalan Kaki).
+  - **Alat Ukur Spasial (Turf.js):** Pengukuran jarak garis dan luas area interaktif langsung di peta dengan feedback toast notification.
+  - **Impor Massal Poligon GIS:** Upload SHP (.zip) atau GeoJSON dengan field mapper otomatis dan preview pencocokan NIBAR sebelum simpan.
+  - **Ekspor GeoJSON:** Unduh seluruh data poligon bidang tanah dalam format GeoJSON FeatureCollection.
+  - **Label Aset Permanen:** Toggle tampilan label nama aset di peta.
+  - **4 Basemap Layer:** Google Hybrid Satellite, OpenStreetMap, Esri Topographic, CartoDB Dark Mode.
+  - **Mobile Responsive:** FAB floating buttons, drawer bottom sheet, dan adaptive UI untuk perangkat mobile.
 - **Rekapitulasi Pensertifikatan Aset Tanah per OPD (`/sipat/laporan/rekap-opd`):** Halaman dan dokumen rekapitulasi progres pensertifikatan seluruh instansi OPD Pemkab Donggala dengan ekspor Excel, unduh PDF A4-L, dan cetak browser.
 - **Master Wilayah & Status Proses Dinamis:**
   - Master Kecamatan & Desa Kabupaten Donggala terhubung langsung ke sebaran aset tanah (`/master-data/wilayah`).

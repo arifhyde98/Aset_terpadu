@@ -195,6 +195,38 @@
         background-color: #0f172a !important;
     }
 
+    /* Mobile Floating Action Buttons */
+    .mobile-map-fab-group {
+        position: absolute;
+        bottom: 100px;
+        right: 14px;
+        z-index: 500;
+        display: none;
+        flex-direction: column;
+        gap: 8px;
+    }
+    .mobile-map-fab {
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        background: var(--bs-body-bg, #ffffff);
+        color: var(--bs-body-color, #334155);
+        border: 1px solid var(--bs-border-color, rgba(0, 0, 0, 0.1));
+        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+    .mobile-map-fab:hover, .mobile-map-fab:active {
+        background: #2563eb;
+        color: #ffffff;
+        border-color: #2563eb;
+        transform: scale(1.08);
+    }
+
     @media (max-width: 767.98px) {
         #gisMap {
             height: calc(100vh - var(--admin-header-height, 64px) - var(--mobile-nav-height, 64px) - 140px) !important;
@@ -204,7 +236,30 @@
             display: none;
         }
         .gis-floating-stats {
-            display: none;
+            bottom: 12px;
+            left: 12px;
+            gap: 4px;
+        }
+        .floating-stat-pill {
+            font-size: 10px;
+            padding: 4px 10px;
+        }
+        .mobile-map-fab-group {
+            display: flex;
+        }
+        .gis-drawer {
+            width: 100%;
+            max-width: 100%;
+            top: auto;
+            bottom: 0;
+            right: 0;
+            left: 0;
+            height: 55vh;
+            border-radius: 18px 18px 0 0;
+            transform: translateY(100%);
+        }
+        .gis-drawer.active {
+            transform: translateY(0);
         }
     }
 </style>
@@ -213,6 +268,13 @@
     <!-- Header -->
     <div class="d-flex justify-content-between align-items-start mb-3 flex-wrap gap-2">
         <div>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-1 text-muted small">
+                    <li class="breadcrumb-item"><a href="{{ route('landing') }}" class="text-decoration-none">Beranda</a></li>
+                    <li class="breadcrumb-item"><a href="{{ route('sipat.aset.index') }}" class="text-decoration-none">SIPAT Tanah</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Peta GIS</li>
+                </ol>
+            </nav>
             <div class="d-flex align-items-center gap-2 mb-1">
                 <span class="badge bg-primary-subtle text-primary fw-semibold px-2.5 py-1 rounded-pill" style="font-size: 0.75rem;">
                     <i class="bi bi-geo-alt-fill me-1"></i> GIS & SPASIAL SIPAT
@@ -385,7 +447,7 @@
                     <i class="bi bi-geo-fill text-primary fs-5"></i>
                     <div>
                         <div class="fw-bold text-primary" id="drawerKecamatanNama">Wilayah Donggala</div>
-                        <div class="text-secondary" style="font-size: 11px;">Kabupaten Donggala, Sulawesi Tengah</div>
+                        <div class="text-secondary" id="drawerKecamatanSub" style="font-size: 11px;">Kabupaten Donggala, Sulawesi Tengah</div>
                     </div>
                 </div>
             </div>
@@ -711,6 +773,8 @@ document.addEventListener('DOMContentLoaded', function () {
     const btnDrawerEditAset = document.getElementById('btnDrawerEditAset');
     const btnDrawerDirectRoute = document.getElementById('btnDrawerDirectRoute');
     const btnCloseDrawer = document.getElementById('btnCloseDrawer');
+    const drawerKecamatanNama = document.getElementById('drawerKecamatanNama');
+    const drawerKecamatanSub = document.getElementById('drawerKecamatanSub');
 
     btnCloseDrawer.addEventListener('click', () => drawer.classList.remove('active'));
 
@@ -726,6 +790,16 @@ document.addEventListener('DOMContentLoaded', function () {
         drawerLuasSpasial.textContent = spatialAreaStr || '- m²';
         drawerOpdNama.textContent = item.opd_nama;
         drawerAlamat.textContent = item.alamat || 'Alamat fisik belum diisi';
+
+        // Kecamatan info dinamis dari alamat
+        const alamatStr = (item.alamat || item.kecamatan || '').toLowerCase();
+        let kecLabel = 'Wilayah Donggala';
+        const kecNames = ['banawa','banawa selatan','banawa tengah','balaesang','balaesang tanjung','dampelas','damsol','labuan','pinogaluman','rio pakava','sindue','sindue tombusabora','sindue tobata','sirenja','sojol','sojol utara','tanantovea'];
+        for (const kn of kecNames) {
+            if (alamatStr.includes(kn)) { kecLabel = 'Kec. ' + kn.replace(/\b\w/g, c => c.toUpperCase()); break; }
+        }
+        if (drawerKecamatanNama) drawerKecamatanNama.textContent = kecLabel;
+        if (drawerKecamatanSub) drawerKecamatanSub.textContent = 'Kabupaten Donggala, Sulawesi Tengah';
 
         const latStr = item.lat ? item.lat.toFixed(6) : '-';
         const lngStr = item.lng ? item.lng.toFixed(6) : '-';
@@ -826,6 +900,9 @@ document.addEventListener('DOMContentLoaded', function () {
         const panelInfo = document.getElementById('infoRutePanel');
         if (panelInfo) panelInfo.style.display = 'none';
     }
+    // Expose ke global scope agar onclick inline di panel rute bisa memanggil
+    window.stopNavigasiRute = stopNavigasiRute;
+    window.hitungRuteNavigasi = hitungRuteNavigasi;
 
     async function hitungRuteNavigasi() {
         if (!currentUserLat || !currentUserLng || !targetLat || !targetLng) return;
@@ -885,6 +962,147 @@ document.addEventListener('DOMContentLoaded', function () {
         } catch (e) {
             console.warn('Gagal menghitung rute OpenRouteService:', e);
         }
+    }
+
+    // ==========================================
+    // RENDER MAP FEATURES (Fungsi Inti Rendering)
+    // ==========================================
+    function renderMapFeatures(opdFilter, statusFilter) {
+        activeLayerGroup.clearLayers();
+        layerById.clear();
+
+        const currentZoom = map.getZoom();
+        let renderedCount = 0;
+
+        rawFeatures.forEach(item => {
+            // Filter berdasarkan OPD
+            if (opdFilter && String(item.opd_id) !== String(opdFilter)) return;
+            // Filter berdasarkan Status BPN
+            if (statusFilter && String(item.status_id) !== String(statusFilter)) return;
+
+            renderedCount++;
+            const colors = getStatusColor(item);
+
+            if (item.has_polygon && item.geojson_data) {
+                // --- Render Poligon ---
+                try {
+                    const geoLayer = L.geoJSON(item.geojson_data, {
+                        pane: 'assetPolygonPane',
+                        style: {
+                            color: colors.color,
+                            weight: 2.5,
+                            fillColor: colors.fill,
+                            fillOpacity: 0.4,
+                            dashArray: null
+                        }
+                    });
+
+                    // Hitung luas spasial
+                    let spatialStr = '-';
+                    if (typeof turf !== 'undefined') {
+                        try {
+                            const a = turf.area(item.geojson_data);
+                            spatialStr = Number(a.toFixed(1)).toLocaleString('id-ID') + ' m²';
+                        } catch (e) {}
+                    }
+
+                    // Click handler → buka drawer detail
+                    geoLayer.on('click', function () {
+                        openAssetDrawer(item, spatialStr);
+                    });
+
+                    // Hover highlight
+                    geoLayer.on('mouseover', function () {
+                        this.setStyle({ fillOpacity: 0.65, weight: 3.5 });
+                    });
+                    geoLayer.on('mouseout', function () {
+                        this.setStyle({ fillOpacity: 0.4, weight: 2.5 });
+                    });
+
+                    // Label nama aset (opsional)
+                    if (isLabelsPermanent) {
+                        try {
+                            const centroid = turf.centroid(item.geojson_data);
+                            const labelLatLng = [centroid.geometry.coordinates[1], centroid.geometry.coordinates[0]];
+                            L.marker(labelLatLng, {
+                                icon: L.divIcon({
+                                    className: 'gis-asset-label',
+                                    html: `<div style="background:rgba(255,255,255,0.9);padding:2px 6px;border-radius:4px;font-size:10px;font-weight:600;color:#1e293b;white-space:nowrap;box-shadow:0 1px 4px rgba(0,0,0,0.15);border:1px solid ${colors.fill};">${sipatEscape(item.nama)}</div>`,
+                                    iconSize: [0, 0],
+                                    iconAnchor: [0, 0]
+                                }),
+                                interactive: false
+                            }).addTo(activeLayerGroup);
+                        } catch (e) {}
+                    }
+
+                    // Tandai layer untuk adaptive zoom switching
+                    geoLayer._isPolygonPoly = true;
+                    geoLayer.addTo(activeLayerGroup);
+                    layerById.set(item.id, geoLayer);
+
+                    // Buat centroid circle marker sebagai pengganti saat zoom rendah
+                    if (item.lat && item.lng) {
+                        const centroidMarker = L.circleMarker([item.lat, item.lng], {
+                            radius: 7,
+                            fillColor: colors.fill,
+                            color: '#ffffff',
+                            weight: 2,
+                            fillOpacity: 0.85
+                        });
+                        centroidMarker._isPolygonCentroidMarker = true;
+                        centroidMarker.on('click', function () {
+                            openAssetDrawer(item, spatialStr);
+                        });
+                        centroidMarker.bindTooltip(sipatEscape(item.nama), { direction: 'top', offset: [0, -8] });
+                        centroidMarker.addTo(activeLayerGroup);
+
+                        // Adaptive zoom: tampilkan polygon hanya pada zoom >= 15
+                        if (currentZoom < 15) {
+                            activeLayerGroup.removeLayer(geoLayer);
+                        } else {
+                            activeLayerGroup.removeLayer(centroidMarker);
+                        }
+                    }
+                } catch (err) {
+                    console.warn('Gagal render poligon aset:', item.kode, err);
+                }
+            } else if (item.lat && item.lng) {
+                // --- Render Marker (titik koordinat saja) ---
+                const marker = L.circleMarker([item.lat, item.lng], {
+                    radius: 7,
+                    fillColor: colors.fill,
+                    color: '#ffffff',
+                    weight: 2,
+                    fillOpacity: 0.85
+                });
+
+                marker.bindTooltip(sipatEscape(item.nama), { direction: 'top', offset: [0, -8] });
+                marker.on('click', function () {
+                    openAssetDrawer(item, '-');
+                });
+
+                marker.addTo(activeLayerGroup);
+                layerById.set(item.id, marker);
+
+                // Label (opsional)
+                if (isLabelsPermanent) {
+                    L.marker([item.lat, item.lng], {
+                        icon: L.divIcon({
+                            className: 'gis-asset-label',
+                            html: `<div style="background:rgba(255,255,255,0.9);padding:2px 6px;border-radius:4px;font-size:10px;font-weight:600;color:#1e293b;white-space:nowrap;box-shadow:0 1px 4px rgba(0,0,0,0.15);border:1px solid ${colors.fill};">${sipatEscape(item.nama)}</div>`,
+                            iconSize: [0, 0],
+                            iconAnchor: [0, 0]
+                        }),
+                        interactive: false
+                    }).addTo(activeLayerGroup);
+                }
+            }
+        });
+
+        // Update counter di filter bar
+        const elRendered = document.getElementById('renderedCount');
+        if (elRendered) elRendered.textContent = renderedCount;
     }
 
     // Adaptive Zoom Switching (Circle Marker vs Poligon - SIGEO Pattern)
@@ -1067,12 +1285,23 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
+    let locateMeMarker = null;
     document.getElementById('btnLocateMe')?.addEventListener('click', () => {
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(pos => {
-                map.setView([pos.coords.latitude, pos.coords.longitude], 16);
-                L.marker([pos.coords.latitude, pos.coords.longitude]).addTo(map)
-                    .bindPopup('<b>Posisi Anda Saat Ini</b>').openPopup();
+                const lat = pos.coords.latitude;
+                const lng = pos.coords.longitude;
+                map.setView([lat, lng], 16);
+                // Hapus marker sebelumnya agar tidak menumpuk
+                if (locateMeMarker) { map.removeLayer(locateMeMarker); }
+                locateMeMarker = L.marker([lat, lng], {
+                    icon: L.divIcon({
+                        className: 'locate-me-marker',
+                        html: '<div style="background:#2563eb;width:14px;height:14px;border-radius:50%;border:3px solid #fff;box-shadow:0 0 12px rgba(37,99,235,0.5);"></div>',
+                        iconSize: [14, 14],
+                        iconAnchor: [7, 7]
+                    })
+                }).addTo(map).bindPopup('<b>Posisi Anda Saat Ini</b>').openPopup();
             }, () => {
                 if (typeof Swal !== 'undefined') Swal.fire('Lokasi', 'Gagal mengakses GPS perangkat.', 'info');
             });
@@ -1104,7 +1333,9 @@ document.addEventListener('DOMContentLoaded', function () {
             resetMeasurement();
             isMeasuringDistance = true;
             this.classList.add('active');
-            alert('Mode Ukur Jarak: Klik titik-titik di peta untuk mengukur panjang garis.');
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({ toast: true, position: 'top', icon: 'info', title: 'Mode Ukur Jarak Aktif', text: 'Klik titik-titik di peta untuk mengukur panjang garis.', showConfirmButton: false, timer: 3000, timerProgressBar: true });
+            }
         }
     });
 
@@ -1115,7 +1346,9 @@ document.addEventListener('DOMContentLoaded', function () {
             resetMeasurement();
             isMeasuringArea = true;
             this.classList.add('active');
-            alert('Mode Ukur Luas: Klik minimal 3 titik di peta untuk mengukur luas area.');
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({ toast: true, position: 'top', icon: 'info', title: 'Mode Ukur Luas Aktif', text: 'Klik minimal 3 titik di peta untuk mengukur luas area.', showConfirmButton: false, timer: 3000, timerProgressBar: true });
+            }
         }
     });
 
