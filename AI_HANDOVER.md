@@ -579,7 +579,7 @@ Diimplementasikan arsitektur *Admin Template Switcher* yang memungkinkan penggun
 - **Rekapitulasi Pensertifikatan Aset Tanah per OPD (`/sipat/laporan/rekap-opd`):** Halaman dan dokumen rekapitulasi progres pensertifikatan seluruh instansi OPD Pemkab Donggala dengan ekspor Excel, unduh PDF A4-L, dan cetak browser.
 - **Master Wilayah & Status Proses Dinamis:**
   - Master Kecamatan & Desa Kabupaten Donggala terhubung langsung ke sebaran aset tanah (`/master-data/wilayah`).
-  - Master Status Proses BPN dengan dukungan multi-kategori per status (`/master-data/status-proses`).
+  - Master Status Proses BPN & Kategori Dinamis (`/master-data/status-proses`): Antarmuka modern Enterprise Grade dengan *Segmented Control Tabs*, sinkronisasi URL state (`?tab=kategori`), tombol aksi ergonomis sentuh (36px+), chip penanda pengecualian target tahunan (`Ex-Target`), proteksi gembok visual kategori bawaan sistem (`is_system`), serta modal interaktif form multi-kategori berbasis *2-column grid cards*.
   - Master KOP Surat & Pejabat Penanda Tangan Pemda (`/master-data/kop-surat`).
 - **Visualisasi Dashboard & Landing Page:**
   - Widget distribusi aset Top 5 OPD dengan doughnut chart representasi 100% di dashboard SIPAT.
