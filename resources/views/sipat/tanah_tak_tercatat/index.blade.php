@@ -102,7 +102,7 @@
     <div class="card target-card mb-4">
         <div class="card-body p-3">
             <form method="GET" action="{{ route('sipat.tanah-tak-tercatat.index') }}" class="row g-2 align-items-center">
-                <div class="col-md-4 col-sm-6">
+                <div class="col-lg-3 col-md-6">
                     <label class="form-label small fw-bold text-secondary mb-1"><i class="bi bi-building me-1"></i> OPD Pengelola</label>
                     @if(in_array(auth()->user()?->role, [\App\Enums\UserRole::SUPERADMIN, \App\Enums\UserRole::ADMIN]))
                     <select name="opd_id" class="form-select form-select-sm" onchange="this.form.submit()">
@@ -117,16 +117,43 @@
                     @endif
                 </div>
 
-                <div class="col-md-5 col-sm-6">
-                    <label class="form-label small fw-bold text-secondary mb-1"><i class="bi bi-search me-1"></i> Kata Kunci Pencarian</label>
-                    <input type="text" name="search" class="form-control form-control-sm" placeholder="NIBAR Draft / Nama Aset / Peruntukan / Lokasi..." value="{{ $search }}">
+                <div class="col-lg-2 col-md-3 col-sm-6">
+                    <label class="form-label small fw-bold text-secondary mb-1"><i class="bi bi-geo-alt me-1"></i> Kecamatan</label>
+                    <select name="kecamatan_id" id="filterKecamatan" class="form-select form-select-sm" onchange="this.form.submit()">
+                        <option value="">-- Semua Kecamatan --</option>
+                        @if(isset($kecamatanList))
+                            @foreach($kecamatanList as $kec)
+                                <option value="{{ $kec->id }}" {{ (string)$kecamatanId === (string)$kec->id ? 'selected' : '' }}>{{ $kec->nama }}</option>
+                            @endforeach
+                        @endif
+                    </select>
                 </div>
 
-                <div class="col-md-3 col-sm-12 align-self-end d-flex gap-1">
+                <div class="col-lg-2 col-md-3 col-sm-6">
+                    <label class="form-label small fw-bold text-secondary mb-1"><i class="bi bi-houses me-1"></i> Desa / Kelurahan</label>
+                    <select name="desa_id" id="filterDesa" class="form-select form-select-sm" onchange="this.form.submit()">
+                        <option value="">-- Semua Desa/Kel. --</option>
+                        <option value="tanpa_desa" {{ (string)$desaId === 'tanpa_desa' ? 'selected' : '' }}>[Tanpa Desa / Kosong]</option>
+                        @if(isset($desaList))
+                            @foreach($desaList as $ds)
+                                <option value="{{ $ds->id }}" data-kec="{{ $ds->kecamatan_id }}" {{ (string)$desaId === (string)$ds->id ? 'selected' : '' }}>
+                                    {{ $ds->nama }} {{ $ds->kecamatan ? '('.$ds->kecamatan->nama.')' : '' }}
+                                </option>
+                            @endforeach
+                        @endif
+                    </select>
+                </div>
+
+                <div class="col-lg-3 col-md-8 col-sm-8">
+                    <label class="form-label small fw-bold text-secondary mb-1"><i class="bi bi-search me-1"></i> Kata Kunci Pencarian</label>
+                    <input type="text" name="search" class="form-control form-control-sm" placeholder="NIBAR Draft / Nama Aset / Lokasi..." value="{{ $search }}">
+                </div>
+
+                <div class="col-lg-2 col-md-4 col-sm-4 align-self-end d-flex gap-1">
                     <button type="submit" class="btn btn-sm btn-primary rounded-pill px-3 flex-grow-1">
                         <i class="bi bi-funnel me-1"></i> Filter
                     </button>
-                    @if($opdId || $search)
+                    @if($opdId || $kecamatanId || $desaId || $search)
                         <a href="{{ route('sipat.tanah-tak-tercatat.index') }}" class="btn btn-sm btn-outline-secondary rounded-pill px-2.5" data-bs-toggle="tooltip" title="Reset Filter">
                             <i class="bi bi-arrow-counterclockwise"></i> Reset
                         </a>
@@ -201,6 +228,11 @@
                                     </div>
                                     @if($item->peruntukan && $item->nama_aset && trim(strtolower($item->peruntukan)) !== trim(strtolower($item->nama_aset)))
                                         <small class="text-secondary d-block mt-0.5" style="font-size: 0.76rem; line-height: 1.3;">{{ $item->nama_aset }}</small>
+                                    @endif
+                                    @if($item->masterNamaAset?->kelompok)
+                                        <span class="badge bg-secondary-subtle text-body border border-secondary-subtle px-2 py-0.5 rounded-pill mt-1" style="font-size: 0.7rem;">
+                                            <i class="bi bi-tag me-1"></i>{{ $item->masterNamaAset->kelompok }}
+                                        </span>
                                     @endif
 
                                     <!-- 2. NIBAR (Sub-teks Halus di Bawah) -->
@@ -312,7 +344,7 @@
                                         @endif
 
                                         <!-- 3. Tombol Edit Aset Lengkap -->
-                                        <a href="{{ route('sipat.aset.edit', $item->id_aset) }}" class="btn btn-sm btn-outline-secondary rounded-3" data-bs-toggle="tooltip" title="Edit Aset Lengkap">
+                                        <a href="{{ route('sipat.aset.edit', ['aset' => $item->id_aset, 'from' => 'tanah-tak-tercatat']) }}" class="btn btn-sm btn-outline-secondary rounded-3" data-bs-toggle="tooltip" title="Edit Aset Lengkap">
                                             <i class="bi bi-gear"></i>
                                         </a>
 
@@ -386,8 +418,17 @@
                             <input type="text" name="kode_aset" class="form-control" placeholder="Kosongkan untuk NIBAR Draft Otomatis">
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label small fw-bold text-body">Nama Aset Tanah <span class="text-danger">*</span></label>
-                            <input type="text" name="nama_aset" class="form-control" placeholder="Contoh: Tanah Lapangan Olahraga Kec. Banawa" required>
+                            <label class="form-label small fw-bold text-body">Nama Aset Tanah (Klasifikasi KIB A) <span class="text-danger">*</span></label>
+                            <select name="nama_aset_id" class="form-select" required>
+                                <option value="">-- Pilih Nama Aset --</option>
+                                @if(isset($masterNamaAsetList))
+                                    @foreach($masterNamaAsetList as $mna)
+                                        <option value="{{ $mna->id }}" {{ old('nama_aset_id') == $mna->id ? 'selected' : '' }}>
+                                            {{ $mna->nama }}
+                                        </option>
+                                    @endforeach
+                                @endif
+                            </select>
                         </div>
                     </div>
 
@@ -427,6 +468,33 @@
                                 @foreach($statusList as $st)
                                     <option value="{{ $st->id_status }}">{{ $st->nama_status }}</option>
                                 @endforeach
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold text-body">Wilayah Kecamatan</label>
+                            <select name="kecamatan_id" id="modalCreateKecamatan" class="form-select">
+                                <option value="">-- Pilih Kecamatan --</option>
+                                @if(isset($kecamatanList))
+                                    @foreach($kecamatanList as $kec)
+                                        <option value="{{ $kec->id }}">{{ $kec->nama }}</option>
+                                    @endforeach
+                                @endif
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold text-body">Wilayah Desa / Kelurahan</label>
+                            <select name="desa_id" id="modalCreateDesa" class="form-select">
+                                <option value="">-- Pilih Desa / Kelurahan --</option>
+                                @if(isset($desaList))
+                                    @foreach($desaList as $ds)
+                                        <option value="{{ $ds->id }}" data-kec="{{ $ds->kecamatan_id }}">
+                                            {{ $ds->nama }} {{ $ds->kecamatan ? '('.$ds->kecamatan->nama.')' : '' }}
+                                        </option>
+                                    @endforeach
+                                @endif
                             </select>
                         </div>
                     </div>
@@ -616,6 +684,46 @@
                 });
             }
         });
+
+        // Dynamic Desa Filter untuk Filter Bar & Modal Tambah
+        const setupKecDesaSync = (kecSelectId, desaSelectId) => {
+            const kecSelect = document.getElementById(kecSelectId);
+            const desaSelect = document.getElementById(desaSelectId);
+            if (!kecSelect || !desaSelect) return;
+
+            const allDesaOptions = Array.from(desaSelect.options);
+
+            const filterDesa = () => {
+                const kecId = kecSelect.value;
+                const curDesaId = desaSelect.value;
+                desaSelect.innerHTML = '';
+                allDesaOptions.forEach(opt => {
+                    if (opt.value === '' || opt.value === 'tanpa_desa' || !kecId || opt.dataset.kec === kecId) {
+                        desaSelect.appendChild(opt.cloneNode(true));
+                    }
+                });
+                if (curDesaId) {
+                    const match = Array.from(desaSelect.options).some(o => o.value === curDesaId);
+                    if (match) desaSelect.value = curDesaId;
+                }
+            };
+
+            kecSelect.addEventListener('change', filterDesa);
+            desaSelect.addEventListener('change', function() {
+                const sel = this.options[this.selectedIndex];
+                if (sel && sel.dataset.kec && !kecSelect.value) {
+                    kecSelect.value = sel.dataset.kec;
+                    filterDesa();
+                }
+            });
+
+            if (kecSelect.value) {
+                filterDesa();
+            }
+        };
+
+        setupKecDesaSync('filterKecamatan', 'filterDesa');
+        setupKecDesaSync('modalCreateKecamatan', 'modalCreateDesa');
     });
 </script>
 @endpush

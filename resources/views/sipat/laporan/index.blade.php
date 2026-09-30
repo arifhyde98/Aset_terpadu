@@ -196,12 +196,27 @@
 
                             <div class="col-md-6">
                                 <label class="form-label small fw-semibold text-secondary mb-1"><i class="bi bi-geo-alt me-1"></i> Wilayah Kecamatan</label>
-                                <select name="kecamatan_id" class="form-select">
+                                <select name="kecamatan_id" id="laporanKecamatanSelect" class="form-select">
                                     <option value="">-- Semua Kecamatan --</option>
                                     <option value="KOSONG" {{ request('kecamatan_id') === 'KOSONG' ? 'selected' : '' }}>[Luar Wilayah / Lainnya]</option>
                                     @if(isset($kecamatanList))
                                         @foreach($kecamatanList as $kec)
                                             <option value="{{ $kec->id }}" {{ (string) request('kecamatan_id') === (string) $kec->id ? 'selected' : '' }}>{{ $kec->nama }}</option>
+                                        @endforeach
+                                    @endif
+                                </select>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold text-secondary mb-1"><i class="bi bi-houses me-1"></i> Wilayah Desa / Kelurahan</label>
+                                <select name="desa_id" id="laporanDesaSelect" class="form-select">
+                                    <option value="">-- Semua Desa/Kel. --</option>
+                                    <option value="KOSONG" {{ request('desa_id') === 'KOSONG' ? 'selected' : '' }}>[Tanpa Desa / Kosong]</option>
+                                    @if(isset($desaList))
+                                        @foreach($desaList as $ds)
+                                            <option value="{{ $ds->id }}" data-kec="{{ $ds->kecamatan_id }}" {{ (string) request('desa_id') === (string) $ds->id ? 'selected' : '' }}>
+                                                {{ $ds->nama }} {{ (!request('kecamatan_id') && $ds->kecamatan) ? '('.$ds->kecamatan->nama.')' : '' }}
+                                            </option>
                                         @endforeach
                                     @endif
                                 </select>
@@ -400,6 +415,22 @@
 
         const filterForm = document.getElementById('filterLaporanForm');
         if (!filterForm) return;
+
+        const lapKec = document.getElementById('laporanKecamatanSelect');
+        const lapDesa = document.getElementById('laporanDesaSelect');
+        if (lapKec && lapDesa) {
+            lapKec.addEventListener('change', function() {
+                lapDesa.value = '';
+            });
+            lapDesa.addEventListener('change', function() {
+                if (this.value && this.value !== 'KOSONG') {
+                    const sel = this.options[this.selectedIndex];
+                    if (sel && sel.dataset.kec && !lapKec.value) {
+                        lapKec.value = sel.dataset.kec;
+                    }
+                }
+            });
+        }
 
         // Auto-submit saat dropdown (OPD, Kategori Status, Master Judul) atau tanggal perolehan berubah
         const autoChangeElements = filterForm.querySelectorAll('select, input[type="date"]');

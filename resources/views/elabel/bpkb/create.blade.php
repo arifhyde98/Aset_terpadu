@@ -62,7 +62,7 @@
 
                     <div class="col-md-3">
                         <label class="form-label fw-semibold small">No. Polisi <span class="text-danger">*</span></label>
-                        <input type="text" name="plate_number" value="{{ old('plate_number') }}" class="form-control" placeholder="DN 1234 XX" required>
+                        <input type="text" name="plate_number" value="{{ old('plate_number') }}" class="form-control" placeholder="DN 1234 XX" style="text-transform: uppercase;" oninput="this.value = this.value.toUpperCase()" required>
                     </div>
 
                     <div class="col-md-3">
@@ -112,7 +112,7 @@
 
                     <div class="col-md-4">
                         <label class="form-label fw-semibold small">Dinas / OPD (SIPAT)</label>
-                        <select name="sipat_opd_id" class="form-select">
+                        <select name="sipat_opd_id" class="form-select searchable-select" data-placeholder="Ketik untuk mencari Dinas / OPD...">
                             <option value="">-- Pilih Dinas / OPD --</option>
                             @foreach($opds as $opd)
                                 <option value="{{ $opd->id }}" {{ old('sipat_opd_id') == $opd->id ? 'selected' : '' }}>{{ $opd->nama }}</option>

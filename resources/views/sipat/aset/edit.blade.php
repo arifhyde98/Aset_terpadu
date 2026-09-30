@@ -7,8 +7,17 @@
             <h2 class="fw-bold mb-1">Edit Data Aset Tanah</h2>
             <p class="text-secondary small mb-0">Perbarui rincian bidang tanah {{ $aset->kode_aset }}</p>
         </div>
-        <a href="{{ route('sipat.aset.index', $savedFilters ?? session('sipat_aset_filters', [])) }}" class="btn btn-outline-secondary rounded-pill px-4">
-            <i class="bi bi-arrow-left me-1"></i> Kembali ke Daftar
+        @php
+            $isUnrecorded = ($aset->status_pencatatan === 'USULAN_BELUM_TERCATAT' || str_starts_with($aset->kode_aset ?? '', 'DRAFT-'));
+            $backUrl = (request('from') === 'tanah-tak-tercatat' || $isUnrecorded)
+                ? route('sipat.tanah-tak-tercatat.index')
+                : route('sipat.aset.index', $savedFilters ?? session('sipat_aset_filters', []));
+            $backLabel = (request('from') === 'tanah-tak-tercatat' || $isUnrecorded)
+                ? 'Kembali ke Tanah Belum Tercatat'
+                : 'Kembali ke Daftar';
+        @endphp
+        <a href="{{ $backUrl }}" class="btn btn-outline-secondary rounded-pill px-4">
+            <i class="bi bi-arrow-left me-1"></i> {{ $backLabel }}
         </a>
     </div>
 
@@ -25,6 +34,16 @@
 
     <div class="card clean-card border-0 shadow-sm rounded-4">
         <div class="card-body p-4">
+            @if($isUnrecorded)
+                <div class="alert alert-warning border-0 bg-warning bg-opacity-10 text-dark rounded-3 d-flex align-items-center gap-3 mb-4">
+                    <i class="bi bi-exclamation-triangle-fill fs-3 text-warning"></i>
+                    <div class="flex-grow-1">
+                        <div class="fw-bold">Aset Belum Tercatat Resmi di KIB A (NIBAR Sementara / Draft)</div>
+                        <div class="small text-secondary">Bidang tanah ini terdaftar sebagai usulan tanah belum tercatat (NIBAR: <code>{{ $aset->kode_aset }}</code>). Anda dapat memperbarui menjadi NIBAR Resmi KIB A atau mengubah status pencatatannya di bawah.</div>
+                    </div>
+                    <span class="badge bg-warning text-dark border font-monospace px-3 py-2 rounded-pill">Status: Usulan / Draft</span>
+                </div>
+            @endif
             @if($aset->targetSertifikat && $aset->targetSertifikat->isNotEmpty())
                 @php
                     $targetYears = $aset->targetSertifikat->pluck('tahun')->unique()->implode(', ');
@@ -47,8 +66,29 @@
                     </div>
 
                     <div class="col-md-6">
-                        <label class="form-label small fw-semibold">Nama Aset / Bidang Tanah <span class="text-danger">*</span></label>
-                        <input type="text" name="nama_aset" class="form-control" required value="{{ old('nama_aset', $aset->nama_aset) }}">
+                        <label class="form-label small fw-semibold">Status Pencatatan Aset</label>
+                        <select name="status_pencatatan" class="form-select">
+                            <option value="TERCATAT_KIB_A" {{ old('status_pencatatan', $aset->status_pencatatan) === 'TERCATAT_KIB_A' ? 'selected' : '' }}>
+                                Tercatat Resmi KIB A
+                            </option>
+                            <option value="USULAN_BELUM_TERCATAT" {{ old('status_pencatatan', $aset->status_pencatatan) === 'USULAN_BELUM_TERCATAT' ? 'selected' : '' }}>
+                                Tanah Belum Tercatat / Usulan (NIBAR Sementara)
+                            </option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label small fw-semibold">Nama Aset Tanah (Klasifikasi KIB A) <span class="text-danger">*</span></label>
+                        <select name="nama_aset_id" class="form-select" required>
+                            <option value="">-- Pilih Nama Aset --</option>
+                            @if(isset($masterNamaAsetList))
+                                @foreach($masterNamaAsetList as $mna)
+                                    <option value="{{ $mna->id }}" {{ old('nama_aset_id', $aset->nama_aset_id) == $mna->id ? 'selected' : '' }}>
+                                        {{ $mna->nama }}
+                                    </option>
+                                @endforeach
+                            @endif
+                        </select>
                     </div>
 
                     <div class="col-md-6">
@@ -114,11 +154,25 @@
 
                     <div class="col-md-6">
                         <label class="form-label small fw-semibold">Wilayah Kecamatan</label>
-                        <select name="kecamatan_id" class="form-select">
+                        <select name="kecamatan_id" id="editKecamatanSelect" class="form-select">
                             <option value="">-- Pilih Kecamatan --</option>
                             @if(isset($kecamatanList))
                                 @foreach($kecamatanList as $kec)
                                     <option value="{{ $kec->id }}" {{ old('kecamatan_id', $aset->kecamatan_id) == $kec->id ? 'selected' : '' }}>{{ $kec->nama }}</option>
+                                @endforeach
+                            @endif
+                        </select>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label small fw-semibold">Wilayah Desa / Kelurahan</label>
+                        <select name="desa_id" id="editDesaSelect" class="form-select">
+                            <option value="">-- Pilih Desa / Kelurahan --</option>
+                            @if(isset($desaList))
+                                @foreach($desaList as $ds)
+                                    <option value="{{ $ds->id }}" data-kec="{{ $ds->kecamatan_id }}" {{ old('desa_id', $aset->desa_id) == $ds->id ? 'selected' : '' }}>
+                                        {{ $ds->nama }} {{ $ds->kecamatan ? '('.$ds->kecamatan->nama.')' : '' }}
+                                    </option>
                                 @endforeach
                             @endif
                         </select>
@@ -456,6 +510,41 @@ document.addEventListener('DOMContentLoaded', function () {
             areaText.textContent = 'Belum Ada Poligon';
         }
     });
+
+    // Dynamic sync kecamatan & desa dropdowns
+    const kecSelect = document.getElementById('editKecamatanSelect');
+    const desaSelect = document.getElementById('editDesaSelect');
+    if (kecSelect && desaSelect) {
+        const allDesaOptions = Array.from(desaSelect.options);
+        
+        const filterDesa = () => {
+            const kecId = kecSelect.value;
+            const curDesaId = desaSelect.value;
+            desaSelect.innerHTML = '';
+            allDesaOptions.forEach(opt => {
+                if (opt.value === '' || !kecId || opt.dataset.kec === kecId) {
+                    desaSelect.appendChild(opt.cloneNode(true));
+                }
+            });
+            if (curDesaId) {
+                const match = Array.from(desaSelect.options).some(o => o.value === curDesaId);
+                if (match) desaSelect.value = curDesaId;
+            }
+        };
+
+        kecSelect.addEventListener('change', filterDesa);
+        desaSelect.addEventListener('change', function() {
+            const sel = this.options[this.selectedIndex];
+            if (sel && sel.dataset.kec && !kecSelect.value) {
+                kecSelect.value = sel.dataset.kec;
+                filterDesa();
+            }
+        });
+
+        if (kecSelect.value) {
+            filterDesa();
+        }
+    }
 
     setTimeout(() => map.invalidateSize(), 300);
 });

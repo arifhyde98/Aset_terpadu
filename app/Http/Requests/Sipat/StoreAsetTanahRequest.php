@@ -15,8 +15,10 @@ class StoreAsetTanahRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'kode_aset' => 'required|string|max:50|unique:aset_tanah,kode_aset',
-            'nama_aset' => 'required|string|max:150',
+            'kode_aset' => 'nullable|string|max:50|unique:aset_tanah,kode_aset',
+            'status_pencatatan' => 'nullable|string|in:TERCATAT_KIB_A,USULAN_BELUM_TERCATAT',
+            'nama_aset' => 'required_without:nama_aset_id|nullable|string|max:150',
+            'nama_aset_id' => 'nullable|integer|exists:master_nama_aset,id',
             'peruntukan' => 'nullable|string|max:150',
             'luas' => 'nullable|numeric',
             'opd_id' => 'nullable|integer|exists:opds,id',
@@ -38,6 +40,51 @@ class StoreAsetTanahRequest extends FormRequest
 
     protected function prepareForValidation(): void
     {
+        // Status pencatatan default
+        $statusPencatatan = $this->input('status_pencatatan');
+        $kodeAset = trim((string) $this->input('kode_aset'));
+
+        if (empty($statusPencatatan)) {
+            $statusPencatatan = empty($kodeAset) ? 'USULAN_BELUM_TERCATAT' : 'TERCATAT_KIB_A';
+            $this->merge(['status_pencatatan' => $statusPencatatan]);
+        }
+
+        // Jika tanah belum tercatat dan kode aset kosong, buat NIBAR sementara otomatis
+        if ($statusPencatatan === 'USULAN_BELUM_TERCATAT' && empty($kodeAset)) {
+            $prefix = 'DRAFT-' . date('Ymd') . '-';
+            $counter = 1;
+            do {
+                $candidateCode = $prefix . str_pad((string) $counter, 4, '0', STR_PAD_LEFT);
+                $exists = \App\Models\AsetTanah::where('kode_aset', $candidateCode)->exists();
+                $counter++;
+            } while ($exists);
+            $this->merge(['kode_aset' => $candidateCode]);
+        } elseif (empty($kodeAset)) {
+            $this->merge(['status_pencatatan' => 'USULAN_BELUM_TERCATAT']);
+            $prefix = 'DRAFT-' . date('Ymd') . '-';
+            $counter = 1;
+            do {
+                $candidateCode = $prefix . str_pad((string) $counter, 4, '0', STR_PAD_LEFT);
+                $exists = \App\Models\AsetTanah::where('kode_aset', $candidateCode)->exists();
+                $counter++;
+            } while ($exists);
+            $this->merge(['kode_aset' => $candidateCode]);
+        }
+
+        // Sinkronisasi dua arah nama_aset string dan nama_aset_id
+        if ($this->filled('nama_aset_id')) {
+            $master = \App\Models\MasterNamaAset::find($this->input('nama_aset_id'));
+            if ($master) {
+                $this->merge(['nama_aset' => $master->nama]);
+            }
+        } elseif ($this->filled('nama_aset')) {
+            $master = \App\Models\MasterNamaAset::firstOrCreate(
+                ['nama' => trim($this->input('nama_aset'))],
+                ['is_active' => true]
+            );
+            $this->merge(['nama_aset_id' => $master->id]);
+        }
+
         // Kunci tenant: paksa opd_id dan nama opd sesuai user login jika rolenya adalah OPD atau KPB (Pola E-RANDIS)
         if (auth()->check()) {
             $user = auth()->user();

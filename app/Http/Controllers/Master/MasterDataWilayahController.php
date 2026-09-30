@@ -26,7 +26,10 @@ class MasterDataWilayahController extends Controller implements HasMiddleware
     public function index()
     {
         $kecamatan = Kecamatan::orderBy('nama', 'asc')->get();
-        $desa = Desa::with('kecamatan')->orderBy('nama', 'asc')->get();
+        $desa = Desa::with('kecamatan')
+            ->withCount(['asetTanah', 'bangunan'])
+            ->orderBy('nama', 'asc')
+            ->get();
         $kades = KepalaDesa::with('desa.kecamatan')->orderBy('nama', 'asc')->get();
         $camat = Camat::with('kecamatan')->orderBy('nama', 'asc')->get();
         $pemohon = Pemohon::orderBy('nama', 'asc')->get();
@@ -107,17 +110,115 @@ class MasterDataWilayahController extends Controller implements HasMiddleware
     public function desaDestroy($id)
     {
         $row = Desa::findOrFail($id);
-        if (\App\Models\AsetTanah::where('desa_id', $id)->exists()) {
-            return redirect()->route('master.wilayah.index')->with('error', 'Desa/Kelurahan tidak dapat dihapus karena masih digunakan oleh data aset tanah.')->with('active_tab', 'desa');
+
+        // ATURAN MUTLAK: Dilarang menghapus desa yang terkait dengan aset manapun (Tanah maupun Bangunan)
+        $asetTanahCount = \App\Models\AsetTanah::where('desa_id', $id)->count();
+        $bangunanCount = \App\Models\Bangunan::where('desa_id', $id)->count();
+
+        if ($asetTanahCount > 0 || $bangunanCount > 0) {
+            $rincian = [];
+            if ($asetTanahCount > 0) $rincian[] = "{$asetTanahCount} Aset Tanah";
+            if ($bangunanCount > 0) $rincian[] = "{$bangunanCount} Aset Bangunan";
+            $rincianStr = implode(' dan ', $rincian);
+
+            return redirect()->route('master.wilayah.index')
+                ->with('error', "Aturan Proteksi Aset: Desa/Kelurahan '{$row->nama}' TIDAK DAPAT dihapus karena masih terkait dengan {$rincianStr}. Hanya desa yang tidak terkait aset manapun yang diizinkan untuk dihapus.")
+                ->with('active_tab', 'desa');
         }
+
         if (DB::table('surat_skpt')->where('desa_id', $id)->exists()) {
-            return redirect()->route('master.wilayah.index')->with('error', 'Desa/Kelurahan tidak dapat dihapus karena masih digunakan pada dokumen Surat SKPT.')->with('active_tab', 'desa');
+            return redirect()->route('master.wilayah.index')
+                ->with('error', "Desa/Kelurahan '{$row->nama}' tidak dapat dihapus karena masih digunakan pada dokumen Surat SKPT.")
+                ->with('active_tab', 'desa');
         }
+
         if (KepalaDesa::where('desa_id', $id)->exists()) {
-            return redirect()->route('master.wilayah.index')->with('error', 'Desa/Kelurahan tidak dapat dihapus karena masih memiliki data Kepala Desa terkait.')->with('active_tab', 'desa');
+            return redirect()->route('master.wilayah.index')
+                ->with('error', "Desa/Kelurahan '{$row->nama}' tidak dapat dihapus karena masih memiliki data Kepala Desa terkait.")
+                ->with('active_tab', 'desa');
         }
+
         $row->delete();
-        return redirect()->route('master.wilayah.index')->with('success', 'Desa/Kelurahan berhasil dihapus.')->with('active_tab', 'desa');
+        return redirect()->route('master.wilayah.index')
+            ->with('success', "Desa/Kelurahan '{$row->nama}' yang bebas dari aset berhasil dihapus.")
+            ->with('active_tab', 'desa');
+    }
+
+    public function desaBulkDestroy(Request $request)
+    {
+        $rawIds = $request->input('ids');
+        if (is_string($rawIds)) {
+            $ids = array_filter(array_map('intval', explode(',', $rawIds)));
+        } elseif (is_array($rawIds)) {
+            $ids = array_filter(array_map('intval', $rawIds));
+        } else {
+            $ids = [];
+        }
+
+        if (empty($ids)) {
+            return redirect()->route('master.wilayah.index')->with('error', 'Tidak ada data Desa/Kelurahan yang dipilih untuk dihapus.')->with('active_tab', 'desa');
+        }
+
+        $deletedCount = 0;
+        $skippedAsetNames = [];
+        $skippedOtherNames = [];
+
+        foreach ($ids as $id) {
+            $row = Desa::find($id);
+            if (!$row) {
+                continue;
+            }
+
+            // ATURAN MUTLAK: Proteksi jika terkait dengan aset manapun (Tanah atau Bangunan)
+            $hasTanah = \App\Models\AsetTanah::where('desa_id', $id)->exists();
+            $hasBangunan = \App\Models\Bangunan::where('desa_id', $id)->exists();
+            if ($hasTanah || $hasBangunan) {
+                $skippedAsetNames[] = $row->nama;
+                continue;
+            }
+
+            // Proteksi dokumen resmi SKPT atau Kades
+            $hasOther = DB::table('surat_skpt')->where('desa_id', $id)->exists()
+                || KepalaDesa::where('desa_id', $id)->exists();
+            if ($hasOther) {
+                $skippedOtherNames[] = $row->nama;
+                continue;
+            }
+
+            $row->delete();
+            $deletedCount++;
+        }
+
+        $totalSkippedAset = count($skippedAsetNames);
+        $totalSkippedOther = count($skippedOtherNames);
+
+        if ($deletedCount > 0 && $totalSkippedAset === 0 && $totalSkippedOther === 0) {
+            $msg = "Berhasil menghapus {$deletedCount} data Desa/Kelurahan terpilih (seluruhnya bebas dari keterkaitan aset).";
+            return redirect()->route('master.wilayah.index')->with('success', $msg)->with('active_tab', 'desa');
+        } elseif ($deletedCount > 0) {
+            $alasan = [];
+            if ($totalSkippedAset > 0) {
+                $contoh = implode(', ', array_slice($skippedAsetNames, 0, 3)) . ($totalSkippedAset > 3 ? ' dll.' : '');
+                $alasan[] = "{$totalSkippedAset} desa diproteksi karena masih terkait aset ({$contoh})";
+            }
+            if ($totalSkippedOther > 0) {
+                $contoh = implode(', ', array_slice($skippedOtherNames, 0, 3)) . ($totalSkippedOther > 3 ? ' dll.' : '');
+                $alasan[] = "{$totalSkippedOther} desa terkait data SKPT/Kades ({$contoh})";
+            }
+            $msg = "Berhasil menghapus {$deletedCount} desa bebas aset. " . implode(' dan ', $alasan) . ".";
+            return redirect()->route('master.wilayah.index')->with('warning', $msg)->with('active_tab', 'desa');
+        } else {
+            if ($totalSkippedAset > 0) {
+                $contoh = implode(', ', array_slice($skippedAsetNames, 0, 4)) . ($totalSkippedAset > 4 ? ' dll.' : '');
+                $msg = "Penghapusan Ditolak: Seluruh {$totalSkippedAset} desa yang dipilih masih terkait dengan data aset ({$contoh}). Aturan sistem: Hanya desa yang tidak terkait aset manapun yang dapat dihapus.";
+            } elseif ($totalSkippedOther > 0) {
+                $contoh = implode(', ', array_slice($skippedOtherNames, 0, 4)) . ($totalSkippedOther > 4 ? ' dll.' : '');
+                $msg = "Penghapusan Ditolak: Seluruh {$totalSkippedOther} desa yang dipilih masih digunakan oleh dokumen SKPT atau Pejabat Kades ({$contoh}).";
+            } else {
+                $msg = "Data Desa/Kelurahan terpilih tidak ditemukan di sistem.";
+            }
+            return redirect()->route('master.wilayah.index')->with('error', $msg)->with('active_tab', 'desa');
+        }
     }
 
     // === KEPALA DESA ===

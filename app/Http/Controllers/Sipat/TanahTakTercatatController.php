@@ -32,6 +32,8 @@ class TanahTakTercatatController extends Controller implements HasMiddleware
     public function index(Request $request): View
     {
         $opdId = $request->filled('opd_id') ? (int) $request->input('opd_id') : null;
+        $kecamatanId = $request->filled('kecamatan_id') ? (int) $request->input('kecamatan_id') : null;
+        $desaId = $request->input('desa_id');
         $search = trim((string) $request->input('search', ''));
 
         $user = auth()->user();
@@ -42,12 +44,24 @@ class TanahTakTercatatController extends Controller implements HasMiddleware
             $opdList = Opd::where('aktif', 1)->orderBy('nama', 'asc')->get();
         }
         $statusList = StatusProses::orderBy('urutan', 'asc')->get();
+        $kecamatanList = \App\Models\Kecamatan::orderBy('nama', 'asc')->get();
+        $desaList = \App\Models\Desa::with('kecamatan')->orderBy('nama', 'asc')->get();
 
-        $query = AsetTanah::with(['opdSipat', 'latestProses.statusProses'])
+        $query = AsetTanah::with(['opdSipat', 'latestProses.statusProses', 'masterNamaAset', 'wilayahKecamatan', 'wilayahDesa'])
             ->where('status_pencatatan', 'USULAN_BELUM_TERCATAT');
 
         if ($opdId) {
             $query->where('opd_id', $opdId);
+        }
+
+        if ($kecamatanId) {
+            $query->where('kecamatan_id', $kecamatanId);
+        }
+
+        if ($desaId === 'tanpa_desa') {
+            $query->whereNull('desa_id');
+        } elseif (!empty($desaId)) {
+            $query->where('desa_id', (int) $desaId);
         }
 
         if (!empty($search)) {
@@ -56,7 +70,13 @@ class TanahTakTercatatController extends Controller implements HasMiddleware
                   ->orWhere('nama_aset', 'LIKE', "%{$search}%")
                   ->orWhere('peruntukan', 'LIKE', "%{$search}%")
                   ->orWhere('alamat', 'LIKE', "%{$search}%")
-                  ->orWhere('keterangan', 'LIKE', "%{$search}%");
+                  ->orWhere('keterangan', 'LIKE', "%{$search}%")
+                  ->orWhereHas('wilayahDesa', function ($d) use ($search) {
+                      $d->where('nama', 'LIKE', "%{$search}%");
+                  })
+                  ->orWhereHas('wilayahKecamatan', function ($k) use ($search) {
+                      $k->where('nama', 'LIKE', "%{$search}%");
+                  });
             });
         }
 
@@ -64,19 +84,24 @@ class TanahTakTercatatController extends Controller implements HasMiddleware
 
         // Statistical summaries
         $totalUnrecorded = AsetTanah::where('status_pencatatan', 'USULAN_BELUM_TERCATAT')->count();
-
         $totalDraftNibar = AsetTanah::where('status_pencatatan', 'USULAN_BELUM_TERCATAT')->where('kode_aset', 'LIKE', 'DRAFT-%')->count();
         $totalOpdCount = Opd::where('aktif', 1)->count();
+        $masterNamaAsetList = \App\Models\MasterNamaAset::active()->ordered()->get();
 
         return view('sipat.tanah_tak_tercatat.index', compact(
             'tanahItems',
             'opdList',
             'statusList',
+            'kecamatanList',
+            'desaList',
             'opdId',
+            'kecamatanId',
+            'desaId',
             'search',
             'totalUnrecorded',
             'totalDraftNibar',
-            'totalOpdCount'
+            'totalOpdCount',
+            'masterNamaAsetList'
         ));
     }
 
@@ -87,7 +112,8 @@ class TanahTakTercatatController extends Controller implements HasMiddleware
     {
         $validated = $request->validate([
             'kode_aset' => 'nullable|string|max:50|unique:aset_tanah,kode_aset',
-            'nama_aset' => 'required|string|max:150',
+            'nama_aset_id' => 'nullable|integer|exists:master_nama_aset,id',
+            'nama_aset' => 'required_without:nama_aset_id|nullable|string|max:150',
             'opd_id' => 'nullable|integer|exists:opds,id',
             'peruntukan' => 'nullable|string|max:150',
             'luas' => 'nullable|numeric|min:0',
@@ -98,8 +124,26 @@ class TanahTakTercatatController extends Controller implements HasMiddleware
             'harga_perolehan' => 'nullable|numeric|min:0',
             'tanggal_perolehan' => 'nullable|date',
             'keterangan' => 'nullable|string',
+            'kecamatan_id' => 'nullable|integer|exists:kecamatan,id',
+            'desa_id' => 'nullable|integer|exists:desa,id',
             'initial_status_id' => 'nullable|integer|exists:status_proses,id_status',
         ]);
+
+        // Penyelarasan dua arah nama_aset_id & nama_aset
+        if (!empty($validated['nama_aset_id'])) {
+            $master = \App\Models\MasterNamaAset::find($validated['nama_aset_id']);
+            if ($master) {
+                $validated['nama_aset'] = $master->nama;
+            }
+        } elseif (!empty($validated['nama_aset'])) {
+            $cleanName = trim(preg_replace('/\s+/', ' ', str_replace(["\r", "\n"], ' ', $validated['nama_aset'])));
+            $master = \App\Models\MasterNamaAset::firstOrCreate(
+                ['nama' => $cleanName],
+                ['is_active' => true, 'kelompok' => 'Lain-Lain']
+            );
+            $validated['nama_aset_id'] = $master->id;
+            $validated['nama_aset'] = $cleanName;
+        }
 
         // Generate NIBAR sementara otomatis jika kosong
         $kodeAset = $validated['kode_aset'] ?? null;
@@ -125,6 +169,7 @@ class TanahTakTercatatController extends Controller implements HasMiddleware
             $aset = AsetTanah::create([
                 'kode_aset' => $kodeAset,
                 'status_pencatatan' => 'USULAN_BELUM_TERCATAT',
+                'nama_aset_id' => $validated['nama_aset_id'] ?? null,
                 'nama_aset' => $validated['nama_aset'],
                 'opd_id' => $validated['opd_id'] ?? null,
                 'opd' => $opdObj?->nama ?? null,
@@ -137,6 +182,8 @@ class TanahTakTercatatController extends Controller implements HasMiddleware
                 'harga_perolehan' => $validated['harga_perolehan'] ?? null,
                 'tanggal_perolehan' => $validated['tanggal_perolehan'] ?? null,
                 'keterangan' => $validated['keterangan'] ?? 'Tanah belum tercatat di KIB A (NIBAR Draft)',
+                'kecamatan_id' => $validated['kecamatan_id'] ?? null,
+                'desa_id' => $validated['desa_id'] ?? null,
             ]);
 
             if (!empty($validated['initial_status_id'])) {

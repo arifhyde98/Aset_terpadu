@@ -25,6 +25,7 @@ class AsetTanah extends Model
         'kode_aset',
         'status_pencatatan',
         'nama_aset',
+        'nama_aset_id',
         'peruntukan',
         'luas',
         'alamat',
@@ -81,6 +82,11 @@ class AsetTanah extends Model
     public function wilayahDesa(): BelongsTo
     {
         return $this->belongsTo(Desa::class, 'desa_id');
+    }
+
+    public function masterNamaAset(): BelongsTo
+    {
+        return $this->belongsTo(MasterNamaAset::class, 'nama_aset_id');
     }
 
     public function prosesAset()

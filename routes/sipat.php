@@ -93,6 +93,15 @@ Route::prefix('master-data')->group(function () {
     Route::resource('opd-sipat', \App\Http\Controllers\Master\MasterSipatOpdController::class)->names('opd-sipat');
     Route::get('opd-sipat-list', [\App\Http\Controllers\Master\MasterSipatOpdController::class, 'index'])->name('master.opd-sipat.index');
 
+    // Master Nama Aset Tanah (KIB A)
+    Route::patch('nama-aset/{id}/toggle', [\App\Http\Controllers\Master\MasterNamaAsetController::class, 'toggleStatus'])->name('master.nama-aset.toggle');
+    Route::resource('nama-aset', \App\Http\Controllers\Master\MasterNamaAsetController::class)->names([
+        'index'   => 'master.nama-aset.index',
+        'store'   => 'master.nama-aset.store',
+        'update'  => 'master.nama-aset.update',
+        'destroy' => 'master.nama-aset.destroy',
+    ]);
+
     // Rute dari web.php (kop-surat dan log-aktivitas)
     Route::get('kop-surat', [\App\Http\Controllers\Master\KopSettingsController::class, 'index'])->name('master.kop-settings.index');
     Route::post('kop-surat', [\App\Http\Controllers\Master\KopSettingsController::class, 'update'])->name('master.kop-settings.update');
@@ -116,6 +125,7 @@ Route::prefix('master-data')->group(function () {
         Route::put('kecamatan/{id}', [\App\Http\Controllers\Master\MasterDataWilayahController::class, 'kecamatanUpdate'])->name('kecamatan.update');
         Route::delete('kecamatan/{id}', [\App\Http\Controllers\Master\MasterDataWilayahController::class, 'kecamatanDestroy'])->name('kecamatan.destroy');
 
+        Route::post('desa/bulk-destroy', [\App\Http\Controllers\Master\MasterDataWilayahController::class, 'desaBulkDestroy'])->name('desa.bulkDestroy');
         Route::post('desa', [\App\Http\Controllers\Master\MasterDataWilayahController::class, 'desaStore'])->name('desa.store');
         Route::put('desa/{id}', [\App\Http\Controllers\Master\MasterDataWilayahController::class, 'desaUpdate'])->name('desa.update');
         Route::delete('desa/{id}', [\App\Http\Controllers\Master\MasterDataWilayahController::class, 'desaDestroy'])->name('desa.destroy');

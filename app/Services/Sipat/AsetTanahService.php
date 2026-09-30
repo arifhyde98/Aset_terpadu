@@ -36,7 +36,8 @@ class AsetTanahService
             'opdSipat',
             'wilayahKecamatan',
             'wilayahDesa',
-            'sertifikatElabel'
+            'sertifikatElabel',
+            'masterNamaAset'
         ]);
 
         $search = $filters['search'] ?? ($filters['q'] ?? null);
@@ -50,6 +51,9 @@ class AsetTanahService
                   })
                   ->orWhereHas('wilayahKecamatan', function ($kecQuery) use ($search) {
                       $kecQuery->where('nama', 'LIKE', "%{$search}%");
+                  })
+                  ->orWhereHas('wilayahDesa', function ($desaQuery) use ($search) {
+                      $desaQuery->where('nama', 'LIKE', "%{$search}%");
                   })
                   ->orWhere('peruntukan', 'LIKE', "%{$search}%")
                   ->orWhere('alamat', 'LIKE', "%{$search}%")
@@ -90,6 +94,14 @@ class AsetTanahService
                 $query->whereNull('kecamatan_id');
             } else {
                 $query->where('kecamatan_id', (int) $filters['kecamatan_id']);
+            }
+        }
+
+        if (!empty($filters['desa_id'])) {
+            if ($filters['desa_id'] === 'KOSONG') {
+                $query->whereNull('desa_id');
+            } else {
+                $query->where('desa_id', (int) $filters['desa_id']);
             }
         }
 
@@ -158,11 +170,18 @@ class AsetTanahService
         $statusList = StatusProses::with('kategoriProses')->orderBy('urutan', 'asc')->get();
         $kecamatanList = \App\Models\Kecamatan::orderBy('nama', 'asc')->get();
 
+        $desaQuery = \App\Models\Desa::with('kecamatan')->orderBy('nama', 'asc');
+        if (!empty($filters['kecamatan_id']) && is_numeric($filters['kecamatan_id'])) {
+            $desaQuery->where('kecamatan_id', (int) $filters['kecamatan_id']);
+        }
+        $desaList = $desaQuery->get();
+
         return [
-            'asetTanah' => $asetTanah,
-            'opdList' => $opdList,
-            'statusList' => $statusList,
+            'asetTanah'     => $asetTanah,
+            'opdList'       => $opdList,
+            'statusList'    => $statusList,
             'kecamatanList' => $kecamatanList,
+            'desaList'      => $desaList,
         ];
     }
 
@@ -176,6 +195,7 @@ class AsetTanahService
     public function storeAset(array $data, ?int $initialStatusId): AsetTanah
     {
         $this->syncLegacyOpdLabel($data);
+        $this->syncNamaAsetPayload($data);
 
         return DB::transaction(function () use ($data, $initialStatusId) {
             $aset = AsetTanah::create($data);
@@ -207,7 +227,7 @@ class AsetTanahService
      */
     public function getAsetDetailsForModal(int $id): array
     {
-        $aset = AsetTanah::with(['prosesAset.statusProses', 'latestProses.statusProses', 'targetSertifikat', 'opdSipat'])->findOrFail($id);
+        $aset = AsetTanah::with(['prosesAset.statusProses', 'latestProses.statusProses', 'targetSertifikat', 'opdSipat', 'masterNamaAset'])->findOrFail($id);
         
         $prosesList = ProsesAset::with('statusProses')
             ->where('id_aset', $id)
@@ -239,6 +259,7 @@ class AsetTanahService
     public function updateAset(int $id, array $data): AsetTanah
     {
         $this->syncLegacyOpdLabel($data);
+        $this->syncNamaAsetPayload($data);
         $aset = AsetTanah::findOrFail($id);
         $oldData = array_merge(['nibar' => $aset->kode_aset], $aset->toArray());
         $aset->update($data);
@@ -251,6 +272,27 @@ class AsetTanahService
         Activity::logSipat("Memperbarui informasi aset tanah: {$aset->nama_aset} ({$konteks})", 'warning', $oldData, $newData);
 
         return $aset;
+    }
+
+    /**
+     * Menyelaraskan nama_aset string dan nama_aset_id secara dua arah.
+     */
+    private function syncNamaAsetPayload(array &$data): void
+    {
+        if (!empty($data['nama_aset_id'])) {
+            $master = \App\Models\MasterNamaAset::find($data['nama_aset_id']);
+            if ($master) {
+                $data['nama_aset'] = $master->nama;
+            }
+        } elseif (!empty($data['nama_aset'])) {
+            $cleanName = trim(preg_replace('/\s+/', ' ', str_replace(["\r", "\n"], ' ', $data['nama_aset'])));
+            $master = \App\Models\MasterNamaAset::firstOrCreate(
+                ['nama' => $cleanName],
+                ['is_active' => true]
+            );
+            $data['nama_aset_id'] = $master->id;
+            $data['nama_aset'] = $cleanName;
+        }
     }
 
     /**

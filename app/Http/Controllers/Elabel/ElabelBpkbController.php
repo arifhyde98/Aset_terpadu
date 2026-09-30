@@ -41,15 +41,67 @@ class ElabelBpkbController extends Controller implements HasMiddleware
         $vehicleType = $this->normalizeVehicleType($type ?: $request->get('type'));
         $vehicleLabel = $this->vehicleLabel($vehicleType);
         $query = trim((string) $request->get('q'));
+        $pdfStatus = $request->get('pdf_status');
+        $boxId = $request->get('box_id');
+        $year = $request->get('year');
+        $opdId = $request->get('opd_id');
+        $status = $request->get('status');
+        $nibarStatus = $request->get('nibar_status');
 
-        $builder = ElabelBpkb::with(['box', 'inputUser', 'opdSipat'])
-            ->where('status', '!=', 'Dihapus');
+        $baseBuilder = ElabelBpkb::where('status', '!=', 'Dihapus');
 
         if ($vehicleType !== null) {
-            $builder->where(function ($q) use ($vehicleType) {
+            $baseBuilder->where(function ($q) use ($vehicleType) {
                 $q->where('vehicle_type', $vehicleType)
                   ->orWhere('vehicle_type', strtolower($vehicleType))
                   ->orWhere('vehicle_type', $vehicleType === 'R4' ? 'mobil' : 'motor');
+            });
+        }
+
+        // Global metrics for current category (R2, R4, or Semua)
+        $totalBpkbCount = (clone $baseBuilder)->count();
+        $totalBpkbWithFileCount = (clone $baseBuilder)->whereNotNull('pdf_path')->where('pdf_path', '!=', '')->count();
+        $totalBpkbWithoutFileCount = max(0, $totalBpkbCount - $totalBpkbWithFileCount);
+        $totalBpkbWithNibarCount = (clone $baseBuilder)->whereNotNull('nibar')->where('nibar', '!=', '')->count();
+        $totalBpkbWithoutNibarCount = max(0, $totalBpkbCount - $totalBpkbWithNibarCount);
+
+        $builder = (clone $baseBuilder)->with(['box', 'inputUser', 'opdSipat']);
+
+        // Filter: PDF Status
+        if ($pdfStatus === 'no_pdf') {
+            $builder->where(function ($q) {
+                $q->whereNull('pdf_path')->orWhere('pdf_path', '');
+            });
+        } elseif ($pdfStatus === 'has_pdf') {
+            $builder->whereNotNull('pdf_path')->where('pdf_path', '!=', '');
+        }
+
+        // Filter: Box Fisik
+        if (!empty($boxId)) {
+            $builder->where('box_id', $boxId);
+        }
+
+        // Filter: Tahun
+        if (!empty($year)) {
+            $builder->where('year', $year);
+        }
+
+        // Filter: OPD
+        if (!empty($opdId)) {
+            $builder->where('sipat_opd_id', $opdId);
+        }
+
+        // Filter: Status Ketersediaan
+        if (!empty($status)) {
+            $builder->where('status', $status);
+        }
+
+        // Filter: NIBAR Status
+        if ($nibarStatus === 'has_nibar') {
+            $builder->whereNotNull('nibar')->where('nibar', '!=', '');
+        } elseif ($nibarStatus === 'no_nibar') {
+            $builder->where(function ($q) {
+                $q->whereNull('nibar')->orWhere('nibar', '');
             });
         }
 
@@ -82,6 +134,18 @@ class ElabelBpkbController extends Controller implements HasMiddleware
             $items = $orderQuery->paginate($perPageInt)->withQueryString();
         }
 
+        // Box options for vehicleType
+        $boxesBuilder = ElabelBox::orderBy('box_code', 'asc');
+        if ($vehicleType !== null) {
+            $boxesBuilder->where(function ($q) use ($vehicleType) {
+                $q->where('vehicle_type', $vehicleType)
+                  ->orWhere('vehicle_type', strtolower($vehicleType))
+                  ->orWhere('vehicle_type', $vehicleType === 'R4' ? 'mobil' : 'motor');
+            });
+        }
+        $boxes = $boxesBuilder->get();
+
+        // Available years
         $yearsBuilder = ElabelBoxYear::select('elabel_box_years.year')
             ->distinct()
             ->join('elabel_boxes', 'elabel_boxes.id', '=', 'elabel_box_years.box_id');
@@ -93,25 +157,46 @@ class ElabelBpkbController extends Controller implements HasMiddleware
                   ->orWhere('elabel_boxes.vehicle_type', $vehicleType === 'R4' ? 'mobil' : 'motor');
             });
         }
+        $boxYears = $yearsBuilder->pluck('year')->toArray();
 
-        $years = $yearsBuilder->orderBy('elabel_box_years.year', 'desc')->pluck('year')->toArray();
+        $bpkbYearsBuilder = ElabelBpkb::whereNotNull('year')->where('year', '>', 0);
+        if ($vehicleType !== null) {
+            $bpkbYearsBuilder->where(function ($q) use ($vehicleType) {
+                $q->where('vehicle_type', $vehicleType)
+                  ->orWhere('vehicle_type', strtolower($vehicleType))
+                  ->orWhere('vehicle_type', $vehicleType === 'R4' ? 'mobil' : 'motor');
+            });
+        }
+        $bpkbYears = $bpkbYearsBuilder->distinct()->pluck('year')->toArray();
 
-        $totalBpkbCount = (clone $builder)->count();
-        $totalBpkbWithFileCount = (clone $builder)->whereNotNull('pdf_path')->where('pdf_path', '!=', '')->count();
-        $totalBpkbWithNibarCount = (clone $builder)->whereNotNull('nibar')->where('nibar', '!=', '')->count();
+        $years = array_values(array_unique(array_filter(array_merge($boxYears, $bpkbYears))));
+        rsort($years);
+
+        // OPD list
+        $opds = \App\Models\Opd::where('aktif', 1)->orderBy('nama', 'asc')->get();
 
         return view('elabel.bpkb.index', [
-            'items'                   => $items,
-            'years'                   => $years,
-            'vehicleType'             => $vehicleType,
-            'vehicleLabel'            => $vehicleLabel,
-            'vehicleRoute'            => $vehicleType ? $this->routeSegment($vehicleType) : null,
-            'activeMenu'              => $vehicleType === 'R2' ? 'bpkb_motor' : ($vehicleType === 'R4' ? 'bpkb_mobil' : 'bpkb'),
-            'searchQuery'             => $query,
-            'perPage'                 => $perPage,
-            'totalBpkbCount'          => $totalBpkbCount,
-            'totalBpkbWithFileCount'  => $totalBpkbWithFileCount,
-            'totalBpkbWithNibarCount' => $totalBpkbWithNibarCount,
+            'items'                       => $items,
+            'years'                       => $years,
+            'boxes'                       => $boxes,
+            'opds'                        => $opds,
+            'vehicleType'                 => $vehicleType,
+            'vehicleLabel'                => $vehicleLabel,
+            'vehicleRoute'                => $vehicleType ? $this->routeSegment($vehicleType) : null,
+            'activeMenu'                  => $vehicleType === 'R2' ? 'bpkb_motor' : ($vehicleType === 'R4' ? 'bpkb_mobil' : 'bpkb'),
+            'searchQuery'                 => $query,
+            'pdfStatus'                   => $pdfStatus,
+            'selectedBoxId'               => $boxId,
+            'selectedYear'                => $year,
+            'selectedOpdId'               => $opdId,
+            'selectedStatus'              => $status,
+            'nibarStatus'                 => $nibarStatus,
+            'perPage'                     => $perPage,
+            'totalBpkbCount'              => $totalBpkbCount,
+            'totalBpkbWithFileCount'      => $totalBpkbWithFileCount,
+            'totalBpkbWithoutFileCount'   => $totalBpkbWithoutFileCount,
+            'totalBpkbWithNibarCount'     => $totalBpkbWithNibarCount,
+            'totalBpkbWithoutNibarCount'  => $totalBpkbWithoutNibarCount,
         ]);
     }
 
@@ -408,38 +493,118 @@ class ElabelBpkbController extends Controller implements HasMiddleware
     {
         $type = (string) $request->get('type');
         $vehicleType = $this->normalizeVehicleType($type !== '' ? $type : null);
+        $query = trim((string) $request->get('q'));
+        $pdfStatus = $request->get('pdf_status');
+        $boxId = $request->get('box_id');
+        $year = $request->get('year');
+        $opdId = $request->get('opd_id');
+        $status = $request->get('status');
+        $nibarStatus = $request->get('nibar_status');
 
-        $builder = ElabelBpkb::with('box')->where('status', '!=', 'Dihapus');
+        $builder = ElabelBpkb::with(['box', 'opdSipat'])->where('status', '!=', 'Dihapus');
         if ($vehicleType !== null) {
-            $builder->where('vehicle_type', $vehicleType);
+            $builder->where(function ($q) use ($vehicleType) {
+                $q->where('vehicle_type', $vehicleType)
+                  ->orWhere('vehicle_type', strtolower($vehicleType))
+                  ->orWhere('vehicle_type', $vehicleType === 'R4' ? 'mobil' : 'motor');
+            });
         }
+
+        // Filter: PDF Status
+        if ($pdfStatus === 'no_pdf') {
+            $builder->where(function ($q) {
+                $q->whereNull('pdf_path')->orWhere('pdf_path', '');
+            });
+        } elseif ($pdfStatus === 'has_pdf') {
+            $builder->whereNotNull('pdf_path')->where('pdf_path', '!=', '');
+        }
+
+        // Filter: Box Fisik
+        if (!empty($boxId)) {
+            $builder->where('box_id', $boxId);
+        }
+
+        // Filter: Tahun
+        if (!empty($year)) {
+            $builder->where('year', $year);
+        }
+
+        // Filter: OPD
+        if (!empty($opdId)) {
+            $builder->where('sipat_opd_id', $opdId);
+        }
+
+        // Filter: Status Ketersediaan
+        if (!empty($status)) {
+            $builder->where('status', $status);
+        }
+
+        // Filter: NIBAR Status
+        if ($nibarStatus === 'has_nibar') {
+            $builder->whereNotNull('nibar')->where('nibar', '!=', '');
+        } elseif ($nibarStatus === 'no_nibar') {
+            $builder->where(function ($q) {
+                $q->whereNull('nibar')->orWhere('nibar', '');
+            });
+        }
+
+        if ($query !== '') {
+            $builder->where(function ($q) use ($query) {
+                $q->where('plate_number', 'LIKE', "%{$query}%")
+                  ->orWhere('no_bpkb', 'LIKE', "%{$query}%")
+                  ->orWhere('nibar', 'LIKE', "%{$query}%")
+                  ->orWhere('no_rangka', 'LIKE', "%{$query}%")
+                  ->orWhere('no_mesin', 'LIKE', "%{$query}%")
+                  ->orWhere('merek', 'LIKE', "%{$query}%")
+                  ->orWhere('tipe', 'LIKE', "%{$query}%")
+                  ->orWhere('isi_silinder', 'LIKE', "%{$query}%")
+                  ->orWhere('warna', 'LIKE', "%{$query}%")
+                  ->orWhere('pengguna', 'LIKE', "%{$query}%")
+                  ->orWhereHas('box', function ($bq) use ($query) {
+                      $bq->where('box_code', 'LIKE', "%{$query}%");
+                  });
+            });
+        }
+
         $items = $builder->orderBy('year', 'desc')->orderBy('plate_number', 'asc')->get();
 
         $label = $vehicleType ? strtolower($vehicleType) : 'semua';
+        if ($pdfStatus === 'no_pdf') {
+            $label .= '-belum-ada-pdf';
+        } elseif ($pdfStatus === 'has_pdf') {
+            $label .= '-ada-pdf';
+        }
         $filename = 'bpkb-' . $label . '-' . date('Ymd') . '.xlsx';
 
         $spreadsheet = new Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet();
         $sheet->setTitle('Data BPKB');
-        $lastColumn = 'O';
+        $lastColumn = 'Q';
         $headerRow = 3;
 
         $sheet->mergeCells('A1:' . $lastColumn . '1');
-        $sheet->setCellValue('A1', 'DATA BPKB ' . strtoupper($vehicleType ?? 'SEMUA'));
+        $sheetTitle = 'DATA BPKB ' . strtoupper($vehicleType ?? 'SEMUA');
+        if ($pdfStatus === 'no_pdf') {
+            $sheetTitle .= ' (BELUM ADA SCAN PDF)';
+        } elseif ($pdfStatus === 'has_pdf') {
+            $sheetTitle .= ' (SUDAH ADA SCAN PDF)';
+        }
+        $sheet->setCellValue('A1', $sheetTitle);
         $sheet->getStyle('A1')->applyFromArray([
-            'font' => ['bold' => true, 'size' => 15, 'color' => ['argb' => 'FFFFFFFF']],
+            'font' => ['bold' => true, 'size' => 14, 'color' => ['argb' => 'FFFFFFFF']],
             'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER, 'vertical' => Alignment::VERTICAL_CENTER],
             'fill' => ['fillType' => Fill::FILL_SOLID, 'color' => ['argb' => 'FF1D4ED8']],
         ]);
         $sheet->getRowDimension(1)->setRowHeight(28);
 
         $sheet->fromArray([
-            ['No', 'No. Polisi', 'No. BPKB', 'Nibar', 'No. Rangka', 'No. Mesin', 'Merek', 'Tipe', 'Isi Silinder', 'Warna', 'Pengguna', 'Tahun', 'Jenis', 'Box', 'Status'],
+            ['No', 'No. Polisi', 'No. BPKB', 'Nibar', 'No. Rangka', 'No. Mesin', 'Merek', 'Tipe', 'Isi Silinder', 'Warna', 'Pemegang / Pengguna', 'OPD / Dinas', 'Tahun', 'Jenis', 'Box', 'Status', 'Scan PDF'],
         ], null, 'A' . $headerRow);
 
         $rowIndex = $headerRow + 1;
         $i = 1;
         foreach ($items as $row) {
+            $hasPdf = !empty($row->pdf_path);
             $sheet->fromArray([[
                 $i++,
                 $row->plate_number ?? '',
@@ -452,10 +617,12 @@ class ElabelBpkbController extends Controller implements HasMiddleware
                 $row->isi_silinder ?? '',
                 $row->warna ?? '',
                 $row->pengguna ?? '',
+                $row->opdSipat ? $row->opdSipat->nama : ($row->pengguna ?? ''),
                 $row->year ?? '',
                 $row->vehicle_type ?? '',
                 $row->box->box_code ?? '',
                 $row->status ?? '',
+                $hasPdf ? 'Ada PDF' : 'Belum Ada PDF',
             ]], null, 'A' . $rowIndex);
             $rowIndex++;
         }

@@ -119,7 +119,7 @@
             <form method="GET" action="{{ route('sipat.aset.index') }}" id="filterForm">
                 <div class="row g-2 align-items-end">
                     <!-- 1. OPD Filter -->
-                    <div class="col-12 col-sm-6 col-md-3 col-xl-2">
+                    <div class="col-12 col-sm-6 col-md-4 col-xl-3">
                         <label class="form-label small fw-semibold text-secondary mb-1">OPD Pengelola</label>
                         @if(auth()->check() && (auth()->user()->role === \App\Enums\UserRole::OPD || auth()->user()->role === \App\Enums\UserRole::KPB))
                             <div class="form-control bg-light text-secondary small fw-semibold text-truncate" title="{{ auth()->user()->opd?->nama }}">
@@ -138,9 +138,9 @@
                     </div>
 
                     <!-- 2. Kecamatan Filter -->
-                    <div class="col-12 col-sm-6 col-md-3 col-xl-2">
+                    <div class="col-12 col-sm-6 col-md-4 col-xl-2">
                         <label class="form-label small fw-semibold text-secondary mb-1">Kecamatan</label>
-                        <select name="kecamatan_id" class="form-select" onchange="document.getElementById('filterForm').submit()">
+                        <select name="kecamatan_id" id="filterKecamatan" class="form-select" onchange="handleKecamatanFilterChange()">
                             <option value="">-- Semua Kecamatan --</option>
                             <option value="KOSONG" {{ request('kecamatan_id') === 'KOSONG' ? 'selected' : '' }}>[Luar Wilayah / Lainnya]</option>
                             @if(isset($kecamatanList))
@@ -151,8 +151,24 @@
                         </select>
                     </div>
 
-                    <!-- 3. Kategori Status Filter Dropdown -->
-                    <div class="col-12 col-sm-6 col-md-3 col-xl-2">
+                    <!-- 3. Desa / Kelurahan Filter -->
+                    <div class="col-12 col-sm-6 col-md-4 col-xl-2">
+                        <label class="form-label small fw-semibold text-secondary mb-1">Desa / Kelurahan</label>
+                        <select name="desa_id" id="filterDesa" class="form-select" onchange="handleDesaFilterChange(this)">
+                            <option value="">-- Semua Desa/Kel. --</option>
+                            <option value="KOSONG" {{ request('desa_id') === 'KOSONG' ? 'selected' : '' }}>[Tanpa Desa / Kosong]</option>
+                            @if(isset($desaList))
+                                @foreach($desaList as $ds)
+                                    <option value="{{ $ds->id }}" data-kec="{{ $ds->kecamatan_id }}" {{ (string) request('desa_id') === (string) $ds->id ? 'selected' : '' }}>
+                                        {{ $ds->nama }} {{ (!request('kecamatan_id') && $ds->kecamatan) ? '('.$ds->kecamatan->nama.')' : '' }}
+                                    </option>
+                                @endforeach
+                            @endif
+                        </select>
+                    </div>
+
+                    <!-- 4. Kategori Status Filter Dropdown -->
+                    <div class="col-12 col-sm-6 col-md-6 col-xl-2">
                         <label class="form-label small fw-semibold text-secondary mb-1">Kategori Aset / Status</label>
                         <select name="kategori_status" id="filterKategoriStatus" class="form-select" onchange="handleKategoriStatusChange(this.value)">
                             <option value="">-- Semua Kategori --</option>
@@ -196,8 +212,8 @@
                         </select>
                     </div>
 
-                    <!-- 4. Multi-select Checkbox Status Filter Dropdown (Dinamis Sesuai Kategori) -->
-                    <div class="col-12 col-sm-6 col-md-3 col-xl-2">
+                    <!-- 5. Multi-select Checkbox Status Filter Dropdown (Dinamis Sesuai Kategori) -->
+                    <div class="col-12 col-sm-6 col-md-6 col-xl-3">
                         <label class="form-label small fw-semibold text-secondary mb-1">
                             Status BPN <span class="badge bg-warning-subtle text-body px-1.5 py-0.5 rounded-pill" style="font-size: 0.65rem;">Centang</span>
                         </label>
@@ -288,8 +304,8 @@
                         </div>
                     </div>
 
-                    <!-- 5. Per Page Limit -->
-                    <div class="col-6 col-sm-3 col-md-1 col-xl-1">
+                    <!-- 6. Per Page Limit -->
+                    <div class="col-4 col-sm-2 col-md-2 col-xl-1 mt-1">
                         <label class="form-label small fw-semibold text-secondary mb-1">Tampil</label>
                         <select name="per_page" class="form-select px-2" onchange="document.getElementById('filterForm').submit()">
                             <option value="15" {{ request('per_page') == '15' ? 'selected' : '' }}>15</option>
@@ -299,14 +315,14 @@
                         </select>
                     </div>
 
-                    <!-- 6. Search Bar -->
-                    <div class="col-12 col-sm-9 col-md-3 col-xl-3">
+                    <!-- 7. Search Bar -->
+                    <div class="col-8 col-sm-10 col-md-10 col-xl-6 mt-1">
                         <label class="form-label small fw-semibold text-secondary mb-1">Pencarian Cepat</label>
                         <div class="input-group">
                             <span class="input-group-text bg-body border-0 text-secondary"><i class="bi bi-search"></i></span>
-                            <input type="text" name="search" class="form-control" placeholder="Kode Aset, Nama Aset, Alamat..." value="{{ request('search') }}">
+                            <input type="text" name="search" class="form-control" placeholder="Kode Aset, Nama Aset, Alamat, Desa, Kecamatan..." value="{{ request('search') }}">
                             <button type="submit" class="btn btn-primary px-3">Cari</button>
-                            @if(request()->hasAny(['search', 'opd_id', 'opd', 'kecamatan_id', 'status', 'kategori_status']))
+                            @if(request()->hasAny(['search', 'opd_id', 'opd', 'kecamatan_id', 'desa_id', 'status', 'kategori_status']))
                                 <a href="{{ route('sipat.aset.index') }}?reset=1" class="btn btn-outline-secondary px-3"><i class="bi bi-x-circle"></i> Reset</a>
                             @endif
                         </div>
@@ -453,7 +469,7 @@
                                                 <span>&bull;</span>
                                             @endif
                                             @if($item->wilayahDesa)
-                                                <span>Desa {{ $item->wilayahDesa->nama }}</span>
+                                                <span>{{ ($item->wilayahDesa->jenis === 'Kelurahan' ? 'Kel. ' : 'Desa ') . $item->wilayahDesa->nama }}</span>
                                             @endif
                                         </div>
                                     @endif
@@ -928,6 +944,27 @@
             }
             return itemCategories.some(cat => allowed.includes(cat));
         }
+
+        // Handler filter kecamatan & desa
+        window.handleKecamatanFilterChange = function() {
+            const desaSelect = document.getElementById('filterDesa');
+            if (desaSelect) {
+                desaSelect.value = ''; // Reset desa saat kecamatan diganti
+            }
+            document.getElementById('filterForm').submit();
+        };
+
+        window.handleDesaFilterChange = function(el) {
+            if (el && el.value && el.value !== 'KOSONG') {
+                const selectedOpt = el.options[el.selectedIndex];
+                const kecId = selectedOpt ? selectedOpt.getAttribute('data-kec') : null;
+                const kecSelect = document.getElementById('filterKecamatan');
+                if (kecId && kecSelect && !kecSelect.value) {
+                    kecSelect.value = kecId;
+                }
+            }
+            document.getElementById('filterForm').submit();
+        };
 
         // Handler dinamis Kategori Status: uncheck status yang tidak sesuai kategori baru lalu submit form
         window.handleKategoriStatusChange = function(newKategori) {

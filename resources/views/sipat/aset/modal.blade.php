@@ -93,7 +93,14 @@
                 </span>
             @endif
         </div>
-        <h4 class="modal-title fw-bold mb-0 text-body">{{ $aset->nama_aset }}</h4>
+        <div class="d-flex align-items-center gap-2 flex-wrap">
+            <h4 class="modal-title fw-bold mb-0 text-body">{{ $aset->nama_aset }}</h4>
+            @if($aset->masterNamaAset?->kelompok)
+                <span class="badge bg-secondary-subtle text-body border border-secondary-subtle px-2 py-0.5 rounded-pill" style="font-size: 0.75rem;">
+                    <i class="bi bi-tag me-1"></i>{{ $aset->masterNamaAset->kelompok }}
+                </span>
+            @endif
+        </div>
     </div>
     <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal" aria-label="Tutup"></button>
 </div>

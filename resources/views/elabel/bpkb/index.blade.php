@@ -18,7 +18,7 @@
             <h4 class="fw-bold text-navy mb-0">Katalog BPKB Kendaraan ({{ $vehicleLabel }})</h4>
         </div>
         <div class="action-toolbar d-flex flex-wrap gap-2">
-            <a href="{{ route('elabel.bpkb.export', ['type' => request('type')]) }}" class="btn btn-outline-success shadow-sm fw-medium d-flex align-items-center gap-2">
+            <a href="{{ route('elabel.bpkb.export', request()->all()) }}" class="btn btn-outline-success shadow-sm fw-medium d-flex align-items-center gap-2">
                 <i class="bi bi-file-earmark-excel"></i> Export Excel
             </a>
             <button type="button" class="btn btn-outline-primary shadow-sm fw-medium d-flex align-items-center gap-2" data-bs-toggle="modal" data-bs-target="#importModal">
@@ -29,6 +29,7 @@
             </a>
         </div>
     </div>
+
     <!-- CATEGORY FILTER TABS -->
     <ul class="nav nav-tabs nav-fill mb-4 border-bottom" role="tablist">
         <li class="nav-item">
@@ -51,33 +52,164 @@
     <!-- SEARCH & TABLE CARD -->
     <div class="card border-0 shadow-sm rounded-4">
         <div class="card-header bg-white border-0 py-3 px-4">
-            <form action="{{ route('elabel.bpkb.index') }}" method="GET" class="row g-2 align-items-center" id="filterForm">
+            @php
+                $hasAdvancedFilter = request()->filled('year') || request()->filled('opd_id') || request()->filled('status') || request()->filled('nibar_status');
+            @endphp
+            <form action="{{ route('elabel.bpkb.index') }}" method="GET" id="filterForm">
                 @if(request('type'))
                     <input type="hidden" name="type" value="{{ request('type') }}">
                 @endif
-                <div class="col-6 col-md-2">
-                    <div class="input-group">
-                        <span class="input-group-text bg-white small text-secondary">Tampil</span>
-                        <select name="per_page" class="form-select px-2" onchange="document.getElementById('filterForm').submit()">
-                            <option value="15" {{ request('per_page', 15) == '15' ? 'selected' : '' }}>15</option>
-                            <option value="50" {{ request('per_page') == '50' ? 'selected' : '' }}>50</option>
-                            <option value="100" {{ request('per_page') == '100' ? 'selected' : '' }}>100</option>
-                            <option value="all" {{ request('per_page') == 'all' ? 'selected' : '' }}>Semua</option>
-                        </select>
+                <div class="row g-2 align-items-center mb-2">
+                    <div class="col-12 col-lg-5">
+                        <div class="input-group">
+                            <span class="input-group-text bg-white border-end-0 text-secondary"><i class="bi bi-search"></i></span>
+                            <input type="text" name="q" value="{{ request('q') }}" class="form-control border-start-0 shadow-none" placeholder="Cari No. Polisi, No. BPKB, NIBAR, Mesin, Rangka, Merk, Box...">
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-3 col-lg-3">
+                        <div class="input-group">
+                            <span class="input-group-text bg-white small text-secondary"><i class="bi bi-file-earmark-pdf"></i></span>
+                            <select name="pdf_status" class="form-select shadow-none" onchange="document.getElementById('filterForm').submit()">
+                                <option value="">Semua Status Scan PDF</option>
+                                <option value="no_pdf" {{ request('pdf_status') === 'no_pdf' ? 'selected' : '' }}>🔴 Belum Ada Scan PDF</option>
+                                <option value="has_pdf" {{ request('pdf_status') === 'has_pdf' ? 'selected' : '' }}>🟢 Sudah Ada Scan PDF</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-2 col-lg-2">
+                        <div class="input-group">
+                            <span class="input-group-text bg-white small text-secondary"><i class="bi bi-archive"></i></span>
+                            <select name="box_id" class="form-select shadow-none" onchange="document.getElementById('filterForm').submit()">
+                                <option value="">Semua Box</option>
+                                @foreach($boxes as $box)
+                                    <option value="{{ $box->id }}" {{ request('box_id') == $box->id ? 'selected' : '' }}>Box {{ $box->box_code }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-2 col-lg-2 d-flex gap-1">
+                        <button type="submit" class="btn btn-primary flex-grow-1 fw-medium" title="Terapkan Filter">
+                            <i class="bi bi-funnel"></i> <span class="d-none d-lg-inline">Filter</span>
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary {{ $hasAdvancedFilter ? 'btn-primary text-white' : '' }}" data-bs-toggle="collapse" data-bs-target="#advancedFilters" aria-expanded="{{ $hasAdvancedFilter ? 'true' : 'false' }}" aria-controls="advancedFilters" title="Filter Lanjutan (Tahun, OPD, Status, NIBAR)">
+                            <i class="bi bi-sliders"></i>
+                        </button>
+                        <a href="{{ route('elabel.bpkb.index', array_filter(['type' => request('type')])) }}" class="btn btn-light border bg-white" title="Reset Semua Filter"><i class="bi bi-arrow-clockwise"></i></a>
                     </div>
                 </div>
-                <div class="col-12 col-md-7">
-                    <div class="input-group">
-                        <span class="input-group-text bg-white border-end-0"><i class="bi bi-search text-secondary"></i></span>
-                        <input type="text" name="q" value="{{ request('q') }}" class="form-control border-start-0 shadow-none" placeholder="Cari nomor polisi, nomor BPKB, NIBAR, rangka, mesin, atau kode box...">
+
+                <!-- SECOND ROW: COLLAPSIBLE ADVANCED FILTERS (Tahun, OPD, Status, NIBAR, Tampil) -->
+                <div class="collapse {{ $hasAdvancedFilter ? 'show' : '' }}" id="advancedFilters">
+                    <div class="row g-2 align-items-center pt-2 border-top mt-1">
+                        <div class="col-6 col-md-3 col-lg-2">
+                            <select name="year" class="form-select form-select-sm shadow-none" onchange="document.getElementById('filterForm').submit()">
+                                <option value="">Semua Tahun</option>
+                                @foreach($years as $yr)
+                                    <option value="{{ $yr }}" {{ request('year') == $yr ? 'selected' : '' }}>Tahun {{ $yr }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="col-6 col-md-3 col-lg-4">
+                            <select name="opd_id" class="form-select form-select-sm shadow-none" onchange="document.getElementById('filterForm').submit()">
+                                <option value="">Semua OPD / Instansi</option>
+                                @foreach($opds as $opd)
+                                    <option value="{{ $opd->id }}" {{ request('opd_id') == $opd->id ? 'selected' : '' }}>{{ Str::limit($opd->nama, 36) }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="col-6 col-md-2 col-lg-2">
+                            <select name="status" class="form-select form-select-sm shadow-none" onchange="document.getElementById('filterForm').submit()">
+                                <option value="">Semua Status Fisik</option>
+                                <option value="Tersedia" {{ request('status') === 'Tersedia' ? 'selected' : '' }}>Tersedia</option>
+                                <option value="Dipinjam" {{ request('status') === 'Dipinjam' ? 'selected' : '' }}>Dipinjam</option>
+                            </select>
+                        </div>
+                        <div class="col-6 col-md-2 col-lg-2">
+                            <select name="nibar_status" class="form-select form-select-sm shadow-none" onchange="document.getElementById('filterForm').submit()">
+                                <option value="">Semua NIBAR</option>
+                                <option value="has_nibar" {{ request('nibar_status') === 'has_nibar' ? 'selected' : '' }}>Ada NIBAR</option>
+                                <option value="no_nibar" {{ request('nibar_status') === 'no_nibar' ? 'selected' : '' }}>Tanpa NIBAR</option>
+                            </select>
+                        </div>
+                        <div class="col-12 col-md-2 col-lg-2">
+                            <div class="input-group input-group-sm">
+                                <span class="input-group-text bg-light text-secondary">Tampil</span>
+                                <select name="per_page" class="form-select form-select-sm" onchange="document.getElementById('filterForm').submit()">
+                                    <option value="15" {{ request('per_page', 15) == '15' ? 'selected' : '' }}>15</option>
+                                    <option value="25" {{ request('per_page') == '25' ? 'selected' : '' }}>25</option>
+                                    <option value="50" {{ request('per_page') == '50' ? 'selected' : '' }}>50</option>
+                                    <option value="100" {{ request('per_page') == '100' ? 'selected' : '' }}>100</option>
+                                    <option value="all" {{ request('per_page') == 'all' ? 'selected' : '' }}>Semua</option>
+                                </select>
+                            </div>
+                        </div>
                     </div>
-                </div>
-                <div class="col-6 col-md-3 d-flex gap-2">
-                    <button type="submit" class="btn btn-primary w-100 fw-medium">Cari</button>
-                    <a href="{{ route('elabel.bpkb.index', array_filter(['type' => request('type')])) }}" class="btn btn-light border bg-white" title="Reset"><i class="bi bi-arrow-clockwise"></i></a>
                 </div>
             </form>
         </div>
+
+        @if(request('pdf_status') || request('box_id') || request('year') || request('opd_id') || request('status') || request('nibar_status') || request('q'))
+            <div class="px-4 py-2 bg-light border-top border-bottom d-flex flex-wrap align-items-center justify-content-between gap-2">
+                <div class="d-flex flex-wrap align-items-center gap-2 small">
+                    <span class="text-secondary"><i class="bi bi-funnel-fill me-1 text-primary"></i>Filter aktif:</span>
+                    @if(request('pdf_status') === 'no_pdf')
+                        <span class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25 px-2 py-1">
+                            <i class="bi bi-file-earmark-x me-1"></i>Belum Ada Scan PDF
+                            <a href="{{ route('elabel.bpkb.index', request()->except('pdf_status', 'page')) }}" class="text-danger ms-1 text-decoration-none">&times;</a>
+                        </span>
+                    @elseif(request('pdf_status') === 'has_pdf')
+                        <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-2 py-1">
+                            <i class="bi bi-file-earmark-check me-1"></i>Sudah Ada Scan PDF
+                            <a href="{{ route('elabel.bpkb.index', request()->except('pdf_status', 'page')) }}" class="text-success ms-1 text-decoration-none">&times;</a>
+                        </span>
+                    @endif
+                    @if(request('box_id'))
+                        @php $activeBox = $boxes->firstWhere('id', request('box_id')); @endphp
+                        <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 px-2 py-1">
+                            Box: {{ $activeBox ? $activeBox->box_code : request('box_id') }}
+                            <a href="{{ route('elabel.bpkb.index', request()->except('box_id', 'page')) }}" class="text-primary ms-1 text-decoration-none">&times;</a>
+                        </span>
+                    @endif
+                    @if(request('year'))
+                        <span class="badge bg-secondary bg-opacity-10 text-secondary border px-2 py-1">
+                            Tahun: {{ request('year') }}
+                            <a href="{{ route('elabel.bpkb.index', request()->except('year', 'page')) }}" class="text-secondary ms-1 text-decoration-none">&times;</a>
+                        </span>
+                    @endif
+                    @if(request('opd_id'))
+                        @php $activeOpd = $opds->firstWhere('id', request('opd_id')); @endphp
+                        <span class="badge bg-secondary bg-opacity-10 text-secondary border px-2 py-1">
+                            OPD: {{ $activeOpd ? Str::limit($activeOpd->nama, 20) : request('opd_id') }}
+                            <a href="{{ route('elabel.bpkb.index', request()->except('opd_id', 'page')) }}" class="text-secondary ms-1 text-decoration-none">&times;</a>
+                        </span>
+                    @endif
+                    @if(request('status'))
+                        <span class="badge bg-secondary bg-opacity-10 text-secondary border px-2 py-1">
+                            Status: {{ request('status') }}
+                            <a href="{{ route('elabel.bpkb.index', request()->except('status', 'page')) }}" class="text-secondary ms-1 text-decoration-none">&times;</a>
+                        </span>
+                    @endif
+                    @if(request('nibar_status'))
+                        <span class="badge bg-info bg-opacity-10 text-info-emphasis border border-info border-opacity-25 px-2 py-1">
+                            NIBAR: {{ request('nibar_status') === 'has_nibar' ? 'Ada NIBAR' : 'Tanpa NIBAR' }}
+                            <a href="{{ route('elabel.bpkb.index', request()->except('nibar_status', 'page')) }}" class="text-info-emphasis ms-1 text-decoration-none">&times;</a>
+                        </span>
+                    @endif
+                    @if(request('q'))
+                        <span class="badge bg-dark bg-opacity-10 text-dark border px-2 py-1">
+                            Cari: "{{ request('q') }}"
+                            <a href="{{ route('elabel.bpkb.index', request()->except('q', 'page')) }}" class="text-dark ms-1 text-decoration-none">&times;</a>
+                        </span>
+                    @endif
+                    <span class="text-muted ms-2">(Ditemukan <strong>{{ number_format($items->total()) }}</strong> data)</span>
+                </div>
+                <div>
+                    <a href="{{ route('elabel.bpkb.index', array_filter(['type' => request('type')])) }}" class="btn btn-sm btn-link text-danger text-decoration-none p-0 small">
+                        <i class="bi bi-x-circle me-1"></i>Hapus Semua Filter
+                    </a>
+                </div>
+            </div>
+        @endif
 
         <div class="table-responsive">
             <table class="table table-hover align-middle mb-0">
@@ -114,9 +246,9 @@
                                 <div class="fw-medium text-dark">{{ $item->merek ?: '-' }} {{ $item->tipe ?: '' }}</div>
                                 <div class="small text-secondary">{{ $item->isi_silinder ?: '-' }} · {{ $item->warna ?: '-' }}</div>
                             </td>
-                            <td>
-                                <div class="fw-semibold text-dark"><i class="bi bi-person-fill text-secondary me-1"></i> {{ $item->pengguna ?: '-' }}</div>
-                                <div class="small text-secondary"><i class="bi bi-building me-1"></i> {{ $item->opdSipat ? $item->opdSipat->nama : '-' }}</div>
+                            <td style="max-width: 220px;">
+                                <div class="fw-semibold text-dark text-truncate" title="{{ $item->pengguna ?: '-' }}"><i class="bi bi-person-fill text-secondary me-1"></i>{{ $item->pengguna ?: '-' }}</div>
+                                <div class="small text-secondary text-truncate" title="{{ $item->opdSipat ? $item->opdSipat->nama : '-' }}"><i class="bi bi-building me-1"></i>{{ $item->opdSipat ? $item->opdSipat->nama : '-' }}</div>
                             </td>
                             <td class="text-center">
                                 <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 px-3 py-2 rounded-3 fw-bold">
@@ -130,8 +262,8 @@
                                     <span class="badge bg-warning bg-opacity-10 text-warning text-dark border border-warning border-opacity-25 px-3 py-1 rounded-pill fw-medium">{{ $item->status }}</span>
                                 @endif
                             </td>
-                            <td class="px-4 text-center">
-                                <div class="d-flex justify-content-center gap-1">
+                            <td class="px-3 text-center">
+                                <div class="d-flex justify-content-center gap-1" style="white-space: nowrap;">
                                     @if($item->pdf_path)
                                         <a href="{{ route('elabel.bpkb.view-pdf', $item->id) }}" 
                                            data-pdf-preview="true"

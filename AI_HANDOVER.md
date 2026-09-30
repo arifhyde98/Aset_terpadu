@@ -193,10 +193,21 @@ Mencegah terjadinya *cascade delete* database yang dapat melenyapkan data histor
   - Menambahkan guard dependensi relasi:
     - `kecamatanDestroy`: Memvalidasi catatan aset aktif di `aset_tanah` serta keberadaan `Camat` aktif sebelum menghapus kecamatan.
     - `desaDestroy`: Memvalidasi keterkaitan pada `surat_skpt` dan `KepalaDesa` sebelum menghapus desa/kelurahan.
+    - `desaBulkDestroy`: Mendukung penghapusan massal data desa/kelurahan terpilih dengan verifikasi dependensi otomatis (*batch constraint check*).
     - `kadesDestroy`: Memvalidasi penggunaan pejabat kepala desa pada dokumen `surat_skpt`.
     - `camatDestroy`: Memvalidasi penggunaan pejabat camat pada dokumen `surat_skpt`.
     - `pemohonDestroy`: Memvalidasi penggunaan pemohon pada dokumen `surat_skpt`.
   - Otomatis memicu pembersihan cache `SipatService::invalidateDashboardCache()` pada setiap mutasi data kecamatan.
+  - **Modernisasi UI/UX Tab Desa / Kelurahan (`resources/views/master/wilayah/index.blade.php`):**
+    - Toolbar Pencarian & Filter real-time (nama Desa/Kelurahan atau Kecamatan) dengan debounce input dan tombol reset instan.
+    - Dropdown filter ganda: berdasarkan Kecamatan dan Jenis (Semua, Desa, Kelurahan).
+    - Control Bar ringkasan statistik cepat (Total Kecamatan, Total Desa, jumlah terfilter, jumlah terpilih) dan tombol Aksi Massal (Bulk Actions dropdown & direct Hapus Terpilih).
+    - Restrukturisasi tabel: Checkbox Select All & per-baris, penomoran adaptif paginasi, badge jenis terformat (Desa soft blue vs Kelurahan soft slate/indigo), dan tombol aksi minimalis (pensil edit & tong sampah hapus dengan efek hover bahaya).
+    - Paginasi komprehensif: Penunjuk halaman aktif (*Page X of Y*), tombol navigasi pintar (`<`, `>`, dan nomor halaman dengan elipsis), serta pemilih jumlah baris per halaman (10, 25, 50, 100 baris).
+  - **Pemutakhiran Master Desa Se-Kabupaten Donggala (`MasterDesaDonggalaSeeder`):**
+    - Sinkronisasi 167 desa dan 9 kelurahan definitif Permendagri No. 137/2017 jo. Permendagri No. 72/2019 ke tabel `desa`.
+    - Mengoreksi penempatan desa yang tertukar (seperti pemindahan `Lumbudolo` ke Kecamatan Banawa Tengah, standarisasi ejaan `Tibo`, `Tambu`, dsb).
+    - Menetapkan klasifikasi `jenis = 'Kelurahan'` pada 9 kelurahan resmi di Kecamatan Banawa (Boneoge, Boya, Ganti, Gunung Bale, Kabonga Besar, Kabonga Kecil, Labuan Bajo, Maleni, Tanjung Batu).
 
 ### 3.5 Atomisitas Transaksi & Pembersihan Berkas Fisik
 - **Transaksi Aset Baru (`AsetTanahService::storeAset`):** Dibungkus penuh dalam `DB::transaction()` untuk menjamin atomisitas pembuatan aset tanah baru dan riwayat status BPN awal (*All-or-Nothing*).
@@ -217,7 +228,49 @@ Mencegah terjadinya *cascade delete* database yang dapat melenyapkan data histor
   - Negative lookahead pada `Labuan` (mengecualikan kelurahan `Labuan Bajo`).
 - Memicu invalidasi cache `SipatService::invalidateDashboardCache()` agar statistik dashboard wilayah langsung terbarukan.
 
-### 3.7 Aturan Integritas Skema Relasi Fisik
+### 3.7 Pemetaan Otomatis Master Desa/Kelurahan (`PopulateAsetTanahDesaCommand`)
+- **Artisan Command:**
+  ```bash
+  php artisan sipat:populate-desa {--dry-run}
+  ```
+- **Fungsi:** Mendeteksi dan memasangkan kolom `desa_id` pada tabel `aset_tanah` berdasarkan teks pada field `alamat` yang dicocokkan secara ketat dengan master data `desa`.
+- **Protokol Pencegahan Salah Pasang (Anti-Collision & Ambiguity Guard):**
+  - **Pencocokan Nama Terpanjang (*Longest String Match First*):** Nama desa multi-kata dievaluasi terlebih dahulu sebelum nama tunggal (contoh: `Labuan Panimba` / `Labuan Kungguma` / `Labuan Toposo` dievaluasi sebelum `Labuan`; `Kabonga Kecil` / `Kabonga Besar` sebelum `Kabonga`; `Toaya Vunta` sebelum `Toaya`; `Lero Tatari` sebelum `Lero`; `Kaliburu Kata` sebelum `Kaliburu`).
+  - **Ambiguity Guard (Lewati Kata Ambigu):** Jika teks alamat hanya menyebutkan kata dasar ambigu tanpa kata penjelas kedua (contoh hanya tertulis `Wani` tanpa Satu/Dua/Tiga/Lumbumpetigo atau hanya `Wombo` tanpa Kalonggo/Mpanau), sistem secara sengaja **melewatkan pencocokan otomatis** guna mencegah salah pasang, sehingga tetap aman untuk dipilih manual oleh operator.
+  - **Pencocokan Batas Kata Ketat (*Word Boundary* `\b...\b`):** Mencegah kata parsial terambil tidak sengaja.
+  - Memicu invalidasi cache `SipatService::invalidateDashboardCache()`.
+
+### 3.8 Filter Wilayah Desa/Kelurahan & Two-Way Dynamic Sync
+- **Katalog Aset (`sipat/aset/index.blade.php`), Pusat Laporan (`sipat/laporan/index.blade.php`), & Tanah Belum Tercatat (`tanah_tak_tercatat/index.blade.php`):**
+  - Dilengkapi filter dropdown `desa_id` yang terhubung langsung ke master 167 desa & 9 kelurahan definitif se-Kabupaten Donggala.
+  - **Opsi Khusus:** `-- Semua Desa/Kel. --` (semua aset) dan `[Tanpa Desa / Kosong]` (menyaring aset dengan `desa_id IS NULL` via `whereNull('desa_id')`).
+  - **Two-Way Dynamic Sync (Sinkronisasi Dinamis Dua Arah):**
+    - Saat Kecamatan dipilih/berubah: Dropdown desa otomatis menyaring hanya desa di kecamatan tersebut dan mereset nilai lama untuk mencegah tabrakan filter.
+    - Saat Desa dipilih langsung dari daftar umum (tanpa memilih kecamatan): Sistem secara otomatis mendeteksi atribut `data-kec` pada desa tersebut dan menyelaraskan pilihan dropdown Kecamatan.
+  - **Dukungan Pencarian Teks Bebas (`search` / `q`):** Ikut mencocokkan string nama desa via relasi `orWhereHas('wilayahDesa')` dan `orWhereHas('wilayahKecamatan')`.
+  - **Formulir Transaksi:** Dropdown pemilihan kecamatan dan desa disematkan secara dinamis pada formulir Tambah Aset (`create.blade.php`), Ubah Aset (`edit.blade.php`), serta modal pendaftaran Tanah Belum Tercatat (`tanah_tak_tercatat/index.blade.php`).
+
+### 3.9 Master Nama Aset Tanah (KIB A), Status Pencatatan & Two-Way Synchronization
+- **Tabel Basis Data:** `master_nama_aset` (`id`, `kode_barang`, `nama` UNIQUE, `kelompok`, `deskripsi`, `urutan`, `is_active`, `timestamps`).
+- **Relasi Database:**
+  - Foreign key `nama_aset_id` pada tabel `aset_tanah` menunjuk ke `master_nama_aset(id)` dengan `onDelete('set null')`.
+  - Model `AsetTanah`: `masterNamaAset(): BelongsTo`. Kolom `nama_aset_id` terdaftar di `$fillable`.
+  - Model `MasterNamaAset`: `asetTanah(): HasMany`. Menyediakan scope `scopeActive()` dan `scopeOrdered()`.
+- **Integrasi Penuh Status Pencatatan (Tercatat KIB A vs Tanah Belum Tercatat):**
+  - Pada formulir Tambah Aset (`create.blade.php`): Tersedia saklar/radio opsi `status_pencatatan` (`TERCATAT_KIB_A` vs `USULAN_BELUM_TERCATAT`). Jika memilih usulan tanah belum tercatat, input NIBAR menjadi opsional dan sistem otomatis men-generate NIBAR sementara (`DRAFT-YYYYMMDD-XXXX`).
+  - Pada formulir Ubah Aset (`edit.blade.php`): Menampilkan banner peringatan status draft/usulan jika aset berstatus `USULAN_BELUM_TERCATAT`, menyediakan dropdown `status_pencatatan`, dan tombol "Kembali" yang secara cerdas mendeteksi konteks (`from=tanah-tak-tercatat`).
+  - Pada Tanah Belum Tercatat (`tanah_tak_tercatat/index.blade.php`): Modal pendaftaran baru terintegrasi penuh dengan dropdown `nama_aset_id`, `kecamatan_id`, dan `desa_id`.
+- **Two-Way Synchronization (Zero Breaking Changes di Lingkungan Production):**
+  - Kolom teks warisan `aset_tanah.nama_aset` **tetap dipertahankan dan disinkronkan secara dua arah** dengan `nama_aset_id`.
+  - Pada `StoreAsetTanahRequest` dan `UpdateAsetTanahRequest` (`prepareForValidation`):
+    - Jika operator memilih `nama_aset_id`, teks `nama_aset` otomatis diisi dari `master_nama_aset.nama`.
+    - Jika input teks `nama_aset` dikirimkan tanpa `nama_aset_id`, sistem secara cerdas melakukan `firstOrCreate` ke tabel master dan mengaitkan ID-nya.
+  - Pada `AsetTanahService` (`syncNamaAsetPayload`): Sinkronisasi payload data dilakukan sebelum `store` atau `update`.
+  - Pada `MasterNamaAsetController@update`: Jika nama master diubah, seluruh catatan aset tanah terkait otomatis diperbarui (`AsetTanah::where('nama_aset_id', $id)->update(['nama_aset' => $nama])`), menjamin laporan PDF/Excel legacy, pencarian cepat `LIKE %nama_aset%`, dan audit log tetap sinkron dan konsisten 100%.
+- **Proteksi Hapus (Guard Dependency):** `MasterNamaAsetController@destroy` menolak penghapusan master nama aset yang masih digunakan oleh catatan `aset_tanah`. Operator diarahkan untuk menonaktifkan statusnya (`toggleStatus`).
+- **Formulir Transaksi & Sidebar:** Dropdown `<select name="nama_aset_id">` terpasang pada `create.blade.php`, `edit.blade.php`, serta modal pendaftaran pada Tanah Belum Tercatat (`tanah_tak_tercatat/index.blade.php`), dan link navigasi terdaftar pada sidebar Master Data di bawah grup Klasifikasi & Jenis.
+
+### 3.10 Aturan Integritas Skema Relasi Fisik
 - `onDelete('cascade')`: Pada relasi foreign key `opd_id` di tabel `users` (penghapusan instansi menghapus user terkait).
 - `onDelete('set null')`: Pada kolom foreign key `user_id` di tabel `activities` untuk menjaga keutuhan riwayat audit trail meskipun akun pengguna yang bersangkutan dihapus dari sistem.
 - `UserObserver::deleting`: Secara otomatis menghapus berkas fisik `avatar` dari storage disk saat akun pengguna dihapus.
@@ -364,9 +417,9 @@ Seluruh logika kalkulasi dan query bisnis wajib dienkapsulasi di dalam kelas Ser
 - `ReportGenerationService` (`app/Services/Erandis/ReportGenerationService.php`): Pembuatan berkas ekspor dan PDF laporan kendaraan dinas.
 - `ReportDocumentSettingService` (`app/Services/Erandis/ReportDocumentSettingService.php`): Pengaturan dokumen, kop surat, dan penanda tangan laporan kendaraan.
 - `SipatService` (`app/Services/Sipat/SipatService.php`): Menyediakan statistik ringkasan pertanahan, agregasi capaian BPN, cache dashboard SIPAT, dan sebaran wilayah kecamatan/OPD.
-- `LaporanService` (`app/Services/Sipat/LaporanService.php`): Mesin pengolah laporan pertanahan resmi: resolusi judul 3 baris dinamis, ekspor Excel 12/13 kolom bersertifikat, penataan lembar pengesahan tanda tangan ganda, serta kueri laporan yang selaras dengan seluruh kombinasi filter pertanahan (`search`/`q`, `opd_id`, `kecamatan_id`, `kategori_status`, `status[]`, `tanggal_perolehan`, `sort_by`, `sort_order`).
+- `LaporanService` (`app/Services/Sipat/LaporanService.php`): Mesin pengolah laporan pertanahan resmi: resolusi judul 3 baris dinamis (termasuk deteksi spesifik wilayah desa/kelurahan), ekspor Excel 12/13 kolom bersertifikat, penataan lembar pengesahan tanda tangan ganda, serta kueri laporan yang selaras dengan seluruh kombinasi filter pertanahan (`search`/`q`, `opd_id`, `kecamatan_id`, `desa_id`, `kategori_status`, `status[]`, `tanggal_perolehan`, `sort_by`, `sort_order`).
 - `AsetTanahService` (`app/Services/Sipat/AsetTanahService.php`):
-  - Memiliki method kanonikal `buildAsetQuery(array $filters)` yang digunakan bersama oleh daftar aset terpaginasi (`getPaginatedAset`) dan tombol ekspor data (`AsetTanahController::index`), menjamin hasil ekspor Excel (`.xlsx`) dan Cetak PDF (`.pdf`) 100% presisi dan identik dengan data filter aktif di tabel layar.
+  - Memiliki method kanonikal `buildAsetQuery(array $filters)` yang digunakan bersama oleh daftar aset terpaginasi (`getPaginatedAset`) dan tombol ekspor data (`AsetTanahController::index`), menjamin hasil ekspor Excel (`.xlsx`) dan Cetak PDF (`.pdf`) 100% presisi dan identik dengan data filter aktif di tabel layar (termasuk filter `desa_id` dan `kecamatan_id`).
   - Kueri Master Aset Tanah diurutkan menggunakan `CASE` SQL agar aset ber-NIBAR resmi selalu di urutan paling atas dan usulan draft (`DRAFT-`, `BELUM-`, null, `-`) di paling bawah.
   - Menggunakan **Eloquent Query Scopes** pada Model `AsetTanah` (`scopeSudahBersertifikat`, `scopeDalamProses`, `scopeBermasalah`, `scopeBelumBersertifikat`, dan `scopeFilterKategoriStatus`) sebagai *Single Source of Truth (SSOT)* filter status pertanahan.
   - Menghubungkan modal detail aset ke arsip `elabel_sertifikat_tanah` via relasi kanonikal `nibar = kode_aset` serta mendeteksi duplikasi nomor sertifikat BPN.
@@ -589,7 +642,18 @@ Diimplementasikan arsitektur *Admin Template Switcher* yang memungkinkan penggun
 ### 10.3 Modul eLABEL (Pengarsipan & Universal Dynamic Archive)
 - **Katalog & Box Berkas Fisik BPKB:**
   - Pengarsipan fisik dokumen BPKB Kendaraan ke dalam box arsip berlabel barcode.
-  - Paginasi dinamis dan optimasi performa query (eager loading `box`, `inputUser`, `opdSipat`, kontrol `per_page`: 15, 50, 100, Semua, serta pagination bar mirip modul SIPAT) pada rute `/elabel/bpkb`.
+  - Paginasi dinamis dan optimasi performa query (eager loading `box`, `inputUser`, `opdSipat`, kontrol `per_page`: 15, 25, 50, 100, Semua, serta pagination bar mirip modul SIPAT) pada rute `/elabel/bpkb`.
+  - **Sistem Filter Toolbar Lengkap & Terpadu:**
+    - **Filter Status Scan PDF:** Penyaringan data BPKB yang **Belum Ada Scan PDF** (`pdf_status=no_pdf`) dan **Sudah Ada Scan PDF** (`pdf_status=has_pdf`). Membantu petugas arsip BPKAD mengidentifikasi dokumen fisik yang belum didigitalisasi.
+    - **Filter Box Fisik:** Penyaringan arsip berdasarkan box penyimpanan (`box_id`).
+    - **Filter Tahun:** Penyaringan dokumen BPKB berdasarkan tahun penerbitan/pengadaan (`year`).
+    - **Filter OPD / Instansi:** Penyaringan kendaraan berdasarkan unit kerja penanggung jawab (`opd_id`).
+    - **Filter Status Fisik:** Penyaringan ketersediaan arsip (*Tersedia*, *Dipinjam*).
+    - **Filter Status NIBAR:** Penyaringan berkas berdasarkan kelengkapan kode aset daerah (*Ada NIBAR* / *Tanpa NIBAR*).
+    - **Chip Indikator Filter Aktif:** Menyajikan ringkasan parameter yang sedang aktif dengan tombol hapus filter cepat.
+    - **Ekspor Excel Terfilter Sinkron:** Tombol *Export Excel* otomatis membawa seluruh parameter filter yang aktif (sehingga jika filter *Belum Ada PDF* aktif, file Excel yang terunduh khusus berisi daftar BPKB yang belum di-scan) serta menyertakan kolom OPD dan Status Scan PDF.
+    - **Filter Lanjutan Kolapsibel & Bersih:** Baris kedua filter (Tahun, OPD, Status Fisik, NIBAR, Per Page) dikemas dalam panel kolapsibel (`#advancedFilters`) dengan tombol toggle `bi-sliders` dan otomatis terbuka (`show`) jika terdapat filter lanjutan yang sedang aktif, menjaga tampilan tetap ringkas dan tidak membebani ruang vertikal.
+    - **Optimasi UI Tabel & Form:** Kolom *Pemegang / Dinas* dilengkapi batas lebar aman (`max-width: 220px;`) dan elipsis (*text-truncate*) berserta tooltip judul (*hover tooltip*); kolom *Aksi* diproteksi `white-space: nowrap;` mencegah tombol bergeser bertingkat; serta form *Create* & *Edit* BPKB dilengkapi kapitalisasi otomatis plat nomor (`text-transform: uppercase` + inline sanitizer) dan dropdown OPD terintegrasi searchable select (*TomSelect*).
   - Tabel utama menyajikan kolom identifikasi lengkap kendaraan: Nomor Polisi / Tahun, Identitas Dokumen (BPKB/NIBAR), Nomor Mesin & Nomor Rangka (font monospace), Spesifikasi (Merk/Tipe/Warna), Pemegang/Dinas, Box Fisik, Status, dan Aksi.
   - Fitur pemecahan (*split*) dan penggabungan (*merge*) box arsip.
   - Cetak label stiker barcode box fisik (`/elabel/boxes/{id}/label`).
@@ -696,6 +760,8 @@ Diimplementasikan arsitektur *Admin Template Switcher* yang memungkinkan penggun
 | **SIPAT** | GET | `/sipat/surat/skpt` | `Sipat\SuratController@skpt` | Auth | Modul Pembuatan Surat SKPT |
 | **SIPAT** | GET | `/sipat/peta` | `Sipat\PetaController@index` | Auth | Peta Interaktif Sebaran Aset Spasial |
 | **SIPAT** | POST | `/sipat/peta/import-poligon` | `Sipat\PetaController@importPoligon` | Auth | Unggah Poligon Spasial GeoJSON/Shapefile |
+| **SIPAT** | Resource | `/master-data/nama-aset` | `Master\MasterNamaAsetController` | Superadmin, Admin | CRUD Master Nama Aset Tanah (KIB A) |
+| **SIPAT** | PATCH | `/master-data/nama-aset/{id}/toggle` | `Master\MasterNamaAsetController@toggleStatus` | Superadmin, Admin | Saklar Aktif/Nonaktif Master Nama Aset |
 | **SIPAT** | Resource | `/master-data/status-proses` | `Master\StatusProsesController` | Auth | CRUD Master Status & Kategori BPN |
 | **SIPAT** | POST | `/master-data/status-proses/kategori` | `Master\StatusProsesController@storeKategori` | Superadmin, Admin | Tambah Master Kategori Proses Baru |
 | **SIPAT** | PUT | `/master-data/status-proses/kategori/{id}` | `Master\StatusProsesController@updateKategori` | Superadmin, Admin | Perbarui Master Kategori Proses & Saklar Target |
@@ -703,6 +769,7 @@ Diimplementasikan arsitektur *Admin Template Switcher* yang memungkinkan penggun
 | **SIPAT** | Resource | `/master-data/opd-sipat` | `Master\MasterSipatOpdController` | Auth | CRUD Master OPD Modul SIPAT |
 | **SIPAT** | GET/POST | `/master-data/kop-surat` | `Master\KopSettingsController` | Superadmin, Admin | Pengaturan KOP Surat Resmi & Pejabat Pemda |
 | **SIPAT** | GET | `/master-data/wilayah` | `Master\MasterDataWilayahController@index` | Auth | Master Kecamatan, Desa, Camat, Kades, Pemohon |
+| **SIPAT** | POST | `/master-data/wilayah/desa/bulk-destroy` | `Master\MasterDataWilayahController@desaBulkDestroy` | Superadmin, Admin | Penghapusan Massal Desa/Kelurahan Terpilih |
 | **SIPAT** | GET | `/sipat/dashboard` | `Sipat\SipatDashboardController@index` | Auth | Dashboard Utama SIPAT |
 | **SIPAT** | GET | `/master-data/import` | `Sipat\SipatImportController@index` | Auth | Halaman Impor Data Aset & Update Status BPN |
 | **SIPAT** | GET | `/master-data/log-aktivitas` | `Admin\AuditLogsController@index` | Auth | Audit Log Riwayat Mutasi Modul SIPAT |

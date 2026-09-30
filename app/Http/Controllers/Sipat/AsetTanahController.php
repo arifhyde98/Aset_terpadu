@@ -65,7 +65,7 @@ class AsetTanahController extends Controller implements HasMiddleware
             return redirect()->route('sipat.aset.index');
         }
 
-        $filterKeys = ['opd_id', 'opd', 'kecamatan_id', 'status', 'kategori_status', 'search', 'per_page', 'page', 'sort_by', 'sort_order'];
+        $filterKeys = ['opd_id', 'opd', 'kecamatan_id', 'desa_id', 'status', 'kategori_status', 'search', 'per_page', 'page', 'sort_by', 'sort_order'];
         $queryFilters = array_filter($request->only($filterKeys), function($v) {
             if (is_array($v)) return !empty(array_filter($v));
             return !is_null($v) && $v !== '';
@@ -134,12 +134,14 @@ class AsetTanahController extends Controller implements HasMiddleware
         $data = $this->asetTanahService->getPaginatedAset($request->all());
         $unrecordedCount = AsetTanah::where('status_pencatatan', 'USULAN_BELUM_TERCATAT')->count();
         $kecamatanList = $data['kecamatanList'] ?? \App\Models\Kecamatan::orderBy('nama', 'asc')->get();
+        $desaList = $data['desaList'] ?? \App\Models\Desa::with('kecamatan')->orderBy('nama', 'asc')->get();
 
         return view('sipat.aset.index', [
             'asetTanah'       => $data['asetTanah'],
             'opdList'         => $data['opdList'],
             'statusList'      => $data['statusList'],
             'kecamatanList'   => $kecamatanList,
+            'desaList'        => $desaList,
             'unrecordedCount' => $unrecordedCount,
         ]);
     }
@@ -252,7 +254,8 @@ class AsetTanahController extends Controller implements HasMiddleware
         $statusList = StatusProses::orderBy('urutan', 'asc')->get();
         $kecamatanList = \App\Models\Kecamatan::orderBy('nama', 'asc')->get();
         $desaList = \App\Models\Desa::orderBy('nama', 'asc')->get();
-        return view('sipat.aset.create', compact('opdList', 'statusList', 'kecamatanList', 'desaList'));
+        $masterNamaAsetList = \App\Models\MasterNamaAset::active()->ordered()->get();
+        return view('sipat.aset.create', compact('opdList', 'statusList', 'kecamatanList', 'desaList', 'masterNamaAsetList'));
     }
 
     /**
@@ -280,7 +283,7 @@ class AsetTanahController extends Controller implements HasMiddleware
     public function show(AsetTanah $aset): JsonResponse
     {
         $this->checkAsetOwnership($aset);
-        return response()->json($aset->load(['prosesAset.statusProses', 'latestProses.statusProses', 'wilayahKecamatan', 'wilayahDesa']));
+        return response()->json($aset->load(['prosesAset.statusProses', 'latestProses.statusProses', 'wilayahKecamatan', 'wilayahDesa', 'masterNamaAset']));
     }
 
     /**
@@ -324,8 +327,9 @@ class AsetTanahController extends Controller implements HasMiddleware
         $statusList = StatusProses::orderBy('urutan', 'asc')->get();
         $kecamatanList = \App\Models\Kecamatan::orderBy('nama', 'asc')->get();
         $desaList = \App\Models\Desa::orderBy('nama', 'asc')->get();
+        $masterNamaAsetList = \App\Models\MasterNamaAset::active()->ordered()->get();
         $savedFilters = $this->getSessionFilters();
-        return view('sipat.aset.edit', compact('aset', 'opdList', 'statusList', 'kecamatanList', 'desaList', 'savedFilters'));
+        return view('sipat.aset.edit', compact('aset', 'opdList', 'statusList', 'kecamatanList', 'desaList', 'masterNamaAsetList', 'savedFilters'));
     }
 
     /**

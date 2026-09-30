@@ -70,11 +70,17 @@ class LaporanController extends Controller implements HasMiddleware
         $exportQueryString = $queryString ? '?' . $queryString : '';
 
         $kecamatanList = \App\Models\Kecamatan::orderBy('nama', 'asc')->get();
+        $desaQuery = \App\Models\Desa::with('kecamatan')->orderBy('nama', 'asc');
+        if (!empty($filters['kecamatan_id']) && is_numeric($filters['kecamatan_id'])) {
+            $desaQuery->where('kecamatan_id', (int) $filters['kecamatan_id']);
+        }
+        $desaList = $desaQuery->get();
 
         return view('sipat.laporan.index', compact(
             'filters',
             'opdList',
             'kecamatanList',
+            'desaList',
             'statusList',
             'reportTitles',
             'rows',

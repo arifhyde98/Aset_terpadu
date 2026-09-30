@@ -45,7 +45,9 @@ class UpdateAsetTanahRequest extends FormRequest
         
         return [
             'kode_aset' => 'required|string|max:50|unique:aset_tanah,kode_aset,' . $id . ',id_aset',
-            'nama_aset' => 'required|string|max:150',
+            'status_pencatatan' => 'nullable|string|in:TERCATAT_KIB_A,USULAN_BELUM_TERCATAT',
+            'nama_aset' => 'required_without:nama_aset_id|nullable|string|max:150',
+            'nama_aset_id' => 'nullable|integer|exists:master_nama_aset,id',
             'peruntukan' => 'nullable|string|max:150',
             'luas' => 'nullable|numeric',
             'opd_id' => 'nullable|integer|exists:opds,id',
@@ -66,6 +68,20 @@ class UpdateAsetTanahRequest extends FormRequest
 
     protected function prepareForValidation(): void
     {
+        // Sinkronisasi dua arah nama_aset string dan nama_aset_id
+        if ($this->filled('nama_aset_id')) {
+            $master = \App\Models\MasterNamaAset::find($this->input('nama_aset_id'));
+            if ($master) {
+                $this->merge(['nama_aset' => $master->nama]);
+            }
+        } elseif ($this->filled('nama_aset')) {
+            $master = \App\Models\MasterNamaAset::firstOrCreate(
+                ['nama' => trim($this->input('nama_aset'))],
+                ['is_active' => true]
+            );
+            $this->merge(['nama_aset_id' => $master->id]);
+        }
+
         // Kunci tenant: paksa opd_id dan nama opd sesuai user login jika rolenya adalah OPD atau KPB (Pola E-RANDIS)
         if (auth()->check()) {
             $user = auth()->user();

@@ -53,18 +53,45 @@
                             <i class="bi bi-card-heading text-primary me-2"></i>1. Identitas & Pemilik Aset
                         </h6>
                         <div class="row g-3">
-                            <div class="col-md-5">
-                                <label class="form-label small fw-semibold text-secondary mb-1">Kode Aset (NIBAR) <span class="text-danger">*</span></label>
-                                <div class="input-group">
-                                    <span class="input-group-text bg-body border-0 text-secondary"><i class="bi bi-hash"></i></span>
-                                    <input type="text" name="kode_aset" class="form-control" placeholder="Contoh: 12.01.02.01.001" value="{{ old('kode_aset') }}" required>
+                            <div class="col-12">
+                                <label class="form-label small fw-semibold text-secondary mb-1">Status Pencatatan Aset</label>
+                                <div class="d-flex gap-3 flex-wrap">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="status_pencatatan" id="statusTercatat" value="TERCATAT_KIB_A" {{ old('status_pencatatan', request('status_pencatatan', 'TERCATAT_KIB_A')) === 'TERCATAT_KIB_A' ? 'checked' : '' }}>
+                                        <label class="form-check-label small fw-semibold text-body" for="statusTercatat">
+                                            <i class="bi bi-patch-check-fill text-success me-1"></i>Tercatat Resmi KIB A
+                                        </label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="status_pencatatan" id="statusBelumTercatat" value="USULAN_BELUM_TERCATAT" {{ old('status_pencatatan', request('status_pencatatan')) === 'USULAN_BELUM_TERCATAT' ? 'checked' : '' }}>
+                                        <label class="form-check-label small fw-semibold text-body" for="statusBelumTercatat">
+                                            <i class="bi bi-exclamation-triangle-fill text-warning me-1"></i>Tanah Belum Tercatat / Usulan (NIBAR Sementara)
+                                        </label>
+                                    </div>
                                 </div>
                             </div>
-                            <div class="col-md-7">
-                                <label class="form-label small fw-semibold text-secondary mb-1">Nama Aset Tanah <span class="text-danger">*</span></label>
+                            <div class="col-md-5">
+                                <label class="form-label small fw-semibold text-secondary mb-1" id="labelKodeAset">Kode Aset (NIBAR) <span class="text-danger" id="reqStarKodeAset">*</span></label>
                                 <div class="input-group">
-                                    <span class="input-group-text bg-body border-0 text-secondary"><i class="bi bi-geo"></i></span>
-                                    <input type="text" name="nama_aset" class="form-control" placeholder="Nama aset tanah..." value="{{ old('nama_aset') }}" required>
+                                    <span class="input-group-text bg-body border-0 text-secondary"><i class="bi bi-hash"></i></span>
+                                    <input type="text" name="kode_aset" id="inputKodeAset" class="form-control" placeholder="Contoh: 12.01.02.01.001" value="{{ old('kode_aset') }}" required>
+                                </div>
+                                <div class="form-text small text-muted" id="helpKodeAset">Nomor Induk Barang resmi KIB A dari BPKAD.</div>
+                            </div>
+                            <div class="col-md-7">
+                                <label class="form-label small fw-semibold text-secondary mb-1">Nama Aset Tanah (Klasifikasi KIB A) <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-body border-0 text-secondary"><i class="bi bi-tag"></i></span>
+                                    <select name="nama_aset_id" id="createNamaAsetSelect" class="form-select" required>
+                                        <option value="">-- Pilih Nama Aset --</option>
+                                        @if(isset($masterNamaAsetList))
+                                            @foreach($masterNamaAsetList as $mna)
+                                                <option value="{{ $mna->id }}" {{ old('nama_aset_id') == $mna->id ? 'selected' : '' }}>
+                                                    {{ $mna->nama }}
+                                                </option>
+                                            @endforeach
+                                        @endif
+                                    </select>
                                 </div>
                             </div>
                             <div class="col-md-6">
@@ -149,7 +176,7 @@
                                 <label class="form-label small fw-semibold text-secondary mb-1">Wilayah Kecamatan</label>
                                 <div class="input-group">
                                     <span class="input-group-text bg-body border-0 text-secondary"><i class="bi bi-geo-alt"></i></span>
-                                    <select name="kecamatan_id" class="form-select">
+                                    <select name="kecamatan_id" id="createKecamatanSelect" class="form-select">
                                         <option value="">- Pilih Kecamatan -</option>
                                         @if(isset($kecamatanList))
                                             @foreach($kecamatanList as $kec)
@@ -160,6 +187,22 @@
                                 </div>
                             </div>
                             <div class="col-md-6">
+                                <label class="form-label small fw-semibold text-secondary mb-1">Wilayah Desa / Kelurahan</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-body border-0 text-secondary"><i class="bi bi-houses"></i></span>
+                                    <select name="desa_id" id="createDesaSelect" class="form-select">
+                                        <option value="">- Pilih Desa / Kelurahan -</option>
+                                        @if(isset($desaList))
+                                            @foreach($desaList as $ds)
+                                                <option value="{{ $ds->id }}" data-kec="{{ $ds->kecamatan_id }}" {{ old('desa_id') == $ds->id ? 'selected' : '' }}>
+                                                    {{ $ds->nama }} {{ $ds->kecamatan ? '('.$ds->kecamatan->nama.')' : '' }}
+                                                </option>
+                                            @endforeach
+                                        @endif
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-12">
                                 <label class="form-label small fw-semibold text-secondary mb-1">Alamat Singkat / Detail Jalan</label>
                                 <textarea name="alamat" class="form-control" rows="1" placeholder="Jalan / Dusun / RT...">{{ old('alamat') }}</textarea>
                             </div>
@@ -216,6 +259,67 @@
         modalEl.addEventListener('hidden.bs.modal', function () {
             window.location.href = '{{ route("sipat.aset.index") }}';
         });
+
+        // Toggle required & helper for NIBAR berdasarkan status pencatatan
+        const statusTercatat = document.getElementById('statusTercatat');
+        const statusBelumTercatat = document.getElementById('statusBelumTercatat');
+        const inputKodeAset = document.getElementById('inputKodeAset');
+        const reqStar = document.getElementById('reqStarKodeAset');
+        const helpKode = document.getElementById('helpKodeAset');
+
+        const updateStatusPencatatanUI = () => {
+            if (statusBelumTercatat && statusBelumTercatat.checked) {
+                inputKodeAset.removeAttribute('required');
+                inputKodeAset.placeholder = 'Kosongkan untuk otomatis NIBAR Sementara (DRAFT-...)';
+                if (reqStar) reqStar.style.display = 'none';
+                if (helpKode) helpKode.innerText = 'Opsional. Jika dikosongkan, sistem akan otomatis membuat NIBAR Sementara (DRAFT-...).';
+            } else {
+                inputKodeAset.setAttribute('required', 'required');
+                inputKodeAset.placeholder = 'Contoh: 12.01.02.01.001';
+                if (reqStar) reqStar.style.display = 'inline';
+                if (helpKode) helpKode.innerText = 'Nomor Induk Barang resmi KIB A dari BPKAD.';
+            }
+        };
+
+        if (statusTercatat && statusBelumTercatat) {
+            statusTercatat.addEventListener('change', updateStatusPencatatanUI);
+            statusBelumTercatat.addEventListener('change', updateStatusPencatatanUI);
+            updateStatusPencatatanUI();
+        }
+
+        const kecSelect = document.getElementById('createKecamatanSelect');
+        const desaSelect = document.getElementById('createDesaSelect');
+        if (kecSelect && desaSelect) {
+            const allDesaOptions = Array.from(desaSelect.options);
+            
+            const filterDesa = () => {
+                const kecId = kecSelect.value;
+                const curDesaId = desaSelect.value;
+                desaSelect.innerHTML = '';
+                allDesaOptions.forEach(opt => {
+                    if (opt.value === '' || !kecId || opt.dataset.kec === kecId) {
+                        desaSelect.appendChild(opt.cloneNode(true));
+                    }
+                });
+                if (curDesaId) {
+                    const match = Array.from(desaSelect.options).some(o => o.value === curDesaId);
+                    if (match) desaSelect.value = curDesaId;
+                }
+            };
+
+            kecSelect.addEventListener('change', filterDesa);
+            desaSelect.addEventListener('change', function() {
+                const sel = this.options[this.selectedIndex];
+                if (sel && sel.dataset.kec && !kecSelect.value) {
+                    kecSelect.value = sel.dataset.kec;
+                    filterDesa();
+                }
+            });
+
+            if (kecSelect.value) {
+                filterDesa();
+            }
+        }
     });
 </script>
 @endpush

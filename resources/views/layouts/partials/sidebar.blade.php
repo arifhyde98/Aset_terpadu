@@ -493,7 +493,7 @@
             @if(auth()->check() && in_array(auth()->user()->role->value, ['superadmin', 'admin']))
                 <!-- MODUL: MASTER DATA TERPADU (Purple/Indigo Accent) -->
                 @php
-                    $isMasterActive = Request::is('opds*', 'sub-opds*', 'master-data/wilayah*', 'master-data/status-proses*', 'vehicle-types*', 'master-data/import*', 'elabel/dynamic/types*');
+                    $isMasterActive = Request::is('opds*', 'sub-opds*', 'master-data/wilayah*', 'master-data/nama-aset*', 'master-data/status-proses*', 'vehicle-types*', 'master-data/import*', 'elabel/dynamic/types*');
                 @endphp
                 <div class="module-group module-master">
                     <a class="module-header {{ $isMasterActive ? '' : 'collapsed' }}" 
@@ -561,16 +561,22 @@
 
                         <!-- Submenu 3: Klasifikasi & Referensi -->
                         <div class="nested-group">
-                            <a class="nested-header {{ Request::is('master-data/status-proses*', 'vehicle-types*', 'elabel/dynamic/types*') ? '' : 'collapsed' }}"
+                            <a class="nested-header {{ Request::is('master-data/nama-aset*', 'master-data/status-proses*', 'vehicle-types*', 'elabel/dynamic/types*') ? '' : 'collapsed' }}"
                                data-bs-toggle="collapse"
                                href="#masterSubKlasifikasi"
                                role="button"
-                               aria-expanded="{{ Request::is('master-data/status-proses*', 'vehicle-types*', 'elabel/dynamic/types*') ? 'true' : 'false' }}">
+                               aria-expanded="{{ Request::is('master-data/nama-aset*', 'master-data/status-proses*', 'vehicle-types*', 'elabel/dynamic/types*') ? 'true' : 'false' }}">
                                 <span><i class="bi bi-tags me-1 text-warning"></i> KLASIFIKASI & JENIS</span>
                                 <i class="bi bi-chevron-down nested-chevron"></i>
                             </a>
-                            <div id="masterSubKlasifikasi" class="collapse {{ Request::is('master-data/status-proses*', 'vehicle-types*', 'elabel/dynamic/types*') ? 'show' : '' }}">
+                            <div id="masterSubKlasifikasi" class="collapse {{ Request::is('master-data/nama-aset*', 'master-data/status-proses*', 'vehicle-types*', 'elabel/dynamic/types*') ? 'show' : '' }}">
                                 <ul class="submenu-list">
+                                    <li class="{{ Request::is('master-data/nama-aset*') ? 'active' : '' }}">
+                                        <a href="{{ route('master.nama-aset.index') }}" data-bs-toggle="tooltip" data-bs-placement="right" title="Master Nama Aset Tanah (KIB A)">
+                                            <i class="bi bi-card-checklist"></i>
+                                            <span>Nama Aset Tanah</span>
+                                        </a>
+                                    </li>
                                     <li class="{{ Request::is('master-data/status-proses*') ? 'active' : '' }}">
                                         <a href="{{ route('status-proses.index') }}" data-bs-toggle="tooltip" data-bs-placement="right" title="Status Proses Pensertifikatan Tanah">
                                             <i class="bi bi-tags"></i>

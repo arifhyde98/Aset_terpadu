@@ -34,6 +34,7 @@ class LaporanService
         return [
             'opd_id' => $input['opd_id'] ?? ($input['opd'] ?? ''),
             'kecamatan_id' => $input['kecamatan_id'] ?? '',
+            'desa_id' => $input['desa_id'] ?? '',
             'status' => $statusIds,
             'kategori_status' => $kategoriStatus,
             'tanggal_perolehan' => $input['tanggal_perolehan'] ?? '',
@@ -83,6 +84,15 @@ class LaporanService
             }
         }
 
+        $desaFilter = $filters['desa_id'] ?? '';
+        if ($desaFilter !== '') {
+            if ($desaFilter === 'KOSONG') {
+                $query->whereNull('desa_id');
+            } elseif (is_numeric($desaFilter)) {
+                $query->where('desa_id', (int) $desaFilter);
+            }
+        }
+
         // Filter Kategori Status (Belum Diproses, Dalam Proses, Sudah Bersertifikat, Bermasalah, Belum Bersertifikat, Target, dll)
         $kat = $filters['kategori_status'] ?? '';
         if ($kat !== '') {
@@ -116,6 +126,9 @@ class LaporanService
                   })
                   ->orWhereHas('wilayahKecamatan', function ($kecQuery) use ($search) {
                       $kecQuery->where('nama', 'LIKE', "%{$search}%");
+                  })
+                  ->orWhereHas('wilayahDesa', function ($desaQuery) use ($search) {
+                      $desaQuery->where('nama', 'LIKE', "%{$search}%");
                   })
                   ->orWhere('peruntukan', 'LIKE', "%{$search}%")
                   ->orWhere('alamat', 'LIKE', "%{$search}%")
@@ -194,6 +207,19 @@ class LaporanService
                 $kecValue = (string) $filters['kecamatan_id'];
             }
             $activeFilters[] = ['label' => $kecLabel, 'value' => $kecValue];
+        }
+
+        if (!empty($filters['desa_id'])) {
+            $desaLabel = 'Desa / Kelurahan';
+            if ($filters['desa_id'] === 'KOSONG') {
+                $desaValue = 'Tanpa Desa / Kosong';
+            } elseif (is_numeric($filters['desa_id'])) {
+                $desa = \App\Models\Desa::find((int) $filters['desa_id']);
+                $desaValue = $desa ? (($desa->jenis ? $desa->jenis . ' ' : '') . $desa->nama) : (string) $filters['desa_id'];
+            } else {
+                $desaValue = (string) $filters['desa_id'];
+            }
+            $activeFilters[] = ['label' => $desaLabel, 'value' => $desaValue];
         }
 
         if (!empty($filters['kategori_status'])) {
@@ -322,6 +348,22 @@ class LaporanService
             }
         }
 
+        // Deteksi Desa
+        $desaText = null;
+        $desaFilter = $filters['desa_id'] ?? '';
+        if ($desaFilter !== '') {
+            if ($desaFilter === 'KOSONG') {
+                $desaText = 'TANPA DESA';
+            } elseif (is_numeric($desaFilter)) {
+                $desa = \App\Models\Desa::find((int) $desaFilter);
+                if ($desa && !empty($desa->nama)) {
+                    $desaText = ($desa->jenis === 'Kelurahan' ? 'KELURAHAN ' : 'DESA ') . strtoupper(trim($desa->nama));
+                }
+            } else {
+                $desaText = strtoupper(trim((string) $desaFilter));
+            }
+        }
+
         $lines = [$line1];
 
         // Baris 2: OPD (atau jika tanpa OPD, sebutkan PEMERINTAH KABUPATEN DONGGALA)
@@ -331,9 +373,18 @@ class LaporanService
             $lines[] = 'PEMERINTAH KABUPATEN DONGGALA';
         }
 
-        // Baris 3: Lokasi Kecamatan + Tahun (format: "KECAMATAN BANAWA 2026")
-        if ($kecText) {
-            $lines[] = $kecText . ' ' . $year;
+        // Baris 3: Lokasi Desa / Kecamatan + Tahun
+        $lokasiText = '';
+        if ($desaText && $kecText) {
+            $lokasiText = $desaText . ', ' . $kecText;
+        } elseif ($desaText) {
+            $lokasiText = $desaText;
+        } elseif ($kecText) {
+            $lokasiText = $kecText;
+        }
+
+        if ($lokasiText !== '') {
+            $lines[] = $lokasiText . ' ' . $year;
         } else {
             $lines[] = 'TAHUN ' . $year;
         }
