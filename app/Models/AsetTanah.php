@@ -148,7 +148,8 @@ class AsetTanah extends Model
     public function scopeDalamProses($query)
     {
         return $query->whereHas('latestProses.statusProses', function($sq) {
-            $sq->where('kategori', 'LIKE', '%proses%');
+            $sq->where('kategori', 'LIKE', '%proses%')
+               ->orWhere('kategori', 'LIKE', '%permohonan%');
         });
     }
 

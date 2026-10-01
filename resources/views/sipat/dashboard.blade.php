@@ -167,7 +167,7 @@
                         <span class="text-secondary fw-semibold small d-flex align-items-center gap-1">
                             <i class="bi bi-building-check text-primary"></i> Tercatat KIB A
                         </span>
-                        <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-2 py-0.5 font-monospace fw-bold">{{ number_format($totalTanahTercatat ?? 1188, 0, ',', '.') }}</span>
+                        <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-2 py-0.5 font-monospace fw-bold">{{ number_format($totalTanahTercatat ?? 0, 0, ',', '.') }}</span>
                     </div>
                     <div class="d-flex justify-content-between align-items-center mb-1 pb-1 border-bottom">
                         <a href="{{ route('sipat.tanah-tak-tercatat.index') }}" class="text-decoration-none text-warning-emphasis fw-bold small d-flex align-items-center gap-1">
@@ -177,7 +177,7 @@
                     </div>
                     <div class="d-flex justify-content-between align-items-center">
                         <span class="text-secondary small text-truncate me-2">&bull; Belum Bersertifikat (Murni)</span>
-                        <span class="fw-semibold text-body font-monospace small">{{ number_format($totalBelumBersertifikat ?? 672, 0, ',', '.') }}</span>
+                        <span class="fw-semibold text-body font-monospace small">{{ number_format($totalBelumBersertifikat ?? 0, 0, ',', '.') }}</span>
                     </div>
                 </div>
             </div>
@@ -439,7 +439,7 @@
                     </div>
                     <div class="d-flex align-items-center gap-2">
                         <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill font-monospace px-2.5 py-1">
-                            {{ number_format($totalTanahTercatat ?? 1188, 0, ',', '.') }} KIB A
+                            {{ number_format($totalTanahTercatat ?? 0, 0, ',', '.') }} KIB A
                         </span>
                         <span class="fw-bold text-primary fs-6 font-monospace">{{ number_format($totalAset, 0, ',', '.') }} Bidang</span>
                     </div>
@@ -796,11 +796,11 @@
                             <div class="mini-stat-card bg-body h-100">
                                 <div class="text-primary fw-semibold small mb-1">Belum Bersertifikat</div>
                                 <div class="d-flex align-items-baseline justify-content-between mb-2">
-                                    <span class="fs-4 fw-bold text-body font-monospace">{{ number_format($totalBelumBersertifikat ?? 672) }}</span>
-                                    <span class="small text-primary fw-bold font-monospace">{{ $pctBelumBersertifikat ?? 56.5 }}%</span>
+                                    <span class="fs-4 fw-bold text-body font-monospace">{{ number_format($totalBelumBersertifikat ?? 0) }}</span>
+                                    <span class="small text-primary fw-bold font-monospace">{{ $pctBelumBersertifikat ?? 0 }}%</span>
                                 </div>
                                 <div class="progress-bar-custom">
-                                    <div class="progress-fill bg-primary" style="width: {{ $pctBelumBersertifikat ?? 56.5 }}%;"></div>
+                                    <div class="progress-fill bg-primary" style="width: {{ $pctBelumBersertifikat ?? 0 }}%;"></div>
                                 </div>
                             </div>
                         </div>

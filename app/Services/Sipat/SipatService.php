@@ -585,13 +585,24 @@ class SipatService
     {
         if (!empty($explicitCategory)) {
             $raw = trim($explicitCategory);
+            $cats = [];
             if (str_contains($raw, ',')) {
                 $cats = array_values(array_filter(array_map('trim', explode(',', $raw))));
-                if (!empty($cats)) {
-                    return $cats;
-                }
             } else {
-                return [$raw];
+                $cats = [$raw];
+            }
+
+            $normalized = [];
+            foreach ($cats as $c) {
+                $cLower = strtolower($c);
+                if ($cLower === 'permohonan_bpn' || $cLower === 'permohonan') {
+                    $normalized[] = 'proses';
+                } else {
+                    $normalized[] = $cLower;
+                }
+            }
+            if (!empty($normalized)) {
+                return array_values(array_unique($normalized));
             }
         }
 
