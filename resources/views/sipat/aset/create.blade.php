@@ -172,6 +172,7 @@
                         <h6 class="fw-bold text-body mb-3">
                             <i class="bi bi-geo-alt-fill text-danger me-2"></i>3. Lokasi Geospasial & Catatan
                         </h6>
+                        <div class="row g-3">
                             <div class="col-md-6">
                                 <label class="form-label small fw-semibold text-secondary mb-1">Wilayah Kecamatan</label>
                                 <div class="input-group">
@@ -204,19 +205,19 @@
                             </div>
                             <div class="col-12">
                                 <label class="form-label small fw-semibold text-secondary mb-1">Alamat Singkat / Detail Jalan</label>
-                                <textarea name="alamat" class="form-control" rows="1" placeholder="Jalan / Dusun / RT...">{{ old('alamat') }}</textarea>
+                                <textarea name="alamat" class="form-control" rows="2" placeholder="Jalan / Dusun / RT...">{{ old('alamat') }}</textarea>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label small fw-semibold text-secondary mb-1">Latitude (Koordinat Y)</label>
                                 <div class="input-group">
-                                    <span class="input-group-text bg-body border-0 text-secondary"><i class="bi bi-pin-map"></i></span>
+                                    <span class="input-group-text bg-body border-0 text-secondary"><i class="bi bi-geo"></i></span>
                                     <input type="text" name="lat" class="form-control" placeholder="-0.xxxxxx" value="{{ old('lat') }}">
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label small fw-semibold text-secondary mb-1">Longitude (Koordinat X)</label>
                                 <div class="input-group">
-                                    <span class="input-group-text bg-body border-0 text-secondary"><i class="bi bi-pin-map"></i></span>
+                                    <span class="input-group-text bg-body border-0 text-secondary"><i class="bi bi-geo"></i></span>
                                     <input type="text" name="lng" class="form-control" placeholder="119.xxxxxx" value="{{ old('lng') }}">
                                 </div>
                             </div>

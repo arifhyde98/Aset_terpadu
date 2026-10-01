@@ -76,9 +76,6 @@
         </div>
 
         <div class="d-flex align-items-center gap-2 flex-wrap">
-            <button type="button" class="btn btn-primary rounded-pill px-3.5 shadow-sm btn-premium-glow" data-bs-toggle="modal" data-bs-target="#modalCreateTanah">
-                <i class="bi bi-plus-lg me-1.5"></i> Input Tanah Belum Tercatat Baru
-            </button>
             <a href="{{ route('sipat.aset.index') }}" class="btn btn-outline-secondary rounded-pill px-3">
                 <i class="bi bi-arrow-left me-1"></i> Kembali ke Master Aset
             </a>
@@ -366,11 +363,6 @@
                                 <td colspan="7" class="text-center py-5 text-secondary">
                                     <i class="bi bi-check-circle fs-1 d-block mb-2 text-success"></i>
                                     Tidak ada bidang tanah yang belum tercatat NIBAR.
-                                    <div class="mt-2">
-                                        <button type="button" class="btn btn-sm btn-primary rounded-pill px-3" data-bs-toggle="modal" data-bs-target="#modalCreateTanah">
-                                            <i class="bi bi-plus-lg me-1"></i> Input Tanah Belum Tercatat Baru
-                                        </button>
-                                    </div>
                                 </td>
                             </tr>
                         @endforelse
