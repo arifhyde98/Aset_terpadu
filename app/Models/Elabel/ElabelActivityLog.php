@@ -33,6 +33,15 @@ class ElabelActivityLog extends Model
         'created_at' => 'datetime',
     ];
 
+    protected static function booted(): void
+    {
+        static::creating(function ($model) {
+            if (empty($model->created_at)) {
+                $model->created_at = now();
+            }
+        });
+    }
+
     protected $fillable = [
         'user_id',
         'action',

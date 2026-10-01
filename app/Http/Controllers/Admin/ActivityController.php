@@ -50,7 +50,7 @@ class ActivityController extends Controller implements HasMiddleware
                 'type' => $activity->type,
                 'description' => $activity->description,
                 'user' => $activity->user,
-                'created_at' => $activity->created_at,
+                'created_at' => $activity->created_at ? Carbon::parse($activity->created_at) : Carbon::now(),
                 'before_data' => !empty($activity->old_data) ? (json_decode((string) $activity->old_data, true) ?: null) : null,
                 'after_data' => !empty($activity->new_data) ? (json_decode((string) $activity->new_data, true) ?: null) : null,
             ];
@@ -68,7 +68,7 @@ class ActivityController extends Controller implements HasMiddleware
                     'type' => $this->typeFromAction((string) $log->action),
                     'description' => $log->description,
                     'user' => $log->user,
-                    'created_at' => $log->created_at,
+                    'created_at' => $log->created_at ? Carbon::parse($log->created_at) : Carbon::now(),
                     'before_data' => !empty($log->old_data) ? (json_decode($log->old_data, true) ?: null) : null,
                     'after_data' => !empty($log->new_data) ? (json_decode($log->new_data, true) ?: null) : null,
                 ];
@@ -95,7 +95,7 @@ class ActivityController extends Controller implements HasMiddleware
                             'name' => $log->user_name,
                             'email' => $log->user_email,
                         ],
-                        'created_at' => Carbon::parse($log->created_at),
+                        'created_at' => $log->created_at ? Carbon::parse($log->created_at) : Carbon::now(),
                         'before_data' => !empty($log->old_data) ? (json_decode((string) $log->old_data, true) ?: null) : null,
                         'after_data' => !empty($log->new_data) ? (json_decode((string) $log->new_data, true) ?: null) : null,
                         'audit_action' => $log->action,

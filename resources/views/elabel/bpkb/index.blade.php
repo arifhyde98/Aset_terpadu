@@ -209,6 +209,12 @@
                             <a href="{{ route('elabel.bpkb.index', request()->except('nibar_status', 'page')) }}" class="text-info-emphasis ms-1 text-decoration-none">&times;</a>
                         </span>
                     @endif
+                    @if(request('ocr_status') === 'pending')
+                        <span class="badge bg-warning bg-opacity-25 text-dark border border-warning px-2 py-1 fw-bold">
+                            <i class="bi bi-stars text-primary me-1"></i>Saran Scan AI Siap Ditinjau
+                            <a href="{{ route('elabel.bpkb.index', request()->except('ocr_status', 'page')) }}" class="text-dark ms-1 text-decoration-none">&times;</a>
+                        </span>
+                    @endif
                     @if(request('q'))
                         <span class="badge bg-dark bg-opacity-10 text-dark border px-2 py-1">
                             Cari: "{{ request('q') }}"
@@ -221,6 +227,30 @@
                     <a href="{{ route('elabel.bpkb.index', array_filter(['type' => request('type')])) }}" class="btn btn-sm btn-link text-danger text-decoration-none p-0 small">
                         <i class="bi bi-x-circle me-1"></i>Hapus Semua Filter
                     </a>
+                </div>
+            </div>
+        @endif
+
+        @if(($pendingOcrCount ?? 0) > 0)
+            <div class="px-4 py-2.5 bg-warning bg-opacity-10 border-top border-warning border-opacity-25 d-flex align-items-center justify-content-between flex-wrap gap-2">
+                <div class="d-flex align-items-center gap-2">
+                    <span class="badge bg-warning text-dark px-2.5 py-1.5 rounded-pill shadow-sm fw-bold">
+                        <i class="bi bi-stars text-primary me-1"></i> {{ $pendingOcrCount }} Saran Scan
+                    </span>
+                    <span class="small text-dark fw-medium">
+                        Terdapat <strong>{{ $pendingOcrCount }}</strong> data BPKB dengan rekomendasi hasil pembacaan scan AI di latar belakang yang siap Anda tinjau.
+                    </span>
+                </div>
+                <div>
+                    @if(request('ocr_status') === 'pending')
+                        <a href="{{ route('elabel.bpkb.index', request()->except('ocr_status', 'page')) }}" class="btn btn-sm btn-outline-secondary rounded-pill px-3 shadow-none">
+                            <i class="bi bi-x-circle me-1"></i> Tampilkan Semua Data
+                        </a>
+                    @else
+                        <a href="{{ route('elabel.bpkb.index', array_merge(request()->query(), ['ocr_status' => 'pending'])) }}" class="btn btn-sm btn-warning text-dark fw-semibold rounded-pill px-3 shadow-sm">
+                            <i class="bi bi-funnel me-1"></i> Tampilkan Hanya yang Perlu Ditinjau
+                        </a>
+                    @endif
                 </div>
             </div>
         @endif
@@ -274,6 +304,15 @@
                             <td class="px-4 text-center fw-medium text-secondary">{{ $items->firstItem() ? ($items->firstItem() + $loop->index) : $loop->iteration }}</td>
                             <td>
                                 <span class="badge bg-light text-dark border px-3 py-2 fs-6 rounded-3 fw-bold btn-view-bpkb" style="cursor: pointer;" title="Klik untuk melihat detail">{{ $item->plate_number }}</span>
+                                @if($item->latestPendingOcr)
+                                    <span class="badge bg-warning text-dark border border-warning px-2 py-1 rounded-pill fw-bold ms-1 btn-review-ocr" 
+                                          data-staging-id="{{ $item->latestPendingOcr->id }}" 
+                                          data-bpkb-id="{{ $item->id }}" 
+                                          title="Tersedia rekomendasi hasil scan AI yang siap ditinjau"
+                                          style="cursor: pointer; font-size: 11px;">
+                                        <i class="bi bi-stars text-primary me-0.5"></i>Saran Scan
+                                    </span>
+                                @endif
                                 <div class="small text-secondary mt-1"><i class="bi bi-calendar3 me-1"></i> Tahun {{ $item->year ?: '-' }}</div>
                             </td>
                             <td>
@@ -324,6 +363,14 @@
                                     <button type="button" class="btn btn-sm btn-light border text-primary btn-edit-bpkb" title="Edit Data BPKB">
                                         <i class="bi bi-pencil-square"></i>
                                     </button>
+                                    @if($item->latestPendingOcr)
+                                        <button type="button" class="btn btn-sm btn-warning border text-dark fw-bold btn-review-ocr" 
+                                                data-staging-id="{{ $item->latestPendingOcr->id }}" 
+                                                data-bpkb-id="{{ $item->id }}" 
+                                                title="Tinjau Rekomendasi Hasil Scan AI">
+                                            <i class="bi bi-stars text-primary"></i>
+                                        </button>
+                                    @endif
                                     <button type="button" class="btn btn-sm btn-light border text-danger" data-bs-toggle="modal" data-bs-target="#deleteModal{{ $item->id }}" title="Keluarkan BPKB">
                                         <i class="bi bi-box-arrow-right"></i>
                                     </button>
@@ -562,9 +609,14 @@
                                             data-pdf-badge="">
                                         <i class="bi bi-eye"></i> Pratinjau Dokumen PDF
                                     </button>
-                                    <a href="#" id="detailPdfDownloadBtn" target="_blank" class="btn btn-sm btn-light border text-secondary fw-medium d-inline-flex align-items-center justify-content-center gap-1">
-                                        <i class="bi bi-download"></i> Buka / Unduh File
-                                    </a>
+                                    <div class="d-flex gap-2">
+                                        <a href="#" id="detailPdfDownloadBtn" target="_blank" class="btn btn-sm btn-light border text-secondary fw-medium flex-grow-1 d-inline-flex align-items-center justify-content-center gap-1">
+                                            <i class="bi bi-download"></i> Buka / Unduh
+                                        </a>
+                                        <button type="button" id="detailPdfDeleteBtn" class="btn btn-sm btn-outline-danger fw-semibold d-inline-flex align-items-center justify-content-center gap-1 shadow-sm" title="Hapus berkas scan fisik jika salah upload file">
+                                            <i class="bi bi-trash"></i> Hapus Scan
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                             <div id="detailPdfMissing" class="p-3 bg-warning bg-opacity-10 text-warning text-dark border border-warning border-opacity-25 rounded-3 small">
@@ -691,17 +743,39 @@
                                 <span class="small text-success fw-medium">
                                     <i class="bi bi-file-earmark-check me-1"></i> Scan fisik tersimpan di sistem
                                 </span>
-                                <button type="button" 
-                                        id="editPdfPreviewBtn"
-                                        class="btn btn-sm btn-outline-danger py-0 px-2 fw-medium d-inline-flex align-items-center gap-1"
-                                        style="font-size: 11.5px; height: 26px;"
-                                        data-pdf-preview="true"
-                                        data-pdf-url=""
-                                        data-pdf-title=""
-                                        data-pdf-subtitle=""
-                                        data-pdf-badge="">
-                                    <i class="bi bi-eye"></i> Pratinjau Scan
-                                </button>
+                                <div class="d-flex align-items-center gap-2">
+                                    <button type="button" 
+                                            id="editPdfPreviewBtn"
+                                            class="btn btn-sm btn-outline-danger py-0 px-2 fw-medium d-inline-flex align-items-center gap-1"
+                                            style="font-size: 11.5px; height: 26px;"
+                                            data-pdf-preview="true"
+                                            data-pdf-url=""
+                                            data-pdf-title=""
+                                            data-pdf-subtitle=""
+                                            data-pdf-badge="">
+                                        <i class="bi bi-eye"></i> Pratinjau Scan
+                                    </button>
+                                    <button type="button" 
+                                            id="btnTriggerOcrInEdit"
+                                            class="btn btn-sm btn-outline-warning text-dark py-0 px-2 fw-semibold d-inline-flex align-items-center gap-1 shadow-sm"
+                                            style="font-size: 11.5px; height: 26px;"
+                                            title="Pindai dokumen ini menggunakan AI">
+                                        <i class="bi bi-stars text-primary"></i> Scan Ulang AI
+                                    </button>
+                                    <button type="button" 
+                                            id="btnDeletePdfInEdit"
+                                            class="btn btn-sm btn-outline-danger py-0 px-2 fw-semibold d-inline-flex align-items-center gap-1 shadow-sm"
+                                            style="font-size: 11.5px; height: 26px;"
+                                            title="Hapus berkas scan fisik jika salah upload">
+                                        <i class="bi bi-trash"></i> Hapus Scan
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="form-check mt-1">
+                                <input class="form-check-input" type="checkbox" name="delete_pdf" value="1" id="edit_delete_pdf">
+                                <label class="form-check-label small text-muted" for="edit_delete_pdf">
+                                    Hapus file scan yang tersimpan saat ini saat form disimpan
+                                </label>
                             </div>
                         </div>
                     </div>
@@ -713,6 +787,88 @@
                     </button>
                 </div>
             </form>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL REVIEW REKOMENDASI SCAN OCR BPKB -->
+<div class="modal fade" id="modalReviewOcr" tabindex="-1" aria-labelledby="modalReviewOcrLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-xl modal-dialog-scrollable">
+        <div class="modal-content rounded-4 border-0 shadow">
+            <div class="modal-header border-bottom px-4 py-3 bg-light rounded-top-4">
+                <div class="d-flex align-items-center gap-2 flex-wrap">
+                    <h5 class="modal-title fw-bold text-navy mb-0" id="modalReviewOcrLabel">
+                        <i class="bi bi-stars text-primary me-2"></i> Tinjau Rekomendasi Scan: <span id="ocrReviewPlateTitle" class="badge bg-white text-navy border ms-1 font-monospace"></span>
+                    </h5>
+                    <span id="ocrReviewScannedAt" class="small text-muted ms-2"></span>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="row g-4">
+                    <!-- Sisi Kiri: Pratinjau Dokumen PDF -->
+                    <div class="col-lg-5 border-end">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="fw-bold small text-secondary"><i class="bi bi-file-earmark-pdf text-danger me-1"></i> Berkas Scan Fisik BPKB</span>
+                            <a id="ocrReviewPdfOpenBtn" href="#" target="_blank" class="btn btn-xs btn-outline-primary py-0 px-2" style="font-size: 11px;">
+                                <i class="bi bi-box-arrow-up-right me-1"></i> Buka Tab Baru
+                            </a>
+                        </div>
+                        <div class="bg-light border rounded-3 overflow-hidden shadow-sm d-flex align-items-center justify-content-center" style="height: 480px;">
+                            <iframe id="ocrReviewPdfFrame" src="" class="w-100 h-100 border-0" title="Pratinjau Berkas BPKB"></iframe>
+                        </div>
+                        <div class="small text-muted mt-2">
+                            <i class="bi bi-info-circle me-1"></i> Periksa dokumen fisik di atas untuk memastikan kecocokan dengan kolom checklist di samping.
+                        </div>
+                    </div>
+
+                    <!-- Sisi Kanan: Checklist Komparasi Data -->
+                    <div class="col-lg-7">
+                        <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+                            <div>
+                                <span class="fw-bold text-navy"><i class="bi bi-check2-square text-success me-1"></i> Checklist Kolom untuk Disimpan</span>
+                                <div class="small text-secondary">Hanya baris yang dicentang yang akan disimpan dan mengupdate database.</div>
+                            </div>
+                            <div class="btn-group btn-group-sm">
+                                <button type="button" class="btn btn-outline-secondary btn-sm" id="btnSelectAllOcr"><i class="bi bi-check-all me-1"></i>Pilih Semua</button>
+                                <button type="button" class="btn btn-outline-secondary btn-sm" id="btnUnselectAllOcr"><i class="bi bi-square me-1"></i>Kosongkan</button>
+                            </div>
+                        </div>
+
+                        <div class="table-responsive border rounded-3 overflow-hidden">
+                            <table class="table table-sm table-hover align-middle mb-0" style="font-size: 13px;">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th class="text-center" style="width: 44px;">Pilih</th>
+                                        <th style="width: 140px;">Kolom Data</th>
+                                        <th style="width: 150px;">Data di Database Saat Ini</th>
+                                        <th>Hasil Scan AI (Bisa Diedit)</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="ocrReviewTableBody">
+                                    <!-- Dynamic rows loaded via JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer border-top px-4 py-3 bg-light rounded-bottom-4 d-flex justify-content-between flex-wrap gap-2">
+                <div class="d-flex align-items-center gap-2 flex-wrap">
+                    <button type="button" class="btn btn-outline-secondary btn-sm" id="btnRejectOcr">
+                        <i class="bi bi-x-circle me-1"></i> Tolak Saran Saja
+                    </button>
+                    <button type="button" class="btn btn-outline-danger btn-sm" id="btnRejectAndDeleteOcrPdf" title="Tolak saran dan hapus berkas fisik BPKB ini karena salah upload">
+                        <i class="bi bi-trash me-1"></i> Salah Upload & Hapus File Scan
+                    </button>
+                </div>
+                <div class="d-flex gap-2">
+                    <button type="button" class="btn btn-light border btn-sm px-3" data-bs-dismiss="modal">Tutup</button>
+                    <button type="button" class="btn btn-primary fw-semibold btn-sm px-4 shadow-sm" id="btnApplyOcr">
+                        <i class="bi bi-check-lg me-1"></i> Terapkan & Simpan ke Database
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
 </div>
@@ -980,6 +1136,538 @@ document.addEventListener('DOMContentLoaded', function () {
         } catch (err) {
             console.warn('Highlight search warning:', err);
         }
+    }
+    // --- OCR STAGING REVIEW LOGIC ---
+    let currentReviewStagingId = null;
+    let currentReviewBpkbId = null;
+    const modalReviewOcrEl = document.getElementById('modalReviewOcr');
+    const reviewOcrModal = modalReviewOcrEl ? bootstrap.Modal.getOrCreateInstance(modalReviewOcrEl) : null;
+
+    const ocrFieldLabels = {
+        'no_bpkb': 'Nomor BPKB',
+        'plate_number': 'Nomor Polisi (Plat)',
+        'no_rangka': 'Nomor Rangka (VIN)',
+        'no_mesin': 'Nomor Mesin',
+        'merek': 'Merek',
+        'tipe': 'Tipe Kendaraan',
+        'year': 'Tahun Dokumen',
+        'isi_silinder': 'Isi Silinder (CC)',
+        'warna': 'Warna',
+        'pengguna': 'Pengguna / Pemilik',
+        'vehicle_type': 'Jenis Kendaraan'
+    };
+
+    function openReviewOcrModal(stagingId, bpkbId) {
+        currentReviewStagingId = stagingId;
+        currentReviewBpkbId = bpkbId;
+
+        if (typeof Swal !== 'undefined') {
+            Swal.fire({
+                title: 'Memuat data rekomendasi...',
+                text: 'Mengambil hasil pembacaan scan dan membandingkan dengan data database.',
+                allowOutsideClick: false,
+                didOpen: () => Swal.showLoading()
+            });
+        }
+
+        fetch(`{{ url('elabel/bpkb-staging') }}/${stagingId}/review`, {
+            headers: {
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(res => res.json())
+        .then(res => {
+            if (typeof Swal !== 'undefined') Swal.close();
+            if (!res.success) {
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({ icon: 'error', title: 'Gagal', text: res.message || 'Data tidak dapat dimuat.' });
+                } else {
+                    alert(res.message || 'Gagal memuat data');
+                }
+                return;
+            }
+
+            document.getElementById('ocrReviewPlateTitle').textContent = res.bpkb.plate_number || '-';
+            document.getElementById('ocrReviewScannedAt').textContent = res.scanned_at ? `Dipindai: ${res.scanned_at}` : '';
+
+            // Set PDF iframe & link
+            const pdfFrame = document.getElementById('ocrReviewPdfFrame');
+            const pdfLink = document.getElementById('ocrReviewPdfOpenBtn');
+            if (pdfFrame && res.bpkb.pdf_url) {
+                pdfFrame.src = res.bpkb.pdf_url;
+            }
+            if (pdfLink && res.bpkb.pdf_url) {
+                pdfLink.href = res.bpkb.pdf_url;
+            }
+
+            // Populate Table Rows
+            const tbody = document.getElementById('ocrReviewTableBody');
+            tbody.innerHTML = '';
+
+            const diff = res.diff || {};
+            for (const [field, info] of Object.entries(diff)) {
+                const label = ocrFieldLabels[field] || field;
+                const currentVal = info.current !== null && info.current !== undefined && info.current !== '' ? info.current : '<em class="text-muted">(Kosong)</em>';
+                const extractedVal = info.extracted !== null && info.extracted !== undefined ? info.extracted : '';
+                const isChecked = info.should_apply ? 'checked' : '';
+                const highlightBadge = info.is_different ? '<span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle ms-1" style="font-size: 10px;">Berbeda</span>' : (info.is_empty ? '<span class="badge bg-info-subtle text-info-emphasis border border-info-subtle ms-1" style="font-size: 10px;">Isi Kosong</span>' : '');
+
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="text-center">
+                        <input type="checkbox" class="form-check-input ocr-field-cb shadow-none" value="${field}" ${isChecked}>
+                    </td>
+                    <td>
+                        <span class="fw-semibold text-dark">${label}</span>
+                        ${highlightBadge}
+                    </td>
+                    <td class="text-secondary small font-monospace">${currentVal}</td>
+                    <td>
+                        <input type="text" class="form-control form-control-sm ocr-field-val font-monospace shadow-none" data-field="${field}" value="${extractedVal}">
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            }
+
+            if (reviewOcrModal) {
+                reviewOcrModal.show();
+            }
+        })
+        .catch(err => {
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({ icon: 'error', title: 'Kesalahan Server', text: err.message });
+            } else {
+                alert('Terjadi kesalahan: ' + err.message);
+            }
+        });
+    }
+
+    // Event listener for .btn-review-ocr
+    document.addEventListener('click', function (e) {
+        const reviewBtn = e.target.closest('.btn-review-ocr');
+        if (reviewBtn) {
+            const stagingId = reviewBtn.dataset.stagingId;
+            const bpkbId = reviewBtn.dataset.bpkbId;
+            if (stagingId) {
+                openReviewOcrModal(stagingId, bpkbId);
+            }
+        }
+    });
+
+    // Select all / Unselect all
+    const btnSelectAllOcr = document.getElementById('btnSelectAllOcr');
+    const btnUnselectAllOcr = document.getElementById('btnUnselectAllOcr');
+    if (btnSelectAllOcr) {
+        btnSelectAllOcr.addEventListener('click', function () {
+            document.querySelectorAll('.ocr-field-cb').forEach(cb => cb.checked = true);
+        });
+    }
+    if (btnUnselectAllOcr) {
+        btnUnselectAllOcr.addEventListener('click', function () {
+            document.querySelectorAll('.ocr-field-cb').forEach(cb => cb.checked = false);
+        });
+    }
+
+    // Apply Button
+    const btnApplyOcr = document.getElementById('btnApplyOcr');
+    if (btnApplyOcr) {
+        btnApplyOcr.addEventListener('click', function () {
+            if (!currentReviewStagingId) return;
+
+            const selectedFields = [];
+            const values = {};
+
+            document.querySelectorAll('.ocr-field-cb:checked').forEach(cb => {
+                const f = cb.value;
+                selectedFields.push(f);
+                const inputEl = document.querySelector(`.ocr-field-val[data-field="${f}"]`);
+                if (inputEl) {
+                    values[f] = inputEl.value;
+                }
+            });
+
+            if (selectedFields.length === 0) {
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({ icon: 'warning', title: 'Pilih Kolom', text: 'Silakan centang minimal 1 kolom yang ingin diterapkan ke database.' });
+                } else {
+                    alert('Silakan centang minimal 1 kolom.');
+                }
+                return;
+            }
+
+            btnApplyOcr.disabled = true;
+            btnApplyOcr.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Menyimpan...';
+
+            fetch(`{{ url('elabel/bpkb-staging') }}/${currentReviewStagingId}/apply`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify({
+                    fields: selectedFields,
+                    values: values
+                })
+            })
+            .then(res => res.json())
+            .then(res => {
+                btnApplyOcr.disabled = false;
+                btnApplyOcr.innerHTML = '<i class="bi bi-check-lg me-1"></i> Terapkan & Simpan ke Database';
+
+                if (!res.success) {
+                    if (typeof Swal !== 'undefined') {
+                        Swal.fire({ icon: 'error', title: 'Gagal', text: res.message || 'Tidak dapat menyimpan perubahan.' });
+                    } else {
+                        alert(res.message);
+                    }
+                    return;
+                }
+
+                if (reviewOcrModal) reviewOcrModal.hide();
+
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Berhasil!',
+                        text: res.message || 'Data BPKB berhasil diperbarui.',
+                        timer: 1500,
+                        showConfirmButton: false
+                    }).then(() => {
+                        window.location.reload();
+                    });
+                } else {
+                    alert('Berhasil disimpan!');
+                    window.location.reload();
+                }
+            })
+            .catch(err => {
+                btnApplyOcr.disabled = false;
+                btnApplyOcr.innerHTML = '<i class="bi bi-check-lg me-1"></i> Terapkan & Simpan ke Database';
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({ icon: 'error', title: 'Kesalahan Server', text: err.message });
+                } else {
+                    alert('Kesalahan server: ' + err.message);
+                }
+            });
+        });
+    }
+
+    // Reject Button
+    const btnRejectOcr = document.getElementById('btnRejectOcr');
+    if (btnRejectOcr) {
+        btnRejectOcr.addEventListener('click', function () {
+            if (!currentReviewStagingId) return;
+
+            const doReject = () => {
+                btnRejectOcr.disabled = true;
+                fetch(`{{ url('elabel/bpkb-staging') }}/${currentReviewStagingId}/reject`, {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                .then(res => res.json())
+                .then(res => {
+                    btnRejectOcr.disabled = false;
+                    if (reviewOcrModal) reviewOcrModal.hide();
+
+                    if (typeof Swal !== 'undefined') {
+                        Swal.fire({
+                            icon: 'info',
+                            title: 'Ditolak',
+                            text: res.message || 'Rekomendasi scan berhasil diabaikan.',
+                            timer: 1300,
+                            showConfirmButton: false
+                        }).then(() => {
+                            window.location.reload();
+                        });
+                    } else {
+                        window.location.reload();
+                    }
+                })
+                .catch(err => {
+                    btnRejectOcr.disabled = false;
+                    console.error(err);
+                });
+            };
+
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    title: 'Abaikan saran scan ini?',
+                    text: 'Data di database tidak akan diubah dan saran ini akan ditutup.',
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: 'Ya, Abaikan',
+                    cancelButtonText: 'Batal'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        doReject();
+                    }
+                });
+            } else {
+                if (confirm('Abaikan saran scan ini?')) {
+                    doReject();
+                }
+            }
+        });
+    }
+
+    // Trigger Scan from Edit Modal
+    const btnTriggerOcrInEdit = document.getElementById('btnTriggerOcrInEdit');
+    if (btnTriggerOcrInEdit) {
+        btnTriggerOcrInEdit.addEventListener('click', function () {
+            if (!currentActiveBpkb || !currentActiveBpkb.id) return;
+
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    title: 'Memindai Dokumen...',
+                    text: 'AI sedang membaca data identitas dari berkas scan BPKB di server.',
+                    allowOutsideClick: false,
+                    didOpen: () => Swal.showLoading()
+                });
+            }
+
+            fetch(`{{ url('elabel/bpkb') }}/${currentActiveBpkb.id}/trigger-scan`, {
+                method: 'POST',
+                headers: {
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(res => res.json())
+            .then(res => {
+                if (typeof Swal !== 'undefined') Swal.close();
+                if (!res.success) {
+                    if (typeof Swal !== 'undefined') {
+                        Swal.fire({ icon: 'error', title: 'Gagal Memindai', text: res.message || 'Pemindaian gagal.' });
+                    } else {
+                        alert(res.message);
+                    }
+                    return;
+                }
+
+                if (editModal) editModal.hide();
+                setTimeout(() => {
+                    openReviewOcrModal(res.staging_id, currentActiveBpkb.id);
+                }, 350);
+            })
+            .catch(err => {
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({ icon: 'error', title: 'Kesalahan Server', text: err.message });
+                } else {
+                    alert('Kesalahan server: ' + err.message);
+                }
+            });
+        });
+    }
+
+    // Helper konfirmasi & hapus berkas scan fisik BPKB
+    function confirmAndDeleteBpkbPdf(bpkbId, plateNumber, onSuccess) {
+        if (!bpkbId) return;
+
+        const executeDelete = () => {
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    title: 'Menghapus Berkas...',
+                    text: 'Sedang menghapus file scan dari server...',
+                    allowOutsideClick: false,
+                    didOpen: () => Swal.showLoading()
+                });
+            }
+
+            fetch(`{{ url('elabel/bpkb') }}/${bpkbId}/delete-pdf`, {
+                method: 'POST',
+                headers: {
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(res => res.json())
+            .then(res => {
+                if (!res.success) {
+                    if (typeof Swal !== 'undefined') {
+                        Swal.fire({ icon: 'error', title: 'Gagal', text: res.message || 'Tidak dapat menghapus file scan.' });
+                    } else {
+                        alert(res.message);
+                    }
+                    return;
+                }
+
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Berkas Dihapus!',
+                        text: res.message || 'Berkas scan berhasil dihapus.',
+                        timer: 1500,
+                        showConfirmButton: false
+                    }).then(() => {
+                        if (typeof onSuccess === 'function') {
+                            onSuccess();
+                        } else {
+                            window.location.reload();
+                        }
+                    });
+                } else {
+                    alert('Berkas scan berhasil dihapus.');
+                    if (typeof onSuccess === 'function') {
+                        onSuccess();
+                    } else {
+                        window.location.reload();
+                    }
+                }
+            })
+            .catch(err => {
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({ icon: 'error', title: 'Kesalahan Server', text: err.message });
+                } else {
+                    alert('Kesalahan server: ' + err.message);
+                }
+            });
+        };
+
+        if (typeof Swal !== 'undefined') {
+            Swal.fire({
+                title: 'Hapus Berkas Scan BPKB?',
+                html: `Apakah Anda yakin ingin menghapus berkas scan fisik untuk <strong>${plateNumber || 'kendaraan ini'}</strong>?<br><br><span class="text-danger small"><i class="bi bi-exclamation-triangle-fill me-1"></i> Gunakan opsi ini jika Anda salah mengunggah file. Berkas scan akan dihapus permanen dari server.</span>`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc3545',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: '<i class="bi bi-trash me-1"></i> Ya, Hapus Berkas',
+                cancelButtonText: 'Batal',
+                reverseButtons: true
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    executeDelete();
+                }
+            });
+        } else {
+            if (confirm(`Hapus berkas scan fisik untuk ${plateNumber || 'kendaraan ini'} (misal salah upload)?`)) {
+                executeDelete();
+            }
+        }
+    }
+
+    // Tombol Hapus Scan dari Detail Modal
+    const detailPdfDeleteBtn = document.getElementById('detailPdfDeleteBtn');
+    if (detailPdfDeleteBtn) {
+        detailPdfDeleteBtn.addEventListener('click', function () {
+            if (!currentActiveBpkb || !currentActiveBpkb.id) return;
+            confirmAndDeleteBpkbPdf(currentActiveBpkb.id, currentActiveBpkb.plate_number, () => {
+                if (detailModal) detailModal.hide();
+                window.location.reload();
+            });
+        });
+    }
+
+    // Tombol Hapus Scan dari Edit Modal
+    const btnDeletePdfInEdit = document.getElementById('btnDeletePdfInEdit');
+    if (btnDeletePdfInEdit) {
+        btnDeletePdfInEdit.addEventListener('click', function () {
+            if (!currentActiveBpkb || !currentActiveBpkb.id) return;
+            confirmAndDeleteBpkbPdf(currentActiveBpkb.id, currentActiveBpkb.plate_number, () => {
+                const pdfContainer = document.getElementById('editPdfCurrentContainer');
+                if (pdfContainer) {
+                    pdfContainer.classList.remove('d-flex');
+                    pdfContainer.classList.add('d-none');
+                }
+                const chk = document.getElementById('edit_delete_pdf');
+                if (chk) chk.checked = false;
+                if (currentActiveBpkb) {
+                    currentActiveBpkb.pdf_url = null;
+                    currentActiveBpkb.pdf_path = null;
+                }
+                window.location.reload();
+            });
+        });
+    }
+
+    // Tombol Salah Upload & Hapus File di Review OCR Modal
+    const btnRejectAndDeleteOcrPdf = document.getElementById('btnRejectAndDeleteOcrPdf');
+    if (btnRejectAndDeleteOcrPdf) {
+        btnRejectAndDeleteOcrPdf.addEventListener('click', function () {
+            if (!currentReviewStagingId) return;
+
+            const doRejectAndDelete = () => {
+                btnRejectAndDeleteOcrPdf.disabled = true;
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        title: 'Menghapus Berkas...',
+                        text: 'Membatalkan saran dan menghapus berkas scan fisik yang salah upload...',
+                        allowOutsideClick: false,
+                        didOpen: () => Swal.showLoading()
+                    });
+                }
+
+                fetch(`{{ url('elabel/bpkb-staging') }}/${currentReviewStagingId}/reject?delete_pdf=1`, {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                .then(res => res.json())
+                .then(res => {
+                    btnRejectAndDeleteOcrPdf.disabled = false;
+                    if (reviewOcrModal) reviewOcrModal.hide();
+
+                    if (typeof Swal !== 'undefined') {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Dihapus & Dibatalkan',
+                            text: res.message || 'File scan berhasil dihapus dan saran dibatalkan.',
+                            timer: 1600,
+                            showConfirmButton: false
+                        }).then(() => {
+                            window.location.reload();
+                        });
+                    } else {
+                        alert(res.message);
+                        window.location.reload();
+                    }
+                })
+                .catch(err => {
+                    btnRejectAndDeleteOcrPdf.disabled = false;
+                    if (typeof Swal !== 'undefined') {
+                        Swal.fire({ icon: 'error', title: 'Kesalahan Server', text: err.message });
+                    } else {
+                        alert('Kesalahan server: ' + err.message);
+                    }
+                });
+            };
+
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    title: 'Salah Upload Berkas?',
+                    html: `Apakah Anda yakin ingin menolak rekomendasi ini <strong>sekaligus menghapus file scan fisik</strong> dari kendaraan?<br><br><span class="text-danger small"><i class="bi bi-trash me-1"></i> File scan yang salah upload akan dihapus secara permanen dari server.</span>`,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#dc3545',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: '<i class="bi bi-trash me-1"></i> Ya, Hapus Berkas Scan',
+                    cancelButtonText: 'Batal',
+                    reverseButtons: true
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        doRejectAndDelete();
+                    }
+                });
+            } else {
+                if (confirm('Tolak saran dan hapus file scan fisik yang salah diupload?')) {
+                    doRejectAndDelete();
+                }
+            }
+        });
     }
 });
 </script>

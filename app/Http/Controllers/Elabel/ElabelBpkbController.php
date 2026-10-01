@@ -10,6 +10,8 @@ use App\Models\Elabel\ElabelBox;
 use App\Models\Elabel\ElabelBoxYear;
 use App\Models\Elabel\ElabelBpkb;
 use App\Models\Elabel\ElabelBpkbDelete;
+use App\Models\Elabel\ElabelBpkbOcrStaging;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
@@ -17,6 +19,7 @@ use Illuminate\Routing\Controllers\Middleware;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
 use PhpOffice\PhpSpreadsheet\IOFactory;
@@ -47,6 +50,7 @@ class ElabelBpkbController extends Controller implements HasMiddleware
         $opdId = $request->get('opd_id');
         $status = $request->get('status');
         $nibarStatus = $request->get('nibar_status');
+        $ocrStatus = $request->get('ocr_status');
 
         $baseBuilder = ElabelBpkb::where('status', '!=', 'Dihapus');
 
@@ -64,8 +68,14 @@ class ElabelBpkbController extends Controller implements HasMiddleware
         $totalBpkbWithoutFileCount = max(0, $totalBpkbCount - $totalBpkbWithFileCount);
         $totalBpkbWithNibarCount = (clone $baseBuilder)->whereNotNull('nibar')->where('nibar', '!=', '')->count();
         $totalBpkbWithoutNibarCount = max(0, $totalBpkbCount - $totalBpkbWithNibarCount);
+        $pendingOcrCount = (clone $baseBuilder)->whereHas('latestPendingOcr')->count();
 
-        $builder = (clone $baseBuilder)->with(['box', 'inputUser', 'opdSipat']);
+        $builder = (clone $baseBuilder)->with(['box', 'inputUser', 'opdSipat', 'latestPendingOcr']);
+
+        // Filter: OCR Staging Status
+        if ($ocrStatus === 'pending') {
+            $builder->whereHas('latestPendingOcr');
+        }
 
         // Filter: PDF Status
         if ($pdfStatus === 'no_pdf') {
@@ -197,6 +207,8 @@ class ElabelBpkbController extends Controller implements HasMiddleware
             'totalBpkbWithoutFileCount'   => $totalBpkbWithoutFileCount,
             'totalBpkbWithNibarCount'     => $totalBpkbWithNibarCount,
             'totalBpkbWithoutNibarCount'  => $totalBpkbWithoutNibarCount,
+            'pendingOcrCount'             => $pendingOcrCount,
+            'ocrStatus'                   => $ocrStatus,
         ]);
     }
 
@@ -348,7 +360,17 @@ class ElabelBpkbController extends Controller implements HasMiddleware
         }
 
         $pdfPath = $item->pdf_path;
-        if ($request->hasFile('pdf') && $request->file('pdf')->isValid()) {
+        if ($request->boolean('delete_pdf')) {
+            if ($pdfPath) {
+                if (Storage::disk('local')->exists($pdfPath)) {
+                    Storage::disk('local')->delete($pdfPath);
+                }
+                if (Storage::disk('public')->exists($pdfPath)) {
+                    Storage::disk('public')->delete($pdfPath);
+                }
+                $pdfPath = null;
+            }
+        } elseif ($request->hasFile('pdf') && $request->file('pdf')->isValid()) {
             $box = ElabelBox::find($boxId);
             $newPdfPath = $this->storeBpkbPdf(
                 $request->file('pdf'),
@@ -400,8 +422,6 @@ class ElabelBpkbController extends Controller implements HasMiddleware
             return redirect()->back()->with('error', 'File PDF tidak ditemukan.');
         }
 
-
-
         $fullPath = null;
         if (Storage::disk('local')->exists($item->pdf_path)) {
             $fullPath = Storage::disk('local')->path($item->pdf_path);
@@ -417,6 +437,58 @@ class ElabelBpkbController extends Controller implements HasMiddleware
             'Content-Type' => 'application/pdf',
             'Content-Disposition' => 'inline; filename="bpkb-' . $id . '.pdf"',
         ]);
+    }
+
+    /**
+     * Menghapus file scan fisik BPKB (misal jika salah upload file).
+     */
+    public function deletePdf(Request $request, int $id): JsonResponse|RedirectResponse
+    {
+        $item = ElabelBpkb::find($id);
+        if (!$item || $item->status === 'Dihapus') {
+            if ($request->wantsJson() || $request->ajax()) {
+                return response()->json(['success' => false, 'message' => 'Data BPKB tidak ditemukan.'], 404);
+            }
+            return redirect()->back()->with('error', 'Data BPKB tidak ditemukan.');
+        }
+
+        $oldPdf = $item->pdf_path;
+        if ($oldPdf) {
+            if (Storage::disk('local')->exists($oldPdf)) {
+                Storage::disk('local')->delete($oldPdf);
+            }
+            if (Storage::disk('public')->exists($oldPdf)) {
+                Storage::disk('public')->delete($oldPdf);
+            }
+            $item->pdf_path = null;
+            $item->save();
+
+            // Batalkan juga OCR staging yang pending jika ada
+            if (Schema::hasTable('elabel_bpkb_ocr_staging')) {
+                ElabelBpkbOcrStaging::where('bpkb_id', $id)
+                    ->where('status', 'pending')
+                    ->update(['status' => 'rejected']);
+            }
+
+            $this->logActivity(
+                'update',
+                'BPKB',
+                'Menghapus file scan BPKB ' . $item->plate_number . ' (salah upload berkas fisik).',
+                'bpkb',
+                $item->id,
+                ['pdf_path' => $oldPdf],
+                ['pdf_path' => null]
+            );
+        }
+
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Berkas scan BPKB ' . $item->plate_number . ' berhasil dihapus dari sistem.'
+            ]);
+        }
+
+        return redirect()->back()->with('success', 'Berkas scan BPKB ' . $item->plate_number . ' berhasil dihapus.');
     }
 
     public function delete(Request $request, int $id): RedirectResponse

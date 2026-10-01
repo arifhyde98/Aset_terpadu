@@ -114,7 +114,7 @@
                             data-module="{{ $activity->module_label }}"
                             data-description="{{ $activity->description }}"
                             data-user="{{ $activity->user->name ?? 'Sistem' }}"
-                            data-created-at="{{ $activity->created_at->translatedFormat('d F Y H:i:s') }}"
+                            data-created-at="{{ $activity->created_at ? $activity->created_at->translatedFormat('d F Y H:i:s') : '-' }}"
                             data-before="{{ json_encode($activity->before_data) }}"
                             data-after="{{ json_encode($activity->after_data) }}"
                         >
@@ -169,10 +169,10 @@
                             <!-- Kolom 4: Waktu Terformat -->
                             <td class="px-3">
                                 <div class="fw-medium text-dark font-monospace" style="font-size: 0.78rem;">
-                                    {{ $activity->created_at->translatedFormat('d M Y, H:i') }}
+                                    {{ $activity->created_at ? $activity->created_at->translatedFormat('d M Y, H:i') : '-' }}
                                 </div>
                                 <div class="text-secondary" style="font-size: 0.72rem;">
-                                    {{ $activity->created_at->diffForHumans() }}
+                                    {{ $activity->created_at ? $activity->created_at->diffForHumans() : '-' }}
                                 </div>
                             </td>
 

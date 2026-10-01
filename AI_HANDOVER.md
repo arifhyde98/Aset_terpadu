@@ -665,6 +665,12 @@ Diimplementasikan arsitektur *Admin Template Switcher* yang memungkinkan penggun
     - **Optimasi UI Tabel & Form:** Kolom *Pemegang / Dinas* dilengkapi batas lebar aman (`max-width: 220px;`) dan elipsis (*text-truncate*) berserta tooltip judul (*hover tooltip*); kolom *Aksi* diproteksi `white-space: nowrap;` mencegah tombol bergeser bertingkat; serta form *Create* & *Edit* BPKB dilengkapi kapitalisasi otomatis plat nomor (`text-transform: uppercase` + inline sanitizer) dan dropdown OPD terintegrasi searchable select (*TomSelect*).
     - **Modal Detail & Edit Terintegrasi (Single Reusable Modal):** Fitur lihat detail data dan ubah data BPKB di halaman katalog BPKB (`/elabel/bpkb`) kini dikemas dalam bentuk modal interaktif in-page (`#modalDetailBpkb` dan `#modalEditBpkb`) tanpa meninggalkan halaman atau mereset filter/posisi tabel. Menggunakan arsitektur *single reusable modal* dengan pengikatan dataset ringan (`data-bpkb`) pada baris tabel (zero latency), mendukung pembukaan detail via klik plat nomor, transisi instan dari modal detail ke modal edit, integrasi TomSelect OPD dan pratinjau scan PDF, serta menjaga logika controller backend (`update()`) dan validasi `UpdateElabelBpkbRequest` tetap utuh 100%.
     - **Peningkatan UX Pencarian Terpadu:** Bilah pencarian katalog BPKB dilengkapi tombol bersihkan kata kunci instan (`[x]` `#btnClearSearch`) yang otomatis memulihkan katalog dalam 1 klik, *keyboard shortcut* cepat (`/` dan `Ctrl+K` / `Cmd+K`) untuk fokus instan, tombol `Escape` untuk membatalkan pencarian, *keyword highlighting* teks kuning (`<mark>`) pada seluruh data baris tabel yang cocok dengan kata kunci pencarian, indikator spinner saat proses submit, serta *empty state* informatif yang menyediakan tombol langsung "Reset Pencarian".
+    - **Fitur Hapus File Scan BPKB (Salah Upload / Koreksi Dokumen):** Tersedia tombol khusus untuk menghapus berkas scan fisik BPKB secara aman jika salah upload:
+      - Di Modal Edit (`#btnDeletePdfInEdit`) dan checkbox `delete_pdf` pada form edit mandiri (`edit.blade.php`).
+      - Di Modal Detail (`#detailPdfDeleteBtn`) dan halaman detail (`show.blade.php`).
+      - Di Modal Review OCR Staging (`#btnRejectAndDeleteOcrPdf`) dengan opsi "Salah Upload & Hapus File Scan" yang membatalkan rekomendasi AI sekaligus menghapus berkas fisik yang salah diunggah dalam 1 klik.
+      - Didukung endpoint khusus `POST /elabel/bpkb/{id}/delete-pdf` (`elabel.bpkb.delete-pdf`) yang membersihkan file dari disk lokal/publik, mengosongkan `pdf_path`, membatalkan status pending staging OCR, dan mencatat riwayat audit log.
+    - **Log Aktivitas Null-Safe (Pencarian Anti Error 500):** Penanganan timestamp `created_at` pada `ActivityController` dan view `activities/index.blade.php` telah diamankan secara *null-safe* menggunakan fallback Carbon, mencegah fatal error (`Call to a member function translatedFormat() on null`) saat pencarian mencocokkan log lama atau log dengan timestamp kosong.
   - Tabel utama menyajikan kolom identifikasi lengkap kendaraan: Nomor Polisi / Tahun, Identitas Dokumen (BPKB/NIBAR), Nomor Mesin & Nomor Rangka (font monospace), Spesifikasi (Merk/Tipe/Warna), Pemegang/Dinas, Box Fisik, Status, dan Aksi.
   - Fitur pemecahan (*split*) dan penggabungan (*merge*) box arsip.
   - Cetak label stiker barcode box fisik (`/elabel/boxes/{id}/label`).
@@ -822,3 +828,24 @@ Diimplementasikan arsitektur *Admin Template Switcher* yang memungkinkan penggun
 4. **Keamanan Otorisasi `HasMiddleware`:** Seluruh *Controller* baru wajib mengimplementasikan interface `HasMiddleware` dengan sintaks standar Laravel 12 (`new Middleware(...)`).
 5. **No Destructive DB Operations:** Dilarang keras menyarankan *Soft Deletes* jika tidak ada pada skema tabel asli. Hormati arsitektur foreign key `ON DELETE SET NULL` pada tabel audit dan `CASCADE` pada relasi instansi pengguna. Jangan pernah mengeksekusi `migrate:fresh` atau `migrate:reset`.
 6. **Wajib Memperbarui Dokumentasi (.md):** Setiap kali ada penambahan fitur, perubahan skema database/migrasi, penambahan rute, atau refaktorisasi arsitektur, agen AI **WAJIB** langsung memperbarui dokumen [`AI_HANDOVER.md`](file:///home/arifhyde98/Projek/Aset_terpadu/AI_HANDOVER.md), [`PROJECT_MASTER.md`](file:///home/arifhyde98/Projek/Aset_terpadu/PROJECT_MASTER.md), serta file spesifikasi fitur terkait sebelum mengakhiri sesi kerja.
+
+---
+
+## 13. 📌 Status Perencanaan & Fitur Baru yang Selesai
+- **Silent Background OCR Staging & Selective Review BPKB (SELESAI - Production Safe):**
+  - **Dokumen Desain & Rencana:** [`PLAN_BPKB_BACKGROUND_OCR_STAGING.md`](file:///home/arif/Projek/SIPAT_Terpadu/PLAN_BPKB_BACKGROUND_OCR_STAGING.md) & [`resources/features/bpkb-ocr-staging/requirements.md`](file:///home/arif/Projek/SIPAT_Terpadu/resources/features/bpkb-ocr-staging/requirements.md).
+  - **Skema Migrasi:** `database/migrations/2026_10_01_000001_create_elabel_bpkb_ocr_staging_table.php` (Tabel transit `elabel_bpkb_ocr_staging`).
+  - **Model & Relasi:** `App\Models\Elabel\ElabelBpkbOcrStaging` terhubung ke `App\Models\Elabel\ElabelBpkb` via `latestPendingOcr()`.
+  - **Mesin Ekstraksi:** `App\Services\Elabel\BpkbOcrExtractionService` (Membaca file PDF langsung dari server, dukungan multimodal AI Gemini Vision dengan graceful fallback ke heuristic local pdftotext engine).
+  - **Background Worker:** `App\Console\Commands\ElabelBpkbScanWorker` (`php artisan elabel:bpkb-scan-worker {--limit=20} {--sleep=1}`).
+  - **Controller & API Endpoints:** `App\Http\Controllers\Elabel\ElabelBpkbOcrStagingController` (`summary`, `review`, `apply`, `reject`, `trigger-scan`).
+  - **Antarmuka Pengguna (UI/UX):**
+    - Banner & Filter Pill Cepat di atas tabel katalog BPKB saat ada data saran scan pending.
+    - Badge glowing *Saran Scan* pada baris nomor polisi BPKB.
+    - Tombol aksi cepat *Tinjau Rekomendasi Hasil Scan AI*.
+    - Modal interaktif `#modalReviewOcr`: Pratinjau PDF di sisi kiri dan tabel checklist selektif di sisi kanan (bisa diedit sebelum diterapkan).
+    - Tombol *Scan Ulang AI* langsung dari Modal Edit BPKB.
+    - Audit log otomatis tercatat di `elabel_activity_logs`.
+  - **Status:** *Selesai, diuji pada database produksi tanpa mengubah atau mengganggu alur backend/frontend yang sudah ada.*
+
+

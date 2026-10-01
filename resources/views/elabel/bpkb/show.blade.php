@@ -40,6 +40,13 @@
                     <i class="bi bi-arrows-fullscreen"></i>
                     <span>Pratinjau Penuh</span>
                 </button>
+                <button type="button" 
+                        id="btnDeletePdfInShow"
+                        class="btn btn-outline-danger shadow-sm fw-medium d-inline-flex align-items-center gap-1.5"
+                        title="Hapus berkas scan fisik jika salah upload">
+                    <i class="bi bi-trash"></i>
+                    <span>Hapus Scan</span>
+                </button>
             @endif
             <a href="{{ route('elabel.bpkb.edit', $item->id) }}" class="btn btn-primary shadow-sm fw-medium d-inline-flex align-items-center gap-1.5">
                 <i class="bi bi-pencil-square"></i>
@@ -205,4 +212,89 @@
     </div>
 
 </div>
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const btnDeletePdfInShow = document.getElementById('btnDeletePdfInShow');
+    if (btnDeletePdfInShow) {
+        btnDeletePdfInShow.addEventListener('click', function () {
+            const executeDelete = () => {
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        title: 'Menghapus Berkas...',
+                        text: 'Sedang menghapus berkas scan dari server...',
+                        allowOutsideClick: false,
+                        didOpen: () => Swal.showLoading()
+                    });
+                }
+
+                fetch(`{{ route('elabel.bpkb.delete-pdf', $item->id) }}`, {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                .then(res => res.json())
+                .then(res => {
+                    if (res.success) {
+                        if (typeof Swal !== 'undefined') {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Berkas Dihapus!',
+                                text: res.message || 'File scan berhasil dihapus.',
+                                timer: 1500,
+                                showConfirmButton: false
+                            }).then(() => {
+                                window.location.reload();
+                            });
+                        } else {
+                            alert('Berkas scan berhasil dihapus.');
+                            window.location.reload();
+                        }
+                    } else {
+                        if (typeof Swal !== 'undefined') {
+                            Swal.fire({ icon: 'error', title: 'Gagal', text: res.message || 'Gagal menghapus berkas.' });
+                        } else {
+                            alert(res.message);
+                        }
+                    }
+                })
+                .catch(err => {
+                    if (typeof Swal !== 'undefined') {
+                        Swal.fire({ icon: 'error', title: 'Kesalahan Server', text: err.message });
+                    } else {
+                        alert('Kesalahan server: ' + err.message);
+                    }
+                });
+            };
+
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    title: 'Hapus Berkas Scan BPKB?',
+                    html: `Apakah Anda yakin ingin menghapus file scan BPKB untuk <strong>{{ $item->plate_number }}</strong>?<br><br><span class="text-danger small"><i class="bi bi-exclamation-triangle-fill me-1"></i> Gunakan ini jika salah mengunggah file. Berkas scan fisik akan dihapus dari server.</span>`,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#dc3545',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: '<i class="bi bi-trash me-1"></i> Ya, Hapus Berkas',
+                    cancelButtonText: 'Batal',
+                    reverseButtons: true
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        executeDelete();
+                    }
+                });
+            } else {
+                if (confirm('Hapus berkas scan fisik BPKB (misal salah upload)?')) {
+                    executeDelete();
+                }
+            }
+        });
+    }
+});
+</script>
+@endpush
 @endsection

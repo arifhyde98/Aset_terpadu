@@ -140,16 +140,31 @@
                                 <span class="small text-success fw-medium">
                                     <i class="bi bi-file-earmark-check me-1"></i> Scan fisik tersimpan
                                 </span>
-                                <button type="button" 
-                                        class="btn btn-sm btn-outline-danger py-0 px-2 fw-medium d-inline-flex align-items-center gap-1"
-                                        style="font-size: 11.5px; height: 26px;"
-                                        data-pdf-preview="true"
-                                        data-pdf-url="{{ route('elabel.bpkb.view-pdf', $item->id) }}"
-                                        data-pdf-title="Scan BPKB {{ $item->plate_number }}"
-                                        data-pdf-subtitle="No. BPKB: {{ $item->no_bpkb ?: '-' }}"
-                                        data-pdf-badge="{{ $item->vehicle_type }}">
-                                    <i class="bi bi-eye"></i> Pratinjau
-                                </button>
+                                <div class="d-flex align-items-center gap-1.5">
+                                    <button type="button" 
+                                            class="btn btn-sm btn-outline-danger py-0 px-2 fw-medium d-inline-flex align-items-center gap-1"
+                                            style="font-size: 11.5px; height: 26px;"
+                                            data-pdf-preview="true"
+                                            data-pdf-url="{{ route('elabel.bpkb.view-pdf', $item->id) }}"
+                                            data-pdf-title="Scan BPKB {{ $item->plate_number }}"
+                                            data-pdf-subtitle="No. BPKB: {{ $item->no_bpkb ?: '-' }}"
+                                            data-pdf-badge="{{ $item->vehicle_type }}">
+                                        <i class="bi bi-eye"></i> Pratinjau
+                                    </button>
+                                    <button type="button" 
+                                            class="btn btn-sm btn-outline-danger py-0 px-2 fw-semibold d-inline-flex align-items-center gap-1 shadow-sm"
+                                            style="font-size: 11.5px; height: 26px;"
+                                            id="btnDirectDeletePdf"
+                                            title="Hapus berkas scan fisik jika salah upload">
+                                        <i class="bi bi-trash"></i> Hapus Scan
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="form-check mt-1">
+                                <input class="form-check-input" type="checkbox" name="delete_pdf" value="1" id="delete_pdf">
+                                <label class="form-check-label small text-muted" for="delete_pdf">
+                                    Hapus file scan yang tersimpan saat ini saat form disimpan
+                                </label>
                             </div>
                         @endif
                     </div>
@@ -164,4 +179,89 @@
     </div>
 
 </div>
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const btnDirectDeletePdf = document.getElementById('btnDirectDeletePdf');
+    if (btnDirectDeletePdf) {
+        btnDirectDeletePdf.addEventListener('click', function () {
+            const executeDelete = () => {
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        title: 'Menghapus Berkas...',
+                        text: 'Sedang menghapus berkas scan dari server...',
+                        allowOutsideClick: false,
+                        didOpen: () => Swal.showLoading()
+                    });
+                }
+
+                fetch(`{{ route('elabel.bpkb.delete-pdf', $item->id) }}`, {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                .then(res => res.json())
+                .then(res => {
+                    if (res.success) {
+                        if (typeof Swal !== 'undefined') {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Berkas Dihapus!',
+                                text: res.message || 'File scan berhasil dihapus.',
+                                timer: 1500,
+                                showConfirmButton: false
+                            }).then(() => {
+                                window.location.reload();
+                            });
+                        } else {
+                            alert('Berkas scan berhasil dihapus.');
+                            window.location.reload();
+                        }
+                    } else {
+                        if (typeof Swal !== 'undefined') {
+                            Swal.fire({ icon: 'error', title: 'Gagal', text: res.message || 'Gagal menghapus berkas.' });
+                        } else {
+                            alert(res.message);
+                        }
+                    }
+                })
+                .catch(err => {
+                    if (typeof Swal !== 'undefined') {
+                        Swal.fire({ icon: 'error', title: 'Kesalahan Server', text: err.message });
+                    } else {
+                        alert('Kesalahan server: ' + err.message);
+                    }
+                });
+            };
+
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    title: 'Hapus Berkas Scan BPKB?',
+                    html: `Apakah Anda yakin ingin menghapus file scan BPKB untuk <strong>{{ $item->plate_number }}</strong>?<br><br><span class="text-danger small"><i class="bi bi-exclamation-triangle-fill me-1"></i> Gunakan ini jika salah mengunggah file. Berkas scan fisik akan dihapus dari server.</span>`,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#dc3545',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: '<i class="bi bi-trash me-1"></i> Ya, Hapus Berkas',
+                    cancelButtonText: 'Batal',
+                    reverseButtons: true
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        executeDelete();
+                    }
+                });
+            } else {
+                if (confirm('Hapus berkas scan fisik BPKB (misal salah upload)?')) {
+                    executeDelete();
+                }
+            }
+        });
+    }
+});
+</script>
+@endpush
 @endsection

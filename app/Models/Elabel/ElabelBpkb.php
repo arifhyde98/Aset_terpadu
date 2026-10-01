@@ -81,4 +81,15 @@ class ElabelBpkb extends Model
     {
         return $this->hasMany(ElabelLoan::class, 'bpkb_id');
     }
+
+    public function ocrStagings(): HasMany
+    {
+        return $this->hasMany(ElabelBpkbOcrStaging::class, 'bpkb_id');
+    }
+
+    public function latestPendingOcr()
+    {
+        return $this->hasOne(ElabelBpkbOcrStaging::class, 'bpkb_id')->where('status', 'pending')->latestOfMany();
+    }
 }
+

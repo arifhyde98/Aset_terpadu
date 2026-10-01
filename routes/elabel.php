@@ -24,7 +24,16 @@ Route::prefix('elabel')->name('elabel.')->group(function () {
     Route::get('bpkb/{id}/edit', [\App\Http\Controllers\Elabel\ElabelBpkbController::class, 'edit'])->name('bpkb.edit');
     Route::post('bpkb/{id}/update', [\App\Http\Controllers\Elabel\ElabelBpkbController::class, 'update'])->name('bpkb.update');
     Route::post('bpkb/{id}/delete', [\App\Http\Controllers\Elabel\ElabelBpkbController::class, 'delete'])->name('bpkb.delete');
+    Route::post('bpkb/{id}/delete-pdf', [\App\Http\Controllers\Elabel\ElabelBpkbController::class, 'deletePdf'])->name('bpkb.delete-pdf');
     Route::get('bpkb/{id}/view-pdf', [\App\Http\Controllers\Elabel\ElabelBpkbController::class, 'viewPdf'])->name('bpkb.view-pdf');
+
+    // BPKB OCR Staging & Review Pipeline
+    Route::get('bpkb-staging/summary', [\App\Http\Controllers\Elabel\ElabelBpkbOcrStagingController::class, 'summary'])->name('bpkb.staging.summary');
+    Route::get('bpkb-staging/{id}/review', [\App\Http\Controllers\Elabel\ElabelBpkbOcrStagingController::class, 'review'])->name('bpkb.staging.review');
+    Route::post('bpkb-staging/{id}/apply', [\App\Http\Controllers\Elabel\ElabelBpkbOcrStagingController::class, 'apply'])->name('bpkb.staging.apply');
+    Route::post('bpkb-staging/{id}/reject', [\App\Http\Controllers\Elabel\ElabelBpkbOcrStagingController::class, 'reject'])->name('bpkb.staging.reject');
+    Route::post('bpkb/{id}/trigger-scan', [\App\Http\Controllers\Elabel\ElabelBpkbOcrStagingController::class, 'triggerScan'])->name('bpkb.trigger-scan');
+
 
     // Smart BPKB Extractor (Halaman Terpisah)
     Route::get('bpkb-smart-extractor', [\App\Http\Controllers\Elabel\ElabelSmartBpkbExtractorController::class, 'index'])->name('bpkb.smart-extractor.index');
